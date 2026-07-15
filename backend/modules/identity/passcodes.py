@@ -7,7 +7,7 @@ import hmac
 import re
 from dataclasses import dataclass
 
-from argon2 import PasswordHasher
+from argon2 import PasswordHasher, Type
 from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -18,7 +18,14 @@ from .pepper import decode_pepper
 from .pepper import validate_pepper_settings as _validate_pepper_settings
 
 _PASSCODE_PATTERN = re.compile(r"\A[0-9]{6}\Z")
-_PASSWORD_HASHER = PasswordHasher()
+_PASSWORD_HASHER = PasswordHasher(
+    time_cost=3,
+    memory_cost=65_536,
+    parallelism=2,
+    hash_len=32,
+    salt_len=16,
+    type=Type.ID,
+)
 
 
 def validate_pepper_settings(active_id: str, peppers: dict[str, object]) -> None:
@@ -33,6 +40,10 @@ class InvalidPasscode(PasscodeError):
     """The supplied passcode does not meet the internal credential contract."""
 
 
+class PasscodeConfigurationError(ImproperlyConfigured):
+    """The configured Pepper cannot support a credential operation."""
+
+
 @dataclass(frozen=True, slots=True)
 class PasscodeVerification:
     valid: bool
@@ -42,7 +53,7 @@ class PasscodeVerification:
 def _pepper(pepper_id: str) -> bytes:
     peppers = settings.PASSCODE_PEPPERS
     if pepper_id not in peppers:
-        raise ImproperlyConfigured("Passcode credential references an unknown Pepper")
+        raise PasscodeConfigurationError("Passcode credential references an unknown Pepper")
     return decode_pepper(peppers[pepper_id])
 
 
@@ -62,7 +73,6 @@ def set_passcode(user: User, passcode: str, *, must_change: bool = True) -> Pass
     """Create or replace a user's credential inside one transaction."""
 
     active_id = settings.PASSCODE_ACTIVE_PEPPER_ID
-    _validate_passcode(passcode)
     encoded_hash = _PASSWORD_HASHER.hash(_hmac_input(passcode, active_id))
     credential, created = PasscodeCredential.objects.select_for_update().get_or_create(
         user=user,
@@ -110,5 +120,9 @@ def verify_passcode(user: User, passcode: str) -> PasscodeVerification:
         return PasscodeVerification(valid=False)
     return PasscodeVerification(
         valid=valid,
-        needs_rehash=valid and credential.pepper_id != settings.PASSCODE_ACTIVE_PEPPER_ID,
+        needs_rehash=valid
+        and (
+            credential.pepper_id != settings.PASSCODE_ACTIVE_PEPPER_ID
+            or _PASSWORD_HASHER.check_needs_rehash(credential.encoded_hash)
+        ),
     )

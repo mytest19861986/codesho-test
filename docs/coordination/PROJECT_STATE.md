@@ -1,6 +1,6 @@
 # Codesho Project State
 
-Updated: 2026-07-15 (S1-001R complete)
+Updated: 2026-07-15 (S1-002 review closure awaiting CI)
 
 ## Current Status
 
@@ -34,6 +34,11 @@ Compose smoke/restore `29430842466` are both successful.
 - S1-001R Claude Review 01 and Review 02 were completed sequentially; raw
   responses/prompts are retained outside the repository. The review summary
   is `docs/reviews/s1-001-role-separation-review-summary.md`.
+- S1-002 Passcode Foundation is implemented at `d29fd1c`: Argon2id, versioned
+  Pepper HMAC, six-ASCII-digit validation, atomic credential service, model,
+  migration, tests, Data Dictionary and Threat Model updates. Claude Review 01
+  (service) and Review 02 (model/migration) both completed with no unresolved
+  blocker; summary is `docs/reviews/s1-002-passcode-review-summary.md`.
 
 ## Historical Evidence
 
@@ -61,9 +66,10 @@ Compose smoke/restore `29430842466` are both successful.
 
 ## Next Steps
 
-1. Send the S1-001R evidence to Commander. Do not begin passcode work until a
-   new Commander task is assigned; do not promote to protected `codesho`
-   without employer approval.
+1. Commit/push S1-002 review traceability and monitor CI/Compose to green.
+2. Send the S1-002 evidence to Commander. Do not begin Login, Rate Limit,
+   Recovery, or UI work until a new Commander task is assigned; do not promote
+   to protected `codesho` without employer approval.
 
 ## Open Decisions / Risks
 
