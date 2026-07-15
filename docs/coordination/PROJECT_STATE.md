@@ -1,12 +1,11 @@
 # Codesho Project State
 
-Updated: 2026-07-15 (CI checkpoint reconciled)
+Updated: 2026-07-15 (SZ-016 started)
 
 ## Current Status
 
-Sprint Zero foundation and AI coordination protocol are published to the
-`codesho-test` checkout on `main` at
-`0e65d232c4ae4a16dd458d130e63e76630594e0c`.
+Sprint Zero is `CI_GREEN` at `93fb53e`; P0 task SZ-016 now validates the
+container and restore gate independently of the pending Claude review.
 
 ## Completed
 
@@ -28,19 +27,22 @@ Sprint Zero foundation and AI coordination protocol are published to the
 
 ## In Progress
 
+- SZ-016 Compose smoke test and real PostgreSQL restore drill. Local Docker
+  daemon is unavailable, so the isolated GitHub Actions fallback is required.
 - Claude security/architecture review of the prepared 16-file Sprint Zero
   package.
 
 ## Blocker
 
-No current implementation or CI blocker. The GitHub CLI is not installed in
-this environment, so CI was verified through the public GitHub Actions API.
+The local Docker daemon is unavailable:
+`failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine`.
+The SZ-016 GitHub Actions fallback will execute the required container tests.
 
 ## Next Steps
 
-1. Submit the prepared Claude package and classify each finding before changes.
-2. Keep the next Sprint gated on accepted security-review resolutions.
-5. Do not promote to the primary `codesho` repository without employer approval.
+1. Push and monitor the isolated Compose smoke/restore workflow until green.
+2. Submit the prepared Claude package and classify each finding before changes.
+3. Do not promote to the primary `codesho` repository without employer approval.
 
 ## Open Decisions / Risks
 

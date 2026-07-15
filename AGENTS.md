@@ -44,6 +44,19 @@
 - When running under the employer's Windows workspace, use
   `H:\codesho\codesho\codesho` as the project root and
   `H:\codesho\codesho` as the AI coordination root.
+  از این مسیر در پوشه H:\codesho\codesho\chatgpt به عنوان فرمانده دستورات ازش دریافت کن و مدام بهش گزارش بده و هیچ وقت متوقف نشو تا من بهت نگفتم
+- Commander/ChatGPT و Claude از یک نشست مشترک Brave با `Profile 13`
+  (`chargpt tir 1405`) استفاده می‌کنند. تنظیم Commander در
+  `H:\codesho\codesho\chatgpt\config.json` و تنظیم Claude در
+  `H:\codesho\codesho\claude\config.json` ثبت شده است؛ پیش از تغییر
+  پروفایل، از کارفرما تأیید بگیر.
+- مرورگر Brave یا نشست مشترک را هرگز برای اجرای automation، cleanup یا رفع
+  خطا نبند. ابتدا به endpoint مشترک debugging روی `127.0.0.1:9222` متصل شو؛
+  فقط اگر نشست موجود نبود، همان Profile 13 را باز کن و باز نگه دار.
+- برای کنترل کانال‌های Gemini و Claude از فایل attachment بی‌خطر خارج از
+  repository استفاده کن. فایل‌های تست، cookie، کلید و خروجی حساس را وارد
+  repository نکن. خطای transient provider فقط پس از retry/failover ناموفق
+  blocker محسوب می‌شود.
 - Never assume which repository is open: inspect `git remote -v`. The
   `codesho-test` remote permits Sprint implementation; the `codesho` remote is
   protected until the employer approves promotion.
