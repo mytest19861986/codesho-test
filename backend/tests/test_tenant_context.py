@@ -63,10 +63,15 @@ def test_runtime_database_role_cannot_execute_ddl_or_disable_rls():
         pytest.skip("PostgreSQL-specific runtime-role contract")
 
     database = connection.settings_dict
+    connection_parameters = {
+        "dbname": database["NAME"],
+        "user": database["USER"],
+        "password": database["PASSWORD"],
+        "host": database["HOST"],
+        "port": database["PORT"],
+    }
     conninfo = " ".join(
-        f"{key}={database[key]!s}"
-        for key in ("NAME", "USER", "PASSWORD", "HOST", "PORT")
-        if database.get(key)
+        f"{key}={value!s}" for key, value in connection_parameters.items() if value
     )
     with (
         connect(conninfo, autocommit=True) as runtime_connection,
