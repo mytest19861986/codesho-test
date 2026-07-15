@@ -20,3 +20,10 @@ after the quality gate.
 
 Do not use `.env.example` credentials outside local development. Kubernetes is
 intentionally out of scope for the initial deployment.
+
+## Starting a new Codex chat
+
+Open the chat with the project root selected. Codex must read `AGENTS.md` and
+`docs/coordination/CODEX_MASTER_PROMPT_FA.md`, reconstruct the current state from
+Git and `docs/coordination/PROJECT_STATE.md`, and continue without requiring the
+employer to repeat project history.

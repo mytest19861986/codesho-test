@@ -38,6 +38,28 @@
 - Keep commits small and scoped.
 - Run relevant tests before handing work back.
 - Never rewrite or discard user changes.
+- At the start of every new chat, read `docs/coordination/CODEX_MASTER_PROMPT_FA.md`
+  and `docs/coordination/PROJECT_STATE.md` before changing files.
+- Update `docs/coordination/PROJECT_STATE.md` before every handoff or session end.
+- When running under the employer's Windows workspace, use
+  `H:\codesho\codesho\codesho` as the project root and
+  `H:\codesho\codesho` as the AI coordination root.
+- Never assume which repository is open: inspect `git remote -v`. The
+  `codesho-test` remote permits Sprint implementation; the `codesho` remote is
+  protected until the employer approves promotion.
+
+## Persistence Protocol
+
+- Continue autonomously through safe, in-scope work; do not stop after analysis,
+  scaffolding, the first failing test, or a partial implementation.
+- A task ends only when its acceptance criteria and relevant checks pass, or a
+  genuine blocker requires employer authority, credentials, a provider choice,
+  paid infrastructure, or external coordination.
+- Before reporting a blocker, exhaust safe diagnostics and alternatives, record
+  the exact failed command/error, and leave a resumable checkpoint.
+- Never wait indefinitely. Poll long-running work, fix failures and continue.
+- Do not ask the employer to repeat project history that exists in repository
+  documents.
 
 ## Required Verification
 
