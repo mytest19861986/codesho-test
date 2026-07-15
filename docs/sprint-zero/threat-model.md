@@ -23,7 +23,7 @@ Status: baseline; update when payment, SMS and video providers are selected.
 | Session theft/CSRF | HttpOnly, Secure, SameSite=Lax, CSRF middleware, same-origin proxy | Django deploy check + E2E before staging |
 | Teen passcode spraying | Account/IP/device limits, global detection, progressive delay, first-login rotation | Required before Identity Sprint |
 | Privileged admin misuse | Least privilege, MFA for staff, immutable audit trail | Required before staging |
-| Malicious upload | Size/type checks, object quarantine, malware scan, signed downloads | Required before upload feature |
+| Malicious upload | Size/type checks, magic-byte validation, object quarantine, malware scan, signed downloads from a cookieless origin separate from the app | Required before upload feature |
 | Forged payment callback | Signature verification, replay protection, idempotency key, ledger reconciliation | Required before payment integration |
 | Data loss/ransomware | Encrypted off-host backups, object versioning, restore drills | Restore drill before production |
 
@@ -31,5 +31,6 @@ Status: baseline; update when payment, SMS and video providers are selected.
 
 - Provider-specific callback and storage threats remain open until providers are selected.
 - Final teen passcode entropy and UX must be approved before Identity implementation.
+- Guardian notification for anomalous teen sign-in or lockout requires employer approval before Identity implementation.
 - Legal rules for retention, consent and aging-out require counsel before paid production.
 - Session recording is disabled in MVP by default.

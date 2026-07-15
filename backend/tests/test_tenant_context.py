@@ -18,6 +18,13 @@ def test_context_is_reset_after_transaction():
 
 
 @pytest.mark.django_db(transaction=True)
+def test_context_is_reset_after_transaction_error():
+    with pytest.raises(RuntimeError, match="expected failure"), tenant_atomic(uuid4()):
+        raise RuntimeError("expected failure")
+    assert current_tenant_id() is None
+
+
+@pytest.mark.django_db(transaction=True)
 def test_membership_rls_fails_closed_without_context():
     if connection.vendor != "postgresql":
         pytest.skip("PostgreSQL-specific RLS contract")
@@ -33,6 +40,19 @@ def test_membership_rls_fails_closed_without_context():
         assert TenantMembership.objects.filter(tenant=tenant).count() == 1
 
     assert TenantMembership.objects.filter(tenant=tenant).count() == 0
+
+
+@pytest.mark.django_db(transaction=True)
+def test_runtime_database_role_cannot_bypass_rls():
+    if connection.vendor != "postgresql":
+        pytest.skip("PostgreSQL-specific RLS contract")
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname = current_user"
+        )
+        can_bypass_rls = cursor.fetchone()[0]
+    assert can_bypass_rls is False
 
 
 @pytest.mark.django_db(transaction=True)

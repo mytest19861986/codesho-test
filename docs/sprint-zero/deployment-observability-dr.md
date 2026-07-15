@@ -16,6 +16,10 @@ external uptime checks and an error tracker. Reassess dedicated metrics storage
 after measured demand. Redis is capped at 256 MB and uses `noeviction` to avoid
 silent job loss.
 
+If self-hosted PostgreSQL is selected, WAL archiving and logical-backup I/O must
+be included in the measured 4 GB / 2 vCPU resource budget; a dedicated metrics
+stack remains deferred until that budget is demonstrated.
+
 ## Recovery objectives
 
 - Target RPO: 15 minutes, conditional on provider capabilities and budget.
@@ -31,4 +35,5 @@ silent job loss.
 ## Production gate
 
 Provider selection, encrypted off-host destination, alert recipient, release
-owner, DNS names and a successful restore drill must be recorded before launch.
+owner, DNS names, a backup-I/O resource budget for self-hosted PostgreSQL (if
+chosen), and a successful restore drill must be recorded before launch.

@@ -1,6 +1,6 @@
 # Codesho Project State
 
-Updated: 2026-07-15 (SZ-020 local resolution checkpoint)
+Updated: 2026-07-15 (SZ-020 Claude review completed)
 
 ## Current Status
 
@@ -27,23 +27,23 @@ Compose smoke and PostgreSQL backup/restore gate.
 
 ## In Progress
 
-- SZ-020 Claude review: Batch 01 received; Batch 02 rate-limited and not
-  Claude-verified. Local preliminary review is authorized; gate remains open.
+- SZ-020 Claude review completed across Batch 01 and Batch 02-A/B/C. Accepted
+  tenant-context, outbox and PostgreSQL-runtime-role test hardening is locally
+  verified and awaiting CI.
 
 ## Blocker
 
 The local Docker daemon remains unavailable:
 `failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine`.
 SZ-016 passed through the isolated GitHub Actions fallback.
-Claude provider reported: `out of free messages until 6:50 PM` (Asia/Tehran).
-No quota or authentication bypass was attempted. Batch 02-A/B/C is prepared
-but must not be sent until the quota window opens.
+The local Docker daemon remains unavailable; CI remains the required
+PostgreSQL/Compose integration gate.
 
 ## Next Steps
 
-1. Resolve Batch 01 findings and run local checks; label local Batch 02 review
-   `LOCAL_PRELIMINARY_REVIEW / NOT_CLAUDE_VERIFIED`.
-2. After 18:50 Asia/Tehran, send Batch 02-A once, then B and C sequentially.
+1. Push the Claude-dispositioned hardening and follow CI to green.
+2. Obtain employer decisions for production migrator/runtime role separation,
+   tenant-scoped admin policy, and guardian anomalous-login notification.
 3. Do not promote to the primary `codesho` repository without employer approval.
 
 ## Open Decisions / Risks
@@ -52,5 +52,6 @@ but must not be sent until the quota window opens.
 - Teen passcode entropy/UX must be closed before the Identity Sprint.
 - Legal retention/privacy/aging-out rules require counsel before paid production.
 - Docker was unavailable locally; container integration remains a CI/staging gate.
-- Claude Batch 01 is received and pending resolution; Batch 02 is blocked by
-  provider usage limit.
+- Production role separation and tenant-admin policy require employer approval.
+- Guardian anomalous-login notification requires employer approval before the
+  Identity Sprint.

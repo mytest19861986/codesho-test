@@ -20,6 +20,12 @@ def test_base_tenant_task_requires_tenant_id():
 
 
 @pytest.mark.django_db(transaction=True)
+def test_base_tenant_task_rejects_invalid_tenant_id():
+    with pytest.raises(ValueError, match="valid UUID"):
+        EchoTenantTask()("value", tenant_id="not-a-uuid")
+
+
+@pytest.mark.django_db(transaction=True)
 def test_base_tenant_task_sets_and_resets_context():
     tenant_id = uuid4()
     value, observed_id = EchoTenantTask()("value", tenant_id=str(tenant_id))

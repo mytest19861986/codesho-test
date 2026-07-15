@@ -14,7 +14,11 @@ class BaseTenantTask(Task):
         raw_tenant_id = kwargs.pop("tenant_id", None)
         if raw_tenant_id is None:
             raise ValueError("tenant_id is required for tenant-aware tasks")
-        with tenant_atomic(UUID(str(raw_tenant_id))):
+        try:
+            tenant_id = UUID(str(raw_tenant_id))
+        except (AttributeError, TypeError, ValueError) as exc:
+            raise ValueError("tenant_id must be a valid UUID") from exc
+        with tenant_atomic(tenant_id):
             return self.run(*args, **kwargs)
 
     @abstractmethod
