@@ -60,9 +60,8 @@ jobs:
           backup_finished_epoch="$(date +%s)"
           restore_started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           restore_started_epoch="$(date +%s)"
-          docker compose exec --no-TTY -e PGPASSWORD=codesho-admin-local postgres createdb -h 127.0.0.1 -U codesho_admin -O codesho_app codesho_restore_verify 2>artifacts/create_db.stderr || { msg="$(tr '\n' ' ' < artifacts/create_db.stderr)"; echo "::error title=create_db::$msg"; exit 1; }
-          docker compose exec --no-TTY -e PGPASSWORD=codesho-admin-local postgres pg_restore -h 127.0.0.1 -U codesho_admin --clean --if-exists --no-owner --no-acl --dbname codesho_restore_verify < artifacts/codesho.dump
-          docker compose exec --no-TTY -e PGPASSWORD=codesho-admin-local postgres psql -h 127.0.0.1 -U codesho_admin -d codesho_restore_verify -v ON_ERROR_STOP=1 -c "SELECT 1; SELECT COUNT(*) AS migration_count FROM django_migrations;"
+          docker compose exec --no-TTY -e PGPASSWORD=codesho-admin-local postgres pg_restore -h 127.0.0.1 -U codesho_admin --clean --if-exists --no-owner --no-acl --dbname postgres < artifacts/codesho.dump
+          docker compose exec --no-TTY -e PGPASSWORD=codesho-admin-local postgres psql -h 127.0.0.1 -U codesho_admin -d postgres -v ON_ERROR_STOP=1 -c "SELECT 1; SELECT COUNT(*) AS migration_count FROM codesho.django_migrations;"
           restore_finished_epoch="$(date +%s)"
           cat > artifacts/restore-drill.md <<EOF
           # Compose Restore Drill
