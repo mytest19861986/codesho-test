@@ -1,5 +1,15 @@
 # Worklog
 
+## 2026-07-15 — SZ-021 started
+
+- Commander assigned documentation-only Sprint Zero closure and Sprint 1
+  employer-gate preparation.
+- Verified closure commit `013bccc` on `codesho-test/main`: CI `29427888761`
+  and Compose smoke/restore `29427888874` are successful.
+- Prepared review traceability, four employer decisions and a planning-only
+  Sprint 1 backlog. No provider transcript, browser session, secret or raw
+  private attachment is stored in the repository.
+
 ## 2026-07-15 — SZ-016 started
 
 - Commander assigned P0 Compose smoke test and PostgreSQL restore drill.
