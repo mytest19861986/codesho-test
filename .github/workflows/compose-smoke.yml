@@ -30,7 +30,7 @@ jobs:
       - name: Verify Nginx routes and service dependencies
         run: |
           for path in / /health/live/ /health/ready/ /api/schema/ /api/schema/swagger-ui/; do
-            curl --fail --show-error --silent --retry 24 --retry-all-errors \
+            curl --fail --show-error --silent --retry 60 --retry-delay 2 --retry-all-errors \
               "http://127.0.0.1:${NGINX_HOST_PORT}${path}" > /dev/null
           done
           docker compose exec --no-TTY postgres sh -ec \
