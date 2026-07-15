@@ -55,8 +55,8 @@ Compose smoke/restore `29430842466` are both successful.
   database URLs; CI and Compose smoke/restore now verify DDL/RLS denial and
   restored ownership/grants. Review 02 identified and the code now closes the
   PUBLIC privilege gap on audit/analytics/platform; `\\getenv` avoids password
-  process-argument exposure. Local checks remain green. CI `29435567609` and
-  Compose smoke/restore `29435567992` are green.
+  process-argument exposure. Local checks remain green. Final checkpoint
+  `cc8e5f5` passed CI `29435918989` and Compose smoke/restore `29435918881`.
 
 ## Blockers
 
