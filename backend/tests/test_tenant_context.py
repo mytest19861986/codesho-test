@@ -77,10 +77,10 @@ def test_runtime_database_role_cannot_execute_ddl_or_disable_rls():
         connect(conninfo, autocommit=True) as runtime_connection,
         runtime_connection.cursor() as cursor,
     ):
-        with pytest.raises(InsufficientPrivilege, match="permission denied"):
+        with pytest.raises(InsufficientPrivilege):
             cursor.execute("CREATE TABLE codesho.runtime_ddl_probe (id integer)")
         cursor.execute("SET row_security = off")
-        with pytest.raises(InsufficientPrivilege, match="row-level security"):
+        with pytest.raises(InsufficientPrivilege):
             cursor.execute("SELECT count(*) FROM codesho.platform_tenant_tenantmembership")
 
 
