@@ -20,3 +20,11 @@ Claude coordination directory.
 
 Verdict: conditional pass converted to pass for the current single-node Redis
 scope after F3 tests and F9 deployment documentation.
+
+Claude Review 02 then reviewed only `request_signals.py` and
+`test_request_signals.py` with `CLAUDE_S1_003_ABUSE_REVIEW_02_v1.md`.
+Its blocking F6 coverage finding was accepted and closed with direct
+fail-fast configuration tests; the exact device-token length and single-hop
+proxy assumption were also tightened/documented. Remaining observations were
+non-blocking and rejected with reason. Marker:
+`CLAUDE_S1_003_ABUSE_REVIEW_02_COMPLETED`.

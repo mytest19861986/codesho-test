@@ -43,7 +43,9 @@ Compose smoke/restore `29430842466` are both successful.
   Redis Lua counters, fail-closed outage handling, progressive delays,
   durable monotonic lockout, trusted-proxy/device extraction and no public API.
   Claude Review 01 was completed sequentially; its findings are recorded in
-  `docs/reviews/s1-003-abuse-control-review-summary.md`.
+  `docs/reviews/s1-003-abuse-control-review-summary.md`. Review 02 closed its
+  configuration-test blocker; final implementation commits are `7935fcf` and
+  `cbd4a8c`.
 
 ## Historical Evidence
 
