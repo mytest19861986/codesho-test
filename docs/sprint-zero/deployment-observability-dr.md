@@ -37,3 +37,12 @@ stack remains deferred until that budget is demonstrated.
 Provider selection, encrypted off-host destination, alert recipient, release
 owner, DNS names, a backup-I/O resource budget for self-hosted PostgreSQL (if
 chosen), and a successful restore drill must be recorded before launch.
+
+## PostgreSQL deployment roles
+
+Migrations run only with `codesho_migrator`; the web process, Celery worker
+and Celery beat use only `codesho_runtime`. The runtime role has no superuser,
+RLS-bypass, role/database creation or `CREATE`-on-application-schema power.
+Deployments must run the migration step to completion before starting runtime
+services. Restore drills preserve migrator object ownership and runtime grants;
+they are rejected if either condition is missing.

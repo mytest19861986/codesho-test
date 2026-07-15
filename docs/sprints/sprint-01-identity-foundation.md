@@ -1,7 +1,8 @@
 # Sprint 1 — Identity Foundation (Planning Only)
 
-Status: draft; no implementation is authorized until all decisions in
-`docs/decisions/sprint-01-employer-gate.md` are approved.
+Status: authorized 2026-07-15. S1-001 PostgreSQL migrator/runtime role
+separation is the only active implementation task; do not begin passcode or
+other identity workflows until Commander assigns them.
 
 ## Sprint goal
 

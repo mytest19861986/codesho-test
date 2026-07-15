@@ -5,6 +5,8 @@ services:
       POSTGRES_DB: codesho
       POSTGRES_USER: codesho_admin
       POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:-codesho-admin-local}
+      CODESHO_MIGRATOR_PASSWORD: ${CODESHO_MIGRATOR_PASSWORD:-codesho-migrator-local}
+      CODESHO_RUNTIME_PASSWORD: ${CODESHO_RUNTIME_PASSWORD:-codesho-runtime-local}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
@@ -27,15 +29,28 @@ services:
       retries: 10
     restart: unless-stopped
 
+  migrator:
+    build: ./backend
+    env_file: .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.local
+      DATABASE_URL: ${DATABASE_MIGRATOR_URL:?DATABASE_MIGRATOR_URL is required}
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    command: ["python", "manage.py", "migrate", "--noinput"]
+    restart: "no"
+
   backend:
     build: ./backend
     env_file: .env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.local
+      DATABASE_URL: ${DATABASE_RUNTIME_URL:?DATABASE_RUNTIME_URL is required}
     depends_on:
-      postgres: { condition: service_healthy }
+      migrator: { condition: service_completed_successfully }
       redis: { condition: service_healthy }
-    command: ["sh", "-c", "python manage.py migrate && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --threads 2 --timeout 60"]
+    command: ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2", "--threads", "2", "--timeout", "60"]
     restart: unless-stopped
 
   worker:
@@ -43,10 +58,23 @@ services:
     env_file: .env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.local
+      DATABASE_URL: ${DATABASE_RUNTIME_URL:?DATABASE_RUNTIME_URL is required}
     depends_on:
-      postgres: { condition: service_healthy }
+      migrator: { condition: service_completed_successfully }
       redis: { condition: service_healthy }
     command: ["celery", "-A", "config", "worker", "--loglevel=INFO", "--concurrency=2"]
+    restart: unless-stopped
+
+  beat:
+    build: ./backend
+    env_file: .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.local
+      DATABASE_URL: ${DATABASE_RUNTIME_URL:?DATABASE_RUNTIME_URL is required}
+    depends_on:
+      migrator: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+    command: ["celery", "-A", "config", "beat", "--loglevel=INFO"]
     restart: unless-stopped
 
   frontend:

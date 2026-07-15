@@ -35,7 +35,10 @@ jobs:
     env:
       DJANGO_SETTINGS_MODULE: config.settings.test
       DJANGO_SECRET_KEY: ci-only
-      DATABASE_URL: postgresql://codesho_app:app-test@localhost:5432/codesho
+      DATABASE_RUNTIME_URL: postgresql://codesho_runtime:runtime-test@localhost:5432/codesho
+      DATABASE_MIGRATOR_URL: postgresql://codesho_migrator:migrator-test@localhost:5432/codesho
+      DATABASE_RUNTIME_TEST_URL: postgresql://codesho_runtime:runtime-test@localhost:5432/codesho_test
+      DATABASE_MIGRATOR_TEST_URL: postgresql://codesho_migrator:migrator-test@localhost:5432/codesho_test
       DATABASE_TEST_NAME: codesho_test
       CELERY_BROKER_URL: redis://localhost:6379/1
     defaults:
@@ -47,22 +50,25 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - name: Create test role and databases
+      - name: Configure migrator and runtime roles
         env:
           PGPASSWORD: admin-test
+          POSTGRES_ADMIN_URL: postgresql://codesho_admin:admin-test@localhost:5432/codesho
+          CODESHO_MIGRATOR_PASSWORD: migrator-test
+          CODESHO_RUNTIME_PASSWORD: runtime-test
         run: |
-          psql -h localhost -U codesho_admin -d codesho -v ON_ERROR_STOP=1 -c "CREATE ROLE codesho_app LOGIN PASSWORD 'app-test';"
-          psql -h localhost -U codesho_admin -d codesho -v ON_ERROR_STOP=1 -c "CREATE SCHEMA codesho AUTHORIZATION codesho_app;"
-          psql -h localhost -U codesho_admin -d codesho -v ON_ERROR_STOP=1 -c "CREATE DATABASE codesho_test OWNER codesho_app;"
-          psql -h localhost -U codesho_admin -d codesho_test -v ON_ERROR_STOP=1 -c "CREATE SCHEMA codesho AUTHORIZATION codesho_app;"
+          sh ../scripts/configure-postgres-roles.sh
+          psql -h localhost -U codesho_admin -d codesho -v ON_ERROR_STOP=1 -c "CREATE DATABASE codesho_test OWNER codesho_migrator;"
+          POSTGRES_ADMIN_URL=postgresql://codesho_admin:admin-test@localhost:5432/codesho_test sh ../scripts/configure-postgres-roles.sh
       - run: pip install -e '.[dev]'
       - run: ruff check .
       - run: mypy .
       - run: python ../scripts/check_module_boundaries.py
       - run: python manage.py makemigrations --check --dry-run
-      - run: python manage.py migrate --noinput
-      - run: python manage.py spectacular --file openapi.yaml --validate
-      - run: pytest --reuse-db --cov=modules --cov-report=term-missing --cov-fail-under=80
+      - run: DATABASE_URL="$DATABASE_MIGRATOR_URL" python manage.py migrate --noinput
+      - run: DATABASE_URL="$DATABASE_MIGRATOR_TEST_URL" python manage.py migrate --noinput
+      - run: DATABASE_URL="$DATABASE_RUNTIME_URL" python manage.py spectacular --file openapi.yaml --validate
+      - run: DATABASE_URL="$DATABASE_RUNTIME_URL" pytest --reuse-db --cov=modules --cov-report=term-missing --cov-fail-under=80
 
   frontend:
     runs-on: ubuntu-24.04

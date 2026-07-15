@@ -1,12 +1,13 @@
 # Codesho Project State
 
-Updated: 2026-07-15 (SZ-021 complete; employer decision gate pending)
+Updated: 2026-07-15 (S1-001 migrator/runtime separation awaiting CI)
 
 ## Current Status
 
 Sprint Zero is technically closed at `013bccc834b31c91a1424c14a304eb6acc01ff0a`
 on `codesho-test/main`. Its two required GitHub Actions workflows completed
-successfully:
+successfully. The employer approved all four Sprint 1 gate decisions on
+2026-07-15, authorizing S1-001 PostgreSQL migrator/runtime separation.
 
 - CI `29427888761`: backend and frontend checks passed.
 - Compose smoke and restore `29427888874`: isolated full-stack startup,
@@ -28,8 +29,8 @@ Compose smoke/restore `29430842466` are both successful.
 - SZ-020 Claude review completed and findings dispositioned; no unresolved
   Claude P0 remains. The auditable summary is at
   `docs/reviews/sz-020-review-resolution-summary.md`.
-- SZ-021 employer decision gate and Sprint 1 plan prepared and verified
-  without new production or identity workflow code.
+- SZ-021 employer decision gate and Sprint 1 plan prepared and verified.
+- Employer decisions recorded: 1-B, 2-A, 3-A-revised and 4-A-revised.
 
 ## Historical Evidence
 
@@ -40,25 +41,27 @@ Compose smoke/restore `29430842466` are both successful.
 
 ## In Progress
 
-- No implementation work is active. Await employer decisions before Identity
-  Foundation code begins.
+- S1-001 separates `codesho_migrator` from `codesho_runtime`: migrations run
+  in a one-shot Compose service; backend, worker and beat use runtime-only
+  database URLs; CI and Compose smoke/restore now verify DDL/RLS denial and
+  restored ownership/grants. Local lint, targeted backend tests, migration
+  check, mypy, Compose configuration and diff check pass. Commit/push and
+  GitHub workflow verification are pending.
 
 ## Blockers
 
-- Employer decisions are required for production migrator/runtime role
-  separation, tenant-scoped Django Admin policy, teen passcode policy, and
-  guardian anomalous-login notification.
 - Local Docker daemon remains unavailable:
   `failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine`.
-  The required Compose gate passed in isolated GitHub Actions.
+  The required S1-001 Compose gate must run in isolated GitHub Actions.
 
 ## Next Steps
 
-1. Employer answers the four questions in
-   `docs/decisions/sprint-01-employer-gate.md`.
-2. Commander converts the answers into the approved Sprint 1 backlog.
-3. Implement Identity Foundation only after that approval; do not promote to
-   the protected `codesho` repository without employer approval.
+1. Commit and push S1-001 to `codesho-test/main`.
+2. Monitor CI and Compose smoke/restore until both are green; repair any
+   failure before handoff.
+3. Send the S1-001 evidence to Commander. Do not begin passcode work until a
+   new Commander task is assigned; do not promote to protected `codesho`
+   without employer approval.
 
 ## Open Decisions / Risks
 

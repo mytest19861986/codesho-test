@@ -40,14 +40,20 @@ jobs:
       - name: Run PostgreSQL RLS and connection-reuse tests in the Compose network
         run: |
           docker compose exec --no-TTY postgres sh -ec \
-            'PGPASSWORD="$POSTGRES_PASSWORD" psql -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE codesho_smoke_tests OWNER codesho_app;"'
+            'PGPASSWORD="$POSTGRES_PASSWORD" psql -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE codesho_smoke_tests OWNER codesho_migrator;"'
           docker compose exec --no-TTY postgres sh -ec \
-            'PGPASSWORD="$POSTGRES_PASSWORD" psql -U "$POSTGRES_USER" -d codesho_smoke_tests -v ON_ERROR_STOP=1 -c "CREATE SCHEMA codesho AUTHORIZATION codesho_app;"'
+            'PGPASSWORD="$POSTGRES_PASSWORD" psql -U "$POSTGRES_USER" -d codesho_smoke_tests -v ON_ERROR_STOP=1 -c "CREATE SCHEMA codesho AUTHORIZATION codesho_migrator; GRANT USAGE ON SCHEMA codesho TO codesho_runtime; ALTER DEFAULT PRIVILEGES FOR ROLE codesho_migrator IN SCHEMA codesho GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO codesho_runtime; ALTER DEFAULT PRIVILEGES FOR ROLE codesho_migrator IN SCHEMA codesho GRANT USAGE, SELECT ON SEQUENCES TO codesho_runtime; ALTER DEFAULT PRIVILEGES FOR ROLE codesho_migrator IN SCHEMA codesho GRANT EXECUTE ON FUNCTIONS TO codesho_runtime;"'
           docker run --rm --network codesho-sz-smoke_default \
             --volume "$GITHUB_WORKSPACE/backend:/app" --workdir /app \
             --env DJANGO_SETTINGS_MODULE=config.settings.test \
             --env DJANGO_SECRET_KEY=compose-smoke-only \
-            --env DATABASE_URL=postgresql://codesho_app:codesho@postgres:5432/codesho \
+            --env DATABASE_URL=postgresql://codesho_migrator:codesho-migrator-local@postgres:5432/codesho_smoke_tests \
+            python:3.12-slim sh -ec "pip install -e '.[dev]' && python manage.py migrate --noinput"
+          docker run --rm --network codesho-sz-smoke_default \
+            --volume "$GITHUB_WORKSPACE/backend:/app" --workdir /app \
+            --env DJANGO_SETTINGS_MODULE=config.settings.test \
+            --env DJANGO_SECRET_KEY=compose-smoke-only \
+            --env DATABASE_URL=postgresql://codesho_runtime:codesho-runtime-local@postgres:5432/codesho \
             --env DATABASE_TEST_NAME=codesho_smoke_tests \
             python:3.12-slim sh -ec \
             "pip install -e '.[dev]' && pytest --reuse-db -q tests/test_tenant_context.py tests/test_middleware.py tests/test_tasks.py"
@@ -55,13 +61,14 @@ jobs:
         run: |
           backup_started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           backup_started_epoch="$(date +%s)"
-          docker compose exec --no-TTY -e PGPASSWORD=codesho-admin-local postgres pg_dump -h 127.0.0.1 -U codesho_admin -d codesho --format=custom --no-owner --no-acl > artifacts/codesho.dump 2>artifacts/pg_dump.stderr || { msg="$(tr '\n' ' ' < artifacts/pg_dump.stderr)"; echo "::error title=pg_dump::$msg"; exit 1; }
+          docker compose exec --no-TTY -e PGPASSWORD=codesho-admin-local postgres pg_dump -h 127.0.0.1 -U codesho_admin -d codesho --format=custom > artifacts/codesho.dump 2>artifacts/pg_dump.stderr || { msg="$(tr '\n' ' ' < artifacts/pg_dump.stderr)"; echo "::error title=pg_dump::$msg"; exit 1; }
           test -s artifacts/codesho.dump
           backup_finished_epoch="$(date +%s)"
           restore_started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           restore_started_epoch="$(date +%s)"
-          docker compose exec --no-TTY -e PGPASSWORD=codesho-admin-local postgres pg_restore -h 127.0.0.1 -U codesho_admin --clean --if-exists --no-owner --no-acl --dbname postgres < artifacts/codesho.dump
-          docker compose exec --no-TTY -e PGPASSWORD=codesho-admin-local postgres psql -h 127.0.0.1 -U codesho_admin -d postgres -v ON_ERROR_STOP=1 -c "SELECT 1; SELECT COUNT(*) AS migration_count FROM codesho.django_migrations;"
+          docker compose exec --no-TTY postgres sh -ec 'PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE codesho_restore_verify OWNER codesho_admin;"'
+          docker compose exec --no-TTY -e PGPASSWORD=codesho-admin-local postgres pg_restore -h 127.0.0.1 -U codesho_admin --clean --if-exists --dbname codesho_restore_verify < artifacts/codesho.dump
+          docker compose exec --no-TTY -e PGPASSWORD=codesho-admin-local postgres psql -h 127.0.0.1 -U codesho_admin -d codesho_restore_verify -v ON_ERROR_STOP=1 -c "SELECT COUNT(*) AS migration_count FROM codesho.django_migrations; DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'codesho' AND tableowner = 'codesho_migrator') THEN RAISE EXCEPTION 'restored tables are not owned by codesho_migrator'; END IF; IF NOT has_table_privilege('codesho_runtime', 'codesho.django_migrations', 'SELECT,INSERT,UPDATE,DELETE') THEN RAISE EXCEPTION 'codesho_runtime lacks restored Django table privileges'; END IF; END \$\$;"
           restore_finished_epoch="$(date +%s)"
           cat > artifacts/restore-drill.md <<EOF
           # Compose Restore Drill

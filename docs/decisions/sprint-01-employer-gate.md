@@ -1,7 +1,19 @@
 # Sprint 1 Employer Gate — Identity Foundation
 
-Status: approval required before Identity implementation. Each section asks
-for one explicit employer decision.
+Status: approved 2026-07-15. The recorded employer decisions authorize Sprint
+1, beginning with S1-001 role separation; identity/passcode implementation
+remains a separate approved backlog item.
+
+## Recorded employer decisions
+
+- 1-B approved: a deployment/CI-only PostgreSQL migrator role and a
+  least-privilege runtime role.
+- 2-A approved: platform-operator Django Admin scope, with tenant records
+  hidden until a tenant-scoped policy is approved.
+- 3-A revised approved: six-digit passcode policy; detailed revised controls
+  must be captured before passcode implementation.
+- 4-A revised approved: guardian anomalous-login notification is deferred;
+  minimal immutable security audit evidence remains in scope.
 
 ## 1. PostgreSQL migrator and runtime roles
 

@@ -2,6 +2,8 @@ from uuid import uuid4
 
 import pytest
 from django.db import connection
+from psycopg import connect
+from psycopg.errors import InsufficientPrivilege
 
 from modules.identity.models import User
 from modules.platform_tenant.context import current_tenant_id, tenant_atomic
@@ -53,6 +55,28 @@ def test_runtime_database_role_cannot_bypass_rls():
         )
         can_bypass_rls = cursor.fetchone()[0]
     assert can_bypass_rls is False
+
+
+@pytest.mark.django_db(transaction=True)
+def test_runtime_database_role_cannot_execute_ddl_or_disable_rls():
+    if connection.vendor != "postgresql":
+        pytest.skip("PostgreSQL-specific runtime-role contract")
+
+    database = connection.settings_dict
+    conninfo = " ".join(
+        f"{key}={database[key]!s}"
+        for key in ("NAME", "USER", "PASSWORD", "HOST", "PORT")
+        if database.get(key)
+    )
+    with (
+        connect(conninfo, autocommit=True) as runtime_connection,
+        runtime_connection.cursor() as cursor,
+    ):
+        with pytest.raises(InsufficientPrivilege, match="permission denied"):
+            cursor.execute("CREATE TABLE codesho.runtime_ddl_probe (id integer)")
+        cursor.execute("SET row_security = off")
+        with pytest.raises(InsufficientPrivilege, match="row-level security"):
+            cursor.execute("SELECT count(*) FROM codesho.platform_tenant_tenantmembership")
 
 
 @pytest.mark.django_db(transaction=True)
