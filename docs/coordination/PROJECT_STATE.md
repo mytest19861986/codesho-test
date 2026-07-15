@@ -4,8 +4,9 @@ Updated: 2026-07-15 (SZ-020 Claude review completed)
 
 ## Current Status
 
-Sprint Zero is `CI_GREEN` at `168332c`; P0 task SZ-016 passed the isolated
-Compose smoke and PostgreSQL backup/restore gate.
+Sprint Zero is `CI_GREEN` at `49c25c1`; SZ-020 Claude-dispositioned tenant and
+outbox hardening passed CI, including the isolated Compose PostgreSQL
+backup/restore gate.
 
 ## Completed
 
@@ -27,22 +28,20 @@ Compose smoke and PostgreSQL backup/restore gate.
 
 ## In Progress
 
-- SZ-020 Claude review completed across Batch 01 and Batch 02-A/B/C. Accepted
-  tenant-context, outbox and PostgreSQL-runtime-role test hardening is locally
-  verified and awaiting CI.
+- No implementation work is active. Employer decisions remain before the
+  associated production/Identity work can start.
 
 ## Blocker
 
 The local Docker daemon remains unavailable:
 `failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine`.
 SZ-016 passed through the isolated GitHub Actions fallback.
-The local Docker daemon remains unavailable; CI remains the required
-PostgreSQL/Compose integration gate.
+The local Docker daemon remains unavailable; the required PostgreSQL/Compose
+integration gate passed in GitHub Actions.
 
 ## Next Steps
 
-1. Push the Claude-dispositioned hardening and follow CI to green.
-2. Obtain employer decisions for production migrator/runtime role separation,
+1. Obtain employer decisions for production migrator/runtime role separation,
    tenant-scoped admin policy, and guardian anomalous-login notification.
 3. Do not promote to the primary `codesho` repository without employer approval.
 
