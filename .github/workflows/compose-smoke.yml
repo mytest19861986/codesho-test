@@ -56,13 +56,13 @@ jobs:
           backup_started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           backup_started_epoch="$(date +%s)"
           docker compose exec --no-TTY -e PGPASSWORD="${POSTGRES_ADMIN_PASSWORD:-codesho-admin-local}" \
-            postgres pg_dump -h 127.0.0.1 -U codesho_admin -d codesho --format=custom --no-owner --no-acl > artifacts/codesho.dump
+            postgres pg_dump -h 127.0.0.1 -U codesho_admin -d codesho --format=custom --no-owner --no-acl > artifacts/codesho.dump 2>artifacts/pg_dump.stderr || { msg="$(tr '\n' ' ' < artifacts/pg_dump.stderr)"; echo "::error title=pg_dump::$msg"; exit 1; }
           test -s artifacts/codesho.dump
           backup_finished_epoch="$(date +%s)"
           restore_started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           restore_started_epoch="$(date +%s)"
           docker compose exec --no-TTY -e PGPASSWORD="${POSTGRES_ADMIN_PASSWORD:-codesho-admin-local}" \
-            postgres psql -h 127.0.0.1 -U codesho_admin -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE codesho_restore_verify OWNER codesho_app;"
+            postgres psql -h 127.0.0.1 -U codesho_admin -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE codesho_restore_verify OWNER codesho_app;" 2>artifacts/create_db.stderr || { msg="$(tr '\n' ' ' < artifacts/create_db.stderr)"; echo "::error title=create_db::$msg"; exit 1; }
           docker compose exec --no-TTY -e PGPASSWORD="${POSTGRES_ADMIN_PASSWORD:-codesho-admin-local}" \
             postgres pg_restore -h 127.0.0.1 -U codesho_admin --clean --if-exists --no-owner --no-acl --dbname codesho_restore_verify < artifacts/codesho.dump
           docker compose exec --no-TTY -e PGPASSWORD="${POSTGRES_ADMIN_PASSWORD:-codesho-admin-local}" \
