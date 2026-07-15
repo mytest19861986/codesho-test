@@ -44,6 +44,7 @@ def validate_abuse_settings(
 
 
 def extract_client_ip(request: Any) -> str | None:
+    """Resolve one IP from REMOTE_ADDR; deployment assumes one trusted proxy hop."""
     remote = request.META.get("REMOTE_ADDR")
     try:
         remote_ip = ipaddress.ip_address(str(remote))
@@ -72,7 +73,7 @@ def extract_device_id(request: Any) -> str | None:
         )
     except (signing.BadSignature, signing.SignatureExpired):
         return None
-    if len(value) < 32 or any(ch not in "0123456789abcdefABCDEF" for ch in value):
+    if len(value) != 32 or any(ch not in "0123456789abcdefABCDEF" for ch in value):
         return None
     return value.lower()
 
