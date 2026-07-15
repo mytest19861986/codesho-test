@@ -1,6 +1,6 @@
 # Codesho Project State
 
-Updated: 2026-07-15 (S1-001 migrator/runtime separation awaiting CI)
+Updated: 2026-07-15 (S1-001 complete)
 
 ## Current Status
 
@@ -41,25 +41,23 @@ Compose smoke/restore `29430842466` are both successful.
 
 ## In Progress
 
-- S1-001 separates `codesho_migrator` from `codesho_runtime`: migrations run
+- S1-001 is complete at implementation checkpoint `972c54b`. It separates
+  `codesho_migrator` from `codesho_runtime`: migrations run
   in a one-shot Compose service; backend, worker and beat use runtime-only
   database URLs; CI and Compose smoke/restore now verify DDL/RLS denial and
   restored ownership/grants. Local lint, targeted backend tests, migration
-  check, mypy, Compose configuration and diff check pass. Commit/push and
-  GitHub workflow verification are pending.
+  check, mypy, Compose configuration and diff check pass. CI `29433068283` and
+  Compose smoke/restore `29433066102` are green.
 
 ## Blockers
 
 - Local Docker daemon remains unavailable:
   `failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine`.
-  The required S1-001 Compose gate must run in isolated GitHub Actions.
+  The required S1-001 Compose gate passed in isolated GitHub Actions.
 
 ## Next Steps
 
-1. Commit and push S1-001 to `codesho-test/main`.
-2. Monitor CI and Compose smoke/restore until both are green; repair any
-   failure before handoff.
-3. Send the S1-001 evidence to Commander. Do not begin passcode work until a
+1. Send the S1-001 evidence to Commander. Do not begin passcode work until a
    new Commander task is assigned; do not promote to protected `codesho`
    without employer approval.
 
