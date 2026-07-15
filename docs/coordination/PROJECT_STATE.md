@@ -1,11 +1,12 @@
 # Codesho Project State
 
-Updated: 2026-07-15
+Updated: 2026-07-15 (CI checkpoint reconciled)
 
 ## Current Status
 
-Sprint Zero foundation is implemented in the local `codesho-test` checkout.
-Local commit: `965db24 chore: establish Sprint Zero foundation`.
+Sprint Zero foundation and AI coordination protocol are published to the
+`codesho-test` checkout on `main` at
+`0e65d232c4ae4a16dd458d130e63e76630594e0c`.
 
 ## Completed
 
@@ -20,25 +21,25 @@ Local commit: `965db24 chore: establish Sprint Zero foundation`.
 - Reusable Codex master prompt, persistent execution protocol and AI handoff file templates.
 - Local validation: 10 passed, 2 PostgreSQL-only tests skipped, 94% coverage,
   Ruff/MyPy/ESLint/TypeScript/Next production build passed.
+- GitHub Actions CI run `29406301878` completed successfully for commit
+  `0e65d23`: backend and frontend jobs both passed. The backend CI job ran
+  against PostgreSQL and Redis and includes the PostgreSQL-specific RLS and
+  physical-connection-reuse tests.
 
 ## In Progress
 
-- Publish the local commit to `codesho-test` and execute GitHub CI.
-- Run PostgreSQL-specific RLS and physical-connection-reuse tests in CI.
+- Claude security/architecture review of the prepared 16-file Sprint Zero
+  package.
 
 ## Blocker
 
-The current execution environment has no GitHub credential and no `gh` binary.
-`git push -u origin main` failed with:
-
-`fatal: could not read Username for 'https://github.com': No such device or address`
+No current implementation or CI blocker. The GitHub CLI is not installed in
+this environment, so CI was verified through the public GitHub Actions API.
 
 ## Next Steps
 
-1. Authenticate GitHub for Codex (`gh auth login` or workspace GitHub connection).
-2. Push commit `965db24` to `codesho-test`.
-3. Monitor CI, fix all failures and record the final green run.
-4. Request Commander/Claude review for the security-sensitive Sprint Zero files.
+1. Submit the prepared Claude package and classify each finding before changes.
+2. Keep the next Sprint gated on accepted security-review resolutions.
 5. Do not promote to the primary `codesho` repository without employer approval.
 
 ## Open Decisions / Risks
@@ -47,3 +48,5 @@ The current execution environment has no GitHub credential and no `gh` binary.
 - Teen passcode entropy/UX must be closed before the Identity Sprint.
 - Legal retention/privacy/aging-out rules require counsel before paid production.
 - Docker was unavailable locally; container integration remains a CI/staging gate.
+- The Claude review package is prepared in the coordination root and awaits
+  review; no findings have been received or applied.
