@@ -1,6 +1,6 @@
 # Codesho Project State
 
-Updated: 2026-07-15 (S1-001R review closure awaiting CI)
+Updated: 2026-07-15 (S1-001R complete)
 
 ## Current Status
 
@@ -50,8 +50,8 @@ Compose smoke/restore `29430842466` are both successful.
   database URLs; CI and Compose smoke/restore now verify DDL/RLS denial and
   restored ownership/grants. Review 02 identified and the code now closes the
   PUBLIC privilege gap on audit/analytics/platform; `\\getenv` avoids password
-  process-argument exposure. Local checks remain green; CI/Compose
-  re-verification is pending.
+  process-argument exposure. Local checks remain green. CI `29434056755` and
+  Compose smoke/restore `29434056738` are green.
 
 ## Blockers
 
@@ -61,8 +61,7 @@ Compose smoke/restore `29430842466` are both successful.
 
 ## Next Steps
 
-1. Commit/push the review closure and monitor CI/Compose to green.
-2. Send the S1-001R evidence to Commander. Do not begin passcode work until a
+1. Send the S1-001R evidence to Commander. Do not begin passcode work until a
    new Commander task is assigned; do not promote to protected `codesho`
    without employer approval.
 
