@@ -1,0 +1,30 @@
+:root {
+  color-scheme: light;
+  font-family: Tahoma, Arial, sans-serif;
+  background: #f4f7fb;
+  color: #172033;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+
+.shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+}
+
+.card {
+  width: min(100%, 48rem);
+  border: 1px solid #dbe3ef;
+  border-radius: 1.25rem;
+  background: #fff;
+  padding: clamp(1.5rem, 5vw, 4rem);
+  box-shadow: 0 1.5rem 4rem rgb(31 48 76 / 9%);
+}
+
+.eyebrow { color: #3457d5; font-weight: 700; }
+h1 { font-size: clamp(2rem, 6vw, 3.5rem); line-height: 1.25; margin-block: .75rem 1rem; }
+p { line-height: 2; color: #506079; }
+a { display: inline-block; margin-top: 1rem; color: #2748bd; font-weight: 700; }

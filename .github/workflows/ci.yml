@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: codesho
+          POSTGRES_USER: codesho_admin
+          POSTGRES_PASSWORD: admin-test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U codesho_admin -d codesho"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.test
+      DJANGO_SECRET_KEY: ci-only
+      DATABASE_URL: postgresql://codesho_app:app-test@localhost:5432/codesho
+      DATABASE_TEST_NAME: codesho_test
+      CELERY_BROKER_URL: redis://localhost:6379/1
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Create test role and databases
+        env:
+          PGPASSWORD: admin-test
+        run: |
+          psql -h localhost -U codesho_admin -d codesho -v ON_ERROR_STOP=1 -c "CREATE ROLE codesho_app LOGIN PASSWORD 'app-test';"
+          psql -h localhost -U codesho_admin -d codesho -v ON_ERROR_STOP=1 -c "CREATE SCHEMA codesho AUTHORIZATION codesho_app;"
+          psql -h localhost -U codesho_admin -d codesho -v ON_ERROR_STOP=1 -c "CREATE DATABASE codesho_test OWNER codesho_app;"
+          psql -h localhost -U codesho_admin -d codesho_test -v ON_ERROR_STOP=1 -c "CREATE SCHEMA codesho AUTHORIZATION codesho_app;"
+      - run: pip install -e '.[dev]'
+      - run: ruff check .
+      - run: mypy .
+      - run: python ../scripts/check_module_boundaries.py
+      - run: python manage.py makemigrations --check --dry-run
+      - run: python manage.py migrate --noinput
+      - run: python manage.py spectacular --file openapi.yaml --validate
+      - run: pytest --reuse-db --cov=modules --cov-report=term-missing --cov-fail-under=80
+
+  frontend:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
