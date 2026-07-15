@@ -1,6 +1,6 @@
 # Codesho Project State
 
-Updated: 2026-07-15 (SZ-016 passed)
+Updated: 2026-07-15 (SZ-020 local resolution checkpoint)
 
 ## Current Status
 
@@ -27,19 +27,24 @@ Compose smoke and PostgreSQL backup/restore gate.
 
 ## In Progress
 
-- Claude security/architecture review of the prepared 16-file Sprint Zero
-  package.
+- SZ-020 Claude review: Batch 01 received; Batch 02 rate-limited and not
+  Claude-verified. Local preliminary review is authorized; gate remains open.
 
 ## Blocker
 
 The local Docker daemon remains unavailable:
 `failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine`.
 SZ-016 passed through the isolated GitHub Actions fallback.
+Claude provider reported: `out of free messages until 6:50 PM` (Asia/Tehran).
+No quota or authentication bypass was attempted. Batch 02-A/B/C is prepared
+but must not be sent until the quota window opens.
 
 ## Next Steps
 
-1. Submit the prepared Claude package and classify each finding before changes.
-2. Do not promote to the primary `codesho` repository without employer approval.
+1. Resolve Batch 01 findings and run local checks; label local Batch 02 review
+   `LOCAL_PRELIMINARY_REVIEW / NOT_CLAUDE_VERIFIED`.
+2. After 18:50 Asia/Tehran, send Batch 02-A once, then B and C sequentially.
+3. Do not promote to the primary `codesho` repository without employer approval.
 
 ## Open Decisions / Risks
 
@@ -47,5 +52,5 @@ SZ-016 passed through the isolated GitHub Actions fallback.
 - Teen passcode entropy/UX must be closed before the Identity Sprint.
 - Legal retention/privacy/aging-out rules require counsel before paid production.
 - Docker was unavailable locally; container integration remains a CI/staging gate.
-- The Claude review package is prepared in the coordination root and awaits
-  review; no findings have been received or applied.
+- Claude Batch 01 is received and pending resolution; Batch 02 is blocked by
+  provider usage limit.
