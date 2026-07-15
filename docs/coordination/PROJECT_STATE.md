@@ -1,11 +1,11 @@
 # Codesho Project State
 
-Updated: 2026-07-15 (SZ-016 started)
+Updated: 2026-07-15 (SZ-016 passed)
 
 ## Current Status
 
-Sprint Zero is `CI_GREEN` at `93fb53e`; P0 task SZ-016 now validates the
-container and restore gate independently of the pending Claude review.
+Sprint Zero is `CI_GREEN` at `168332c`; P0 task SZ-016 passed the isolated
+Compose smoke and PostgreSQL backup/restore gate.
 
 ## Completed
 
@@ -27,22 +27,19 @@ container and restore gate independently of the pending Claude review.
 
 ## In Progress
 
-- SZ-016 Compose smoke test and real PostgreSQL restore drill. Local Docker
-  daemon is unavailable, so the isolated GitHub Actions fallback is required.
 - Claude security/architecture review of the prepared 16-file Sprint Zero
   package.
 
 ## Blocker
 
-The local Docker daemon is unavailable:
+The local Docker daemon remains unavailable:
 `failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine`.
-The SZ-016 GitHub Actions fallback will execute the required container tests.
+SZ-016 passed through the isolated GitHub Actions fallback.
 
 ## Next Steps
 
-1. Push and monitor the isolated Compose smoke/restore workflow until green.
-2. Submit the prepared Claude package and classify each finding before changes.
-3. Do not promote to the primary `codesho` repository without employer approval.
+1. Submit the prepared Claude package and classify each finding before changes.
+2. Do not promote to the primary `codesho` repository without employer approval.
 
 ## Open Decisions / Risks
 
