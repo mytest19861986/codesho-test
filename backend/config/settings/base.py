@@ -1,6 +1,8 @@
+import json
 from pathlib import Path
 
 import environ
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 env = environ.Env()
@@ -102,6 +104,14 @@ SPECTACULAR_SETTINGS = {
 
 TENANT_BASE_DOMAIN = env("TENANT_BASE_DOMAIN", default="localhost")
 TENANT_BYPASS_PATHS = ("/health/", "/admin/", "/api/schema/")
+
+PASSCODE_ACTIVE_PEPPER_ID = env("PASSCODE_ACTIVE_PEPPER_ID", default="")
+try:
+    PASSCODE_PEPPERS = json.loads(env("PASSCODE_PEPPERS", default="{}"))
+except json.JSONDecodeError as exc:
+    raise ImproperlyConfigured("PASSCODE_PEPPERS must be valid JSON") from exc
+if not isinstance(PASSCODE_PEPPERS, dict):
+    raise ImproperlyConfigured("PASSCODE_PEPPERS must be a JSON object")
 
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/1")
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://localhost:6379/2")

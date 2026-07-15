@@ -13,6 +13,7 @@ dependencies = [
   "psycopg[binary]>=3.2,<3.3",
   "celery[redis]>=5.5,<5.6",
   "django-environ>=0.12,<0.13",
+  "argon2-cffi>=23.1,<26",
   "gunicorn>=23,<24",
   "uvicorn[standard]>=0.34,<0.36",
 ]

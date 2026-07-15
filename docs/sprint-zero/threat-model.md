@@ -1,5 +1,14 @@
 # Sprint Zero Threat Model
 
+## Passcode credential foundation (S1-002)
+
+Passcodes are accepted only as six ASCII digits, HMACed with a versioned
+server-side Pepper, and then hashed with Argon2id. Raw passcodes and HMAC
+digests are never persisted or logged. Production requires an active Pepper ID
+and Base64 Pepper values decoding to at least 32 bytes; rotation is detected by
+the credential's Pepper ID. Login, rate limiting, recovery and public APIs are
+out of scope until separately approved.
+
 Status: baseline; update when payment, SMS and video providers are selected.
 
 ## Assets and trust boundaries
