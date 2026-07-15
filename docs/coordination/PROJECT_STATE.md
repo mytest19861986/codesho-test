@@ -39,6 +39,11 @@ Compose smoke/restore `29430842466` are both successful.
   migration, tests, Data Dictionary and Threat Model updates. Claude Review 01
   (service) and Review 02 (model/migration) both completed with no unresolved
   blocker; summary is `docs/reviews/s1-002-passcode-review-summary.md`.
+- S1-003 Abuse Control Foundation is implemented locally: HMAC-anonymous
+  Redis Lua counters, fail-closed outage handling, progressive delays,
+  durable monotonic lockout, trusted-proxy/device extraction and no public API.
+  Claude Review 01 was completed sequentially; its findings are recorded in
+  `docs/reviews/s1-003-abuse-control-review-summary.md`.
 
 ## Historical Evidence
 
@@ -66,7 +71,7 @@ Compose smoke/restore `29430842466` are both successful.
 
 ## Next Steps
 
-1. Send the S1-002 evidence to Commander. Do not begin Login, Rate Limit,
+1. Send the S1-003 evidence to Commander. Do not begin Login, Rate Limit,
    Recovery, or UI work until a new Commander task is assigned; do not promote
    to protected `codesho` without employer approval.
 

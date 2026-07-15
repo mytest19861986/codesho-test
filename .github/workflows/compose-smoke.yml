@@ -55,8 +55,10 @@ jobs:
             --env DJANGO_SECRET_KEY=compose-smoke-only \
             --env DATABASE_URL=postgresql://codesho_runtime:codesho-runtime-local@postgres:5432/codesho \
             --env DATABASE_TEST_NAME=codesho_smoke_tests \
+            --env REDIS_URL=redis://redis:6379/0 \
+            --env PASSCODE_SIGNAL_HMAC_KEY=c2lnbmFsLWhtYWMta2V5LXgteHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg= \
             python:3.12-slim sh -ec \
-            "pip install -e '.[dev]' && pytest --reuse-db -q tests/test_tenant_context.py tests/test_middleware.py tests/test_tasks.py"
+            "pip install -e '.[dev]' && pytest --reuse-db -q tests/test_tenant_context.py tests/test_middleware.py tests/test_tasks.py tests/test_passcode_abuse.py tests/test_request_signals.py"
       - name: Create, restore, and verify a PostgreSQL backup
         run: |
           backup_started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"

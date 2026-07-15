@@ -43,3 +43,11 @@ Status: baseline; update when payment, SMS and video providers are selected.
 - Guardian notification for anomalous teen sign-in or lockout requires employer approval before Identity implementation.
 - Legal rules for retention, consent and aging-out require counsel before paid production.
 - Session recording is disabled in MVP by default.
+
+### S1-003 abuse-control deployment note
+
+The internal passcode abuse engine uses one atomic Redis Lua script across the
+account, account-device, IP, device and global keys. Redis must therefore run as
+a single-node service (the Compose/CI Redis service); Redis Cluster is not an
+approved topology for this foundation unless the key design is changed to use
+hash tags and re-reviewed. Redis or malformed-script failures fail closed.
