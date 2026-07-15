@@ -33,7 +33,7 @@ GRANT USAGE ON SCHEMA codesho TO codesho_runtime;
 SELECT format('GRANT CONNECT ON DATABASE %I TO codesho_migrator, codesho_runtime', current_database())
 \gexec
 ALTER DEFAULT PRIVILEGES FOR ROLE codesho_migrator IN SCHEMA codesho
-    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO codesho_runtime;
+    GRANT SELECT, INSERT, UPDATE, DELETE, TRUNCATE ON TABLES TO codesho_runtime;
 ALTER DEFAULT PRIVILEGES FOR ROLE codesho_migrator IN SCHEMA codesho
     GRANT USAGE, SELECT ON SEQUENCES TO codesho_runtime;
 ALTER DEFAULT PRIVILEGES FOR ROLE codesho_migrator IN SCHEMA codesho

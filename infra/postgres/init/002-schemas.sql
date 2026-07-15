@@ -8,7 +8,7 @@ GRANT USAGE ON SCHEMA public, codesho TO codesho_runtime;
 GRANT USAGE, CREATE ON SCHEMA public, codesho TO codesho_migrator;
 
 ALTER DEFAULT PRIVILEGES FOR ROLE codesho_migrator IN SCHEMA codesho
-    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO codesho_runtime;
+    GRANT SELECT, INSERT, UPDATE, DELETE, TRUNCATE ON TABLES TO codesho_runtime;
 ALTER DEFAULT PRIVILEGES FOR ROLE codesho_migrator IN SCHEMA codesho
     GRANT USAGE, SELECT ON SEQUENCES TO codesho_runtime;
 ALTER DEFAULT PRIVILEGES FOR ROLE codesho_migrator IN SCHEMA codesho

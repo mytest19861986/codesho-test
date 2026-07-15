@@ -42,7 +42,7 @@ jobs:
           docker compose exec --no-TTY postgres sh -ec \
             'PGPASSWORD="$POSTGRES_PASSWORD" psql -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE codesho_smoke_tests OWNER codesho_migrator;"'
           docker compose exec --no-TTY postgres sh -ec \
-            'PGPASSWORD="$POSTGRES_PASSWORD" psql -U "$POSTGRES_USER" -d codesho_smoke_tests -v ON_ERROR_STOP=1 -c "CREATE SCHEMA codesho AUTHORIZATION codesho_migrator; GRANT USAGE ON SCHEMA codesho TO codesho_runtime; ALTER DEFAULT PRIVILEGES FOR ROLE codesho_migrator IN SCHEMA codesho GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO codesho_runtime; ALTER DEFAULT PRIVILEGES FOR ROLE codesho_migrator IN SCHEMA codesho GRANT USAGE, SELECT ON SEQUENCES TO codesho_runtime; ALTER DEFAULT PRIVILEGES FOR ROLE codesho_migrator IN SCHEMA codesho GRANT EXECUTE ON FUNCTIONS TO codesho_runtime;"'
+            'PGPASSWORD="$POSTGRES_PASSWORD" psql -U "$POSTGRES_USER" -d codesho_smoke_tests -v ON_ERROR_STOP=1 -c "CREATE SCHEMA codesho AUTHORIZATION codesho_migrator; GRANT USAGE ON SCHEMA codesho TO codesho_runtime; ALTER DEFAULT PRIVILEGES FOR ROLE codesho_migrator IN SCHEMA codesho GRANT SELECT, INSERT, UPDATE, DELETE, TRUNCATE ON TABLES TO codesho_runtime; ALTER DEFAULT PRIVILEGES FOR ROLE codesho_migrator IN SCHEMA codesho GRANT USAGE, SELECT ON SEQUENCES TO codesho_runtime; ALTER DEFAULT PRIVILEGES FOR ROLE codesho_migrator IN SCHEMA codesho GRANT EXECUTE ON FUNCTIONS TO codesho_runtime;"'
           docker run --rm --network codesho-sz-smoke_default \
             --volume "$GITHUB_WORKSPACE/backend:/app" --workdir /app \
             --env DJANGO_SETTINGS_MODULE=config.settings.test \
