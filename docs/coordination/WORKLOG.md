@@ -9,6 +9,8 @@
 - Prepared review traceability, four employer decisions and a planning-only
   Sprint 1 backlog. No provider transcript, browser session, secret or raw
   private attachment is stored in the repository.
+- Committed and pushed `dc13cc8`; CI `29430842483` and Compose smoke/restore
+  `29430842466` both completed successfully.
 
 ## 2026-07-15 — SZ-016 started
 

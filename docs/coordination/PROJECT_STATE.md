@@ -1,6 +1,6 @@
 # Codesho Project State
 
-Updated: 2026-07-15 (SZ-021 closure and Sprint 1 employer gate prepared)
+Updated: 2026-07-15 (SZ-021 complete; employer decision gate pending)
 
 ## Current Status
 
@@ -12,8 +12,10 @@ successfully:
 - Compose smoke and restore `29427888874`: isolated full-stack startup,
   PostgreSQL RLS/connection-reuse tests, and backup/restore drill passed.
 
-SZ-021 records the review traceability and prepares, but does not implement,
-the employer decisions that gate Sprint 1 Identity Foundation.
+SZ-021 is complete at `dc13cc8e72b2f67eaf6bf97c018f1fc7c2d076bf`: it records
+review traceability and prepares, but does not implement, the employer
+decisions that gate Sprint 1 Identity Foundation. Its CI `29430842483` and
+Compose smoke/restore `29430842466` are both successful.
 
 ## Completed
 
@@ -26,8 +28,8 @@ the employer decisions that gate Sprint 1 Identity Foundation.
 - SZ-020 Claude review completed and findings dispositioned; no unresolved
   Claude P0 remains. The auditable summary is at
   `docs/reviews/sz-020-review-resolution-summary.md`.
-- SZ-021 employer decision gate and Sprint 1 plan prepared without new
-  production or identity workflow code.
+- SZ-021 employer decision gate and Sprint 1 plan prepared and verified
+  without new production or identity workflow code.
 
 ## Historical Evidence
 
