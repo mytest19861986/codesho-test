@@ -1,6 +1,6 @@
+import base64
 from types import SimpleNamespace
 
-import base64
 import pytest
 from django.core.exceptions import ImproperlyConfigured
 from django.core.signing import TimestampSigner
@@ -36,7 +36,9 @@ def test_signed_malformed_and_expired_devices_are_ignored(settings):
     signer = TimestampSigner(salt="codesho.passcode.device")
     malformed = signer.sign("f" * 64)
     expired = signer.sign("a" * 32)
-    with override_settings(PASSCODE_DEVICE_COOKIE_NAME="codesho_device", PASSCODE_DEVICE_MAX_AGE_SECONDS=-1):
+    with override_settings(
+        PASSCODE_DEVICE_COOKIE_NAME="codesho_device", PASSCODE_DEVICE_MAX_AGE_SECONDS=-1
+    ):
         assert extract_device_id(request(cookie=malformed)) is None
         assert extract_device_id(request(cookie=expired)) is None
 
