@@ -60,7 +60,7 @@ jobs:
           backup_finished_epoch="$(date +%s)"
           restore_started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           restore_started_epoch="$(date +%s)"
-          docker compose exec --no-TTY postgres psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE codesho_restore_verify OWNER codesho_app;" 2>artifacts/create_db.stderr || { msg="$(tr '\n' ' ' < artifacts/create_db.stderr)"; echo "::error title=create_db::$msg"; exit 1; }
+          docker compose exec --no-TTY postgres psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "DROP DATABASE IF EXISTS codesho_restore_verify;" -c "CREATE DATABASE codesho_restore_verify OWNER codesho_app;" 2>artifacts/create_db.stderr || { msg="$(tr '\n' ' ' < artifacts/create_db.stderr)"; echo "::error title=create_db::$msg"; exit 1; }
           docker compose exec --no-TTY postgres pg_restore -U postgres --clean --if-exists --no-owner --no-acl --dbname codesho_restore_verify < artifacts/codesho.dump
           docker compose exec --no-TTY postgres psql -U postgres -d codesho_restore_verify -v ON_ERROR_STOP=1 -c "SELECT 1; SELECT COUNT(*) AS migration_count FROM django_migrations;"
           restore_finished_epoch="$(date +%s)"
