@@ -12,7 +12,7 @@ successfully:
 - Compose smoke and restore `29427888874`: isolated full-stack startup,
   PostgreSQL RLS/connection-reuse tests, and backup/restore drill passed.
 
-SZ-021 is complete at `dc13cc8e72b2f67eaf6bf97c018f1fc7c2d076bf`: it records
+SZ-021 is complete at `dc13cc891dfff2e4df9a70ce61da7d8e73f3a4f2`: it records
 review traceability and prepares, but does not implement, the employer
 decisions that gate Sprint 1 Identity Foundation. Its CI `29430842483` and
 Compose smoke/restore `29430842466` are both successful.
