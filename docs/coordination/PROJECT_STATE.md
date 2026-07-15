@@ -56,7 +56,7 @@ Compose smoke/restore `29430842466` are both successful.
   restored ownership/grants. Review 02 identified and the code now closes the
   PUBLIC privilege gap on audit/analytics/platform; `\\getenv` avoids password
   process-argument exposure. Local checks remain green. Final checkpoint
-  `cc8e5f5` passed CI `29435918989` and Compose smoke/restore `29435918881`.
+  `a7d4fbf` passed CI `29436322030` and Compose smoke/restore `29436321886`.
 
 ## Blockers
 
