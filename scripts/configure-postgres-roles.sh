@@ -5,9 +5,9 @@ set -eu
 : "${CODESHO_MIGRATOR_PASSWORD:?CODESHO_MIGRATOR_PASSWORD is required}"
 : "${CODESHO_RUNTIME_PASSWORD:?CODESHO_RUNTIME_PASSWORD is required}"
 
-psql "$POSTGRES_ADMIN_URL" -v ON_ERROR_STOP=1 \
-  --set=migrator_password="$CODESHO_MIGRATOR_PASSWORD" \
-  --set=runtime_password="$CODESHO_RUNTIME_PASSWORD" <<'SQL'
+psql "$POSTGRES_ADMIN_URL" -v ON_ERROR_STOP=1 <<'SQL'
+\getenv migrator_password CODESHO_MIGRATOR_PASSWORD
+\getenv runtime_password CODESHO_RUNTIME_PASSWORD
 SELECT format(
     'CREATE ROLE %I LOGIN PASSWORD %L NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE NOINHERIT',
     'codesho_migrator', :'migrator_password'
@@ -28,6 +28,8 @@ ALTER ROLE codesho_migrator SET search_path TO codesho, public;
 ALTER ROLE codesho_runtime SET search_path TO codesho, public;
 
 CREATE SCHEMA IF NOT EXISTS codesho AUTHORIZATION codesho_migrator;
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+REVOKE ALL ON SCHEMA codesho FROM PUBLIC;
 GRANT USAGE, CREATE ON SCHEMA codesho TO codesho_migrator;
 GRANT USAGE ON SCHEMA codesho TO codesho_runtime;
 SELECT format('GRANT CONNECT ON DATABASE %I TO codesho_migrator, codesho_runtime', current_database())

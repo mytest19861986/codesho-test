@@ -1,6 +1,6 @@
 # Codesho Project State
 
-Updated: 2026-07-15 (S1-001 complete)
+Updated: 2026-07-15 (S1-001R review closure awaiting CI)
 
 ## Current Status
 
@@ -31,6 +31,9 @@ Compose smoke/restore `29430842466` are both successful.
   `docs/reviews/sz-020-review-resolution-summary.md`.
 - SZ-021 employer decision gate and Sprint 1 plan prepared and verified.
 - Employer decisions recorded: 1-B, 2-A, 3-A-revised and 4-A-revised.
+- S1-001R Claude Review 01 and Review 02 were completed sequentially; raw
+  responses/prompts are retained outside the repository. The review summary
+  is `docs/reviews/s1-001-role-separation-review-summary.md`.
 
 ## Historical Evidence
 
@@ -45,9 +48,10 @@ Compose smoke/restore `29430842466` are both successful.
   `codesho_migrator` from `codesho_runtime`: migrations run
   in a one-shot Compose service; backend, worker and beat use runtime-only
   database URLs; CI and Compose smoke/restore now verify DDL/RLS denial and
-  restored ownership/grants. Local lint, targeted backend tests, migration
-  check, mypy, Compose configuration and diff check pass. CI `29433068283` and
-  Compose smoke/restore `29433066102` are green.
+  restored ownership/grants. Review 02 identified and the code now closes the
+  PUBLIC privilege gap on audit/analytics/platform; `\\getenv` avoids password
+  process-argument exposure. Local checks remain green; CI/Compose
+  re-verification is pending.
 
 ## Blockers
 
@@ -57,7 +61,8 @@ Compose smoke/restore `29430842466` are both successful.
 
 ## Next Steps
 
-1. Send the S1-001 evidence to Commander. Do not begin passcode work until a
+1. Commit/push the review closure and monitor CI/Compose to green.
+2. Send the S1-001R evidence to Commander. Do not begin passcode work until a
    new Commander task is assigned; do not promote to protected `codesho`
    without employer approval.
 

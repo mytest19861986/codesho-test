@@ -4,9 +4,9 @@ set -eu
 : "${CODESHO_MIGRATOR_PASSWORD:?CODESHO_MIGRATOR_PASSWORD is required}"
 : "${CODESHO_RUNTIME_PASSWORD:?CODESHO_RUNTIME_PASSWORD is required}"
 
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" \
-  --set=migrator_password="$CODESHO_MIGRATOR_PASSWORD" \
-  --set=runtime_password="$CODESHO_RUNTIME_PASSWORD" <<'SQL'
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<'SQL'
+\getenv migrator_password CODESHO_MIGRATOR_PASSWORD
+\getenv runtime_password CODESHO_RUNTIME_PASSWORD
 SELECT format(
     'CREATE ROLE %I LOGIN PASSWORD %L NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE NOINHERIT',
     'codesho_migrator', :'migrator_password'
