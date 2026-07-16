@@ -60,7 +60,7 @@ def append_security_event(event: SecurityAuditEvent) -> AppendAuditResult:
                     subject_user_id, actor_user_id, tenant_id,
                     credential_version, correlation_id, idempotency_key
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (idempotency_key) DO NOTHING
+                ON CONFLICT DO NOTHING
                 """,
                 (
                     event.event_id,
