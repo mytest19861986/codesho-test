@@ -61,8 +61,9 @@ Compose smoke/restore `29430842466` are both successful.
   typed append contract, PostgreSQL immutability triggers, and runtime
   insert-only privileges. No Login, Session, Guardian, Notification, public
   API, frontend, or producer integration is included in this task. Local
-  backend and frontend checks are green; remote CI/Compose and sequential
-  review gates remain pending.
+  backend and frontend checks are green. Checkpoint `c3f52f6` passed CI
+  `29477200441` and Compose smoke/restore `29477200386`; only the sequential
+  provider-review gate remains pending.
 - S1-001 is complete at implementation checkpoint `972c54b`. It separates
   `codesho_migrator` from `codesho_runtime`: migrations run
   in a one-shot Compose service; backend, worker and beat use runtime-only
@@ -84,9 +85,9 @@ Compose smoke/restore `29430842466` are both successful.
 
 ## Next Steps
 
-1. Push the S1-004 checkpoint to `codesho-test`, monitor CI and Compose
-   smoke/restore, and complete the sequential review gate when the shared
-   provider session is available.
+1. Complete S1-004's sequential migration and service reviews when the shared
+   provider session is available, disposition findings, and re-run the gates
+   for any accepted P0/P1 remediation.
 2. Do not begin Login, Rate Limit, Recovery, UI, or audit-event producer
    integration without a new Commander task; do not promote to protected
    `codesho` without employer approval.

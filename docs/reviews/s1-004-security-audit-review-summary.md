@@ -25,8 +25,20 @@ the follow-on service review remain pending provider/session availability.
   frontend lint/typecheck/build, shell syntax checks, Compose configuration,
   and `git diff --check`.
 
+## CI and restore verification
+
+The real PostgreSQL gates passed for checkpoint `c3f52f6`:
+
+- CI `29477200441` completed successfully, including empty-database migrations,
+  runtime/migrator role tests, OpenAPI validation, and the full backend/frontend
+  quality gates.
+- Compose smoke and restore `29477200386` completed successfully, including
+  full-stack startup, audit-schema backup/restore ownership and insert-only
+  grant verification.
+
+Local Docker remains unavailable on this workstation, so no local container
+result is claimed.
+
 ## Pending gate
 
-The remote CI and Compose smoke/restore workflows must validate the migration
-and role behavior against a real PostgreSQL service. Local Docker is unavailable
-on this workstation, so no local container result is claimed.
+Sequential provider review remains the only open S1-004 acceptance gate.
