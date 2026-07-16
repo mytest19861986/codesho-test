@@ -7,8 +7,7 @@
   `codesho` repository.
 - Commander AI owns task assignment, technical coordination, and review.
   Codex implements only approved, in-scope work; Gemini reviews UI; Claude
-  reviews high-risk architecture, security, and database changes in packages
-  of at most 19 files.
+  reviews high-risk architecture, security, and database changes.
 - Resolve material ambiguity with Commander and record the decision in the
   coordination artifacts. Do not restart cancelled, completed, or blocked
   work without a new approved task.
@@ -57,9 +56,19 @@
   outbox-idempotency, and `git diff --check`. Do not weaken tests to make them
   pass. If local Docker/PostgreSQL is unavailable, use the required real CI
   workflow and report that evidence accurately.
-- Use precise, versioned Gemini/Claude prompts. Keep prompts, raw responses,
-  screenshots, and attachments outside the repository; review providers in
-  small sequential packages. Disposition findings before applying them.
+- Every Gemini or Claude request uses an exact, versioned prompt. Keep its
+  exact prompt, attachments, screenshots, and raw response outside the
+  repository; commit only an auditable findings/disposition summary.
+- Claude uses a free account: reviews are sequential, never parallel, and
+  contain at most five files. Prefer one large file or at most two tightly
+  related files. On a Claude rate limit, do not bypass quota, change accounts,
+  hammer retries, or alter authentication; stop calls and record resumable
+  state.
+- Gemini may provide a fallback review only when labelled
+  `GEMINI_FALLBACK_REVIEW` and `NOT_CLAUDE_VERIFIED`. Critical security,
+  database, authentication, authorization, tenant-isolation, payment, and
+  privacy gates still require later Claude verification. Disposition findings
+  before applying them.
 - For a blocker, attempt bounded safe diagnostics, approved fallback, and
   independent in-scope work first. Record the exact command/error, evidence,
   remaining decision, and resumable checkpoint in coordination artifacts.
