@@ -11,7 +11,6 @@ from uuid import UUID, uuid4
 
 from django.conf import settings
 from django.contrib.auth import login
-from django.db import transaction
 from django.http import HttpRequest
 
 from modules.identity.abuse import (
@@ -186,7 +185,14 @@ def authenticate_passcode(
 ) -> LoginResult:
     """Authenticate only after Redis and immutable-audit gates pass."""
     normalized_username = username.casefold()
-    user = User.objects.filter(username__iexact=normalized_username).first()
+    candidate = User.objects.filter(username=normalized_username).first()
+    user = None
+    if candidate is not None and candidate.is_active:
+        with tenant_atomic(tenant.id):
+            if TenantMembership.objects.filter(
+                tenant_id=tenant.id, user_id=candidate.id, is_active=True
+            ).exists():
+                user = candidate
     credential = PasscodeCredential.objects.filter(user=user).first() if user is not None else None
     signals = AttemptSignals(
         account_subject=f"{tenant.id}:{normalized_username}",
@@ -231,19 +237,10 @@ def authenticate_passcode(
     if user is None or credential is None:
         return LoginResult(LoginStatus.INVALID_CREDENTIALS)
 
-    with tenant_atomic(tenant.id), transaction.atomic():
-        active_member = TenantMembership.objects.filter(
-            tenant_id=tenant.id, user_id=user.id, is_active=True
-        ).first()
-        valid_member = active_member is not None
-    if not valid_member:
-        decision = record_failed_attempt(credential=credential, signals=signals)
-        if decision.reason is AbuseReason.BACKEND_UNAVAILABLE or not _audit_failure(
-            tenant=tenant, user=user, credential=credential, correlation_id=correlation_id
-        ):
-            return LoginResult(LoginStatus.UNAVAILABLE)
-        return LoginResult(LoginStatus.INVALID_CREDENTIALS)
     if credential.must_change:
+        success = record_successful_attempt(credential=credential, signals=signals)
+        if not success.allowed:
+            return LoginResult(LoginStatus.UNAVAILABLE, success.retry_after_seconds)
         if not _audit_failure(
             tenant=tenant, user=user, credential=credential, correlation_id=correlation_id
         ):

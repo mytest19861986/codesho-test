@@ -67,6 +67,9 @@ def passcode_login(request: HttpRequest) -> HttpResponse:
     if client_ip is None:
         return _error("invalid_request", 400)
     device_id = extract_device_id(request)
+    issued_device_id = device_id is None
+    if device_id is None:
+        device_id = new_device_id()
     result = authenticate_passcode(
         request=request,
         tenant=tenant_request.tenant,
@@ -85,8 +88,8 @@ def passcode_login(request: HttpRequest) -> HttpResponse:
         response = _error("authentication_temporarily_unavailable", 503)
     else:
         response = _error("invalid_credentials", 401)
-    if device_id is None:
-        _set_device_cookie(response, new_device_id())
+    if issued_device_id:
+        _set_device_cookie(response, device_id)
     return response
 
 

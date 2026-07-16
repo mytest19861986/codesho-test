@@ -45,3 +45,13 @@ repository in the controlled Claude review workspace. Reviews were sequential.
 | P2 grants and SECURITY DEFINER coupling | Rejected with evidence: this migration changes only check constraints; prior append-function/grant verification remains covered by audit privilege tests. |
 
 No unresolved Claude P0 or P1 remains in the reviewed S1-005 scope.
+
+## S1-005R Commander remediation
+
+- Real membership is now established before loading a real credential; inactive,
+  unknown and non-member principals use Dummy Argon2 with `credential=None`, so
+  wrong-tenant attempts cannot mutate global `locked_until`.
+- Missing, invalid or expired Device cookies are resolved to one new ID before
+  authentication; that exact ID reaches abuse signals and is returned signed.
+- Username lookup is normalized then exact; must-change credentials clear
+  eligible account counters but never create a session.

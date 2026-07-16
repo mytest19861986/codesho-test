@@ -106,6 +106,38 @@ def test_rate_limit_and_corrupt_device_cookie_are_handled_safely(tenant_member):
 
 
 @pytest.mark.django_db(transaction=True)
+def test_missing_device_cookie_is_used_for_the_same_returned_cookie(tenant_member):
+    client = csrf_client()
+    headers = csrf_headers(client)
+    client.cookies.pop("codesho_device", None)
+    with patch("config.auth_views.authenticate_passcode") as authenticate:
+        authenticate.return_value = type("Result", (), {"status": "invalid_credentials"})()
+        response = login(client, headers)
+    device_id = authenticate.call_args.kwargs["device_id"]
+    assert device_id is not None
+    assert response.cookies["codesho_device"]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_nonmember_never_reaches_real_credential_lockout(tenant_member):
+    tenant, _, _ = tenant_member
+    outsider = User.objects.create_user(username="outsider", email="outsider@example.com")
+    credential = set_passcode(outsider, "123456", must_change=False)
+    client = csrf_client()
+    headers = csrf_headers(client)
+    with (
+        patch("config.authentication.preflight_attempt", return_value=allowed()) as preflight,
+        patch("config.authentication.record_failed_attempt", return_value=allowed()),
+        patch("config.authentication.append_security_event"),
+    ):
+        response = login(client, headers, username="outsider", passcode="000000")
+    assert response.status_code == 401
+    assert preflight.call_args.kwargs["credential"] is None
+    credential.refresh_from_db()
+    assert credential.locked_until is None
+
+
+@pytest.mark.django_db(transaction=True)
 def test_wrong_unknown_inactive_and_nonmember_share_invalid_credentials(tenant_member):
     tenant, user, _ = tenant_member
     inactive = User.objects.create_user(
@@ -147,6 +179,7 @@ def test_must_change_and_audit_failure_never_create_a_session(tenant_member):
     headers = csrf_headers(client)
     with (
         patch("config.authentication.preflight_attempt", return_value=allowed()),
+        patch("config.authentication.record_successful_attempt", return_value=allowed()),
         patch("config.authentication.append_security_event"),
     ):
         response = login(client, headers)
