@@ -19,7 +19,13 @@ EVENT_OUTCOMES = ("success", "failure", "blocked", "detected")
 
 
 CREATE_AUDIT_SQL = f"""
-CREATE SCHEMA IF NOT EXISTS audit AUTHORIZATION CURRENT_USER;
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'audit') THEN
+        RAISE EXCEPTION 'audit schema must be provisioned before audit migrations run';
+    END IF;
+END;
+$$;
 REVOKE ALL ON SCHEMA audit FROM PUBLIC;
 CREATE TABLE audit.identity_security_event (
     event_id uuid PRIMARY KEY,
