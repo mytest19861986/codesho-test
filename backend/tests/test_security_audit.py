@@ -62,7 +62,7 @@ def test_reason_code_requires_an_approved_enum_value():
 
 
 @pytest.mark.django_db(transaction=True)
-def test_runtime_can_append_without_selecting_event():
+def test_runtime_can_append_only_through_the_security_definer_function():
     require_postgres()
     result = append_security_event(make_event())
     assert isinstance(result, AppendAuditResult)
@@ -71,6 +71,17 @@ def test_runtime_can_append_without_selecting_event():
         InsufficientPrivilege
     ):
         cursor.execute("SELECT event_id FROM audit.identity_security_event")
+    with runtime_connection() as runtime, runtime.cursor() as cursor, pytest.raises(
+        InsufficientPrivilege
+    ):
+        cursor.execute(
+            """
+            INSERT INTO audit.identity_security_event
+              (event_id, event_type, outcome, correlation_id)
+            VALUES (%s, %s, %s, %s)
+            """,
+            (str(uuid4()), "passcode_created", "success", str(uuid4())),
+        )
 
 
 @pytest.mark.django_db(transaction=True)
@@ -207,6 +218,42 @@ def test_audit_schema_has_no_runtime_default_read_or_mutation_privileges():
             """
         )
         assert cursor.fetchone()[0] is False
+
+
+@pytest.mark.django_db(transaction=True)
+def test_append_function_has_only_the_required_runtime_capability():
+    require_postgres()
+    migrator_url = os.environ.get("DATABASE_MIGRATOR_TEST_URL")
+    if not migrator_url:
+        pytest.skip("migrator connection is not configured")
+    with connect(migrator_url, autocommit=True) as migrator, migrator.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                owner.rolname,
+                function.prosecdef,
+                COALESCE(array_to_string(function.proconfig, ','), ''),
+                has_function_privilege('codesho_runtime', function.oid, 'EXECUTE'),
+                EXISTS (
+                    SELECT 1
+                    FROM aclexplode(COALESCE(function.proacl, acldefault('f', function.proowner)))
+                      AS privilege
+                    WHERE privilege.grantee = 0
+                      AND privilege.privilege_type = 'EXECUTE'
+                )
+            FROM pg_proc AS function
+            JOIN pg_namespace AS namespace ON namespace.oid = function.pronamespace
+            JOIN pg_roles AS owner ON owner.oid = function.proowner
+            WHERE namespace.nspname = 'audit'
+              AND function.proname = 'append_identity_security_event'
+            """
+        )
+        owner, security_definer, config, runtime_execute, public_execute = cursor.fetchone()
+    assert owner == "codesho_migrator"
+    assert security_definer is True
+    assert "search_path=pg_catalog, pg_temp" in config
+    assert runtime_execute is True
+    assert public_execute is False
 
 
 def require_postgres():

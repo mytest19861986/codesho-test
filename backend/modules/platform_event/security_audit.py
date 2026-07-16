@@ -73,12 +73,9 @@ def append_security_event(event: SecurityAuditEvent) -> AppendAuditResult:
         with transaction.atomic(), connection.cursor() as cursor:
             cursor.execute(
                 """
-                INSERT INTO audit.identity_security_event (
-                    event_id, event_type, outcome, reason_code,
-                    subject_user_id, actor_user_id, tenant_id,
-                    credential_version, correlation_id, idempotency_key
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (idempotency_key) DO NOTHING
+                SELECT audit.append_identity_security_event(
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                )
                 """,
                 (
                     event.event_id,
@@ -93,7 +90,7 @@ def append_security_event(event: SecurityAuditEvent) -> AppendAuditResult:
                     event.idempotency_key,
                 ),
             )
-            created = cursor.rowcount == 1
+            created = cursor.fetchone()[0]
     except DatabaseError as exc:
         raise SecurityAuditError("security audit append failed") from exc
     return AppendAuditResult(event_id=event.event_id if created else None, created=created)

@@ -34,14 +34,30 @@ psql "$VERIFY_DATABASE_URL" -v ON_ERROR_STOP=1 -c "
       RAISE EXCEPTION 'restored audit table is missing or has the wrong owner';
     END IF;
     IF NOT has_schema_privilege('codesho_runtime', 'audit', 'USAGE')
-       OR NOT has_table_privilege(
-         'codesho_runtime', 'audit.identity_security_event', 'INSERT'
-       )
        OR has_table_privilege(
-         'codesho_runtime', 'audit.identity_security_event', 'SELECT'
+         'codesho_runtime', 'audit.identity_security_event',
+         'INSERT,SELECT,UPDATE,DELETE,TRUNCATE'
+       )
+       OR NOT EXISTS (
+         SELECT 1
+         FROM pg_proc AS function
+         JOIN pg_namespace AS namespace ON namespace.oid = function.pronamespace
+         JOIN pg_roles AS owner ON owner.oid = function.proowner
+         WHERE namespace.nspname = 'audit'
+           AND function.proname = 'append_identity_security_event'
+           AND owner.rolname = 'codesho_migrator'
+           AND function.prosecdef
+           AND has_function_privilege('codesho_runtime', function.oid, 'EXECUTE')
+           AND NOT EXISTS (
+             SELECT 1
+             FROM aclexplode(COALESCE(function.proacl, acldefault('f', function.proowner)))
+               AS privilege
+             WHERE privilege.grantee = 0
+               AND privilege.privilege_type = 'EXECUTE'
+           )
        )
     THEN
-      RAISE EXCEPTION 'restored audit grants are not insert-only for runtime';
+      RAISE EXCEPTION 'restored audit append capability is not restricted correctly';
     END IF;
   END
   \$\$;

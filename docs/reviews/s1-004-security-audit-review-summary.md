@@ -42,9 +42,17 @@ required completion marker was received:
 - F2 (P1): `partially accepted`. Nullable keys are intentional: events with
   no idempotency key must both be inserted. The service now uses
   `ON CONFLICT (idempotency_key) DO NOTHING`, so future constraints and a
-  duplicate `event_id` cannot be treated as idempotency. A conflict returns
-  `AppendAuditResult(event_id=None, created=False)` because runtime has no
-  read privilege to identify the existing event.
+  duplicate `event_id` cannot be treated as idempotency. PostgreSQL requires
+  SELECT privilege on an explicit conflict target; direct runtime INSERT then
+  failed in CI, as expected from the privilege model. Commander therefore
+  approved migration `0004`: the explicit insert executes only inside the
+  narrowly scoped `SECURITY DEFINER` function
+  `audit.append_identity_security_event`. It is owned by `codesho_migrator`,
+  has `search_path = pg_catalog, pg_temp`, schema-qualifies the audit table,
+  revokes PUBLIC execution, and grants only EXECUTE to `codesho_runtime`.
+  Direct runtime INSERT is revoked. A conflict returns
+  `AppendAuditResult(event_id=None, created=False)` because runtime cannot
+  identify the existing event.
 - F3 (P2): `accepted`. Only Django `DatabaseError` is converted to the
   privacy-safe `SecurityAuditError`; programming and validation errors remain
   distinguishable.
@@ -63,6 +71,10 @@ required completion marker was received:
   table; `SELECT`, `UPDATE`, `DELETE`, and `TRUNCATE` are explicitly revoked.
 - PostgreSQL triggers reject update, delete, and truncate. The reverse
   migration raises `IrreversibleError` to protect retained evidence.
+- Runtime has no direct table privilege on the audit ledger. Its sole write
+  capability is execution of the restricted append function; tests verify the
+  function owner, `SECURITY DEFINER`, hardened search path, runtime EXECUTE,
+  and absence of PUBLIC EXECUTE.
 - Local checks passed: Ruff, MyPy, migration-drift check, 40 backend tests,
   frontend lint/typecheck/build, shell syntax checks, Compose configuration,
   and `git diff --check`.
@@ -83,5 +95,5 @@ result is claimed.
 
 ## Pending gate
 
-The final limited Claude verification of the changed files and fresh CI/
-Compose runs remain required after the accepted remediation.
+Fresh CI/Compose runs and the final limited Claude verification of the changed
+files remain required after the approved capability-only remediation.
