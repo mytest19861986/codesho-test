@@ -51,3 +51,20 @@ non-asset corrections from the review (student count, ambient/path glows, and
 CSS-only benefit illustrations) are included. Resume final visual review only
 after the employer selects either supplied approved assets/font or documented
 acceptance of the CSS reconstruction gap.
+
+## UI-001B employer-approved asset-gap disposition
+
+- Employer decision: `OPTION_B_APPROVED`.
+- Status: `ACCEPTED_KNOWN_GAP_BY_EMPLOYER_OPTION_B`.
+- The CSS-rendered logo, device mockups, and project previews remain temporary
+  reconstructions, not source brand or product assets; this does not claim
+  pixel-level fidelity for the unavailable imagery.
+- Vazirmatn is self-hosted through `next/font/local`; no runtime font CDN or
+  remote font request is used.
+- Source: official `rastikerdar/vazirmatn` release `v33.003` (tag commit
+  `f68f7bc5dd1d046bd6a5a2bda355bd6d430e807a`).
+- Imported variable font: `frontend/src/app/fonts/Vazirmatn[wght].woff2`;
+  SHA-256: `17E355067C8284F47743A1EE3B1EF7FF684FF0601EDA357F9353B10B3016AB31`.
+- License: SIL Open Font License 1.1, preserved at
+  `frontend/THIRD_PARTY_LICENSES_Vazirmatn.txt`.
+- Technical completion status: `WAITING_EMPLOYER_VISUAL_APPROVAL`.
