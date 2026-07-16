@@ -37,7 +37,7 @@ def test_security_audit_event_is_typed_and_has_no_metadata_field():
 
 def test_audit_failure_does_not_expose_connection_details():
     with patch(
-        "modules.platform_event.security_audit.IdentitySecurityEvent.objects.create",
+        "modules.platform_event.security_audit.connection.cursor",
         side_effect=RuntimeError("postgresql://username:password@database/audit"),
     ), pytest.raises(SecurityAuditError, match="security audit append failed") as exc_info:
         append_security_event(make_event())

@@ -2,9 +2,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from uuid import UUID
 
-from django.db import IntegrityError, transaction
-
-from .models import IdentitySecurityEvent
+from django.db import IntegrityError, connection, transaction
 
 
 class SecurityAuditError(RuntimeError):
@@ -52,31 +50,37 @@ class AppendAuditResult:
 
 
 def append_security_event(event: SecurityAuditEvent) -> AppendAuditResult:
-    """Append one immutable security event, returning an existing idempotent event."""
+    """Append one immutable security event without requiring runtime read access."""
     try:
-        with transaction.atomic():
-            created_event = IdentitySecurityEvent.objects.create(
-                event_id=event.event_id,
-                event_type=event.event_type.value,
-                outcome=event.outcome.value,
-                reason_code=event.reason_code,
-                subject_user_id=event.subject_user_id,
-                actor_user_id=event.actor_user_id,
-                tenant_id=event.tenant_id,
-                credential_version=event.credential_version,
-                correlation_id=event.correlation_id,
-                idempotency_key=event.idempotency_key,
+        with transaction.atomic(), connection.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO audit.identity_security_event (
+                    event_id, event_type, outcome, reason_code,
+                    subject_user_id, actor_user_id, tenant_id,
+                    credential_version, correlation_id, idempotency_key
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (idempotency_key) DO NOTHING
+                RETURNING event_id
+                """,
+                (
+                    event.event_id,
+                    event.event_type.value,
+                    event.outcome.value,
+                    event.reason_code,
+                    event.subject_user_id,
+                    event.actor_user_id,
+                    event.tenant_id,
+                    event.credential_version,
+                    event.correlation_id,
+                    event.idempotency_key,
+                ),
             )
+            created_event = cursor.fetchone()
     except IntegrityError as exc:
-        if event.idempotency_key is None:
-            raise SecurityAuditError("security audit append failed") from exc
-        try:
-            existing_event = IdentitySecurityEvent.objects.get(
-                idempotency_key=event.idempotency_key
-            )
-        except IdentitySecurityEvent.DoesNotExist as lookup_exc:
-            raise SecurityAuditError("security audit append failed") from lookup_exc
-        return AppendAuditResult(event_id=existing_event.event_id, created=False)
+        raise SecurityAuditError("security audit append failed") from exc
     except Exception as exc:
         raise SecurityAuditError("security audit append failed") from exc
-    return AppendAuditResult(event_id=created_event.event_id, created=True)
+    if created_event is None:
+        return AppendAuditResult(event_id=event.event_id, created=False)
+    return AppendAuditResult(event_id=created_event[0], created=True)
