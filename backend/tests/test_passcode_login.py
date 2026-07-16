@@ -138,6 +138,19 @@ def test_nonmember_never_reaches_real_credential_lockout(tenant_member):
 
 
 @pytest.mark.django_db(transaction=True)
+def test_username_lookup_is_exact_and_case_sensitive(tenant_member):
+    client = csrf_client()
+    headers = csrf_headers(client)
+    with (
+        patch("config.authentication.preflight_attempt", return_value=allowed()) as preflight,
+        patch("config.authentication.record_failed_attempt", return_value=allowed()),
+    ):
+        response = login(client, headers, username="LEARNER", passcode="123456")
+    assert response.status_code == 401
+    assert preflight.call_args.kwargs["credential"] is None
+
+
+@pytest.mark.django_db(transaction=True)
 def test_wrong_unknown_inactive_and_nonmember_share_invalid_credentials(tenant_member):
     tenant, user, _ = tenant_member
     inactive = User.objects.create_user(

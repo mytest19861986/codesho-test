@@ -54,4 +54,6 @@ No unresolved Claude P0 or P1 remains in the reviewed S1-005 scope.
 - Missing, invalid or expired Device cookies are resolved to one new ID before
   authentication; that exact ID reaches abuse signals and is returned signed.
 - Username lookup is normalized then exact; must-change credentials clear
-  eligible account counters but never create a session.
+  eligible account counters but never create a session. Review 04 refined this:
+  lookup is exact/case-sensitive until an approved normalized-username migration
+  exists, and must-change credential verification records a typed success event.

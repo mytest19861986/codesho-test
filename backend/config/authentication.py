@@ -184,7 +184,9 @@ def authenticate_passcode(
     sleeper: Callable[[float], None] = time.sleep,
 ) -> LoginResult:
     """Authenticate only after Redis and immutable-audit gates pass."""
-    normalized_username = username.casefold()
+    # Username authentication is deliberately exact and case-sensitive until an
+    # approved normalized-username migration exists; never select a variant.
+    normalized_username = username
     candidate = User.objects.filter(username=normalized_username).first()
     user = None
     if candidate is not None and candidate.is_active:
@@ -241,9 +243,18 @@ def authenticate_passcode(
         success = record_successful_attempt(credential=credential, signals=signals)
         if not success.allowed:
             return LoginResult(LoginStatus.UNAVAILABLE, success.retry_after_seconds)
-        if not _audit_failure(
-            tenant=tenant, user=user, credential=credential, correlation_id=correlation_id
-        ):
+        try:
+            with tenant_atomic(tenant.id):
+                _append(
+                    event_type=SecurityEventType.AUTHENTICATION_SUCCEEDED,
+                    outcome=SecurityEventOutcome.SUCCESS,
+                    reason_code=ReasonCode.LOGIN_SUCCEEDED,
+                    correlation_id=correlation_id,
+                    tenant_id=tenant.id,
+                    user=user,
+                    credential=credential,
+                )
+        except SecurityAuditError:
             return LoginResult(LoginStatus.UNAVAILABLE)
         return LoginResult(LoginStatus.PASSCODE_CHANGE_REQUIRED)
 
