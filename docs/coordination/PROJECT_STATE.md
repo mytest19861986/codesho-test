@@ -1,6 +1,6 @@
 # Codesho Project State
 
-Updated: 2026-07-15 (S1-002 complete)
+Updated: 2026-07-16 (S1-004 immutable security-audit foundation in progress)
 
 ## Current Status
 
@@ -56,6 +56,13 @@ Compose smoke/restore `29430842466` are both successful.
 
 ## In Progress
 
+- S1-004 Immutable Credential Security Audit Foundation is assigned at P0.
+  It creates the internal-only `audit.identity_security_event` ledger with a
+  typed append contract, PostgreSQL immutability triggers, and runtime
+  insert-only privileges. No Login, Session, Guardian, Notification, public
+  API, frontend, or producer integration is included in this task. Local
+  backend and frontend checks are green; remote CI/Compose and sequential
+  review gates remain pending.
 - S1-001 is complete at implementation checkpoint `972c54b`. It separates
   `codesho_migrator` from `codesho_runtime`: migrations run
   in a one-shot Compose service; backend, worker and beat use runtime-only
@@ -70,12 +77,19 @@ Compose smoke/restore `29430842466` are both successful.
 - Local Docker daemon remains unavailable:
   `failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine`.
   The required S1-001 Compose gate passed in isolated GitHub Actions.
+- S1-004 Claude Review 01 could not be delivered: the approved shared Brave
+  profile is already locked and does not expose `127.0.0.1:9222`. The session
+  was preserved; details are recorded in
+  `docs/reviews/s1-004-security-audit-review-summary.md`.
 
 ## Next Steps
 
-1. Send the S1-003 evidence to Commander. Do not begin Login, Rate Limit,
-   Recovery, or UI work until a new Commander task is assigned; do not promote
-   to protected `codesho` without employer approval.
+1. Push the S1-004 checkpoint to `codesho-test`, monitor CI and Compose
+   smoke/restore, and complete the sequential review gate when the shared
+   provider session is available.
+2. Do not begin Login, Rate Limit, Recovery, UI, or audit-event producer
+   integration without a new Commander task; do not promote to protected
+   `codesho` without employer approval.
 
 ## Open Decisions / Risks
 

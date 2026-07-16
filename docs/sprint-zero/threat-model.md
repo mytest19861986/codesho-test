@@ -51,3 +51,14 @@ account, account-device, IP, device and global keys. Redis must therefore run as
 a single-node service (the Compose/CI Redis service); Redis Cluster is not an
 approved topology for this foundation unless the key design is changed to use
 hash tags and re-reviewed. Redis or malformed-script failures fail closed.
+
+### S1-004 immutable credential-security audit note
+
+Credential-security evidence is stored only in the dedicated PostgreSQL
+`audit.identity_security_event` table. It has no user foreign key, accepts a
+strict event/outcome contract with no arbitrary metadata, and never stores raw
+passcodes, IP addresses, devices, cookies, Pepper material, or HMAC digests.
+The runtime role receives only schema `USAGE` and table `INSERT`; PostgreSQL
+triggers reject `UPDATE`, `DELETE`, and `TRUNCATE` for every role, including
+the migrator owner during normal operation. Audit append errors use a safe
+typed exception so future credential-changing callers can fail closed.

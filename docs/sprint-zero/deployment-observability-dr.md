@@ -46,3 +46,9 @@ RLS-bypass, role/database creation or `CREATE`-on-application-schema power.
 Deployments must run the migration step to completion before starting runtime
 services. Restore drills preserve migrator object ownership and runtime grants;
 they are rejected if either condition is missing.
+
+The dedicated `audit` schema is part of the restore contract. Its immutable
+credential-security table must remain owned by `codesho_migrator`; the runtime
+role must have only schema `USAGE` and table `INSERT`, and no `SELECT` access.
+Restore verification rejects a backup when this ownership or insert-only grant
+is missing.

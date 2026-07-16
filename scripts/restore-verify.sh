@@ -25,6 +25,24 @@ psql "$VERIFY_DATABASE_URL" -v ON_ERROR_STOP=1 -c "
     ) THEN
       RAISE EXCEPTION 'codesho_runtime lacks restored Django table privileges';
     END IF;
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_tables
+      WHERE schemaname = 'audit'
+        AND tablename = 'identity_security_event'
+        AND tableowner = 'codesho_migrator'
+    ) THEN
+      RAISE EXCEPTION 'restored audit table is missing or has the wrong owner';
+    END IF;
+    IF NOT has_schema_privilege('codesho_runtime', 'audit', 'USAGE')
+       OR NOT has_table_privilege(
+         'codesho_runtime', 'audit.identity_security_event', 'INSERT'
+       )
+       OR has_table_privilege(
+         'codesho_runtime', 'audit.identity_security_event', 'SELECT'
+       )
+    THEN
+      RAISE EXCEPTION 'restored audit grants are not insert-only for runtime';
+    END IF;
   END
   \$\$;
 "

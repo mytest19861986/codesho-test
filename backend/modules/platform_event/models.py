@@ -1,6 +1,8 @@
 import uuid
 
 from django.db import models
+from django.db.models import Q
+from django.db.models.functions import Now
 
 
 class OutboxEvent(models.Model):
@@ -21,3 +23,48 @@ class OutboxEvent(models.Model):
 
     def __str__(self) -> str:
         return f"{self.topic}:{self.id}"
+
+
+SECURITY_EVENT_TYPES = (
+    "passcode_created",
+    "passcode_changed",
+    "passcode_verification_failed",
+    "account_locked",
+    "account_unlocked",
+    "abuse_global_alert",
+    "temporary_passcode_issued",
+    "temporary_passcode_consumed",
+    "guardian_reset_started",
+    "guardian_reset_completed",
+)
+SECURITY_EVENT_OUTCOMES = ("success", "failure", "blocked", "detected")
+
+
+class IdentitySecurityEvent(models.Model):
+    event_id = models.UUIDField(primary_key=True, editable=False)
+    event_type = models.CharField(max_length=64)
+    outcome = models.CharField(max_length=16)
+    reason_code = models.CharField(max_length=128, null=True, blank=True)
+    subject_user_id = models.UUIDField(null=True, blank=True)
+    actor_user_id = models.UUIDField(null=True, blank=True)
+    tenant_id = models.UUIDField(null=True, blank=True)
+    credential_version = models.PositiveIntegerField(null=True, blank=True)
+    correlation_id = models.UUIDField()
+    idempotency_key = models.CharField(max_length=255, null=True, blank=True, unique=True)
+    occurred_at = models.DateTimeField(db_default=Now(), editable=False)
+
+    class Meta:
+        db_table = "audit.identity_security_event"
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(event_type__in=SECURITY_EVENT_TYPES),
+                name="identity_security_event_type_valid",
+            ),
+            models.CheckConstraint(
+                condition=Q(outcome__in=SECURITY_EVENT_OUTCOMES),
+                name="identity_security_event_outcome_valid",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.event_type}:{self.event_id}"
