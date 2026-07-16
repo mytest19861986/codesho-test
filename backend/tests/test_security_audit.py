@@ -133,7 +133,9 @@ def test_runtime_cannot_mutate_or_truncate_audit_table():
 @pytest.mark.django_db(transaction=True)
 def test_invalid_event_type_is_rejected_by_database():
     require_postgres()
-    with connection.cursor() as cursor, pytest.raises((CheckViolation, IntegrityError)):
+    with migrator_connection() as migrator, migrator.cursor() as cursor, pytest.raises(
+        (CheckViolation, IntegrityError)
+    ):
         cursor.execute(
             """
             INSERT INTO audit.identity_security_event
@@ -147,7 +149,9 @@ def test_invalid_event_type_is_rejected_by_database():
 @pytest.mark.django_db(transaction=True)
 def test_invalid_reason_code_is_rejected_by_database():
     require_postgres()
-    with connection.cursor() as cursor, pytest.raises((CheckViolation, IntegrityError)):
+    with migrator_connection() as migrator, migrator.cursor() as cursor, pytest.raises(
+        (CheckViolation, IntegrityError)
+    ):
         cursor.execute(
             """
             INSERT INTO audit.identity_security_event
@@ -277,3 +281,10 @@ def runtime_connection():
             if value
         )
     return connect(runtime_url, autocommit=True)
+
+
+def migrator_connection():
+    migrator_url = os.environ.get("DATABASE_MIGRATOR_TEST_URL")
+    if not migrator_url:
+        pytest.skip("migrator connection is not configured")
+    return connect(migrator_url, autocommit=True)
