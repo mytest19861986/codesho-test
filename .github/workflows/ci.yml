@@ -70,7 +70,16 @@ jobs:
       - run: DATABASE_URL="$DATABASE_MIGRATOR_URL" python manage.py migrate --noinput
       - run: DATABASE_URL="$DATABASE_MIGRATOR_TEST_URL" python manage.py migrate --noinput
       - run: DATABASE_URL="$DATABASE_RUNTIME_URL" python manage.py spectacular --file openapi.yaml --validate
-      - run: DATABASE_URL="$DATABASE_RUNTIME_URL" pytest --reuse-db --cov=modules --cov-report=term-missing --cov-fail-under=80
+      - name: Run backend tests with failure annotation
+        run: |
+          set +e
+          DATABASE_URL="$DATABASE_RUNTIME_URL" pytest --reuse-db --cov=modules --cov-report=term-missing --cov-fail-under=80 2>&1 | tee /tmp/backend-pytest.log
+          status="${PIPESTATUS[0]}"
+          if [ "$status" -ne 0 ]; then
+            summary="$(tail -n 30 /tmp/backend-pytest.log | tr '\n' ' ' | sed 's/::/%3A%3A/g')"
+            echo "::error title=backend pytest failure::$summary"
+            exit "$status"
+          fi
 
   frontend:
     runs-on: ubuntu-24.04
