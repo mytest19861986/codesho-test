@@ -38,6 +38,18 @@ SECURITY_EVENT_TYPES = (
     "guardian_reset_completed",
 )
 SECURITY_EVENT_OUTCOMES = ("success", "failure", "blocked", "detected")
+SECURITY_EVENT_REASON_CODES = (
+    "credential_created",
+    "credential_changed",
+    "verification_mismatch",
+    "lock_threshold_reached",
+    "lock_cleared",
+    "abuse_threshold_reached",
+    "temporary_credential_issued",
+    "temporary_credential_consumed",
+    "guardian_reset_requested",
+    "guardian_reset_confirmed",
+)
 
 
 class IdentitySecurityEvent(models.Model):
@@ -63,6 +75,11 @@ class IdentitySecurityEvent(models.Model):
             models.CheckConstraint(
                 condition=Q(outcome__in=SECURITY_EVENT_OUTCOMES),
                 name="identity_security_event_outcome_valid",
+            ),
+            models.CheckConstraint(
+                condition=Q(reason_code__isnull=True)
+                | Q(reason_code__in=SECURITY_EVENT_REASON_CODES),
+                name="identity_security_event_reason_code_valid",
             ),
         ]
 

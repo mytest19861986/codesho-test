@@ -56,14 +56,14 @@ Compose smoke/restore `29430842466` are both successful.
 
 ## In Progress
 
-- S1-004 Immutable Credential Security Audit Foundation is assigned at P0.
-  It creates the internal-only `audit.identity_security_event` ledger with a
-  typed append contract, PostgreSQL immutability triggers, and runtime
-  insert-only privileges. No Login, Session, Guardian, Notification, public
-  API, frontend, or producer integration is included in this task. Local
-  backend and frontend checks are green. Checkpoint `c3f52f6` passed CI
-  `29477200441` and Compose smoke/restore `29477200386`; only the sequential
-  provider-review gate remains pending.
+- S1-004 Immutable Credential Security Audit Foundation has completed its
+  sequential migration and service reviews. Commander accepted the service
+  remediation: explicit idempotency conflict handling, database-only error
+  wrapping, and an immutable `reason_code` allow-list migration. No Login,
+  Session, Guardian, Notification, public API, frontend, or producer
+  integration is included. Fresh local backend verification is green; final
+  limited Claude verification and fresh CI/Compose evidence are pending the
+  remediation commit.
 - S1-001 is complete at implementation checkpoint `972c54b`. It separates
   `codesho_migrator` from `codesho_runtime`: migrations run
   in a one-shot Compose service; backend, worker and beat use runtime-only
@@ -78,16 +78,13 @@ Compose smoke/restore `29430842466` are both successful.
 - Local Docker daemon remains unavailable:
   `failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine`.
   The required S1-001 Compose gate passed in isolated GitHub Actions.
-- S1-004 Claude Review 01 could not be delivered: the approved shared Brave
-  profile is already locked and does not expose `127.0.0.1:9222`. The session
-  was preserved; details are recorded in
-  `docs/reviews/s1-004-security-audit-review-summary.md`.
+- Local Docker daemon remains unavailable for an on-workstation Compose run;
+  the replacement CI/Compose evidence will be collected after this commit.
 
 ## Next Steps
 
-1. Complete S1-004's sequential migration and service reviews when the shared
-   provider session is available, disposition findings, and re-run the gates
-   for any accepted P0/P1 remediation.
+1. Complete S1-004's final limited Claude verification for the remediated
+   files, then collect fresh CI and Compose smoke/restore evidence.
 2. Do not begin Login, Rate Limit, Recovery, UI, or audit-event producer
    integration without a new Commander task; do not promote to protected
    `codesho` without employer approval.

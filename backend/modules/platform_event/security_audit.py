@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from uuid import UUID
 
-from django.db import IntegrityError, connection, transaction
+from django.db import DatabaseError, connection, transaction
 
 
 class SecurityAuditError(RuntimeError):
@@ -29,6 +29,21 @@ class SecurityEventOutcome(StrEnum):
     DETECTED = "detected"
 
 
+class ReasonCode(StrEnum):
+    """Approved, non-sensitive classifications for a security audit event."""
+
+    CREDENTIAL_CREATED = "credential_created"
+    CREDENTIAL_CHANGED = "credential_changed"
+    VERIFICATION_MISMATCH = "verification_mismatch"
+    LOCK_THRESHOLD_REACHED = "lock_threshold_reached"
+    LOCK_CLEARED = "lock_cleared"
+    ABUSE_THRESHOLD_REACHED = "abuse_threshold_reached"
+    TEMPORARY_CREDENTIAL_ISSUED = "temporary_credential_issued"
+    TEMPORARY_CREDENTIAL_CONSUMED = "temporary_credential_consumed"
+    GUARDIAN_RESET_REQUESTED = "guardian_reset_requested"
+    GUARDIAN_RESET_CONFIRMED = "guardian_reset_confirmed"
+
+
 @dataclass(frozen=True, slots=True)
 class SecurityAuditEvent:
     event_id: UUID
@@ -39,18 +54,21 @@ class SecurityAuditEvent:
     actor_user_id: UUID | None = None
     tenant_id: UUID | None = None
     credential_version: int | None = None
-    reason_code: str | None = None
+    reason_code: ReasonCode | None = None
     idempotency_key: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class AppendAuditResult:
-    event_id: UUID
+    event_id: UUID | None
     created: bool
 
 
 def append_security_event(event: SecurityAuditEvent) -> AppendAuditResult:
     """Append one immutable security event without requiring runtime read access."""
+    if event.reason_code is not None and not isinstance(event.reason_code, ReasonCode):
+        raise ValueError("reason_code must be an approved ReasonCode")
+
     try:
         with transaction.atomic(), connection.cursor() as cursor:
             cursor.execute(
@@ -60,13 +78,13 @@ def append_security_event(event: SecurityAuditEvent) -> AppendAuditResult:
                     subject_user_id, actor_user_id, tenant_id,
                     credential_version, correlation_id, idempotency_key
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT DO NOTHING
+                ON CONFLICT (idempotency_key) DO NOTHING
                 """,
                 (
                     event.event_id,
                     event.event_type.value,
                     event.outcome.value,
-                    event.reason_code,
+                    event.reason_code.value if event.reason_code is not None else None,
                     event.subject_user_id,
                     event.actor_user_id,
                     event.tenant_id,
@@ -76,8 +94,6 @@ def append_security_event(event: SecurityAuditEvent) -> AppendAuditResult:
                 ),
             )
             created = cursor.rowcount == 1
-    except IntegrityError as exc:
+    except DatabaseError as exc:
         raise SecurityAuditError("security audit append failed") from exc
-    except Exception as exc:
-        raise SecurityAuditError("security audit append failed") from exc
-    return AppendAuditResult(event_id=event.event_id, created=created)
+    return AppendAuditResult(event_id=event.event_id if created else None, created=created)

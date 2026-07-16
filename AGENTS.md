@@ -7,6 +7,9 @@
 - Codex implements code, tests and refactors from approved architecture.
 - Gemini produces UI proposals and lightweight frontend review.
 - Claude reviews high-risk architecture/security packages of no more than 19 files.
+- When any material ambiguity, question, or decision arises during execution,
+  Codex must ask Commander before proceeding; record the answer in the
+  applicable coordination artifact.
 
 ## Architecture
 

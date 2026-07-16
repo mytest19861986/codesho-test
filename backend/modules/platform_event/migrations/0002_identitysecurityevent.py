@@ -17,7 +17,8 @@ EVENT_TYPES = (
 )
 EVENT_OUTCOMES = ("success", "failure", "blocked", "detected")
 
-
+# These literals are trusted migration constants; never source them from runtime
+# configuration or user-controlled input before interpolating them into SQL.
 CREATE_AUDIT_SQL = f"""
 DO $$
 BEGIN
