@@ -248,7 +248,7 @@ def authenticate_passcode(
                 _append(
                     event_type=SecurityEventType.AUTHENTICATION_SUCCEEDED,
                     outcome=SecurityEventOutcome.SUCCESS,
-                    reason_code=ReasonCode.LOGIN_SUCCEEDED,
+                    reason_code=ReasonCode.PASSCODE_CHANGE_REQUIRED,
                     correlation_id=correlation_id,
                     tenant_id=tenant.id,
                     user=user,

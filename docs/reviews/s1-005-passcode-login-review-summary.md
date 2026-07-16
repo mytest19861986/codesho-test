@@ -57,3 +57,17 @@ No unresolved Claude P0 or P1 remains in the reviewed S1-005 scope.
   eligible account counters but never create a session. Review 04 refined this:
   lookup is exact/case-sensitive until an approved normalized-username migration
   exists, and must-change credential verification records a typed success event.
+
+## Audit semantics follow-up (Reviews 05, 05A, 05B)
+
+- `PASSCODE_CHANGE_REQUIRED` is an additive typed reason code used only for a
+  valid must-change credential, which clears eligible abuse counters but creates
+  no session.
+- Migration `0006` is atomic and forward-only. Before any replacement DDL it
+  generates the expected CHECK constraint canonically on a transaction-local
+  temporary table and requires exact equality with the validated live
+  constraint; mismatch aborts before DROP.
+- Claude markers: `CLAUDE_S1_005_AUDIT_SEMANTICS_REVIEW_05_COMPLETED`,
+  `CLAUDE_S1_005_AUDIT_SEMANTICS_REVIEW_05A_COMPLETED`, and
+  `CLAUDE_S1_005_AUDIT_SEMANTICS_REVIEW_05B_COMPLETED`. Review 05B reported no
+  remaining P0/P1/P2.

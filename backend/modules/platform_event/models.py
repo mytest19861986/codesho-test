@@ -57,6 +57,7 @@ SECURITY_EVENT_REASON_CODES = (
     "login_failed",
     "login_blocked",
     "session_logged_out",
+    "passcode_change_required",
 )
 
 

@@ -50,6 +50,7 @@ class ReasonCode(StrEnum):
     LOGIN_FAILED = "login_failed"
     LOGIN_BLOCKED = "login_blocked"
     SESSION_LOGGED_OUT = "session_logged_out"
+    PASSCODE_CHANGE_REQUIRED = "passcode_change_required"
 
 
 @dataclass(frozen=True, slots=True)
