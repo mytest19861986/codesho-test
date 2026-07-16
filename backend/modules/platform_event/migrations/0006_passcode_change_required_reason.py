@@ -34,22 +34,22 @@ def add_reason_code(apps, schema_editor):
         )
         cursor.execute(
             """
-            SELECT pg_get_constraintdef(constraint.oid)
-            FROM pg_constraint AS constraint
-            WHERE constraint.conrelid = 'codesho_expected_audit_reason_constraint'::regclass
-              AND constraint.conname = 'expected_reason_code_valid'
+            SELECT pg_get_constraintdef(audit_constraint.oid)
+            FROM pg_constraint AS audit_constraint
+            WHERE audit_constraint.conrelid = 'codesho_expected_audit_reason_constraint'::regclass
+              AND audit_constraint.conname = 'expected_reason_code_valid'
             """
         )
         expected_row = cursor.fetchone()
         cursor.execute(
             """
-            SELECT pg_get_constraintdef(constraint.oid), constraint.convalidated
-            FROM pg_constraint AS constraint
-            JOIN pg_class AS relation ON relation.oid = constraint.conrelid
+            SELECT pg_get_constraintdef(audit_constraint.oid), audit_constraint.convalidated
+            FROM pg_constraint AS audit_constraint
+            JOIN pg_class AS relation ON relation.oid = audit_constraint.conrelid
             JOIN pg_namespace AS namespace ON namespace.oid = relation.relnamespace
             WHERE namespace.nspname = 'audit'
               AND relation.relname = 'identity_security_event'
-              AND constraint.conname = 'identity_security_event_reason_code_valid'
+              AND audit_constraint.conname = 'identity_security_event_reason_code_valid'
             """
         )
         row = cursor.fetchone()
