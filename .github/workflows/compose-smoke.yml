@@ -36,7 +36,16 @@ jobs:
           docker compose exec --no-TTY postgres sh -ec \
             'PGPASSWORD="$POSTGRES_PASSWORD" psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -c "SELECT 1;"'
           docker compose exec --no-TTY redis redis-cli ping | grep -Fx PONG
-          docker compose exec --no-TTY worker celery -A config inspect ping --timeout 10 | grep -F pong
+          for attempt in $(seq 1 12); do
+            if docker compose exec --no-TTY worker celery -A config inspect ping --timeout 10 | grep -F pong; then
+              break
+            fi
+            if [ "$attempt" -eq 12 ]; then
+              echo "::error title=worker readiness::Celery worker did not reply to inspect ping"
+              exit 1
+            fi
+            sleep 5
+          done
       - name: Run PostgreSQL RLS and connection-reuse tests in the Compose network
         run: |
           docker compose exec --no-TTY postgres sh -ec \
