@@ -28,8 +28,10 @@ ALTER ROLE codesho_migrator SET search_path TO codesho, public;
 ALTER ROLE codesho_runtime SET search_path TO codesho, public;
 
 CREATE SCHEMA IF NOT EXISTS codesho AUTHORIZATION codesho_migrator;
+CREATE SCHEMA IF NOT EXISTS audit AUTHORIZATION codesho_migrator;
 REVOKE ALL ON SCHEMA public FROM PUBLIC;
 REVOKE ALL ON SCHEMA codesho FROM PUBLIC;
+REVOKE ALL ON SCHEMA audit FROM PUBLIC;
 GRANT USAGE, CREATE ON SCHEMA codesho TO codesho_migrator;
 GRANT USAGE ON SCHEMA codesho TO codesho_runtime;
 SELECT format('GRANT CONNECT ON DATABASE %I TO codesho_migrator, codesho_runtime', current_database())
