@@ -95,5 +95,23 @@ result is claimed.
 
 ## Pending gate
 
-Fresh CI/Compose runs and the final limited Claude verification of the changed
-files remain required after the approved capability-only remediation.
+All S1-004 acceptance gates are complete at `924f76f`.
+
+- CI `29479743517` succeeded with the PostgreSQL role/migration tests,
+  backend checks, OpenAPI validation, and frontend checks.
+- Compose smoke and restore `29479741154` succeeded with full-stack startup,
+  worker readiness, and isolated backup/restore verification.
+- Final limited Claude verification passed sequentially for migration `0004`
+  (SHA-256 `2D0269E6FCF839F981DA65900F87DC9174E8E969C6E0C5AC4E04BD6264E73232,
+  marker `CLAUDE_S1_004_FINAL_0004_COMPLETED`), service
+  `security_audit.py` (SHA-256
+  `23C0CD558A2C6A95A4862CD1ABA7E40F3F5CE7767B6EE5EF9D87D2048CC1931C`,
+  marker `CLAUDE_S1_004_FINAL_SERVICE_COMPLETED`), tests
+  `test_security_audit.py` (SHA-256
+  `AD5DB293B9A1DD816C606B6165A413089EEDE9F3F6BF9C3D49AF87E0CFFCC31D`,
+  marker `CLAUDE_S1_004_FINAL_TESTS_COMPLETED`), reason-code migration `0003`
+  (SHA-256 `D54471389C54495D48CC2090530692F5962648EC3C9F1AB5D1F06A1BECE7C5E1`,
+  marker `CLAUDE_S1_004_FINAL_0003_COMPLETED`), and restore verification
+  (SHA-256 `98CF5E5DAF1EE57961E8C082055694723DE01313A895EAFF6B94C53EAA229A89`,
+  marker `CLAUDE_S1_004_FINAL_RESTORE_COMPLETED`). No unresolved P0/P1
+  finding remains.

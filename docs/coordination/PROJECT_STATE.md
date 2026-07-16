@@ -56,15 +56,13 @@ Compose smoke/restore `29430842466` are both successful.
 
 ## In Progress
 
-- S1-004 Immutable Credential Security Audit Foundation has completed its
-  sequential migration and service reviews. Commander accepted the service
-  remediation: explicit idempotency conflict handling through a restricted
-  `SECURITY DEFINER` function, database-only error wrapping, and an immutable
-  `reason_code` allow-list migration. Runtime now has EXECUTE-only append
-  capability and no direct audit-table privilege. No Login, Session, Guardian,
-  Notification, public API, frontend, or producer integration is included.
-  Fresh local backend verification is green; final limited Claude verification
-  and fresh CI/Compose evidence are pending the remediation commit.
+- S1-004 Immutable Credential Security Audit Foundation is complete at
+  `924f76f`. The audit ledger is immutable, runtime has only EXECUTE access to
+  the restricted `SECURITY DEFINER` append function, and reason codes are an
+  immutable allow-list. CI `29479743517` and Compose smoke/restore
+  `29479741154` are successful; final sequential Claude verification recorded
+  no unresolved P0/P1. No Login, Session, Guardian, Notification, public API,
+  frontend, or producer integration was included.
 - S1-001 is complete at implementation checkpoint `972c54b`. It separates
   `codesho_migrator` from `codesho_runtime`: migrations run
   in a one-shot Compose service; backend, worker and beat use runtime-only
@@ -84,9 +82,7 @@ Compose smoke/restore `29430842466` are both successful.
 
 ## Next Steps
 
-1. Complete S1-004's final limited Claude verification for the remediated
-   files, then collect fresh CI and Compose smoke/restore evidence.
-2. Do not begin Login, Rate Limit, Recovery, UI, or audit-event producer
+1. Do not begin Login, Rate Limit, Recovery, UI, or audit-event producer
    integration without a new Commander task; do not promote to protected
    `codesho` without employer approval.
 
