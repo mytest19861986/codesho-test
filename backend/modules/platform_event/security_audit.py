@@ -20,6 +20,10 @@ class SecurityEventType(StrEnum):
     TEMPORARY_PASSCODE_CONSUMED = "temporary_passcode_consumed"
     GUARDIAN_RESET_STARTED = "guardian_reset_started"
     GUARDIAN_RESET_COMPLETED = "guardian_reset_completed"
+    AUTHENTICATION_SUCCEEDED = "authentication_succeeded"
+    AUTHENTICATION_FAILED = "authentication_failed"
+    AUTHENTICATION_BLOCKED = "authentication_blocked"
+    SESSION_LOGGED_OUT = "session_logged_out"
 
 
 class SecurityEventOutcome(StrEnum):
@@ -42,6 +46,10 @@ class ReasonCode(StrEnum):
     TEMPORARY_CREDENTIAL_CONSUMED = "temporary_credential_consumed"
     GUARDIAN_RESET_REQUESTED = "guardian_reset_requested"
     GUARDIAN_RESET_CONFIRMED = "guardian_reset_confirmed"
+    LOGIN_SUCCEEDED = "login_succeeded"
+    LOGIN_FAILED = "login_failed"
+    LOGIN_BLOCKED = "login_blocked"
+    SESSION_LOGGED_OUT = "session_logged_out"
 
 
 @dataclass(frozen=True, slots=True)

@@ -1,7 +1,14 @@
 import base64
 from unittest.mock import patch
 
-from modules.identity.abuse import AbuseReason, AttemptSignals, _decision, preflight_attempt
+from modules.identity.abuse import (
+    AbuseReason,
+    AttemptSignals,
+    _decision,
+    preflight_attempt,
+    record_successful_attempt,
+)
+from modules.identity.models import PasscodeCredential, User
 from modules.identity.request_signals import validate_abuse_settings
 
 
@@ -29,8 +36,16 @@ def test_decision_progressive_and_limits(settings):
 
 def test_abuse_settings_require_strong_key():
     validate_abuse_settings(
-        "redis://redis:6379/0", base64.b64encode(b"x" * 32).decode(),
-        900, 5, 900, 30, 20, 1000, 300, (250, 500, 1000, 2000)
+        "redis://redis:6379/0",
+        base64.b64encode(b"x" * 32).decode(),
+        900,
+        5,
+        900,
+        30,
+        20,
+        1000,
+        300,
+        (250, 500, 1000, 2000),
     )
 
 
@@ -39,8 +54,22 @@ def test_malformed_and_negative_ttl_responses_fail_closed(settings):
     for response in ([1, 2], [-1], [1] * 8 + [-1, 1]):
         with patch("modules.identity.abuse._client") as factory:
             factory.return_value.eval.return_value = response
-            decision = preflight_attempt(
-                credential=None, signals=AttemptSignals("a", "127.0.0.1")
-            )
+            decision = preflight_attempt(credential=None, signals=AttemptSignals("a", "127.0.0.1"))
         assert decision.reason is AbuseReason.BACKEND_UNAVAILABLE
         assert decision.allowed is False
+
+
+def test_success_clear_timeout_is_atomic_and_fails_closed(settings, db):
+    settings.PASSCODE_SIGNAL_HMAC_KEY = base64.b64encode(b"k" * 32).decode()
+    user = User.objects.create_user(username="learner", email="learner@example.com")
+    credential = PasscodeCredential.objects.create(
+        user=user, encoded_hash="placeholder", pepper_id="test", must_change=False
+    )
+    with patch("modules.identity.abuse._client") as factory:
+        factory.return_value.eval.side_effect = TimeoutError("redis timeout")
+        decision = record_successful_attempt(
+            credential=credential,
+            signals=AttemptSignals("tenant:learner", "127.0.0.1"),
+        )
+    assert decision.reason is AbuseReason.BACKEND_UNAVAILABLE
+    assert decision.allowed is False

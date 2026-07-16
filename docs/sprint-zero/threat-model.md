@@ -62,3 +62,15 @@ The runtime role receives only schema `USAGE` and table `INSERT`; PostgreSQL
 triggers reject `UPDATE`, `DELETE`, and `TRUNCATE` for every role, including
 the migrator owner during normal operation. Audit append errors use a safe
 typed exception so future credential-changing callers can fail closed.
+
+### S1-005 session and login boundary note
+
+Passcode login is accepted only on an exact allow-list of tenant-host auth
+paths; tenant-bypass paths are likewise exact matches only. CSRF is explicitly enforced even for anonymous login; username failures
+share one public response and unknown accounts execute equivalent Dummy Argon2
+work. Redis failure fails closed, global detection is alert-only, and a
+successful audit append precedes session issuance. Session keys rotate at login
+and carry a credential epoch which is invalidated in the same transaction as a
+passcode replacement. Failed events are bounded by the five-attempt durable
+lock and blocked events are window-deduped to avoid attacker-driven audit
+amplification; logout flushes even when audit append is unavailable.

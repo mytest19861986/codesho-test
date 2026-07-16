@@ -1,9 +1,11 @@
 import os
+from importlib import import_module
 from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
 from django.db import DatabaseError, IntegrityError, connection
+from django.db.migrations.exceptions import IrreversibleError
 from psycopg import connect
 from psycopg.errors import CheckViolation, InsufficientPrivilege, RaiseException
 
@@ -36,12 +38,30 @@ def test_security_audit_event_is_typed_and_has_no_metadata_field():
     assert not hasattr(event, "metadata")
 
 
+def test_s1_005_audit_allow_list_migration_is_atomic_and_forward_only():
+    audit_initial = import_module("modules.platform_event.migrations.0002_identitysecurityevent")
+    audit_reason_codes = import_module(
+        "modules.platform_event.migrations.0003_identitysecurityevent_reason_code"
+    )
+    authentication_events = import_module(
+        "modules.platform_event.migrations.0005_authentication_security_events"
+    )
+    assert authentication_events.Migration.atomic is True
+    assert set(audit_initial.EVENT_TYPES) <= set(authentication_events.EVENT_TYPES)
+    assert set(audit_reason_codes.REASON_CODES) <= set(authentication_events.REASON_CODES)
+    with pytest.raises(IrreversibleError, match="must move forward"):
+        authentication_events.irreversible(None, None)
+
+
 @pytest.mark.django_db
 def test_audit_failure_does_not_expose_connection_details():
-    with patch(
-        "modules.platform_event.security_audit.connection.cursor",
-        side_effect=DatabaseError("postgresql://username:password@database/audit"),
-    ), pytest.raises(SecurityAuditError, match="security audit append failed") as exc_info:
+    with (
+        patch(
+            "modules.platform_event.security_audit.connection.cursor",
+            side_effect=DatabaseError("postgresql://username:password@database/audit"),
+        ),
+        pytest.raises(SecurityAuditError, match="security audit append failed") as exc_info,
+    ):
         append_security_event(make_event())
     assert "postgresql" not in str(exc_info.value)
     assert "password" not in str(exc_info.value)
@@ -49,10 +69,13 @@ def test_audit_failure_does_not_expose_connection_details():
 
 @pytest.mark.django_db
 def test_programming_error_is_not_misclassified_as_audit_failure():
-    with patch(
-        "modules.platform_event.security_audit.connection.cursor",
-        side_effect=RuntimeError("programming error"),
-    ), pytest.raises(RuntimeError, match="programming error"):
+    with (
+        patch(
+            "modules.platform_event.security_audit.connection.cursor",
+            side_effect=RuntimeError("programming error"),
+        ),
+        pytest.raises(RuntimeError, match="programming error"),
+    ):
         append_security_event(make_event())
 
 
@@ -67,12 +90,16 @@ def test_runtime_can_append_only_through_the_security_definer_function():
     result = append_security_event(make_event())
     assert isinstance(result, AppendAuditResult)
     assert result.created is True
-    with runtime_connection() as runtime, runtime.cursor() as cursor, pytest.raises(
-        InsufficientPrivilege
+    with (
+        runtime_connection() as runtime,
+        runtime.cursor() as cursor,
+        pytest.raises(InsufficientPrivilege),
     ):
         cursor.execute("SELECT event_id FROM audit.identity_security_event")
-    with runtime_connection() as runtime, runtime.cursor() as cursor, pytest.raises(
-        InsufficientPrivilege
+    with (
+        runtime_connection() as runtime,
+        runtime.cursor() as cursor,
+        pytest.raises(InsufficientPrivilege),
     ):
         cursor.execute(
             """
@@ -133,8 +160,10 @@ def test_runtime_cannot_mutate_or_truncate_audit_table():
 @pytest.mark.django_db(transaction=True)
 def test_invalid_event_type_is_rejected_by_database():
     require_postgres()
-    with migrator_connection() as migrator, migrator.cursor() as cursor, pytest.raises(
-        (CheckViolation, IntegrityError)
+    with (
+        migrator_connection() as migrator,
+        migrator.cursor() as cursor,
+        pytest.raises((CheckViolation, IntegrityError)),
     ):
         cursor.execute(
             """
@@ -149,8 +178,10 @@ def test_invalid_event_type_is_rejected_by_database():
 @pytest.mark.django_db(transaction=True)
 def test_invalid_reason_code_is_rejected_by_database():
     require_postgres()
-    with migrator_connection() as migrator, migrator.cursor() as cursor, pytest.raises(
-        (CheckViolation, IntegrityError)
+    with (
+        migrator_connection() as migrator,
+        migrator.cursor() as cursor,
+        pytest.raises((CheckViolation, IntegrityError)),
     ):
         cursor.execute(
             """

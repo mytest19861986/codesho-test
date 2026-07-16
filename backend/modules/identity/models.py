@@ -7,6 +7,7 @@ from django.db import models
 class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True)
+    session_auth_epoch = models.PositiveBigIntegerField(default=1)
 
     REQUIRED_FIELDS = ["email"]
 

@@ -36,6 +36,10 @@ SECURITY_EVENT_TYPES = (
     "temporary_passcode_consumed",
     "guardian_reset_started",
     "guardian_reset_completed",
+    "authentication_succeeded",
+    "authentication_failed",
+    "authentication_blocked",
+    "session_logged_out",
 )
 SECURITY_EVENT_OUTCOMES = ("success", "failure", "blocked", "detected")
 SECURITY_EVENT_REASON_CODES = (
@@ -49,6 +53,10 @@ SECURITY_EVENT_REASON_CODES = (
     "temporary_credential_consumed",
     "guardian_reset_requested",
     "guardian_reset_confirmed",
+    "login_succeeded",
+    "login_failed",
+    "login_blocked",
+    "session_logged_out",
 )
 
 

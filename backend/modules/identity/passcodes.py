@@ -11,7 +11,7 @@ from argon2 import PasswordHasher, Type
 from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-from django.db import transaction
+from django.db import models, transaction
 
 from .models import PasscodeCredential, User
 from .pepper import decode_pepper
@@ -26,6 +26,7 @@ _PASSWORD_HASHER = PasswordHasher(
     salt_len=16,
     type=Type.ID,
 )
+_DUMMY_ENCODED_HASH = _PASSWORD_HASHER.hash("0" * 64)
 
 
 def validate_pepper_settings(active_id: str, peppers: dict[str, object]) -> None:
@@ -74,8 +75,11 @@ def set_passcode(user: User, passcode: str, *, must_change: bool = True) -> Pass
 
     active_id = settings.PASSCODE_ACTIVE_PEPPER_ID
     encoded_hash = _PASSWORD_HASHER.hash(_hmac_input(passcode, active_id))
-    credential, created = PasscodeCredential.objects.select_for_update().get_or_create(
-        user=user,
+    # Locking the parent serializes concurrent first-credential creation too;
+    # a nonexistent one-to-one row cannot itself be locked.
+    locked_user = User.objects.select_for_update().get(pk=user.pk)
+    credential, created = PasscodeCredential.objects.get_or_create(
+        user=locked_user,
         defaults={
             "encoded_hash": encoded_hash,
             "pepper_id": active_id,
@@ -97,6 +101,10 @@ def set_passcode(user: User, passcode: str, *, must_change: bool = True) -> Pass
                 "changed_at",
             ]
         )
+        User.objects.filter(pk=locked_user.pk).update(
+            session_auth_epoch=models.F("session_auth_epoch") + 1
+        )
+        user.refresh_from_db(fields=["session_auth_epoch"])
     return credential
 
 
@@ -126,3 +134,12 @@ def verify_passcode(user: User, passcode: str) -> PasscodeVerification:
             or _PASSWORD_HASHER.check_needs_rehash(credential.encoded_hash)
         ),
     )
+
+
+def verify_dummy_passcode(passcode: str) -> None:
+    """Execute equivalent Argon2 work for a non-authenticating login path."""
+    try:
+        candidate = _hmac_input(passcode, settings.PASSCODE_ACTIVE_PEPPER_ID)
+        _PASSWORD_HASHER.verify(_DUMMY_ENCODED_HASH, candidate)
+    except (ImproperlyConfigured, InvalidPasscode, VerificationError, VerifyMismatchError):
+        return

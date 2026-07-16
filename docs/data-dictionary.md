@@ -15,3 +15,18 @@
 Passcodes are exactly six ASCII digits. The S1-002 service is internal and adds
 no URL, serializer, OpenAPI operation, admin action, login, rate limit, or
 recovery workflow.
+
+## `identity_user.session_auth_epoch`
+
+| Field | Meaning | Security/immutability rule |
+|---|---|---|
+| `session_auth_epoch` | Monotonic credential-session epoch | Stored in each passcode-login session. Incrementing it in the credential-change transaction invalidates all earlier sessions. |
+
+## Authentication audit additions
+
+`authentication_succeeded`, `authentication_failed`, `authentication_blocked`,
+`session_logged_out`, and `abuse_global_alert` are immutable allow-listed audit
+events. Reason codes are allow-listed; the first five known-principal failures
+are recorded before the durable lock, subsequent blocked events use bounded
+windowed idempotency keys, and fully unknown principals create no durable
+unbounded audit rows.

@@ -32,6 +32,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "modules.platform_tenant.middleware.SessionEpochMiddleware",
     "modules.platform_tenant.middleware.TenantCandidateMiddleware",
     "modules.platform_tenant.middleware.TenantTransactionMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -85,6 +86,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_DOMAIN = None
+CSRF_COOKIE_DOMAIN = None
 X_FRAME_OPTIONS = "DENY"
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"
@@ -103,7 +106,16 @@ SPECTACULAR_SETTINGS = {
 }
 
 TENANT_BASE_DOMAIN = env("TENANT_BASE_DOMAIN", default="localhost")
-TENANT_BYPASS_PATHS = ("/health/", "/admin/", "/api/schema/")
+TENANT_BYPASS_PATHS = (
+    "/health/live/",
+    "/health/ready/",
+    "/api/schema/",
+    "/api/schema/swagger-ui/",
+)
+TENANT_PREAUTH_PATHS = ("/api/v1/auth/csrf/", "/api/v1/auth/passcode/login/")
+SESSION_COOKIE_AGE = env.int("SESSION_COOKIE_AGE", default=43_200)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+CSRF_FAILURE_VIEW = "config.auth_views.csrf_failure"
 
 REDIS_URL = env("REDIS_URL", default="redis://redis:6379/0")
 PASSCODE_SIGNAL_HMAC_KEY = env("PASSCODE_SIGNAL_HMAC_KEY", default="")

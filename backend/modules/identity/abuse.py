@@ -195,6 +195,7 @@ def record_successful_attempt(
     try:
         client = _client()
         # Never clear IP/device-wide counters from one account's success.
+        # Redis EVAL executes this account/account-device clear atomically.
         keys = _keys(signals)[:2]
         result = client.eval(_CLEAR_LUA, len(keys), *keys)
         if not isinstance(result, list) or len(result) != 2 or int(result[0]) != 1:

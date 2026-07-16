@@ -1,8 +1,9 @@
 from collections.abc import Callable
-from typing import cast
+from typing import Any, cast
 from uuid import UUID
 
 from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
 from django.http import HttpRequest, HttpResponse, JsonResponse
 
 from .context import tenant_atomic
@@ -43,7 +44,7 @@ class TenantTransactionMiddleware:
         self.get_response = get_response
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
-        if request.path.startswith(settings.TENANT_BYPASS_PATHS):
+        if request.path in settings.TENANT_BYPASS_PATHS:
             return self.get_response(request)
 
         tenant_request = cast(TenantRequest, request)
@@ -55,10 +56,21 @@ class TenantTransactionMiddleware:
         if tenant_id is None:
             return JsonResponse({"detail": "Tenant not found."}, status=404)
 
+        if request.path in settings.TENANT_PREAUTH_PATHS:
+            with tenant_atomic(tenant_id):
+                tenant = Tenant.objects.filter(id=tenant_id, status=Tenant.Status.ACTIVE).first()
+                if tenant is None:
+                    return JsonResponse({"detail": "Tenant not found."}, status=404)
+                tenant_request.tenant = tenant
+            # The transaction is intentionally closed before the view invokes
+            # Redis; only tenant resolution is permitted on this pre-auth path.
+            return self.get_response(request)
+
         with tenant_atomic(tenant_id):
             tenant = Tenant.objects.filter(id=tenant_id, status=Tenant.Status.ACTIVE).first()
             if tenant is None:
                 return JsonResponse({"detail": "Tenant not found."}, status=404)
+            tenant_request.tenant = tenant
             if not request.user.is_authenticated:
                 return JsonResponse({"detail": "Authentication required."}, status=401)
             membership = TenantMembership.objects.filter(
@@ -68,7 +80,6 @@ class TenantTransactionMiddleware:
             ).first()
             if membership is None:
                 return JsonResponse({"detail": "Tenant access denied."}, status=403)
-            tenant_request.tenant = tenant
             tenant_request.tenant_membership = membership
             return self.get_response(request)
 
@@ -76,3 +87,19 @@ class TenantTransactionMiddleware:
     def _resolve_global_tenant_id(slug: str) -> UUID | None:
         # Tenant is a global routing registry. Tenant-owned rows remain RLS-protected.
         return Tenant.objects.filter(slug=slug).values_list("id", flat=True).first()
+
+
+class SessionEpochMiddleware:
+    """Reject a session issued before the user's credential epoch."""
+
+    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
+        self.get_response = get_response
+
+    def __call__(self, request: HttpRequest) -> HttpResponse:
+        user: Any = getattr(request, "user", None)
+        if getattr(user, "is_authenticated", False):
+            issued_epoch = request.session.get("session_auth_epoch")
+            if issued_epoch != user.session_auth_epoch:
+                request.session.flush()
+                request.user = AnonymousUser()
+        return self.get_response(request)

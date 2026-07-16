@@ -1,8 +1,9 @@
 # Sprint 1 — Identity Foundation (Planning Only)
 
-Status: authorized 2026-07-15. S1-001 PostgreSQL migrator/runtime role
-separation is the only active implementation task; do not begin passcode or
-other identity workflows until Commander assigns them.
+Status: S1-005 Secure Passcode Login and Session Foundation authorized
+2026-07-16. It extends the completed passcode, abuse-control, tenant, and
+immutable-audit foundations. Recovery, Guardian, Login UI, Signup and
+Notification remain out of scope.
 
 ## Sprint goal
 
@@ -26,6 +27,9 @@ workflow integration.
 - Tenant-absence and cross-tenant access must fail closed.
 - Session/CSRF same-origin, session fixation, logout and credential-change
   tests must pass.
+- S1-005 login uses a tenant-host-only username/passcode endpoint, explicit
+  CSRF protection, 12-hour browser sessions, session-auth epoch invalidation,
+  fail-closed Redis/Audit gates, and typed immutable audit producers.
 - Lockout/rate-limit tests cover account, IP, device and global limits without
   recording sensitive credential material.
 - PostgreSQL RLS and connection-reuse negative tests run in CI.

@@ -2,5 +2,93 @@ openapi: 3.0.3
 info:
   title: Codesho API
   version: 0.1.0
-paths: {}
-components: {}
+paths:
+  /api/v1/auth/csrf/:
+    get:
+      summary: Establish CSRF and device cookies for a tenant host
+      responses:
+        '204': { description: Cookies established }
+        '400': { $ref: '#/components/responses/InvalidRequest' }
+  /api/v1/auth/passcode/login/:
+    post:
+      summary: Authenticate a tenant member with a passcode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PasscodeLoginRequest' }
+      responses:
+        '204': { description: Session established }
+        '400': { $ref: '#/components/responses/InvalidRequest' }
+        '401': { $ref: '#/components/responses/InvalidCredentials' }
+        '403': { $ref: '#/components/responses/PasscodeChangeRequired' }
+        '429': { $ref: '#/components/responses/TryAgainLater' }
+        '503': { $ref: '#/components/responses/AuthenticationUnavailable' }
+  /api/v1/auth/session/:
+    get:
+      summary: Return the authenticated user and current tenant membership
+      responses:
+        '200':
+          description: Session state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionState' }
+        '401': { $ref: '#/components/responses/InvalidCredentials' }
+  /api/v1/auth/logout/:
+    post:
+      summary: Flush the authenticated tenant session
+      responses:
+        '204': { description: Session flushed }
+        '403': { $ref: '#/components/responses/CsrfFailed' }
+components:
+  schemas:
+    PasscodeLoginRequest:
+      type: object
+      required: [username, passcode]
+      additionalProperties: false
+      properties:
+        username: { type: string, maxLength: 150 }
+        passcode: { type: string, pattern: '^[0-9]{6}$' }
+    Error:
+      type: object
+      required: [code]
+      properties:
+        code: { type: string }
+    SessionState:
+      type: object
+      required: [authenticated, user, tenant]
+      properties:
+        authenticated: { type: boolean, enum: [true] }
+        user:
+          type: object
+          required: [id, username]
+          properties:
+            id: { type: string, format: uuid }
+            username: { type: string }
+        tenant:
+          type: object
+          required: [id, slug, role]
+          properties:
+            id: { type: string, format: uuid }
+            slug: { type: string }
+            role: { type: string }
+  responses:
+    InvalidRequest:
+      description: Invalid request or tenant signal
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    InvalidCredentials:
+      description: Fixed response for credential failures
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    PasscodeChangeRequired:
+      description: Valid passcode requires an approved credential-change flow
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    TryAgainLater:
+      description: Abuse-control lockout or limit
+      headers: { Retry-After: { schema: { type: integer, minimum: 0 } } }
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    AuthenticationUnavailable:
+      description: Critical Redis or audit dependency unavailable
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    CsrfFailed:
+      description: CSRF validation failed
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
