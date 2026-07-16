@@ -61,7 +61,6 @@ def append_security_event(event: SecurityAuditEvent) -> AppendAuditResult:
                     credential_version, correlation_id, idempotency_key
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (idempotency_key) DO NOTHING
-                RETURNING event_id
                 """,
                 (
                     event.event_id,
@@ -76,11 +75,9 @@ def append_security_event(event: SecurityAuditEvent) -> AppendAuditResult:
                     event.idempotency_key,
                 ),
             )
-            created_event = cursor.fetchone()
+            created = cursor.rowcount == 1
     except IntegrityError as exc:
         raise SecurityAuditError("security audit append failed") from exc
     except Exception as exc:
         raise SecurityAuditError("security audit append failed") from exc
-    if created_event is None:
-        return AppendAuditResult(event_id=event.event_id, created=False)
-    return AppendAuditResult(event_id=created_event[0], created=True)
+    return AppendAuditResult(event_id=event.event_id, created=created)

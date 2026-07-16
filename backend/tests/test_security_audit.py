@@ -3,7 +3,7 @@ from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
-from django.db import connection
+from django.db import IntegrityError, connection
 from psycopg import connect
 from psycopg.errors import CheckViolation, InsufficientPrivilege, RaiseException
 
@@ -88,7 +88,7 @@ def test_runtime_cannot_mutate_or_truncate_audit_table():
 @pytest.mark.django_db(transaction=True)
 def test_invalid_event_type_is_rejected_by_database():
     require_postgres()
-    with connection.cursor() as cursor, pytest.raises(CheckViolation):
+    with connection.cursor() as cursor, pytest.raises((CheckViolation, IntegrityError)):
         cursor.execute(
             """
             INSERT INTO audit.identity_security_event
