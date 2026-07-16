@@ -64,7 +64,7 @@ acceptance of the CSS reconstruction gap.
 - Source: official `rastikerdar/vazirmatn` release `v33.003` (tag commit
   `f68f7bc5dd1d046bd6a5a2bda355bd6d430e807a`).
 - Imported variable font: `frontend/src/app/fonts/Vazirmatn[wght].woff2`;
-  SHA-256: `17E355067C8284F47743A1EE3B1EF7FF684FF0601EDA357F9353B10B3016AB31`.
+  SHA-256: `4E3FA217D38FDAFC1FEA4414CEB58CA5E662CF0AB5FA735A8C8C20E8B42CAD92`.
 - License: SIL Open Font License 1.1, preserved at
   `frontend/THIRD_PARTY_LICENSES_Vazirmatn.txt`.
 - Technical completion status: `WAITING_EMPLOYER_VISUAL_APPROVAL`.
