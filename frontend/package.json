@@ -6,7 +6,9 @@
     "dev": "next dev --hostname 0.0.0.0",
     "build": "next build",
     "start": "next start --hostname 0.0.0.0",
+    "check:ui-policy": "node scripts/check-ui-policy.mjs",
     "lint": "eslint .",
+    "test:ui-policy": "node --test scripts/check-ui-policy.test.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -43,6 +43,10 @@ The Commander confirmation adds these mandatory rules for future UI work:
 - Gate names: `NO_RAW_COLORS_IN_COMPONENTS`, `NO_MARKETING_COPY_IN_JSX`, and
   `NO_FAKE_PRODUCTION_METRICS`; any violation is BLOCKING.
 
+The old checkpoint wording that Review 04 was still required is superseded:
+Review 05 is complete, UI-FOUNDATION-002B is CLOSED, and these gates are now
+carried by `UI-GOV-001`.
+
 ## Review evidence
 
 The three required Gemini reviews were run sequentially against screenshots
@@ -67,8 +71,8 @@ Screenshots, exact prompts, and raw responses are retained at
 | One disabled preview button wrapped on mobile | MINOR | `PREVIEW_COMPOSITION`; primitive unchanged |
 | Static badges were below 44px | MINOR | Accepted; 24px static badges are allowed. Clickable chips must be 44px minimum |
 
-No BLOCKING finding was reported. Follow-up contrast review 04 is required
-before commit.
+No BLOCKING finding was reported in the original foundation review. Review 05
+is the final status-badge/passive-card review and is complete.
 
 ## Scope guard
 

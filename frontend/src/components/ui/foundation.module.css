@@ -12,7 +12,7 @@
   align-items: center;
   justify-content: center;
   gap: var(--cs-space-2);
-  border: var(--cs-border-width) solid transparent;
+  border: var(--cs-border-width) solid var(--cs-color-transparent);
   border-radius: var(--cs-radius-control);
   cursor: pointer;
   font-weight: var(--cs-font-weight-semibold);
@@ -87,7 +87,7 @@
 }
 
 .outline {
-  background: transparent;
+  background: var(--cs-color-transparent);
   border-color: var(--cs-color-brand-primary);
   color: var(--cs-color-brand-primary);
 }
@@ -97,7 +97,7 @@
 }
 
 .ghost {
-  background: transparent;
+  background: var(--cs-color-transparent);
   color: var(--cs-color-text-secondary);
 }
 
@@ -116,7 +116,7 @@
 }
 
 .iconButton.outline {
-  background: transparent;
+  background: var(--cs-color-transparent);
 }
 
 .fullWidth {
