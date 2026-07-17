@@ -1,17 +1,28 @@
 # Homepage Alpha approvals
 
 Date: 2026-07-17
-Status: employer decisions supplied through Commander for `UI-HOME-002B1`
+Status: employer decisions and `UI-HOME-002B1R-FIX` disposition supplied through Commander
 
 ## Approved decisions
 
-- Reference copy is approved only as an `alpha_approved` draft. It is stored as
-  typed Persian content and is not a claim of production availability.
-- Non-logo AI assets may be generated in a separately authorized asset task.
-  This contract creates no asset, asset URL, or media placeholder.
+- The reference transcript is a strict Alpha content source, not a production
+  availability claim. Copy not transcribed exactly is removed or represented
+  as a typed pending state.
+- Non-logo illustrations are `generation_authorized`; this contract creates
+  no asset, asset URL, or media placeholder. The official logo remains
+  `awaiting_official_asset` and the visible brand text is `CodeSho`.
 - Statistics without backend provenance are hidden.
 - Testimonials are omitted.
-- The logo remains a text placeholder: `کدشو`.
+- Footer transcript is intentionally absent because its reported Projects
+  subgroup was ambiguous.
+
+## Transcript review evidence
+
+`GEMINI_UI_HOME_002B1_REFERENCE_COPY_AUDIT_01_COMPLETED` was received for
+`main.png`. Its raw response is retained outside the repository. The Commander
+disposition adopted the exact Hero description in the typed payload and
+required the Mentor description to remain `pending_transcription`, rather than
+inventing copy.
 
 ## Route policy
 

@@ -1,4 +1,4 @@
-# UI-HOME-002B1 handoff
+# UI-HOME-002B1R handoff
 
 ## Scope completed
 
@@ -7,10 +7,20 @@ The Typed Homepage Alpha Content Contract is limited to:
 - `frontend/src/features/home/home.types.ts`
 - `frontend/src/content/fa/homepage.alpha.ts`
 
-The payload contains draft Alpha copy, a text-only `کدشو` brand, the approved
-route registry, and hidden destinations for every route that is not yet
-implemented. It deliberately contains no statistics, testimonials, prices,
-ratings, assets, asset URLs, or rendered UI.
+The payload reconciles Alpha copy with the strict `main.png` transcription:
+the text-only brand is `CodeSho`, all unimplemented destinations are hidden,
+and every Homepage section has explicit typed state. Invented feature copy is
+removed. The Mentor description is `pending_transcription`; the ambiguous
+Footer transcript is not content. It deliberately contains no statistics,
+testimonials, prices, ratings, assets, asset URLs, or rendered UI.
+
+## Transcript disposition
+
+The raw external audit completed with
+`GEMINI_UI_HOME_002B1_REFERENCE_COPY_AUDIT_01_COMPLETED`. Commander required
+the exact Hero description in the typed payload, removal of the prior
+invented Mentor description, and omission of uncertain Footer copy. The raw
+response remains outside the repository.
 
 ## Renderer requirements
 

@@ -1,41 +1,55 @@
-import type { HomepageAlphaContent } from "@/features/home/home.types";
+import type { HomepageAlphaContent, HomepageRoute } from "@/features/home/home.types";
 
-const hidden = (route: "/login" | "/signup" | "/paths" | "/courses" | "/projects" | "/mentor") => ({
+const hidden = (route: HomepageRoute) => ({
   route,
   status: "hidden_until_route_available" as const,
 });
 
 export const homepageAlphaContent = {
-  brandName: "کدشو",
+  brandName: "CodeSho",
   navigation: [
     { id: "paths", label: "مسیرهای یادگیری", destination: hidden("/paths") },
     { id: "courses", label: "دوره‌ها", destination: hidden("/courses") },
     { id: "projects", label: "پروژه‌ها", destination: hidden("/projects") },
-    { id: "mentor", label: "منتور", destination: hidden("/mentor") },
+    { id: "mentor", label: "منتور هوشمند", destination: hidden("/mentor") },
     { id: "login", label: "ورود", destination: hidden("/login") },
-    { id: "signup", label: "ثبت‌نام", destination: hidden("/signup") },
+    { id: "signup", label: "شروع رایگان", destination: hidden("/signup") },
   ],
+  sections: {
+    hero: "enabled",
+    trust: "hidden_until_verified_data",
+    learningPaths: "enabled",
+    projects: "hidden_until_verified_data",
+    courses: "hidden_until_verified_data",
+    mentor: "enabled",
+    testimonials: "omitted_until_permissioned",
+    finalCta: "enabled",
+    footer: "hidden_until_route_available",
+  },
+  assets: {
+    nonLogoIllustrations: "generation_authorized",
+    officialLogo: "awaiting_official_asset",
+  },
   hero: {
-    eyebrow: "یادگیری برنامه‌نویسی پروژه‌محور",
-    title: "یاد بگیر، بساز و مسیر خودت را پیدا کن",
-    description: "کدشو فضای یادگیری و ساخت پروژه برای شروع مسیر برنامه‌نویسی است.",
-    primaryAction: { id: "hero-start", label: "شروع یادگیری", destination: hidden("/signup") },
+    eyebrow: "آکادمی برنامه‌نویسی با منتور هوشمند",
+    title: "با هوش مصنوعی، سریع‌تر برنامه‌نویس حرفه‌ای شو",
+    description: "CodeSho مسیر یادگیری ساختاریافته، پروژه‌های واقعی و منتور هوشمند را ترکیب کرده تا مهارت‌های موردنیاز بازار کار را سریع‌تر و هوشمندانه‌تر به تو برساند.",
+    primaryAction: { id: "hero-start", label: "شروع یادگیری رایگان", destination: hidden("/signup") },
     secondaryAction: { id: "hero-paths", label: "مشاهده مسیرها", destination: hidden("/paths") },
   },
-  features: [
-    { id: "project-based", title: "یادگیری پروژه‌محور", description: "مفاهیم را با ساخت پروژه تمرین کن." },
-    { id: "guided", title: "راهنمایی گام‌به‌گام", description: "برای ادامهٔ مسیر، راهنمای روشن داشته باش." },
-    { id: "practice", title: "تمرین عملی", description: "دانسته‌ها را در تمرین و پروژه به کار ببر." },
-  ],
   learningPaths: [
-    { id: "web", title: "مسیر وب", description: "برای آشنایی با ساخت تجربه‌های وب.", action: { id: "path-web", label: "دیدن مسیر", destination: hidden("/paths") } },
-    { id: "backend", title: "مسیر بک‌اند", description: "برای شناخت منطق و سرویس‌های پشت یک محصول.", action: { id: "path-backend", label: "دیدن مسیر", destination: hidden("/paths") } },
-    { id: "projects", title: "مسیر پروژه", description: "برای تبدیل تمرین‌ها به نمونه‌کارهای واقعی.", action: { id: "path-projects", label: "دیدن مسیر", destination: hidden("/projects") } },
+    { id: "frontend", title: "مسیر فرانت‌اند", description: "توسعه رابط کاربری مدرن و تعاملی", action: { id: "path-frontend", label: "مشاهده مسیر", destination: hidden("/paths") } },
+    { id: "backend", title: "مسیر بک‌اند", description: "ساخت APIها و سیستم‌های مقیاس‌پذیر و پایدار", action: { id: "path-backend", label: "مشاهده مسیر", destination: hidden("/paths") } },
+    { id: "ai-engineering", title: "مسیر مهندسی هوش مصنوعی", description: "ساخت مدل‌های هوشمند و کاربردهای AI", action: { id: "path-ai-engineering", label: "مشاهده مسیر", destination: hidden("/paths") } },
   ],
   mentor: {
-    eyebrow: "همراه یادگیری",
-    title: "منتور کدشو",
-    description: "در هر مرحله از یادگیری، برای پرسش و ادامهٔ مسیر همراهت هستیم.",
-    action: { id: "mentor-start", label: "آشنایی با منتور", destination: hidden("/mentor") },
+    title: "منتور هوشمند CodeSho، همیشه کنار تو",
+    descriptionStatus: "pending_transcription",
+    action: { id: "mentor-start", label: "شروع گفتگو با منتور", destination: hidden("/mentor") },
+  },
+  finalCta: {
+    title: "آماده‌ای مسیر حرفه‌ای خودت را شروع کنی؟",
+    primaryAction: { id: "final-start", label: "شروع یادگیری رایگان", destination: hidden("/signup") },
+    secondaryAction: { id: "final-paths", label: "مشاهده مسیرها", destination: hidden("/paths") },
   },
 } as const satisfies HomepageAlphaContent;

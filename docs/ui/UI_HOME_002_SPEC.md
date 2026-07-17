@@ -1,8 +1,8 @@
 # UI-HOME-002 - Homepage implementation specification
 
-Status: `UI-HOME-002B1 CONTENT-CONTRACT ONLY - PAGE IMPLEMENTATION FORBIDDEN`
+Status: `UI-HOME-002B1R-FIX CONTENT-CONTRACT ONLY - PAGE IMPLEMENTATION FORBIDDEN`
 Reference: `H:\codesho\UI\ui new\desktop+mobile+tablet\main.png`
-Scope: This document plans a future Homepage implementation. `UI-HOME-002B1`
+Scope: This document plans a future Homepage implementation. `UI-HOME-002B1R-FIX`
 authorizes only `frontend/src/features/home/home.types.ts` and
 `frontend/src/content/fa/homepage.alpha.ts`; it authorizes no page, component,
 CSS, asset, shell, package, lockfile, API, or route implementation.
@@ -64,12 +64,17 @@ Homepage
 
 ## Typed content and provenance contract
 
-The `UI-HOME-002B1` Alpha contract is `HomepageAlphaContent`. Its approved
+The `UI-HOME-002B1R-FIX` Alpha contract is `HomepageAlphaContent`. Its approved
 route union is `/login`, `/signup`, `/paths`, `/courses`, `/projects`, and
 `/mentor`. A destination has a route and status. Until a route is implemented,
 its status is exactly `hidden_until_route_available` and a renderer must not
-render a broken link. The text logo is `کدشو`; statistics and testimonials are
-not present in the Alpha payload.
+render a broken link. The text logo is `CodeSho`; statistics and testimonials
+are not present in the Alpha payload. The contract holds explicit state for
+each section: hero, learning paths, mentor and final CTA are enabled; trust,
+projects and courses are hidden until verified data; testimonials are omitted
+until permissioned; and the footer is hidden until its routes exist. It also
+records `generation_authorized` non-logo illustrations and an
+`awaiting_official_asset` logo.
 
 Every future `HomepageContent` payload is passed from a content module or
 approved server/data boundary and includes stable ids. The Alpha CTA shape is
