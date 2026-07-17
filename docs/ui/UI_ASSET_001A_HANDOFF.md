@@ -43,3 +43,21 @@ Homepage UI, component, CSS, route, shell, or asset rendering was added.
 
 Production rights/source metadata review remains open. The asset must not be
 promoted as Production-approved or used in Production until it is closed.
+
+## Changed files
+
+- `frontend/public/assets/home/hero-ai-coding-alpha.png`
+- `frontend/src/features/home/home.types.ts`
+- `frontend/src/content/fa/homepage.alpha.ts`
+- `docs/assets/UI_ASSET_001A_HERO_PROVENANCE.md`
+- `docs/ui/UI_ASSET_001A_HANDOFF.md`
+- `docs/decisions/2026-07-17-homepage-alpha-approvals.md`
+
+## Final status
+
+- `UI_ASSET_001A_REGISTER = COMPLETE`
+- `ALPHA_ASSET_APPROVAL = RECORDED`
+- `PRODUCTION_RIGHTS = PENDING_METADATA_REVIEW`
+- `PROVIDER_MODEL_METADATA = UNKNOWN_NOT_INFERRED`
+- `ARTIFACT_REENCODING = FORBIDDEN`
+- `PRIMARY_REPO_PROMOTION = FORBIDDEN`
