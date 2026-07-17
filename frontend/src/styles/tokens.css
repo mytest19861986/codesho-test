@@ -1,0 +1,80 @@
+:root {
+  --cs-color-brand-primary: #5d26df;
+  --cs-color-brand-primary-hover: #4b1bb8;
+  --cs-color-brand-primary-active: #3f149f;
+  --cs-color-brand-primary-soft: #f1edff;
+  --cs-color-brand-indigo: #4f46e5;
+  --cs-color-brand-dark: #0f0f2d;
+  --cs-color-brand-dark-gradient-end: #1e1b4b;
+  --cs-color-accent-teal: #06b6d4;
+  --cs-color-bg-base: #f8fafc;
+  --cs-color-bg-surface: #ffffff;
+  --cs-color-text-primary: #0f172a;
+  --cs-color-text-secondary: #334155;
+  --cs-color-text-placeholder: #475569;
+  --cs-color-text-muted: #94a3b8;
+  --cs-color-border-subtle: #e2e8f0;
+  --cs-color-control-disabled-bg: #e2e8f0;
+  --cs-color-control-disabled-text: #475569;
+  --cs-color-control-disabled-border: #cbd5e1;
+  --cs-color-success: #10b981;
+  --cs-color-warning: #f59e0b;
+  --cs-color-danger: #b91c1c;
+  --cs-color-info: #3b82f6;
+
+  --cs-font-family-sans: var(--font-vazirmatn), Tahoma, Arial, sans-serif;
+  --cs-font-size-display: 2rem;
+  --cs-font-size-heading-xl: 1.5rem;
+  --cs-font-size-heading-lg: 1.125rem;
+  --cs-font-size-body: 0.875rem;
+  --cs-font-size-caption: 0.75rem;
+  --cs-font-weight-regular: 400;
+  --cs-font-weight-medium: 500;
+  --cs-font-weight-semibold: 600;
+  --cs-font-weight-bold: 700;
+  --cs-line-height-tight: 1.4;
+  --cs-line-height-normal: 1.5;
+  --cs-line-height-relaxed: 1.6;
+
+  --cs-space-1: 0.25rem;
+  --cs-space-2: 0.5rem;
+  --cs-space-3: 0.75rem;
+  --cs-space-4: 1rem;
+  --cs-space-6: 1.5rem;
+  --cs-space-8: 2rem;
+  --cs-space-12: 3rem;
+  --cs-space-16: 4rem;
+
+  --cs-radius-control: 0.75rem;
+  --cs-radius-card: 1rem;
+  --cs-radius-panel: 1.25rem;
+  --cs-radius-sheet: 1.5rem;
+  --cs-radius-pill: 9999px;
+  --cs-border-width: 1px;
+  --cs-shadow-card: 0 0.25rem 0.75rem rgb(15 23 42 / 3%);
+  --cs-shadow-floating: 0 0.75rem 1.5rem rgb(15 23 42 / 8%);
+
+  --cs-shell-header-desktop: 4.5rem;
+  --cs-shell-header-tablet: 4rem;
+  --cs-shell-header-mobile: 3.5rem;
+  --cs-shell-bottom-nav-tablet: 4.5rem;
+  --cs-shell-bottom-nav-mobile: 4rem;
+  --cs-shell-sidebar: 16.25rem;
+  --cs-focus-ring: 0 0 0 0.1875rem rgb(93 38 223 / 35%);
+  --cs-motion-fast: 120ms;
+  --cs-motion-standard: 180ms;
+  --cs-motion-slow: 240ms;
+  --cs-elevation-base: 0;
+  --cs-elevation-content: 10;
+  --cs-elevation-header: 20;
+  --cs-elevation-overlay: 100;
+  --cs-elevation-modal: 200;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --cs-motion-fast: 0ms;
+    --cs-motion-standard: 0ms;
+    --cs-motion-slow: 0ms;
+  }
+}

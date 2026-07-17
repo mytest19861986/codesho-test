@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import "./styles.css";
 import "./ui-001.css";
+import "../styles/tokens.css";
 
 const vazirmatn = localFont({
   src: "./fonts/Vazirmatn[wght].woff2",
