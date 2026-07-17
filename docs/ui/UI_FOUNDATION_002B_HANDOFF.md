@@ -25,6 +25,24 @@ forbidden.
   BLOCKING, MAJOR or MINOR issue. The 390px screenshot, prompt and raw reply
   remain outside the repository at `H:\codesho\ui-foundation-002b-working`.
 
+## Commander project-wide blocking gates
+
+The Commander confirmation adds these mandatory rules for future UI work:
+
+- Components and pages must contain no raw HEX, `rgb()`/`rgba()`, `hsl()`/
+  `hsla()`, `oklch()`, named colors, or direct-color gradients. All colors
+  belong in `frontend/src/styles/tokens.css` and consumers use semantic tokens.
+- Marketing copy such as hero titles, CTAs, product claims, prices,
+  testimonials and FAQs must not be hard-coded in JSX. Approved content must
+  come through typed content files under `frontend/src/content/` or
+  `frontend/src/i18n/fa/`.
+- Production must not contain fabricated metrics, testimonials, prices,
+  discounts or claims. Use real backend data, employer-approved content, an
+  honest empty state, or hide the section. Fixtures are preview/test-only and
+  must not enter the production bundle or real routes.
+- Gate names: `NO_RAW_COLORS_IN_COMPONENTS`, `NO_MARKETING_COPY_IN_JSX`, and
+  `NO_FAKE_PRODUCTION_METRICS`; any violation is BLOCKING.
+
 ## Review evidence
 
 The three required Gemini reviews were run sequentially against screenshots
