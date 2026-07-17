@@ -222,6 +222,7 @@
   padding-block: var(--cs-space-4);
   color: var(--cs-color-text-muted);
   font-size: var(--cs-font-size-caption);
+  text-align: start;
 }
 
 .drawerLayer {
@@ -372,5 +373,11 @@
 
   .footerGroups {
     grid-template-columns: 1fr;
+  }
+
+  .footerLegal {
+    display: flex;
+    justify-content: flex-start;
+    padding-block: var(--cs-space-6);
   }
 }
