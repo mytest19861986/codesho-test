@@ -8,3 +8,16 @@ export type { NavigationDrawerProps } from "./NavigationDrawer";
 export { Sidebar } from "./Sidebar";
 export type { SidebarProps } from "./Sidebar";
 export type { AppShellProps, NavigationItem, ShellTone } from "./layout.types";
+export { PublicFooter } from "./PublicFooter";
+export { PublicHeader } from "./PublicHeader";
+export { PublicNavigationDrawer } from "./PublicNavigationDrawer";
+export { PublicShell } from "./PublicShell";
+export type {
+  PublicFooterGroup,
+  PublicFooterLink,
+  PublicFooterProps,
+  PublicHeaderProps,
+  PublicNavigationDrawerProps,
+  PublicNavigationItem,
+  PublicShellProps,
+} from "./public-layout.types";

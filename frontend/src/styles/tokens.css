@@ -68,6 +68,7 @@
   --cs-shell-bottom-nav-tablet: 4.5rem;
   --cs-shell-bottom-nav-mobile: 4rem;
   --cs-shell-sidebar: 16.25rem;
+  --cs-public-content-max: 80rem;
   --cs-focus-ring: 0 0 0 0.1875rem rgb(93 38 223 / 35%);
   --cs-motion-fast: 120ms;
   --cs-motion-standard: 180ms;
