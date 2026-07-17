@@ -1,10 +1,10 @@
 # UI-FOUNDATION-002A — Reference Audit & Specification
 
-Status: `UI-FOUNDATION-002A-R`; specification approved pending this document fix
+Status: `UI-FOUNDATION_002_SPEC_APPROVED`
 Owner: Codex
-Task: `UI-FOUNDATION-002A`
+Task: `UI-FOUNDATION-002A-R`
 Reference root: `H:\codesho\UI\ui new\desktop+mobile+tablet`
-Repository: `codesho-test` at `667fd9721c1a5abd712c77ddb5e87772690649e4`
+Repository: `codesho-test` at `6519bf9aabcce2257cb44e1bd35dfb3f4017e4b7`
 
 This document is a design-system audit and implementation specification only.
 It does not authorize changes in `frontend/`, backend changes, production
@@ -64,7 +64,7 @@ physical left/right assumptions.
 The analyses agree on the semantic roles below. Final brand values are fixed
 by Section 7; page-specific exceptions require a cited reference.
 
-| Token | Candidate value | Use |
+| Token | Final value | Use |
 |---|---|---|
 | `color-bg-base` | `#F8FAFC` | Application canvas |
 | `color-bg-surface` | `#FFFFFF` | Cards, tables, inputs |
@@ -185,31 +185,30 @@ illustrations, and any brand marks (Next.js, Python, OpenAI, etc.). Do not crop,
 trace, extract, or ship screenshot pixels. Asset ownership, license, dimensions,
 alt text, dark/light variants, and fallback must be recorded before use.
 
-The four unreviewed reference images are blocking page-specific asset/layout
-claims: `dore.png`, `mentor.png`, `project+tamrin.png`, and
-`signup+onboard.png`.
+All eight references have completed audits. The register above records the
+reference inputs; original licensed production assets are still required for
+the logo, illustrations, icons, avatars, banners, and other media.
 
-## 5. Conflicts and decisions required
+## 5. Historical conflicts — resolved by Section 7
 
-| Topic | Evidence conflict | Decision required |
+| Topic | Historical evidence conflict | Final disposition |
 |---|---|---|
-| Primary brand | Public `#5011DF`; learner `#5E35B1`; teacher `#4F46E5`; admin `#5D5FEF` | Choose one canonical primary and permitted role-specific accents |
-| Dark shell | Public gradient `#1E1B4B`; teacher `#130F30`; admin `#0F0F2D` | Choose canonical dark token and gradient stops |
-| Canvas | Public white; learner/teacher `#F8FAFC`; admin `#F4F6FA` | Choose base canvas and whether public shell is an exception |
-| Header | 56px mobile, 60px learner, 64px tablet, 72px desktop | Confirm exact shell heights and safe-area behavior |
-| Breakpoint | Admin hides sidebar below 1280; other reviews only state tablet ranges | Confirm sidebar collapse breakpoint |
-| Bottom nav | Learner 64px mobile; teacher/admin 72px tablet; admin 64px mobile | Confirm bar heights, item count, and FAB ownership |
-| Shape | Cards range 12–24px; learner reports 20px desktop/16px mobile | Confirm canonical card radius by shell |
-| Font | Reports suggest several Persian families | Final: self-hosted Vazirmatn with recorded license and hash |
-| Unreviewed pages | Four references have no Gemini analysis marker | Run four additional sequential reviews before page implementation |
+| Primary brand | Public/learner/teacher/admin analyses reported different violet values | Use Section 7 `brand-primary` tokens |
+| Dark shell | Public/teacher/admin analyses reported different dark values | Use Section 7 shell gradient and role-specific canvas |
+| Canvas | Public, learner, teacher, and admin surfaces differed | Use Section 7 public/auth, learner, and teacher/admin dispositions |
+| Header | Reports ranged from 56px to 72px | Use Section 7 desktop/tablet/mobile heights |
+| Breakpoint | Reports used different tablet boundaries | Use Section 7 768/1280 boundaries and 480px compact sub-breakpoint |
+| Bottom nav | Reports ranged from 56px to 72px | Use Section 7 72px tablet and 64px mobile plus safe area |
+| Shape | Reports ranged from 12px to 24px | Use Section 7 control/card/panel/modal/pill values |
+| Font | Reports named several Persian families | Use self-hosted Vazirmatn and the recorded license/hash |
 
-Until these decisions are recorded by Commander/employer, implementation must
-not infer a token value outside the final token table.
+Implementation must use the final token table and may not add page-local brand
+color literals.
 
 ## 6. Supplementary reference audits
 
-The four remaining references were audited sequentially after Commander
-authorized `UI-FOUNDATION-002A-R`. They are still analysis inputs only.
+The supplementary four references were audited sequentially after Commander
+authorized `UI-FOUNDATION-002A-R`; all eight audits are now complete.
 
 | Reference | Prompt ID | Completion marker |
 |---|---|---|
@@ -287,7 +286,7 @@ mobile five-step bar must collapse below 370px to avoid overflow.
 ## 7. Decision matrix — final Commander decisions
 
 The following decisions are authoritative for the next implementation task.
-They replace the earlier candidate values; components must use semantic tokens,
+They replace the earlier audit values; components must use semantic tokens,
 and raw brand literals are prohibited outside the token layer.
 
 | Decision | Final decision | Evidence/exception |
@@ -330,8 +329,10 @@ must perform the visual comparison; this document is not self-approval.
   `docs/coordination/CURRENT_TASK.md`, `PROJECT_STATE.md`, and `WORKLOG.md`;
   no coordination file was changed by this task.
 - Backend/frontend source was not changed.
-- No commit or push was performed, per `UI-FOUNDATION-002A` instruction.
+- Document checkpoint commits: `28996446cc3c8912212b8bf32628f0b3e3b2eb6f`
+  and `6519bf9aabcce2257cb44e1bd35dfb3f4017e4b7`; both were pushed to
+  `codesho-test/main`.
 - Local raw Gemini artifacts, exact prompts, and provider responses remain
   outside the repository.
-- `SOURCE_IMPLEMENTATION = BLOCKED_PENDING_SPEC_APPROVAL`.
-- `UI_FOUNDATION_002A-R = APPROVED_PENDING_DOCUMENT_FIXES`.
+- `SOURCE_IMPLEMENTATION = BLOCKED_UNTIL_INDEPENDENT_COMMANDER_TASK`.
+- `UI_FOUNDATION_002A-R = APPROVED`.
