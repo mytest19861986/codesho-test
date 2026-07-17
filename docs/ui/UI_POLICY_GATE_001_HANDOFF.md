@@ -2,8 +2,8 @@
 
 Status: complete
 Repository: `codesho-test`
-Commit: `a02d2a9` (implementation checkpoint; this handoff is the final
-documentation checkpoint)
+Implementation commit: `a02d2a9`
+Final documentation checkpoint: `e37b5f0`
 Promotion: forbidden for protected `codesho`
 
 ## Delivered
@@ -39,9 +39,9 @@ Promotion: forbidden for protected `codesho`
 - `npm run lint`, `npm run typecheck`, `npm run build`, and `git diff --check`:
   passed.
 - No dependency was added; `frontend/package-lock.json` was not changed.
-- CI: [29564109651](https://github.com/mytest19861986/codesho-test/actions/runs/29564109651)
-- Compose smoke/restore: [29564109647](https://github.com/mytest19861986/codesho-test/actions/runs/29564109647)
-- Both real gates completed successfully for `a02d2a9`.
+- CI: [29564264678](https://github.com/mytest19861986/codesho-test/actions/runs/29564264678)
+- Compose smoke/restore: [29564264683](https://github.com/mytest19861986/codesho-test/actions/runs/29564264683)
+- Both real gates completed successfully for `e37b5f0`.
 
 UI-GOV-001 is closed. Shell/page implementation remains blocked until a new
 approved task. The next task must preserve the three employer blocking gates.
