@@ -7,7 +7,7 @@ import test from "node:test";
 
 import { run } from "./check-ui-policy.mjs";
 
-const LEGACY = ["src/app/page.tsx", "src/app/styles.css", "src/app/ui-001.css"];
+const LEGACY = ["src/app/styles.css", "src/app/ui-001.css"];
 
 function hash(content) {
   return crypto.createHash("sha256").update(content).digest("hex").toUpperCase();
@@ -22,6 +22,7 @@ function fixture() {
   }
   fs.mkdirSync(path.join(root, "src/components"), { recursive: true });
   fs.mkdirSync(path.join(root, "src/styles"), { recursive: true });
+  write(root, "src/app/page.tsx", "export const Page = ({ label }: { label: string }) => <main>{label}</main>;");
   const baseline = Object.fromEntries(LEGACY.map((relative) => {
     const content = fs.readFileSync(path.join(root, relative));
     return [relative, hash(content)];
@@ -68,8 +69,22 @@ test("fixture/mock import fails", () => {
 
 test("legacy hash mutation fails", () => {
   const root = fixture();
-  fs.appendFileSync(path.join(root, "src/app/page.tsx"), "changed\n");
+  fs.appendFileSync(path.join(root, "src/app/styles.css"), "changed\n");
   assert.equal(run(root).ok, false);
+});
+
+test("page is not required in the legacy baseline", () => {
+  const root = fixture();
+  assert.deepEqual(run(root), { ok: true, violations: [] });
+});
+
+test("page participates in active policy scanning", () => {
+  const root = fixture();
+  write(root, "src/app/page.tsx", "export const Page = () => <main style={{ color: '#fff' }} />;");
+  assert.deepEqual(run(root), {
+    ok: false,
+    violations: ["src/app/page.tsx: raw color syntax matched /#[0-9a-f]{3,8}\\b/i"],
+  });
 });
 
 test("token-layer colors and props pass", () => {

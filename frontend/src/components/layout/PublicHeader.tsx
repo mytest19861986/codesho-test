@@ -8,6 +8,7 @@ import styles from "./public-shell.module.css";
 
 export function PublicHeader({ actionSlot, activeItemId, brand, drawerCloseLabel, drawerOpen, menuButtonLabel, navigationItems, navigationLabel, onDrawerClose, onDrawerOpen, utilitySlot }: PublicHeaderProps) {
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const hasNavigationItems = navigationItems.length > 0;
 
   return (
     <header className={styles.header}>
@@ -18,21 +19,25 @@ export function PublicHeader({ actionSlot, activeItemId, brand, drawerCloseLabel
             {actionSlot ? <div className={styles.actionSlot}>{actionSlot}</div> : null}
           </div>
         ) : null}
-        <nav aria-label={navigationLabel} className={styles.desktopNavigation}>
-          <ul className={styles.desktopNavigationList}>
-            {navigationItems.map((item) => (
-              <li key={item.id}>
-                <a aria-current={item.id === activeItemId ? "page" : undefined} className={`${styles.desktopNavigationLink} ${item.id === activeItemId ? styles.desktopNavigationLinkActive : ""}`} href={item.href}>{item.label}</a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <div className={styles.headerBrand}>{brand}</div>
-        <button aria-controls="codesho-public-navigation-drawer" aria-expanded={drawerOpen} aria-label={menuButtonLabel} className={styles.menuButton} onClick={onDrawerOpen} ref={menuButtonRef} type="button">
-          <span aria-hidden="true" className={styles.menuIcon}><i /><i /><i /></span>
-        </button>
+        {hasNavigationItems ? (
+          <nav aria-label={navigationLabel} className={styles.desktopNavigation}>
+            <ul className={styles.desktopNavigationList}>
+              {navigationItems.map((item) => (
+                <li key={item.id}>
+                  <a aria-current={item.id === activeItemId ? "page" : undefined} className={`${styles.desktopNavigationLink} ${item.id === activeItemId ? styles.desktopNavigationLinkActive : ""}`} href={item.href}>{item.label}</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ) : null}
+        <div className={`${styles.headerBrand} ${hasNavigationItems ? "" : styles.headerBrandWithoutNavigation}`}>{brand}</div>
+        {hasNavigationItems ? (
+          <button aria-controls="codesho-public-navigation-drawer" aria-expanded={drawerOpen} aria-label={menuButtonLabel} className={styles.menuButton} onClick={onDrawerOpen} ref={menuButtonRef} type="button">
+            <span aria-hidden="true" className={styles.menuIcon}><i /><i /><i /></span>
+          </button>
+        ) : null}
       </div>
-      <PublicNavigationDrawer activeItemId={activeItemId} closeLabel={drawerCloseLabel} items={navigationItems} label={navigationLabel} onClose={onDrawerClose} open={drawerOpen} triggerRef={menuButtonRef} />
+      {hasNavigationItems ? <PublicNavigationDrawer activeItemId={activeItemId} closeLabel={drawerCloseLabel} items={navigationItems} label={navigationLabel} onClose={onDrawerClose} open={drawerOpen} triggerRef={menuButtonRef} /> : null}
     </header>
   );
 }

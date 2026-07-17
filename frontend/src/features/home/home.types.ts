@@ -82,6 +82,11 @@ export interface HomepageAssetMetadata {
 
 export interface HomepageAlphaContent {
   readonly brandName: "CodeSho";
+  readonly shell: {
+    readonly drawerCloseLabel: string;
+    readonly menuButtonLabel: string;
+    readonly navigationLabel: string;
+  };
   readonly navigation: readonly HomepageNavigationItem[];
   readonly sections: HomepageSectionStates;
   readonly assets: HomepageAssetStates;

@@ -35,6 +35,10 @@
   font-weight: var(--cs-font-weight-bold);
 }
 
+.headerBrandWithoutNavigation {
+  margin-inline-start: auto;
+}
+
 .desktopNavigation {
   flex: 1 1 auto;
   min-inline-size: 0;

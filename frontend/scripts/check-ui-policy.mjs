@@ -5,7 +5,6 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
 const LEGACY_FILES = new Set([
-  "src/app/page.tsx",
   "src/app/styles.css",
   "src/app/ui-001.css",
 ]);

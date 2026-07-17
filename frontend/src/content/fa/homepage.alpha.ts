@@ -7,6 +7,11 @@ const hidden = (route: HomepageRoute) => ({
 
 export const homepageAlphaContent = {
   brandName: "CodeSho",
+  shell: {
+    drawerCloseLabel: "بستن منوی اصلی",
+    menuButtonLabel: "باز کردن منوی اصلی",
+    navigationLabel: "ناوبری اصلی",
+  },
   navigation: [
     { id: "paths", label: "مسیرهای یادگیری", destination: hidden("/paths") },
     { id: "courses", label: "دوره‌ها", destination: hidden("/courses") },
