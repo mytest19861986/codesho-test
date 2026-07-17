@@ -1,9 +1,11 @@
-# UI-HOME-002A - Homepage implementation specification
+# UI-HOME-002 - Homepage implementation specification
 
-Status: `ANALYSIS_ONLY - AWAITING_EMPLOYER_APPROVALS`
+Status: `UI-HOME-002B1 CONTENT-CONTRACT ONLY - PAGE IMPLEMENTATION FORBIDDEN`
 Reference: `H:\codesho\UI\ui new\desktop+mobile+tablet\main.png`
-Scope: This document plans a future Homepage implementation. It authorizes no
-source, asset, package, data, API, commit, or push change.
+Scope: This document plans a future Homepage implementation. `UI-HOME-002B1`
+authorizes only `frontend/src/features/home/home.types.ts` and
+`frontend/src/content/fa/homepage.alpha.ts`; it authorizes no page, component,
+CSS, asset, shell, package, lockfile, API, or route implementation.
 
 ## Non-negotiable implementation rules
 
@@ -62,10 +64,17 @@ Homepage
 
 ## Typed content and provenance contract
 
+The `UI-HOME-002B1` Alpha contract is `HomepageAlphaContent`. Its approved
+route union is `/login`, `/signup`, `/paths`, `/courses`, `/projects`, and
+`/mentor`. A destination has a route and status. Until a route is implemented,
+its status is exactly `hidden_until_route_available` and a renderer must not
+render a broken link. The text logo is `کدشو`; statistics and testimonials are
+not present in the Alpha payload.
+
 Every future `HomepageContent` payload is passed from a content module or
-approved server/data boundary and includes stable ids. CTA shape is
-`{ id, label, href, destinationStatus }`; `destinationStatus` is one of
-`approved`, `pending_product_decision`, or `unavailable`. Numeric data shape
+approved server/data boundary and includes stable ids. The Alpha CTA shape is
+`{ id, label, destination: { route, status } }`; routes without an
+implementation use `hidden_until_route_available`. Numeric data shape
 is `{ value, label, provenance, asOf, displayState }`; `displayState` is
 `verified`, `hidden`, or `placeholder_not_for_production`. Testimonials require
 `source`, `permissionStatus`, `displayName`, and avatar `assetId`.
