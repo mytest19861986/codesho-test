@@ -69,6 +69,13 @@
   database, authentication, authorization, tenant-isolation, payment, and
   privacy gates still require later Claude verification. Disposition findings
   before applying them.
+- For every Gemini interaction, first read
+  `H:\codesho\codesho\gemini\GEMII_REVIEW_GUIDE.md` and use the primary
+  `H:\codesho\codesho\gemini\GEMIN_REVIEW.py` channel with its project
+  defaults. Use `H:\codesho\codesho\gemini api\gemini` only after the
+  primary channel fails to return a complete response; do not call both
+  channels in parallel. Record the exact primary-channel failure before using
+  the API fallback.
 - For a blocker, attempt bounded safe diagnostics, approved fallback, and
   independent in-scope work first. Record the exact command/error, evidence,
   remaining decision, and resumable checkpoint in coordination artifacts.
