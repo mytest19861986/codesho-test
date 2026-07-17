@@ -1,6 +1,10 @@
 export { HomeHero } from "./HomeHero";
 export type { HomeHeroProps } from "./HomeHero";
+export { FinalCta } from "./FinalCta";
+export type { FinalCtaProps } from "./FinalCta";
 export { LearningPathGrid } from "./LearningPathGrid";
 export type { LearningPathGridProps } from "./LearningPathGrid";
+export { MentorCta } from "./MentorCta";
+export type { MentorCtaProps } from "./MentorCta";
 export { TrustStrip } from "./TrustStrip";
 export type { TrustStripProps } from "./TrustStrip";
