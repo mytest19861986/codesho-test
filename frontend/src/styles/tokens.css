@@ -10,10 +10,12 @@
   --cs-color-bg-base: #f8fafc;
   --cs-color-bg-surface: #ffffff;
   --cs-color-transparent: transparent;
+  --cs-color-overlay: rgb(15 23 42 / 45%);
   --cs-color-text-primary: #0f172a;
   --cs-color-text-secondary: #334155;
   --cs-color-text-placeholder: #475569;
   --cs-color-text-muted: #94a3b8;
+  --cs-color-text-inverse: #ffffff;
   --cs-color-border-subtle: #e2e8f0;
   --cs-color-control-disabled-bg: #e2e8f0;
   --cs-color-control-disabled-text: #475569;
@@ -26,6 +28,7 @@
   --cs-color-danger-foreground: #b91c1c;
   --cs-color-info: #3b82f6;
   --cs-color-info-foreground: #1d4ed8;
+  --cs-color-nav-teacher-active-bg: #0e7490;
 
   --cs-font-family-sans: var(--font-vazirmatn), Tahoma, Arial, sans-serif;
   --cs-font-size-display: 2rem;
