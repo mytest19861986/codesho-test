@@ -1,7 +1,7 @@
 # UI-HOME-002A - Homepage implementation specification
 
-Status: `ANALYSIS_ONLY - AWAITING_EMPLOYER_APPROVALS`  
-Reference: `H:\codesho\UI\ui new\desktop+mobile+tablet\main.png`  
+Status: `ANALYSIS_ONLY - AWAITING_EMPLOYER_APPROVALS`
+Reference: `H:\codesho\UI\ui new\desktop+mobile+tablet\main.png`
 Scope: This document plans a future Homepage implementation. It authorizes no
 source, asset, package, data, API, commit, or push change.
 
