@@ -80,3 +80,27 @@ The implementation passes all three blocking policy rules:
 No package manifest changed, no coordination-stage files are part of this
 checkpoint, no production page was added, and no protected-repository
 promotion was attempted.
+
+## C1R navigation-collection remediation
+
+`AppShellProps` now requires `bottomNavigationItems` separately from the full
+`navigationItems` collection. The full collection is passed unchanged to
+`Sidebar` and `NavigationDrawer`; the separate collection is passed unchanged
+only to `MobileBottomNav`. `AppShell` has no global five-item limit, slice,
+truncation, fallback, merge, or conditional-hook path. `MobileBottomNav`
+retains its independent fail-fast maximum-five-item contract.
+
+Temporary runtime evidence outside the repository rendered 12 full navigation
+items and 5 bottom-navigation items: Sidebar `12`, Drawer `12`, Bottom `5`.
+The temporary preview route was deleted before the C1R checkpoint commit.
+
+Sequential Claude reviews completed outside the repository:
+
+| Review | Prompt / marker | Result |
+|---|---|---|
+| Types | `CLAUDE_UI_FOUNDATION_002C1R_TYPES_REVIEW_01_V1` / `CLAUDE_UI_FOUNDATION_002C1R_TYPES_REVIEW_01_COMPLETED` | PASS; P0/P1 none |
+| AppShell | `CLAUDE_UI_FOUNDATION_002C1R_APPSHELL_REVIEW_02_V1` / `CLAUDE_UI_FOUNDATION_002C1R_APPSHELL_REVIEW_02_COMPLETED` | PASS; P0/P1/P2 none |
+
+The Types review noted that `NavigationItem.badge` remains optional; this is an
+existing intentional per-item display capability and is outside the bounded
+C1R change. No source change was required.

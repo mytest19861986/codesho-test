@@ -17,6 +17,7 @@ export function AppShell({
   headerActionsSlot,
   headerPrimarySlot,
   menuButtonLabel,
+  bottomNavigationItems,
   navigationItems,
   navigationLabel,
   profileSlot,
@@ -24,9 +25,6 @@ export function AppShell({
   sidebarSupplementarySlot,
   tone,
 }: AppShellProps) {
-  if (navigationItems.length > 5) {
-    throw new Error("AppShell accepts at most five navigation items for mobile navigation.");
-  }
   const [drawerOpen, setDrawerOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const handleClose = useCallback(() => setDrawerOpen(false), []);
@@ -56,7 +54,7 @@ export function AppShell({
         />
         <main className={styles.shellContent}>{children}</main>
       </div>
-      <MobileBottomNav activeItemId={activeItemId} items={navigationItems} navigationLabel={navigationLabel} />
+      <MobileBottomNav activeItemId={activeItemId} items={bottomNavigationItems} navigationLabel={navigationLabel} />
       <NavigationDrawer
         activeItemId={activeItemId}
         closeLabel={drawerCloseLabel}

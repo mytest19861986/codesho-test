@@ -18,6 +18,7 @@ export interface AppShellProps {
   headerActionsSlot?: ReactNode;
   headerPrimarySlot?: ReactNode;
   menuButtonLabel: string;
+  bottomNavigationItems: NavigationItem[];
   navigationItems: NavigationItem[];
   navigationLabel: string;
   profileSlot?: ReactNode;
