@@ -15,6 +15,9 @@ Status: employer decisions and `UI-HOME-002B1R-FIX` disposition supplied through
 - Testimonials are omitted.
 - Footer transcript is intentionally absent because its reported Projects
   subgroup was ambiguous.
+- Employer visual approval on 2026-07-17 authorizes the byte-verified Hero
+  illustration for Alpha only. Its Production rights remain
+  `pending_metadata_review`; this is not Production approval.
 
 ## Transcript review evidence
 
@@ -34,6 +37,6 @@ link until its route is available.
 
 ## Scope boundary
 
-This decision authorizes the typed content contract only. It does not
-authorize Homepage/page, component, CSS, asset, shell, package, or lockfile
-changes.
+This decision authorizes the typed content contract and the approved Alpha Hero
+asset registration only. It does not authorize Homepage/page, component, CSS,
+shell, package, lockfile, route, or Production changes.

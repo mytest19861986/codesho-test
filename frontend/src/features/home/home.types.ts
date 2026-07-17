@@ -10,6 +10,18 @@ export type HomepageSectionStatus =
 
 export type HomepageAssetStatus = "generation_authorized" | "awaiting_official_asset";
 
+export type HomepageAssetApprovalStatus = "alpha_approved";
+
+export type HomepageAssetBackground = "solid";
+
+export type HomepageAssetPresentation = "decorative";
+
+export type HomepageProductionRights = "pending_metadata_review";
+
+export type HomepageAssetSourceKind = "employer_supplied_ai_generated";
+
+export type HomepageReferenceUse = "none_reported_not_independently_verified";
+
 export interface HomepageDestination {
   readonly route: HomepageRoute;
   readonly status: HomepageDestinationStatus;
@@ -47,6 +59,27 @@ export interface HomepageAssetStates {
   readonly officialLogo: "awaiting_official_asset";
 }
 
+export interface HomepageAssetMetadata {
+  readonly id: "home-hero-ai-coding-alpha";
+  readonly src: "/assets/home/hero-ai-coding-alpha.png";
+  readonly width: 1448;
+  readonly height: 1086;
+  readonly format: "png";
+  readonly background: HomepageAssetBackground;
+  /** Coupled invariant: decorative presentation requires an empty alt value. */
+  readonly presentation: HomepageAssetPresentation;
+  readonly alt: "";
+  readonly approvalStatus: HomepageAssetApprovalStatus;
+  /** Provisional only; never treat this value as cleared for Production use. */
+  readonly productionRights: HomepageProductionRights;
+  readonly sourceKind: HomepageAssetSourceKind;
+  /** Unknown at Alpha; do not infer or backfill attribution. */
+  readonly provider: null;
+  /** Unknown at Alpha; do not infer or backfill attribution. */
+  readonly model: null;
+  readonly referenceUse: HomepageReferenceUse;
+}
+
 export interface HomepageAlphaContent {
   readonly brandName: "CodeSho";
   readonly navigation: readonly HomepageNavigationItem[];
@@ -58,6 +91,7 @@ export interface HomepageAlphaContent {
     readonly description: string;
     readonly primaryAction: HomepageAction;
     readonly secondaryAction: HomepageAction;
+    readonly illustration: HomepageAssetMetadata;
   };
   readonly learningPaths: readonly HomepageLearningPath[];
   readonly mentor: {
