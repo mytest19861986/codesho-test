@@ -69,8 +69,9 @@ by Section 7; page-specific exceptions require a cited reference.
 | `color-bg-base` | `#F8FAFC` | Application canvas |
 | `color-bg-surface` | `#FFFFFF` | Cards, tables, inputs |
 | `color-text-primary` | `#0F172A` | Headings and key values |
-| `color-text-secondary` | `#475569` | Descriptions and metadata |
-| `color-text-muted` | `#94A3B8` | Placeholder and non-essential support text |
+| `color-text-secondary` | `#334155` | Descriptions and metadata |
+| `color-text-placeholder` | `#475569` | Placeholder text |
+| `color-text-muted` | `#94A3B8` | Non-essential support text |
 | `color-border-subtle` | `#E2E8F0` | Card borders and dividers |
 | `color-brand-primary` | `#5D26DF` | Primary action and active state |
 | `color-brand-primary-hover` | `#4B1BB8` | Primary hover state |
@@ -81,9 +82,13 @@ by Section 7; page-specific exceptions require a cited reference.
 | `color-brand-dark-gradient-end` | `#1E1B4B` | Teacher/Admin sidebar gradient end |
 | `color-accent-teal` | `#06B6D4` | Accent only; never primary action |
 | `color-success` | `#10B981` | Completion/published state |
+| `color-success-foreground` | `#047857` | Status badge text |
 | `color-warning` | `#F59E0B` | Review/rating/in-progress state |
-| `color-danger` | `#EF4444` | Destructive/error state |
+| `color-warning-foreground` | `#92400E` | Status badge text |
+| `color-danger` | `#B91C1C` | Destructive/error state |
+| `color-danger-foreground` | `#B91C1C` | Status badge text |
 | `color-info` | `#3B82F6` | Informational state |
+| `color-info-foreground` | `#1D4ED8` | Status badge text |
 
 Gradient usage is limited to hero/CTA and AI-assistant surfaces. The approved
 dark shell gradient is `linear-gradient(135deg, #0F0F2D, #1E1B4B)`.

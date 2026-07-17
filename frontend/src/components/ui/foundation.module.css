@@ -177,19 +177,6 @@
   color: var(--cs-color-text-primary);
 }
 
-.cardInteractive {
-  transition:
-    border-color var(--cs-motion-standard) ease,
-    box-shadow var(--cs-motion-standard) ease,
-    transform var(--cs-motion-standard) ease;
-}
-
-.cardInteractive:hover {
-  border-color: var(--cs-color-brand-primary);
-  box-shadow: var(--cs-shadow-floating);
-  transform: translateY(-0.125rem);
-}
-
 .badge {
   display: inline-flex;
   align-items: center;
@@ -209,22 +196,22 @@
 
 .badgeSuccess {
   background: color-mix(in srgb, var(--cs-color-success) 12%, var(--cs-color-bg-surface));
-  color: var(--cs-color-success);
+  color: var(--cs-color-success-foreground);
 }
 
 .badgeWarning {
   background: color-mix(in srgb, var(--cs-color-warning) 14%, var(--cs-color-bg-surface));
-  color: var(--cs-color-warning);
+  color: var(--cs-color-warning-foreground);
 }
 
 .badgeDanger {
   background: color-mix(in srgb, var(--cs-color-danger) 12%, var(--cs-color-bg-surface));
-  color: var(--cs-color-danger);
+  color: var(--cs-color-danger-foreground);
 }
 
 .badgeInfo {
   background: color-mix(in srgb, var(--cs-color-info) 12%, var(--cs-color-bg-surface));
-  color: var(--cs-color-info);
+  color: var(--cs-color-info-foreground);
 }
 
 .progress {
@@ -251,7 +238,6 @@
 @media (prefers-reduced-motion: reduce) {
   .button,
   .iconButton,
-  .cardInteractive,
   .progressValue {
     transition: none;
   }

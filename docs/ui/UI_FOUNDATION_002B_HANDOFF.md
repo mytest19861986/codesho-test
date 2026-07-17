@@ -4,6 +4,27 @@ Status: complete; source scope was limited to shared tokens and primitive
 components. Page, homepage, shell, backend, and API implementation remain
 forbidden.
 
+## UI-FOUNDATION-002B-R Commander reopening
+
+- Independent Commander review reopened this task for status-badge contrast
+  and misleading interactive-card semantics.
+- Authorized files are `tokens.css`, `foundation.module.css`, `Card.tsx`, this
+  handoff, and the approved foundation specification.
+- Required follow-up marker:
+  `GEMINI_UI_FOUNDATION_002B_STATUS_REVIEW_05_COMPLETED`.
+
+## UI-FOUNDATION-002B-R completion
+
+- Status foreground tokens were added for success, warning, danger and info.
+  Calculated contrast against the actual color-mix backgrounds is respectively
+  `4.91:1`, `6.36:1`, `5.29:1` and `5.84:1`.
+- `Card` is now passive by construction: its `interactive` prop and hover CSS
+  were removed. Future links/buttons require separate semantic components.
+- Gemini Review 05 completed sequentially with marker
+  `GEMINI_UI_FOUNDATION_002B_STATUS_REVIEW_05_COMPLETED`; it found no
+  BLOCKING, MAJOR or MINOR issue. The 390px screenshot, prompt and raw reply
+  remain outside the repository at `H:\codesho\ui-foundation-002b-working`.
+
 ## Review evidence
 
 The three required Gemini reviews were run sequentially against screenshots
