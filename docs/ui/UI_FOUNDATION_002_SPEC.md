@@ -1,9 +1,9 @@
 # UI-FOUNDATION-002A — Reference Audit & Specification
 
-Status: `UI-FOUNDATION-002A-R`; specification approved pending this document fix  
-Owner: Codex  
-Task: `UI-FOUNDATION-002A`  
-Reference root: `H:\codesho\UI\ui new\desktop+mobile+tablet`  
+Status: `UI-FOUNDATION-002A-R`; specification approved pending this document fix
+Owner: Codex
+Task: `UI-FOUNDATION-002A`
+Reference root: `H:\codesho\UI\ui new\desktop+mobile+tablet`
 Repository: `codesho-test` at `667fd9721c1a5abd712c77ddb5e87772690649e4`
 
 This document is a design-system audit and implementation specification only.
