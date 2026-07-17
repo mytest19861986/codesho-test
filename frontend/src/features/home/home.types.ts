@@ -94,6 +94,7 @@ export interface HomepageAlphaContent {
     readonly illustration: HomepageAssetMetadata;
   };
   readonly learningPaths: readonly HomepageLearningPath[];
+  readonly learningPathsHeading: "مسیرهای یادگیری";
   readonly mentor: {
     readonly title: string;
     readonly descriptionStatus: "pending_transcription";

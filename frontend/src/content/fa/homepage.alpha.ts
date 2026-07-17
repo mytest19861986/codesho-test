@@ -58,6 +58,7 @@ export const homepageAlphaContent = {
     { id: "backend", title: "مسیر بک‌اند", description: "ساخت APIها و سیستم‌های مقیاس‌پذیر و پایدار", action: { id: "path-backend", label: "مشاهده مسیر", destination: hidden("/paths") } },
     { id: "ai-engineering", title: "مسیر مهندسی هوش مصنوعی", description: "ساخت مدل‌های هوشمند و کاربردهای AI", action: { id: "path-ai-engineering", label: "مشاهده مسیر", destination: hidden("/paths") } },
   ],
+  learningPathsHeading: "مسیرهای یادگیری",
   mentor: {
     title: "منتور هوشمند CodeSho، همیشه کنار تو",
     descriptionStatus: "pending_transcription",

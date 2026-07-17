@@ -1,0 +1,73 @@
+.section {
+  padding-block: var(--cs-space-12);
+}
+
+.heading {
+  margin: 0 0 var(--cs-space-6);
+  color: var(--cs-color-text-primary);
+  font-size: var(--cs-font-size-heading-xl);
+  font-weight: var(--cs-font-weight-bold);
+  line-height: var(--cs-line-height-tight);
+  text-align: center;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--cs-space-4);
+}
+
+.card {
+  display: grid;
+  align-content: start;
+  gap: var(--cs-space-3);
+  min-block-size: 11rem;
+  min-inline-size: 0;
+  padding: var(--cs-space-6);
+  border: var(--cs-border-width) solid var(--cs-color-border-subtle);
+  border-radius: var(--cs-radius-card);
+  background: var(--cs-color-bg-surface);
+  box-shadow: var(--cs-shadow-card);
+}
+
+.cardTitle {
+  margin: 0;
+  color: var(--cs-color-text-primary);
+  font-size: var(--cs-font-size-heading-lg);
+  font-weight: var(--cs-font-weight-bold);
+  line-height: var(--cs-line-height-tight);
+}
+
+.cardDescription {
+  margin: 0;
+  color: var(--cs-color-text-secondary);
+  font-size: var(--cs-font-size-body);
+  line-height: var(--cs-line-height-relaxed);
+}
+
+.cardAction {
+  color: var(--cs-color-brand-primary);
+  font-weight: var(--cs-font-weight-semibold);
+  text-decoration: none;
+}
+
+.cardAction:focus-visible {
+  outline: none;
+  box-shadow: var(--cs-focus-ring);
+}
+
+@media (max-width: 64rem) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 47.9375rem) {
+  .section {
+    padding-block: var(--cs-space-8);
+  }
+
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
