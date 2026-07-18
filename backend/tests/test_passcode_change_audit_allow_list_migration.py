@@ -49,7 +49,11 @@ def test_expected_constraint_sql_has_one_column_reference_before_in(
     statement = cursor.execute.call_args_list[0].args[0]
     values = migration._values(getattr(migration, previous_values))
     expected_condition = f"{column} IS NULL OR {column} IN" if nullable else f"{column} IN"
-    assert f"CHECK ({expected_condition} ({values}))" in statement
+    assert statement == (
+        f"CREATE TEMPORARY TABLE codesho_expected_{column} ({column} varchar(128), "
+        f"CONSTRAINT expected_{column}_valid CHECK ({expected_condition} ({values}))) "
+        "ON COMMIT DROP"
+    )
 
 
 def test_mismatch_aborts_before_any_constraint_replacement(migration):

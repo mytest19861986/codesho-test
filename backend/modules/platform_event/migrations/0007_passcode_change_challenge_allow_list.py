@@ -67,7 +67,7 @@ def _expected_constraint(cursor, column, nullable):
     condition = f"{column} IS NULL OR {column} IN" if nullable else f"{column} IN"
     cursor.execute(
         f"CREATE TEMPORARY TABLE {table_name} ({column} varchar(128), "
-        f"CONSTRAINT {constraint_name} CHECK ({condition} ({_values(previous_values)})) "
+        f"CONSTRAINT {constraint_name} CHECK ({condition} ({_values(previous_values)}))) "
         "ON COMMIT DROP"
     )
     cursor.execute(

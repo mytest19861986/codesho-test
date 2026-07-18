@@ -26,3 +26,8 @@ condition once, and the focused test now pins both generated PostgreSQL CHECK
 forms. Claude remediation review
 `CLAUDE_AUTH_PASSCODE_CHANGE_001B2_AUDIT_MIGRATION_REVIEW_02_V1` completed
 with no blocking findings.
+
+After a second remote syntax failure, the exact DDL assertion was strengthened
+to include the table-closing parenthesis before `ON COMMIT DROP`. Claude review
+`CLAUDE_AUTH_PASSCODE_CHANGE_001B2_AUDIT_MIGRATION_REVIEW_03_V1` confirmed the
+generated PostgreSQL DDL is balanced and no blocking findings remain.
