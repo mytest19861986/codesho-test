@@ -1,0 +1,28 @@
+openapi: 3.0.3
+info:
+  title: Codesho passcode change future draft
+  version: 0.0.0-draft
+  description: Non-canonical dormant draft. It is not part of docs/openapi.yaml.
+x-codesho-status: non-canonical-future-contract
+paths:
+  /api/v1/auth/passcode/login/:
+    post:
+      summary: Existing login future must-change cookie behavior
+      responses:
+        '403': { description: passcode_change_required; sets the approved HttpOnly challenge cookie and creates no session }
+  /api/v1/auth/passcode/change/complete/:
+    post:
+      summary: Future completion; creates no session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [newPasscode], additionalProperties: false, properties: { newPasscode: { type: string, pattern: '^[0-9]{6}$' } } }
+      responses:
+        '204': { description: Passcode changed; no session }
+        '400': { description: invalid_request }
+        '401': { description: challenge_invalid_or_expired }
+        '403': { description: csrf_failed }
+        '409': { description: passcode_same_as_current }
+        '429': { description: try_again_later }
+        '503': { description: authentication_temporarily_unavailable }
