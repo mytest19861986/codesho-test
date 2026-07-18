@@ -112,7 +112,11 @@ TENANT_BYPASS_PATHS = (
     "/api/schema/",
     "/api/schema/swagger-ui/",
 )
-TENANT_PREAUTH_PATHS = ("/api/v1/auth/csrf/", "/api/v1/auth/passcode/login/")
+TENANT_PREAUTH_PATHS = (
+    "/api/v1/auth/csrf/",
+    "/api/v1/auth/passcode/login/",
+    "/api/v1/auth/passcode/change/complete/",
+)
 SESSION_COOKIE_AGE = env.int("SESSION_COOKIE_AGE", default=43_200)
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 CSRF_FAILURE_VIEW = "config.auth_views.csrf_failure"
@@ -135,6 +139,27 @@ PASSCODE_RATE_LIMIT_REDIS_PREFIX = env(
 )
 PASSCODE_BACKEND_FAILURE_RETRY_SECONDS = env.int(
     "PASSCODE_BACKEND_FAILURE_RETRY_SECONDS", default=5
+)
+# Forced passcode completion has a separate, short abuse window.  These
+# counters are deliberately not shared with login failures: a valid challenge
+# must not inherit a lockout caused by password guessing on another endpoint.
+PASSCODE_CHANGE_COMPLETION_WINDOW_SECONDS = env.int(
+    "PASSCODE_CHANGE_COMPLETION_WINDOW_SECONDS", default=600
+)
+PASSCODE_CHANGE_COMPLETION_ACCOUNT_MAX_FAILURES = env.int(
+    "PASSCODE_CHANGE_COMPLETION_ACCOUNT_MAX_FAILURES", default=5
+)
+PASSCODE_CHANGE_COMPLETION_CHALLENGE_MAX_FAILURES = env.int(
+    "PASSCODE_CHANGE_COMPLETION_CHALLENGE_MAX_FAILURES", default=5
+)
+PASSCODE_CHANGE_COMPLETION_IP_MAX_FAILURES = env.int(
+    "PASSCODE_CHANGE_COMPLETION_IP_MAX_FAILURES", default=30
+)
+PASSCODE_CHANGE_COMPLETION_DEVICE_MAX_FAILURES = env.int(
+    "PASSCODE_CHANGE_COMPLETION_DEVICE_MAX_FAILURES", default=10
+)
+PASSCODE_CHANGE_COMPLETION_GLOBAL_ALERT_THRESHOLD = env.int(
+    "PASSCODE_CHANGE_COMPLETION_GLOBAL_ALERT_THRESHOLD", default=100
 )
 TRUSTED_PROXY_CIDRS = tuple(env.list("TRUSTED_PROXY_CIDRS", default=[]))
 PASSCODE_DEVICE_COOKIE_NAME = env("PASSCODE_DEVICE_COOKIE_NAME", default="codesho_device")

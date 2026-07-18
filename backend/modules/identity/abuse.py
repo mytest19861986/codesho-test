@@ -27,6 +27,7 @@ class AbuseReason(StrEnum):
     ACCOUNT_LIMIT = "account_limit"
     IP_LIMIT = "ip_limit"
     DEVICE_LIMIT = "device_limit"
+    CHALLENGE_LIMIT = "challenge_limit"
     BACKEND_UNAVAILABLE = "backend_unavailable"
 
 
@@ -44,6 +45,26 @@ class AbuseDecision:
     retry_after_seconds: int
     progressive_delay_ms: int
     global_alert: bool
+
+
+@dataclass(frozen=True, slots=True)
+class CompletionSignals:
+    """Non-secret, HMAC-keyed dimensions for one change-completion request."""
+
+    client_ip: str
+    device_id: str | None
+    account_subject: str | None = None
+    challenge_subject: str | None = None
+    global_subject: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class CompletionDimensions:
+    account: bool = False
+    challenge: bool = False
+    ip: bool = False
+    device: bool = False
+    global_detection: bool = False
 
 
 _BUMP_LUA = """local out={}
@@ -68,6 +89,22 @@ return out"""
 _CLEAR_LUA = """local deleted=0
 for _,key in ipairs(KEYS) do if key~='' then deleted=deleted+redis.call('DEL',key) end end
 return {1,deleted}"""
+_COMPLETION_BUMP_LUA = """local out={}
+for i=1,5 do
+ if ARGV[6+i]=='1' and KEYS[i]~='' then
+  local n=redis.call('INCR',KEYS[i]); local t=redis.call('PTTL',KEYS[i])
+  if n==1 or t<0 then redis.call('PEXPIRE',KEYS[i],tonumber(ARGV[i])); t=tonumber(ARGV[i]) end
+  out[#out+1]=n; out[#out+1]=t
+ else out[#out+1]=0; out[#out+1]=0 end
+end
+local distinct=0; local distinct_ttl=0
+if ARGV[11]=='1' and KEYS[6]~='' and ARGV[12]~='' then
+ redis.call('ZADD',KEYS[6],0,ARGV[12]); local t=redis.call('PTTL',KEYS[6])
+ if t<0 then redis.call('PEXPIRE',KEYS[6],tonumber(ARGV[6])); t=tonumber(ARGV[6]) end
+ distinct=redis.call('ZCARD',KEYS[6]); distinct_ttl=t
+end
+out[#out+1]=distinct; out[#out+1]=distinct_ttl
+return out"""
 
 
 def _digest(value: str) -> str:
@@ -200,6 +237,147 @@ def record_successful_attempt(
         result = client.eval(_CLEAR_LUA, len(keys), *keys)
         if not isinstance(result, list) or len(result) != 2 or int(result[0]) != 1:
             raise ValueError("malformed abuse backend response")
+        return AbuseDecision(True, AbuseReason.ALLOWED, 0, 0, False)
+    except Exception:
+        return _backend_failure()
+
+
+def _completion_keys(signals: CompletionSignals) -> list[str]:
+    prefix = f"{settings.PASSCODE_RATE_LIMIT_REDIS_PREFIX}:completion"
+    # The selector is never retained: challenge_subject is an internal UUID and
+    # only its keyed digest is used in Redis.
+    return [
+        (
+            f"{prefix}:account:{_digest(signals.account_subject)}"
+            if signals.account_subject
+            else ""
+        ),
+        f"{prefix}:challenge:{_digest(signals.challenge_subject)}"
+        if signals.challenge_subject
+        else "",
+        f"{prefix}:ip:{_digest(signals.client_ip)}",
+        f"{prefix}:device:{_digest(signals.device_id)}" if signals.device_id else "",
+        f"{prefix}:global",
+    ]
+
+
+def _completion_distinct_key() -> str:
+    return f"{settings.PASSCODE_RATE_LIMIT_REDIS_PREFIX}:completion:global-distinct"
+
+
+def _completion_run(
+    script: str, signals: CompletionSignals, *, bump: bool
+) -> tuple[list[int], list[int]]:
+    keys = _completion_keys(signals)
+    args = (
+        [settings.PASSCODE_CHANGE_COMPLETION_WINDOW_SECONDS * 1000] * len(keys)
+        if bump
+        else []
+    )
+    result = _client().eval(script, len(keys), *keys, *args)
+    if not isinstance(result, list) or (len(result) != 10 and result != [-1]):
+        raise ValueError("malformed completion abuse backend response")
+    if result == [-1]:
+        raise ValueError("invalid completion abuse backend ttl")
+    values = [int(value) for value in result]
+    counts, ttls = values[0::2], values[1::2]
+    if any(value < 0 for value in counts + ttls):
+        raise ValueError("invalid completion abuse backend values")
+    return counts, ttls
+
+
+def _completion_decision(
+    counts: list[int], ttls: list[int], *, distinct_subjects: int = 0
+) -> AbuseDecision:
+    global_alert = (
+        counts[4] >= settings.PASSCODE_CHANGE_COMPLETION_GLOBAL_ALERT_THRESHOLD
+        or distinct_subjects >= 20
+    )
+    for index, limit, reason in (
+        (
+            0,
+            settings.PASSCODE_CHANGE_COMPLETION_ACCOUNT_MAX_FAILURES,
+            AbuseReason.ACCOUNT_LIMIT,
+        ),
+        (
+            1,
+            settings.PASSCODE_CHANGE_COMPLETION_CHALLENGE_MAX_FAILURES,
+            AbuseReason.CHALLENGE_LIMIT,
+        ),
+        (
+            2,
+            settings.PASSCODE_CHANGE_COMPLETION_IP_MAX_FAILURES,
+            AbuseReason.IP_LIMIT,
+        ),
+        (
+            3,
+            settings.PASSCODE_CHANGE_COMPLETION_DEVICE_MAX_FAILURES,
+            AbuseReason.DEVICE_LIMIT,
+        ),
+    ):
+        if counts[index] >= limit:
+            return AbuseDecision(
+                False, reason, max(0, math.ceil(ttls[index] / 1000)), 0, global_alert
+            )
+    return AbuseDecision(True, AbuseReason.ALLOWED, 0, 0, global_alert)
+
+
+def preflight_completion_attempt(signals: CompletionSignals) -> AbuseDecision:
+    try:
+        counts, ttls = _completion_run(_READ_LUA, signals, bump=False)
+        return _completion_decision(counts, ttls)
+    except Exception:
+        logger.warning(
+            "passcode_completion_abuse_backend_failure",
+            extra={
+                "event_name": "passcode_completion_abuse",
+                "error_code": "backend_unavailable",
+            },
+        )
+        return _backend_failure()
+
+
+def record_failed_completion_attempt(
+    signals: CompletionSignals, dimensions: CompletionDimensions
+) -> AbuseDecision:
+    try:
+        keys = _completion_keys(signals) + [_completion_distinct_key()]
+        flags = [
+            dimensions.account,
+            dimensions.challenge,
+            dimensions.ip,
+            dimensions.device,
+            dimensions.global_detection,
+        ]
+        subject = _digest(signals.global_subject) if signals.global_subject else ""
+        ttl = settings.PASSCODE_CHANGE_COMPLETION_WINDOW_SECONDS * 1000
+        result = _client().eval(
+            _COMPLETION_BUMP_LUA,
+            len(keys),
+            *keys,
+            *([ttl] * 6),
+            *("1" if flag else "0" for flag in flags),
+            subject,
+        )
+        if not isinstance(result, list) or len(result) != 12:
+            raise ValueError("malformed completion abuse backend response")
+        values = [int(value) for value in result]
+        if any(value < 0 for value in values):
+            raise ValueError("invalid completion abuse backend values")
+        counts, ttls = values[:10:2], values[1:10:2]
+        return _completion_decision(counts, ttls, distinct_subjects=values[10])
+    except Exception:
+        return _backend_failure()
+
+
+def record_successful_completion_attempt(signals: CompletionSignals) -> AbuseDecision:
+    try:
+        # A successful forced change clears only the account and single
+        # challenge counters.  IP and device counters are intentionally shared
+        # across principals and must never be reset by a successful request.
+        result = _client().eval(_CLEAR_LUA, 2, *_completion_keys(signals)[:2])
+        if not isinstance(result, list) or len(result) != 2 or int(result[0]) != 1:
+            raise ValueError("malformed completion clear response")
         return AbuseDecision(True, AbuseReason.ALLOWED, 0, 0, False)
     except Exception:
         return _backend_failure()

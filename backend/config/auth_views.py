@@ -13,6 +13,13 @@ from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 
 from config.authentication import LoginStatus, authenticate_passcode, validate_login_input
+from config.passcode_change_completion import CompletionStatus, complete_forced_passcode_change
+from modules.identity.abuse import (
+    AbuseReason,
+    CompletionDimensions,
+    CompletionSignals,
+    record_failed_completion_attempt,
+)
 from modules.identity.challenge_cookie import (
     COOKIE_HTTPONLY,
     COOKIE_NAME,
@@ -20,6 +27,7 @@ from modules.identity.challenge_cookie import (
     COOKIE_SAMESITE,
     COOKIE_SECURE,
     COOKIE_TTL_SECONDS,
+    parse_challenge_cookie,
 )
 from modules.identity.request_signals import extract_client_ip, extract_device_id, new_device_id
 from modules.platform_event.security_audit import (
@@ -139,6 +147,65 @@ def passcode_login(request: HttpRequest) -> HttpResponse:
     return response
 
 
+@require_POST
+@csrf_protect
+def passcode_change_complete(request: HttpRequest) -> HttpResponse:
+    tenant_request = cast(TenantRequest, request)
+    client_ip = extract_client_ip(request)
+    if client_ip is None:
+        return _error("invalid_request", 400)
+    device_id = extract_device_id(request)
+    try:
+        payload = json.loads(request.body)
+        if set(payload) != {"newPasscode"}:
+            raise ValueError
+        _, new_passcode = validate_login_input("completion", payload["newPasscode"])
+    except (json.JSONDecodeError, AttributeError, TypeError, ValueError):
+        decision = record_failed_completion_attempt(
+            CompletionSignals(client_ip, device_id), CompletionDimensions(ip=True, device=True)
+        )
+        if decision.reason is AbuseReason.BACKEND_UNAVAILABLE:
+            return _error("authentication_temporarily_unavailable", 503)
+        if not decision.allowed:
+            return _error("try_again_later", 429, retry_after=decision.retry_after_seconds)
+        return _error("invalid_request", 400)
+    try:
+        cookie = parse_challenge_cookie(request.COOKIES.get(COOKIE_NAME))
+    except ValueError:
+        decision = record_failed_completion_attempt(
+            CompletionSignals(client_ip, device_id), CompletionDimensions(ip=True, device=True)
+        )
+        if decision.reason is AbuseReason.BACKEND_UNAVAILABLE:
+            return _error("authentication_temporarily_unavailable", 503)
+        if not decision.allowed:
+            return _error("try_again_later", 429, retry_after=decision.retry_after_seconds)
+        invalid_response = _error("challenge_invalid_or_expired", 401)
+        _clear_challenge_cookie(invalid_response)
+        return invalid_response
+    result = complete_forced_passcode_change(
+        tenant=tenant_request.tenant,
+        selector=cookie.selector,
+        secret=cookie.secret,
+        new_passcode=new_passcode,
+        client_ip=client_ip,
+        device_id=device_id,
+    )
+    response: HttpResponse
+    if result.status is CompletionStatus.SUCCESS:
+        response = HttpResponse(status=204)
+        _clear_challenge_cookie(response)
+        return response
+    if result.status in {CompletionStatus.INVALID, CompletionStatus.EXPIRED}:
+        response = _error("challenge_invalid_or_expired", 401)
+        _clear_challenge_cookie(response)
+        return response
+    if result.status is CompletionStatus.SAME_AS_CURRENT:
+        return _error("passcode_same_as_current", 409)
+    if result.status is CompletionStatus.RATE_LIMITED:
+        return _error("try_again_later", 429, retry_after=result.retry_after_seconds)
+    return _error("authentication_temporarily_unavailable", 503)
+
+
 @require_GET
 def session(request: HttpRequest) -> JsonResponse:
     tenant_request = cast(TenantRequest, request)
@@ -180,4 +247,15 @@ def logout(request: HttpRequest) -> HttpResponse:
 
 
 def csrf_failure(request: HttpRequest, reason: str = "") -> JsonResponse:
+    if request.path == "/api/v1/auth/passcode/change/complete/":
+        client_ip = extract_client_ip(request)
+        if client_ip is not None:
+            decision = record_failed_completion_attempt(
+                CompletionSignals(client_ip, extract_device_id(request)),
+                CompletionDimensions(ip=True, device=True),
+            )
+            if decision.reason is AbuseReason.BACKEND_UNAVAILABLE:
+                return _error("authentication_temporarily_unavailable", 503)
+            if not decision.allowed:
+                return _error("try_again_later", 429, retry_after=decision.retry_after_seconds)
     return _error("csrf_failed", 403)

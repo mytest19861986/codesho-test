@@ -30,6 +30,34 @@ paths:
           content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
         '429': { $ref: '#/components/responses/TryAgainLater' }
         '503': { $ref: '#/components/responses/AuthenticationUnavailable' }
+  /api/v1/auth/passcode/change/complete/:
+    post:
+      summary: Complete a forced passcode change without creating a session
+      parameters:
+        - in: cookie
+          name: __Host-codesho-passcode-change
+          required: true
+          schema: { type: string }
+          description: Strict HttpOnly v1 challenge cookie issued by the forced-change login branch.
+        - in: header
+          name: X-CSRFToken
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PasscodeChangeCompletionRequest' }
+      responses:
+        '204':
+          description: Challenge consumed, credential replaced, no session created, and challenge cookie cleared; a fresh login is required.
+          headers: { Set-Cookie: { schema: { type: string }, description: Clears __Host-codesho-passcode-change. } }
+        '400': { $ref: '#/components/responses/InvalidRequest' }
+        '401': { $ref: '#/components/responses/ChallengeInvalidOrExpired' }
+        '403': { $ref: '#/components/responses/CsrfFailed' }
+        '409': { $ref: '#/components/responses/PasscodeSameAsCurrent' }
+        '429': { $ref: '#/components/responses/TryAgainLater' }
+        '503': { $ref: '#/components/responses/AuthenticationUnavailable' }
   /api/v1/auth/session/:
     get:
       summary: Return the authenticated user and current tenant membership
@@ -55,6 +83,12 @@ components:
       properties:
         username: { type: string, maxLength: 150 }
         passcode: { type: string, pattern: '^[0-9]{6}$' }
+    PasscodeChangeCompletionRequest:
+      type: object
+      required: [newPasscode]
+      additionalProperties: false
+      properties:
+        newPasscode: { type: string, pattern: '^[0-9]{6}$' }
     Error:
       type: object
       required: [code]
@@ -87,6 +121,13 @@ components:
       content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
     PasscodeChangeRequired:
       description: Valid passcode requires an approved credential-change flow
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    ChallengeInvalidOrExpired:
+      description: Uniform terminal challenge response; the challenge cookie is cleared.
+      headers: { Set-Cookie: { schema: { type: string }, description: Clears __Host-codesho-passcode-change. } }
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    PasscodeSameAsCurrent:
+      description: The proposed passcode equals the current passcode; the valid challenge remains usable.
       content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
     TryAgainLater:
       description: Abuse-control lockout or limit

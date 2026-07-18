@@ -143,3 +143,26 @@ def verify_dummy_passcode(passcode: str) -> None:
         _PASSWORD_HASHER.verify(_DUMMY_ENCODED_HASH, candidate)
     except (ImproperlyConfigured, InvalidPasscode, VerificationError, VerifyMismatchError):
         return
+
+
+def replace_locked_passcode(credential: PasscodeCredential, passcode: str) -> PasscodeCredential:
+    """Replace a credential already protected by the completion lock order."""
+
+    active_id = settings.PASSCODE_ACTIVE_PEPPER_ID
+    credential.encoded_hash = _PASSWORD_HASHER.hash(_hmac_input(passcode, active_id))
+    credential.pepper_id = active_id
+    credential.must_change = False
+    credential.credential_version += 1
+    credential.save(
+        update_fields=[
+            "encoded_hash",
+            "pepper_id",
+            "must_change",
+            "credential_version",
+            "changed_at",
+        ]
+    )
+    User.objects.filter(pk=credential.user_id).update(
+        session_auth_epoch=models.F("session_auth_epoch") + 1
+    )
+    return credential

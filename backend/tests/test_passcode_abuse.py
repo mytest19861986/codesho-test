@@ -4,8 +4,13 @@ from unittest.mock import patch
 from modules.identity.abuse import (
     AbuseReason,
     AttemptSignals,
+    CompletionDimensions,
+    CompletionSignals,
+    _completion_decision,
+    _completion_keys,
     _decision,
     preflight_attempt,
+    record_failed_completion_attempt,
     record_successful_attempt,
 )
 from modules.identity.models import PasscodeCredential, User
@@ -73,3 +78,40 @@ def test_success_clear_timeout_is_atomic_and_fails_closed(settings, db):
         )
     assert decision.reason is AbuseReason.BACKEND_UNAVAILABLE
     assert decision.allowed is False
+
+
+def test_completion_counter_dimensions_and_distinct_alert_thresholds(settings):
+    settings.PASSCODE_SIGNAL_HMAC_KEY = base64.b64encode(b"k" * 32).decode()
+    settings.PASSCODE_CHANGE_COMPLETION_WINDOW_SECONDS = 600
+    signals = CompletionSignals(
+        "127.0.0.1",
+        "a" * 32,
+        account_subject="tenant:user",
+        challenge_subject="challenge-id",
+        global_subject="selector-id",
+    )
+    with patch("modules.identity.abuse._client") as factory:
+        factory.return_value.eval.return_value = [
+            0, 0, 0, 0, 1, 600000, 1, 600000, 99, 600000, 19, 600000
+        ]
+        decision = record_failed_completion_attempt(
+            signals, CompletionDimensions(ip=True, device=True, global_detection=True)
+        )
+    assert decision.allowed and not decision.global_alert
+    call = factory.return_value.eval.call_args
+    assert call.args[1] == 6
+    assert call.args[2:8] == (
+        *_completion_keys(signals),
+        "codesho:passcode:v1:completion:global-distinct",
+    )
+    assert call.args[-6:-1] == ("0", "0", "1", "1", "1")
+    assert call.args[-1] != signals.global_subject
+    assert not _completion_decision(
+        [0, 0, 0, 0, 99], [600000] * 5, distinct_subjects=19
+    ).global_alert
+    assert _completion_decision(
+        [0, 0, 0, 0, 99], [600000] * 5, distinct_subjects=20
+    ).global_alert
+    assert _completion_decision(
+        [0, 0, 0, 0, 100], [600000] * 5, distinct_subjects=1
+    ).global_alert
