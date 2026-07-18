@@ -19,3 +19,10 @@ Claude review `CLAUDE_AUTH_PASSCODE_CHANGE_001B2_AUDIT_MIGRATION_REVIEW_01_V1`
 completed with no P0/P1 findings. The focused suite additionally covers
 missing/unvalidated predecessor aborts and the matching validated path's exact
 two `DROP`/`ADD` replacement pairs.
+
+The first remote run exposed malformed expected-constraint SQL before any
+replacement DDL. The regression is fixed by constructing the full nullable
+condition once, and the focused test now pins both generated PostgreSQL CHECK
+forms. Claude remediation review
+`CLAUDE_AUTH_PASSCODE_CHANGE_001B2_AUDIT_MIGRATION_REVIEW_02_V1` completed
+with no blocking findings.

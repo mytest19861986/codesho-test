@@ -31,6 +31,27 @@ def test_migration_requires_expected_predecessor_constraint_definitions(migratio
     assert "challenge_issued" not in migration.PREVIOUS_REASON_CODES
 
 
+@pytest.mark.parametrize(
+    ("column", "nullable", "previous_values"),
+    [
+        ("event_type", False, "PREVIOUS_EVENT_TYPES"),
+        ("reason_code", True, "PREVIOUS_REASON_CODES"),
+    ],
+)
+def test_expected_constraint_sql_has_one_column_reference_before_in(
+    migration, column, nullable, previous_values
+):
+    cursor = Mock()
+    cursor.fetchone.return_value = ("expected",)
+
+    migration._expected_constraint(cursor, column, nullable)
+
+    statement = cursor.execute.call_args_list[0].args[0]
+    values = migration._values(getattr(migration, previous_values))
+    expected_condition = f"{column} IS NULL OR {column} IN" if nullable else f"{column} IN"
+    assert f"CHECK ({expected_condition} ({values}))" in statement
+
+
 def test_mismatch_aborts_before_any_constraint_replacement(migration):
     cursor = Mock()
     cursor.fetchone.side_effect = [("expected",), ("unexpected", True)]

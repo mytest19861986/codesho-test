@@ -64,10 +64,10 @@ def _expected_constraint(cursor, column, nullable):
     previous_values = (
         PREVIOUS_REASON_CODES if column == "reason_code" else PREVIOUS_EVENT_TYPES
     )
+    condition = f"{column} IS NULL OR {column} IN" if nullable else f"{column} IN"
     cursor.execute(
         f"CREATE TEMPORARY TABLE {table_name} ({column} varchar(128), "
-        f"CONSTRAINT {constraint_name} CHECK ({column}{nullable} {column} "
-        f"IN ({_values(previous_values)})) "
+        f"CONSTRAINT {constraint_name} CHECK ({condition} ({_values(previous_values)})) "
         "ON COMMIT DROP"
     )
     cursor.execute(
@@ -101,8 +101,8 @@ def extend_passcode_change_allow_lists(apps, schema_editor):
 
     with schema_editor.connection.cursor() as cursor:
         for column, constraint_name, nullable in (
-            ("event_type", "identity_security_event_type_valid", ""),
-            ("reason_code", "identity_security_event_reason_code_valid", " IS NULL OR"),
+            ("event_type", "identity_security_event_type_valid", False),
+            ("reason_code", "identity_security_event_reason_code_valid", True),
         ):
             expected = _expected_constraint(cursor, column, nullable)
             current = _current_constraint(cursor, constraint_name)
