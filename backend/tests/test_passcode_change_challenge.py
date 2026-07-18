@@ -14,6 +14,7 @@ from modules.identity.challenge import (
     verify_challenge_secret,
 )
 from modules.identity.models import PasscodeChangeChallenge, PasscodeCredential, User
+from modules.platform_tenant.context import tenant_atomic
 from modules.platform_tenant.models import Tenant
 
 
@@ -121,7 +122,8 @@ def challenge_factory(**overrides):
         "state": PasscodeChangeChallenge.State.ACTIVE,
     }
     values.update(overrides)
-    return PasscodeChangeChallenge.objects.create(**values)
+    with tenant_atomic(tenant.pk):
+        return PasscodeChangeChallenge.objects.create(**values)
 
 
 def credential_factory() -> PasscodeCredential:

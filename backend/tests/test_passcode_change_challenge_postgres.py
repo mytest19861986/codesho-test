@@ -119,7 +119,8 @@ def test_runtime_role_has_no_delete_truncate_ddl_or_bypass_rls_capability(runtim
         assert cursor.fetchone() == (False, False)
         cursor.execute("SELECT has_schema_privilege('codesho_runtime', current_schema(), 'CREATE')")
         assert cursor.fetchone()[0] is False
-        cursor.execute("SET row_security = off")
+        # Runtime has SELECT; FORCE RLS must reject a bypass attempt itself.
+        cursor.execute("SET LOCAL row_security = off")
         with pytest.raises(InsufficientPrivilege):
             cursor.execute("SELECT count(*) FROM identity_passcodechangechallenge")
 
