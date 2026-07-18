@@ -1,6 +1,6 @@
 # AUTH-PASSCODE-CHANGE-001B2 Handoff
 
-Status: `IMPLEMENTATION_IN_PROGRESS`
+Status: `COMPLETE`
 
 Resolved paths: `backend/modules/platform_event/migrations/0007_passcode_change_challenge_allow_list.py` and `backend/tests/test_passcode_change_audit_allow_list_migration.py`.
 
@@ -31,3 +31,11 @@ After a second remote syntax failure, the exact DDL assertion was strengthened
 to include the table-closing parenthesis before `ON COMMIT DROP`. Claude review
 `CLAUDE_AUTH_PASSCODE_CHANGE_001B2_AUDIT_MIGRATION_REVIEW_03_V1` confirmed the
 generated PostgreSQL DDL is balanced and no blocking findings remain.
+
+Implementation commit `aaa3e9350a290b92c8edb128c06ad9f520d7042e` passed the
+required remote gates: CI
+`https://github.com/mytest19861986/codesho-test/actions/runs/29643913096` and
+Compose smoke/restore
+`https://github.com/mytest19861986/codesho-test/actions/runs/29643913110`.
+No producer, endpoint, 001C work, coordination-file change, or protected
+`codesho` promotion was performed.
