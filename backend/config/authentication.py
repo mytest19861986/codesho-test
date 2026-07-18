@@ -13,6 +13,10 @@ from django.conf import settings
 from django.contrib.auth import login
 from django.http import HttpRequest
 
+from config.passcode_change_issuance import (
+    ChallengeIssuanceError,
+    issue_forced_passcode_change_challenge,
+)
 from modules.identity.abuse import (
     AbuseReason,
     AttemptSignals,
@@ -20,6 +24,7 @@ from modules.identity.abuse import (
     record_failed_attempt,
     record_successful_attempt,
 )
+from modules.identity.challenge_cookie import ChallengeCookieValue, serialize_challenge_cookie
 from modules.identity.models import PasscodeCredential, User
 from modules.identity.passcodes import InvalidPasscode, verify_dummy_passcode, verify_passcode
 from modules.platform_event.security_audit import (
@@ -46,6 +51,7 @@ class LoginStatus(StrEnum):
 class LoginResult:
     status: LoginStatus
     retry_after_seconds: int = 0
+    challenge_cookie_value: str | None = None
 
 
 def _idempotency_key(
@@ -186,8 +192,8 @@ def authenticate_passcode(
     """Authenticate only after Redis and immutable-audit gates pass."""
     # Username authentication is deliberately exact and case-sensitive until an
     # approved normalized-username migration exists; never select a variant.
-    normalized_username = username
-    candidate = User.objects.filter(username=normalized_username).first()
+    exact_username = username
+    candidate = User.objects.filter(username=exact_username).first()
     user = None
     if candidate is not None and candidate.is_active:
         with tenant_atomic(tenant.id):
@@ -197,7 +203,9 @@ def authenticate_passcode(
                 user = candidate
     credential = PasscodeCredential.objects.filter(user=user).first() if user is not None else None
     signals = AttemptSignals(
-        account_subject=f"{tenant.id}:{normalized_username}",
+        # Account-rate-limit bounding is enforced by the Redis decision before
+        # this function appends any non-deduplicated authentication failure audit.
+        account_subject=f"{tenant.id}:{exact_username}",
         client_ip=client_ip,
         device_id=device_id,
     )
@@ -244,19 +252,24 @@ def authenticate_passcode(
         if not success.allowed:
             return LoginResult(LoginStatus.UNAVAILABLE, success.retry_after_seconds)
         try:
-            with tenant_atomic(tenant.id):
-                _append(
-                    event_type=SecurityEventType.AUTHENTICATION_SUCCEEDED,
-                    outcome=SecurityEventOutcome.SUCCESS,
-                    reason_code=ReasonCode.PASSCODE_CHANGE_REQUIRED,
-                    correlation_id=correlation_id,
-                    tenant_id=tenant.id,
-                    user=user,
-                    credential=credential,
+            issued = issue_forced_passcode_change_challenge(
+                tenant=tenant,
+                user=user,
+                credential=credential,
+                correlation_id=correlation_id,
+            )
+            cookie_value = serialize_challenge_cookie(
+                ChallengeCookieValue(
+                    selector=issued.material.selector,
+                    secret=issued.material.secret,
                 )
-        except SecurityAuditError:
+            )
+        except (ChallengeIssuanceError, ValueError):
             return LoginResult(LoginStatus.UNAVAILABLE)
-        return LoginResult(LoginStatus.PASSCODE_CHANGE_REQUIRED)
+        return LoginResult(
+            LoginStatus.PASSCODE_CHANGE_REQUIRED,
+            challenge_cookie_value=cookie_value,
+        )
 
     success = record_successful_attempt(credential=credential, signals=signals)
     if not success.allowed:

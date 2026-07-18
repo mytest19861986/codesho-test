@@ -1,13 +1,15 @@
 import os
 from datetime import timedelta
+from threading import Barrier, Thread
 from uuid import uuid4
 
 import pytest
-from django.db import IntegrityError, connection
+from django.db import IntegrityError, close_old_connections, connection
 from django.utils import timezone
 from psycopg import connect
 from psycopg.errors import CheckViolation, InsufficientPrivilege
 
+from config.passcode_change_issuance import issue_forced_passcode_change_challenge
 from modules.identity.challenge import digest_challenge_secret, generate_challenge_material
 from modules.identity.models import PasscodeChangeChallenge, PasscodeCredential, User
 from modules.platform_tenant.context import tenant_atomic
@@ -114,9 +116,13 @@ def test_runtime_role_has_no_delete_truncate_ddl_or_bypass_rls_capability(runtim
             "SELECT has_table_privilege("
             "current_user, 'identity_passcodechangechallenge', 'DELETE'), "
             "has_table_privilege("
-            "current_user, 'identity_passcodechangechallenge', 'TRUNCATE')"
+            "current_user, 'identity_passcodechangechallenge', 'TRUNCATE'), "
+            "has_column_privilege("
+            "current_user, 'identity_passcodechangechallenge', 'state', 'UPDATE'), "
+            "has_column_privilege("
+            "current_user, 'identity_passcodechangechallenge', 'tenant_id', 'UPDATE')"
         )
-        assert cursor.fetchone() == (False, False)
+        assert cursor.fetchone() == (False, False, True, False)
         cursor.execute("SELECT has_schema_privilege('codesho_runtime', current_schema(), 'CREATE')")
         assert cursor.fetchone()[0] is False
         # Runtime has SELECT; FORCE RLS must reject a bypass attempt itself.
@@ -137,3 +143,54 @@ def test_challenge_table_is_migrator_owned_and_runtime_is_not_bypassrls(runtime_
             "SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname = 'codesho_runtime'"
         )
         assert cursor.fetchone()[0] is False
+
+
+@pytest.mark.django_db(transaction=True)
+def test_parallel_issuance_serializes_to_one_active_challenge():
+    require_postgres()
+    tenant = Tenant.objects.create(slug=f"tenant-{uuid4()}", name="Tenant")
+    user = User.objects.create_user(username=f"user-{uuid4()}", email=f"{uuid4()}@example.com")
+    credential = PasscodeCredential.objects.create(
+        user=user,
+        encoded_hash="unused-for-concurrency-test",
+        pepper_id="test-v1",
+    )
+    start = Barrier(2)
+    results: list[BaseException | None] = []
+
+    def issue_in_parallel() -> None:
+        close_old_connections()
+        try:
+            local_user = User.objects.get(pk=user.pk)
+            local_credential = PasscodeCredential.objects.get(pk=credential.pk)
+            start.wait(timeout=10)
+            issue_forced_passcode_change_challenge(
+                tenant=tenant,
+                user=local_user,
+                credential=local_credential,
+                correlation_id=uuid4(),
+            )
+            results.append(None)
+        except BaseException as exc:  # pragma: no cover - asserted by parent thread
+            results.append(exc)
+        finally:
+            close_old_connections()
+
+    first = Thread(target=issue_in_parallel)
+    second = Thread(target=issue_in_parallel)
+    first.start()
+    second.start()
+    first.join(timeout=20)
+    second.join(timeout=20)
+    assert not first.is_alive() and not second.is_alive()
+    assert results == [None, None]
+    with tenant_atomic(tenant.id):
+        challenges = list(
+            PasscodeChangeChallenge.objects.filter(credential=credential).order_by("issued_at")
+        )
+    assert len(challenges) == 2
+    assert [challenge.state for challenge in challenges] == [
+        PasscodeChangeChallenge.State.REVOKED,
+        PasscodeChangeChallenge.State.ACTIVE,
+    ]
+    assert challenges[0].secret_digest is None and challenges[0].revoked_at is not None

@@ -21,7 +21,13 @@ paths:
         '204': { description: Session established }
         '400': { $ref: '#/components/responses/InvalidRequest' }
         '401': { $ref: '#/components/responses/InvalidCredentials' }
-        '403': { $ref: '#/components/responses/PasscodeChangeRequired' }
+        '403':
+          description: Valid must-change credential; no session is created and a short-lived HttpOnly challenge cookie is issued.
+          headers:
+            Set-Cookie:
+              description: __Host-codesho-passcode-change; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=600; no Domain attribute.
+              schema: { type: string }
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
         '429': { $ref: '#/components/responses/TryAgainLater' }
         '503': { $ref: '#/components/responses/AuthenticationUnavailable' }
   /api/v1/auth/session/:

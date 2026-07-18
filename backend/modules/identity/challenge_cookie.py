@@ -1,4 +1,4 @@
-"""Dormant strict codec and policy for forced-passcode-change cookies."""
+"""Strict codec and policy for forced-passcode-change cookies."""
 
 from __future__ import annotations
 

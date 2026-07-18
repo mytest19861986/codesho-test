@@ -60,6 +60,8 @@ class PasscodeChangeChallenge(models.Model):
         choices=Purpose,
         default=Purpose.FORCED_PASSCODE_CHANGE,
     )
+    # PostgreSQL migration 0004 enforces an exact 32-byte non-null digest for
+    # active rows; SQLite cannot faithfully enforce byte-length constraints.
     secret_digest = models.BinaryField(max_length=32, null=True, editable=False)
     pepper_id = models.CharField(max_length=64)
     state = models.CharField(max_length=16, choices=State, default=State.ACTIVE)

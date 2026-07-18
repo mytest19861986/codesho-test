@@ -193,13 +193,13 @@ def test_must_change_and_audit_failure_never_create_a_session(tenant_member):
     with (
         patch("config.authentication.preflight_attempt", return_value=allowed()),
         patch("config.authentication.record_successful_attempt", return_value=allowed()),
-        patch("config.authentication.append_security_event") as append,
+        patch("config.passcode_change_issuance.append_security_event") as append,
     ):
         response = login(client, headers)
     assert response.status_code == 403
     assert response.json() == {"code": "passcode_change_required"}
     assert "_auth_user_id" not in client.session
-    assert append.call_args.args[0].reason_code.value == "passcode_change_required"
+    assert append.call_args.args[0].reason_code.value == "challenge_issued"
 
     credential.must_change = False
     credential.save(update_fields=["must_change"])

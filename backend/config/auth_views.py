@@ -13,6 +13,14 @@ from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 
 from config.authentication import LoginStatus, authenticate_passcode, validate_login_input
+from modules.identity.challenge_cookie import (
+    COOKIE_HTTPONLY,
+    COOKIE_NAME,
+    COOKIE_PATH,
+    COOKIE_SAMESITE,
+    COOKIE_SECURE,
+    COOKIE_TTL_SECONDS,
+)
 from modules.identity.request_signals import extract_client_ip, extract_device_id, new_device_id
 from modules.platform_event.security_audit import (
     ReasonCode,
@@ -44,6 +52,30 @@ def _set_device_cookie(response: HttpResponse, device_id: str) -> None:
     )
 
 
+def _set_challenge_cookie(response: HttpResponse, value: str) -> None:
+    response.set_cookie(
+        COOKIE_NAME,
+        value,
+        max_age=COOKIE_TTL_SECONDS,
+        secure=COOKIE_SECURE,
+        httponly=COOKIE_HTTPONLY,
+        samesite=COOKIE_SAMESITE,
+        path=COOKIE_PATH,
+    )
+
+
+def _clear_challenge_cookie(response: HttpResponse) -> None:
+    response.set_cookie(
+        COOKIE_NAME,
+        "",
+        max_age=0,
+        secure=COOKIE_SECURE,
+        httponly=COOKIE_HTTPONLY,
+        samesite=COOKIE_SAMESITE,
+        path=COOKIE_PATH,
+    )
+
+
 @require_GET
 @ensure_csrf_cookie
 def csrf(request: HttpRequest) -> HttpResponse:
@@ -62,10 +94,14 @@ def passcode_login(request: HttpRequest) -> HttpResponse:
         payload = json.loads(request.body)
         username, passcode = validate_login_input(payload.get("username"), payload.get("passcode"))
     except (json.JSONDecodeError, AttributeError, ValueError):
-        return _error("invalid_request", 400)
+        invalid_response = _error("invalid_request", 400)
+        _clear_challenge_cookie(invalid_response)
+        return invalid_response
     client_ip = extract_client_ip(request)
     if client_ip is None:
-        return _error("invalid_request", 400)
+        invalid_response = _error("invalid_request", 400)
+        _clear_challenge_cookie(invalid_response)
+        return invalid_response
     device_id = extract_device_id(request)
     issued_device_id = device_id is None
     if device_id is None:
@@ -78,16 +114,26 @@ def passcode_login(request: HttpRequest) -> HttpResponse:
         client_ip=client_ip,
         device_id=device_id,
     )
+    response: HttpResponse
     if result.status is LoginStatus.SUCCESS:
         response = HttpResponse(status=204)
     elif result.status is LoginStatus.PASSCODE_CHANGE_REQUIRED:
-        response = _error("passcode_change_required", 403)
+        if result.challenge_cookie_value is None:
+            response = _error("authentication_temporarily_unavailable", 503)
+        else:
+            response = _error("passcode_change_required", 403)
+            _set_challenge_cookie(response, result.challenge_cookie_value)
     elif result.status is LoginStatus.RATE_LIMITED:
         response = _error("try_again_later", 429, retry_after=result.retry_after_seconds)
     elif result.status is LoginStatus.UNAVAILABLE:
         response = _error("authentication_temporarily_unavailable", 503)
     else:
         response = _error("invalid_credentials", 401)
+    if (
+        result.status is not LoginStatus.PASSCODE_CHANGE_REQUIRED
+        or result.challenge_cookie_value is None
+    ):
+        _clear_challenge_cookie(response)
     if issued_device_id:
         _set_device_cookie(response, device_id)
     return response
