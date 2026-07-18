@@ -52,6 +52,7 @@ jobs:
             'PGPASSWORD="$POSTGRES_PASSWORD" psql -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE codesho_smoke_tests OWNER codesho_migrator;"'
           docker compose exec --no-TTY postgres sh -ec \
             'PGPASSWORD="$POSTGRES_PASSWORD" psql -U "$POSTGRES_USER" -d codesho_smoke_tests -v ON_ERROR_STOP=1 -c "CREATE SCHEMA codesho AUTHORIZATION codesho_migrator; CREATE SCHEMA audit AUTHORIZATION codesho_migrator; REVOKE ALL ON SCHEMA audit FROM PUBLIC; GRANT USAGE ON SCHEMA codesho TO codesho_runtime; ALTER DEFAULT PRIVILEGES FOR ROLE codesho_migrator IN SCHEMA codesho GRANT SELECT, INSERT, UPDATE, DELETE, TRUNCATE ON TABLES TO codesho_runtime; ALTER DEFAULT PRIVILEGES FOR ROLE codesho_migrator IN SCHEMA codesho GRANT USAGE, SELECT ON SEQUENCES TO codesho_runtime; ALTER DEFAULT PRIVILEGES FOR ROLE codesho_migrator IN SCHEMA codesho GRANT EXECUTE ON FUNCTIONS TO codesho_runtime;"'
+          # The following test-only HMAC key must not be reused.
           docker run --rm --network codesho-sz-smoke_default \
             --volume "$GITHUB_WORKSPACE/backend:/app" --workdir /app \
             --env DJANGO_SETTINGS_MODULE=config.settings.test \
@@ -62,7 +63,8 @@ jobs:
             --volume "$GITHUB_WORKSPACE/backend:/app" --workdir /app \
             --env DJANGO_SETTINGS_MODULE=config.settings.test \
             --env DJANGO_SECRET_KEY=compose-smoke-only \
-            --env DATABASE_URL=postgresql://codesho_runtime:codesho-runtime-local@postgres:5432/codesho \
+            --env DATABASE_URL=postgresql://codesho_migrator:codesho-migrator-local@postgres:5432/codesho_smoke_tests \
+            --env DATABASE_RUNTIME_TEST_URL=postgresql://codesho_runtime:codesho-runtime-local@postgres:5432/codesho_smoke_tests \
             --env DATABASE_TEST_NAME=codesho_smoke_tests \
             --env REDIS_URL=redis://redis:6379/0 \
             --env PASSCODE_SIGNAL_HMAC_KEY=c2lnbmFsLWhtYWMta2V5LXgteHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg= \

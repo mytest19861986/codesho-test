@@ -1,6 +1,23 @@
 # AUTH-PASSCODE-CHANGE-001B1 Foundation Handoff
 
-Status: `LOCAL_GATES_GREEN_AWAITING_SCOPED_COMMIT`
+Status: `CI_ROLE_REMEDIATION_IN_PROGRESS`
+
+## CI role remediation 001
+
+Commander authorized `AUTH-PASSCODE-CHANGE-001B1-CI-FIX-001` from base
+`448617225243adf26c04587354cebf6079c9dc0c`. The resolved orchestration files
+are `.github/workflows/ci.yml` and `.github/workflows/compose-smoke.yml`.
+
+Before this remediation, the failing commands use the runtime role for the
+Django test lifecycle:
+
+- CI: `DATABASE_URL="$DATABASE_RUNTIME_URL" pytest --reuse-db ...`
+- Compose test container: `DATABASE_URL=postgresql://codesho_runtime:...`
+
+Both will select the existing migrator *test* URL only for Django test database
+creation, migration, flush, and teardown. Runtime test URLs stay separately
+available to explicit privilege/RLS tests; application and Compose services
+continue to use their existing runtime URLs. No database URL is logged.
 
 Resolved owner paths before implementation:
 

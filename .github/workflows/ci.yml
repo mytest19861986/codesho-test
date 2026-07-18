@@ -42,6 +42,7 @@ jobs:
       DATABASE_TEST_NAME: codesho_test
       CELERY_BROKER_URL: redis://localhost:6379/1
       REDIS_URL: redis://localhost:6379/0
+      # CI-ONLY — DO NOT REUSE outside ephemeral test environments.
       PASSCODE_SIGNAL_HMAC_KEY: c2lnbmFsLWhtYWMta2V5LXgteHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg=
     defaults:
       run:
@@ -73,7 +74,7 @@ jobs:
       - name: Run backend tests with failure annotation
         run: |
           set +e
-          DATABASE_URL="$DATABASE_RUNTIME_URL" pytest --reuse-db --cov=modules --cov-report=term-missing --cov-fail-under=80 2>&1 | tee /tmp/backend-pytest.log
+          DATABASE_URL="$DATABASE_MIGRATOR_TEST_URL" pytest --reuse-db --cov=modules --cov-report=term-missing --cov-fail-under=80 2>&1 | tee /tmp/backend-pytest.log
           status="${PIPESTATUS[0]}"
           if [ "$status" -ne 0 ]; then
             summary="$(tail -n 30 /tmp/backend-pytest.log | tr '\n' ' ' | sed 's/::/%3A%3A/g')"
