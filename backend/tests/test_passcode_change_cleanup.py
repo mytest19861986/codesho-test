@@ -5,11 +5,11 @@ from uuid import uuid4
 import pytest
 from django.utils import timezone
 
-from modules.identity.models import PasscodeChangeChallenge, PasscodeCredential, User
-from modules.identity.passcode_change_cleanup import (
+from config.passcode_change_cleanup import (
     CleanupResult,
     cleanup_passcode_change_challenges,
 )
+from modules.identity.models import PasscodeChangeChallenge, PasscodeCredential, User
 from modules.identity.tasks import cleanup_passcode_change_challenges_task
 from modules.platform_tenant.context import tenant_atomic
 from modules.platform_tenant.models import Tenant
@@ -20,9 +20,15 @@ def make_challenge(*, tenant, state="active", expires_at=None, expired_at=None):
     credential = PasscodeCredential.objects.create(user=user, encoded_hash="x", pepper_id="v1")
     now = timezone.now()
     values = dict(
-        selector=uuid4(), tenant=tenant, credential=credential, credential_version=1,
-        pepper_id="v1", issued_at=now - timedelta(seconds=600), expires_at=expires_at or now,
-        state=state, secret_digest=b"x" * 32,
+        selector=uuid4(),
+        tenant=tenant,
+        credential=credential,
+        credential_version=1,
+        pepper_id="v1",
+        issued_at=now - timedelta(seconds=600),
+        expires_at=expires_at or now,
+        state=state,
+        secret_digest=b"x" * 32,
     )
     if state == "expired":
         values.update(secret_digest=None, expired_at=expired_at or now)
@@ -34,7 +40,7 @@ def make_challenge(*, tenant, state="active", expires_at=None, expired_at=None):
 def test_cleanup_expires_rows_and_nulls_digest_before_audit():
     tenant = Tenant.objects.create(slug=f"t-{uuid4()}", name="T")
     challenge = make_challenge(tenant=tenant, expires_at=timezone.now() - timedelta(seconds=1))
-    with patch("modules.identity.passcode_change_cleanup.append_security_event") as audit:
+    with patch("config.passcode_change_cleanup.append_security_event") as audit:
         result = cleanup_passcode_change_challenges(tenant=tenant)
     with tenant_atomic(tenant.id):
         challenge.refresh_from_db()
@@ -50,7 +56,7 @@ def test_cleanup_rolls_back_expiry_when_audit_fails():
     challenge = make_challenge(tenant=tenant, expires_at=timezone.now() - timedelta(seconds=1))
     with (
         patch(
-            "modules.identity.passcode_change_cleanup.append_security_event",
+            "config.passcode_change_cleanup.append_security_event",
             side_effect=RuntimeError,
         ),
         pytest.raises(RuntimeError),
@@ -81,7 +87,7 @@ def test_cleanup_respects_batch_limit_and_deletes_only_old_terminal_metadata():
         state="expired",
         expired_at=timezone.now() - timedelta(days=31),
     )
-    with patch("modules.identity.passcode_change_cleanup.append_security_event"):
+    with patch("config.passcode_change_cleanup.append_security_event"):
         result = cleanup_passcode_change_challenges(tenant=tenant, batch_size=1)
     with tenant_atomic(tenant.id):
         first.refresh_from_db()
@@ -98,7 +104,7 @@ def test_cleanup_is_tenant_scoped():
     second_tenant = Tenant.objects.create(slug=f"t-{uuid4()}", name="T2")
     own = make_challenge(tenant=first_tenant, expires_at=timezone.now() - timedelta(seconds=1))
     other = make_challenge(tenant=second_tenant, expires_at=timezone.now() - timedelta(seconds=1))
-    with patch("modules.identity.passcode_change_cleanup.append_security_event"):
+    with patch("config.passcode_change_cleanup.append_security_event"):
         cleanup_passcode_change_challenges(tenant=first_tenant)
     with tenant_atomic(first_tenant.id):
         own.refresh_from_db()
@@ -113,8 +119,23 @@ def test_cleanup_task_inherits_and_clears_tenant_context():
     tenant = Tenant.objects.create(slug=f"t-{uuid4()}", name="T")
     expected = {"expired": 0, "deleted": 0}
     with patch(
-        "modules.identity.tasks.cleanup_passcode_change_challenges",
+        "modules.identity.tasks.cleanup_current_tenant",
         return_value=CleanupResult(**expected),
     ) as cleanup:
         assert cleanup_passcode_change_challenges_task(tenant_id=str(tenant.id)) == expected
-    cleanup.assert_called_once_with(tenant=tenant, batch_size=None)
+    cleanup.assert_called_once_with(batch_size=None)
+
+
+@pytest.mark.django_db(transaction=True)
+def test_cleanup_task_forwards_explicit_batch_size():
+    tenant = Tenant.objects.create(slug=f"t-{uuid4()}", name="T")
+    expected = {"expired": 1, "deleted": 0}
+    with patch(
+        "modules.identity.tasks.cleanup_current_tenant",
+        return_value=CleanupResult(**expected),
+    ) as cleanup:
+        assert (
+            cleanup_passcode_change_challenges_task(tenant_id=str(tenant.id), batch_size=17)
+            == expected
+        )
+    cleanup.assert_called_once_with(batch_size=17)
