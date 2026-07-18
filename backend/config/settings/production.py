@@ -7,6 +7,14 @@ from .base import *  # noqa: F403
 if SECRET_KEY == "unsafe-local-only":  # noqa: F405
     raise ImproperlyConfigured("DJANGO_SECRET_KEY must be configured")
 
+from modules.identity.challenge_cookie import (
+    COOKIE_DOMAIN,
+    COOKIE_HTTPONLY,
+    COOKIE_NAME,
+    COOKIE_PATH,
+    COOKIE_SAMESITE,
+    COOKIE_SECURE,
+)
 from modules.identity.pepper import validate_pepper_settings
 from modules.identity.request_signals import validate_abuse_settings
 
@@ -23,6 +31,16 @@ validate_abuse_settings(  # noqa: F405
     PASSCODE_GLOBAL_WINDOW_SECONDS,
     PASSCODE_PROGRESSIVE_DELAYS_MS,
 )
+
+if (
+    COOKIE_NAME != "__Host-codesho-passcode-change"
+    or not COOKIE_SECURE
+    or not COOKIE_HTTPONLY
+    or COOKIE_SAMESITE != "Lax"
+    or COOKIE_PATH != "/"
+    or COOKIE_DOMAIN is not None
+):
+    raise ImproperlyConfigured("forced passcode-change cookie policy is unsafe")
 
 SECURE_SSL_REDIRECT = env.bool("DJANGO_SECURE_SSL_REDIRECT", default=True)  # noqa: F405
 SESSION_COOKIE_SECURE = True
