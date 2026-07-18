@@ -60,9 +60,10 @@ def test_runtime_database_role_cannot_bypass_rls():
 
 @pytest.mark.django_db(transaction=True)
 def test_runtime_database_role_cannot_execute_ddl_or_disable_rls(runtime_connection):
+    with runtime_connection.cursor() as cursor, pytest.raises(InsufficientPrivilege):
+        cursor.execute("CREATE TABLE codesho.runtime_ddl_probe (id integer)")
+    runtime_connection.rollback()
     with runtime_connection.cursor() as cursor:
-        with pytest.raises(InsufficientPrivilege):
-            cursor.execute("CREATE TABLE codesho.runtime_ddl_probe (id integer)")
         cursor.execute("SET LOCAL row_security = off")
         with pytest.raises(InsufficientPrivilege):
             cursor.execute("SELECT count(*) FROM codesho.platform_tenant_tenantmembership")
