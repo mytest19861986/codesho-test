@@ -19,14 +19,15 @@ def make_challenge(*, tenant, state="active", expires_at=None, expired_at=None):
     user = User.objects.create_user(username=str(uuid4()), email=f"{uuid4()}@example.com")
     credential = PasscodeCredential.objects.create(user=user, encoded_hash="x", pepper_id="v1")
     now = timezone.now()
+    expires_at = expires_at or now
     values = dict(
         selector=uuid4(),
         tenant=tenant,
         credential=credential,
         credential_version=1,
         pepper_id="v1",
-        issued_at=now - timedelta(seconds=600),
-        expires_at=expires_at or now,
+        issued_at=expires_at - timedelta(seconds=600),
+        expires_at=expires_at,
         state=state,
         secret_digest=b"x" * 32,
     )
