@@ -1,5 +1,5 @@
-.page { min-block-size: 100dvh; display: grid; place-items: center; padding: var(--cs-space-6); background: var(--cs-color-bg-base); }
-.card { inline-size: min(100%, 28rem); padding: clamp(1.5rem, 5vw, 3rem); border: var(--cs-border-width) solid var(--cs-color-border-subtle); border-radius: var(--cs-radius-card); background: var(--cs-color-bg-surface); box-shadow: var(--cs-shadow-card); }
+.page { min-block-size: 100dvh; min-inline-size: 0; display: grid; place-items: center; padding: var(--cs-space-6); overflow-x: hidden; background: var(--cs-color-bg-base); }
+.card { inline-size: min(100%, 28rem); max-inline-size: 100%; min-inline-size: 0; padding: clamp(1.5rem, 5vw, 3rem); border: var(--cs-border-width) solid var(--cs-color-border-subtle); border-radius: var(--cs-radius-card); background: var(--cs-color-bg-surface); box-shadow: var(--cs-shadow-card); }
 .brand { margin: 0 0 var(--cs-space-8); color: var(--cs-color-brand-primary); font-weight: var(--cs-font-weight-bold); }
 .card h1 { margin: 0 0 var(--cs-space-8); font-size: var(--cs-font-size-heading-2); }
 .field { display: grid; gap: var(--cs-space-2); margin-block-end: var(--cs-space-5); font-weight: var(--cs-font-weight-semibold); }
