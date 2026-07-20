@@ -84,3 +84,11 @@ closed. Canonical OpenAPI status/cookie contracts remain the release authority.
   row result explicit with `RETURNING` and preserves idempotent no-op behavior.
 - Local Ruff, Django check, migration drift check, full backend tests, and diff
   check pass; PostgreSQL/Redis HTTP evidence remains a CI/Compose gate.
+
+## Review 03 follow-up — audit append return-value hardening
+
+- Prompt: `CLAUDE_AUTH_PASSCODE_CHANGE_001F1_AUDIT_PRODUCER_REVIEW_03_V1`
+- Verdict: `PASS`; P0/P1/P2 findings: none.
+- Verified `inserted boolean := false` plus `RETURN COALESCE(inserted, false)` gives a strict two-valued return contract: true only for a newly inserted row and false on idempotency conflict.
+- Verified `SECURITY DEFINER`, hardened `search_path`, unchanged function signature, conflict behavior, forward-only migration, dependency, and irreversible reverse operation.
+- No out-of-scope changes were implicated.
