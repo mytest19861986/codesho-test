@@ -52,6 +52,14 @@ promotion is authorized.
   deliberate fail-loud tradeoff if a future second user is added to this unique
   tenant; no out-of-scope change is implicated.
 
+- CI exact-SHA `7d263b9` still showed missing completion/rejection counts. A
+  test-only aggregate event-type diagnostic was added to failure messages; it
+  emits categories and counts only, never identifiers or sensitive values.
+- Follow-up prompt:
+  `CLAUDE_AUTH_PASSCODE_CHANGE_001F1_END_TO_END_RELEASE_REVIEW_02F_V1`.
+- Follow-up verdict: `PASS`; P0/P1: none. One non-blocking P2 notes that the
+  diagnostic aggregate is global and could be noisy under parallel tests.
+
 ## Release checkpoint
 
 - Final implementation checkpoint before this documentation update:

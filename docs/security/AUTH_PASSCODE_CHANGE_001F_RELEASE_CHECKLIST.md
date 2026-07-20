@@ -42,6 +42,14 @@ Status: test-only release gate in progress; no Production behavior is enabled.
 - Review 02D verdict: `PASS`; P0/P1: none; one non-blocking P2 reliability
   note about the deliberate fail-loud behavior for a future second user.
 
+- CI exact-SHA `7d263b9` still lacked completion/rejection counts. A bounded
+  aggregate event-type diagnostic was added to failure messages without any
+  sensitive fields.
+- Review 02F prompt:
+  `CLAUDE_AUTH_PASSCODE_CHANGE_001F1_END_TO_END_RELEASE_REVIEW_02F_V1`.
+- Review 02F verdict: `PASS`; P0/P1: none; one non-blocking P2 diagnostic
+  quality note about global counts under parallel execution.
+
 ## Exact-SHA checkpoint
 
 - Implementation SHA: `b2d7217`.
