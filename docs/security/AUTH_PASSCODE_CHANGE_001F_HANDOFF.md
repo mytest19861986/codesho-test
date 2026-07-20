@@ -101,3 +101,4 @@ promotion is authorized.
 - Claude verified the `COALESCE(inserted, false)` return-value hardening, preserved `SECURITY DEFINER` and `search_path`, unchanged append/idempotency behavior, forward-only migration safety, and signature/grant compatibility.
 - Local rerun: Ruff passed; Django check passed; focused E2E `2 skipped` because local PostgreSQL is unavailable; full backend `130 passed, 29 skipped`; `git diff --check` passed.
 - Exact-SHA CI and Compose evidence for `b67e815` remains green: CI `29740298435`, Compose `29740298423`.
+- Remote post-push verification: Compose `29742594591` passed; CI backend `29742594545` failed in the full PostgreSQL suite at the two existing E2E audit-count assertions while frontend passed. The failure annotation reported no `passcode_changed` or `passcode_change_rejected` rows; no assertion was weakened. GitHub rerun endpoint returned `401 Unauthorized`, so a fresh authorized push is required for revalidation.
