@@ -52,7 +52,12 @@ class CompletionResult:
 
 
 def _metadata(
-    tenant: Tenant, user: User, credential: PasscodeCredential, correlation_id: UUID
+    tenant: Tenant,
+    user: User,
+    credential: PasscodeCredential,
+    correlation_id: UUID,
+    challenge_id: UUID,
+    event_type: SecurityEventType,
 ) -> PasscodeChangeAuditMetadata:
     return PasscodeChangeAuditMetadata(
         event_id=uuid4(),
@@ -61,7 +66,7 @@ def _metadata(
         subject_user_id=user.id,
         actor_user_id=user.id,
         credential_version=credential.credential_version,
-        idempotency_key=f"passcode-change:complete:{correlation_id}",
+        idempotency_key=f"passcode-change:{event_type.value}:{challenge_id}",
     )
 
 
@@ -135,7 +140,14 @@ def complete_forced_passcode_change(
                 challenge.save(update_fields=["state", "secret_digest", "expired_at"])
                 append_security_event(
                     passcode_change_challenge_expired(
-                        _metadata(tenant, user, credential, correlation_id)
+                        _metadata(
+                            tenant,
+                            user,
+                            credential,
+                            correlation_id,
+                            challenge.id,
+                            SecurityEventType.PASSCODE_CHANGE_CHALLENGE_EXPIRED,
+                        )
                     )
                 )
                 return CompletionResult(CompletionStatus.EXPIRED)
@@ -179,7 +191,14 @@ def complete_forced_passcode_change(
             if verify_passcode(user, new_passcode).valid:
                 append_security_event(
                     passcode_change_rejected(
-                        _metadata(tenant, user, credential, correlation_id),
+                        _metadata(
+                            tenant,
+                            user,
+                            credential,
+                            correlation_id,
+                            challenge.id,
+                            SecurityEventType.PASSCODE_CHANGE_REJECTED,
+                        ),
                         ReasonCode.PASSCODE_SAME_AS_CURRENT,
                     )
                 )
@@ -205,7 +224,10 @@ def complete_forced_passcode_change(
                     subject_user_id=user.id,
                     actor_user_id=user.id,
                     credential_version=credential.credential_version,
-                    idempotency_key=f"passcode-change:changed:{correlation_id}",
+                    idempotency_key=(
+                        f"passcode-change:{SecurityEventType.PASSCODE_CHANGED.value}:"
+                        f"{challenge.id}"
+                    ),
                 )
             )
             cleared = record_successful_completion_attempt(scoped_signals)
@@ -217,7 +239,14 @@ def complete_forced_passcode_change(
             challenge.save(update_fields=["state", "secret_digest", "consumed_at"])
             append_security_event(
                 passcode_change_challenge_consumed(
-                    _metadata(tenant, user, credential, correlation_id)
+                    _metadata(
+                        tenant,
+                        user,
+                        credential,
+                        correlation_id,
+                        challenge.id,
+                        SecurityEventType.PASSCODE_CHANGE_CHALLENGE_CONSUMED,
+                    )
                 )
             )
     except (DatabaseError, SecurityAuditError, ValueError):

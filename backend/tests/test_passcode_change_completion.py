@@ -350,6 +350,20 @@ def test_postgres_parallel_completion_consumes_a_challenge_once(tenant_member):
     assert [event.event_type.value for event in audit_events].count(
         "passcode_change_challenge_consumed"
     ) == 1
+    successful_keys = {
+        event.event_type.value: event.idempotency_key
+        for event in audit_events
+        if event.event_type.value in {
+            "passcode_changed",
+            "passcode_change_challenge_consumed",
+        }
+    }
+    assert set(successful_keys) == {
+        "passcode_changed",
+        "passcode_change_challenge_consumed",
+    }
+    assert len(set(successful_keys.values())) == 2
+    assert all(str(challenge.id) in key for key in successful_keys.values())
     replay = complete_forced_passcode_change(
         tenant=tenant, selector=cookie.selector, secret=cookie.secret,
         new_passcode="000000", client_ip="127.0.0.1", device_id=None,
