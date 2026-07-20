@@ -34,7 +34,7 @@ BEGIN
     ON CONFLICT (idempotency_key) DO NOTHING
     RETURNING true INTO inserted;
 
-    RETURN inserted;
+    RETURN COALESCE(inserted, false);
 END;
 $$;
 """
