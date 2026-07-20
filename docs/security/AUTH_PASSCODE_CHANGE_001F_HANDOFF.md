@@ -42,6 +42,16 @@ promotion is authorized.
   `CLAUDE_AUTH_PASSCODE_CHANGE_001F1_END_TO_END_RELEASE_REVIEW_02A_V1`.
 - Follow-up verdict: `PASS`; P0/P1: none; no new P2 or out-of-scope finding.
 
+- CI exact-SHA `9852f09` still showed only the issuance row through the scoped
+  tenant+subject filter. The helper now selects all rows for the unique tenant
+  and fail-closed asserts every row belongs to the expected subject user,
+  preserving tenant isolation while exposing any producer subject mismatch.
+- Follow-up prompt:
+  `CLAUDE_AUTH_PASSCODE_CHANGE_001F1_END_TO_END_RELEASE_REVIEW_02D_V1`.
+- Follow-up verdict: `PASS`; P0/P1: none. One new non-blocking P2 notes the
+  deliberate fail-loud tradeoff if a future second user is added to this unique
+  tenant; no out-of-scope change is implicated.
+
 ## Release checkpoint
 
 - Final implementation checkpoint before this documentation update:

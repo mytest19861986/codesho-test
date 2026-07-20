@@ -62,12 +62,14 @@ def _audit_rows(*, tenant_id, user_id):
                    subject_user_id, actor_user_id, credential_version,
                    correlation_id, idempotency_key
             FROM audit.identity_security_event
-            WHERE tenant_id = %s AND subject_user_id = %s
+            WHERE tenant_id = %s
             ORDER BY occurred_at, event_id
             """,
-            (tenant_id, user_id),
+            (tenant_id,),
         )
-        return [dict(zip(columns, row, strict=True)) for row in cursor.fetchall()]
+        rows = [dict(zip(columns, row, strict=True)) for row in cursor.fetchall()]
+    assert all(row["subject_user_id"] == user_id for row in rows)
+    return rows
 
 
 def _event_count(rows, event_type: SecurityEventType) -> int:

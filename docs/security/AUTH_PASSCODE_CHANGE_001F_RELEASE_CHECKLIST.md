@@ -34,6 +34,14 @@ Status: test-only release gate in progress; no Production behavior is enabled.
   `CLAUDE_AUTH_PASSCODE_CHANGE_001F1_END_TO_END_RELEASE_REVIEW_02C_V1`.
 - Review 02C verdict: `PASS`; P0/P1: none; no new P2 findings.
 
+- CI exact-SHA `9852f09` continued to show an audit visibility mismatch under
+  the tenant+subject filter. The helper now reads the unique tenant's rows and
+  asserts the expected subject explicitly, making any mismatch fail closed.
+- Review 02D prompt:
+  `CLAUDE_AUTH_PASSCODE_CHANGE_001F1_END_TO_END_RELEASE_REVIEW_02D_V1`.
+- Review 02D verdict: `PASS`; P0/P1: none; one non-blocking P2 reliability
+  note about the deliberate fail-loud behavior for a future second user.
+
 ## Exact-SHA checkpoint
 
 - Implementation SHA: `b2d7217`.
