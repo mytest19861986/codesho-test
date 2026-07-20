@@ -1,0 +1,17 @@
+export const authAlphaContent = {
+  brand: "کُدشو",
+  title: "ورود",
+  usernameLabel: "نام کاربری",
+  passcodeLabel: "رمز ورود ۶ رقمی",
+  submit: "ورود",
+  invalidCredentials: "نام کاربری یا رمز ورود صحیح نیست.",
+  tooManyAttempts: "تعداد تلاش‌ها زیاد است؛ کمی بعد دوباره امتحان کنید.",
+  unavailable: "سرویس ورود موقتاً در دسترس نیست.",
+  mustChange: "برای ادامه باید رمز ورودت را تغییر دهی.",
+  success: "ورود با موفقیت انجام شد.",
+  usernameRequired: "نام کاربری را وارد کنید.",
+  passcodeRequired: "رمز ورود را وارد کنید.",
+  passcodeInvalid: "رمز ورود باید شش رقم باشد.",
+  bootstrapFailed: "ارتباط با سرویس ورود برقرار نشد.",
+  retry: "دوباره تلاش کنید.",
+} as const;
