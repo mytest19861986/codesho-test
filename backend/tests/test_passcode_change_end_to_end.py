@@ -13,7 +13,6 @@ from modules.identity.abuse import _client as _redis_client
 from modules.identity.challenge_cookie import COOKIE_NAME
 from modules.identity.models import PasscodeChangeChallenge, User
 from modules.identity.passcodes import set_passcode
-from modules.platform_event.models import IdentitySecurityEvent
 from modules.platform_event.security_audit import SecurityEventType
 from modules.platform_tenant.context import tenant_atomic
 from modules.platform_tenant.models import Tenant, TenantMembership
@@ -40,22 +39,31 @@ def _login(client: Client, headers: dict[str, str], passcode: str, host: str):
 
 
 def _audit_rows(*, tenant_id, user_id):
-    return list(
-        IdentitySecurityEvent.objects.filter(tenant_id=tenant_id, subject_user_id=user_id)
-        .order_by("occurred_at", "event_id")
-        .values(
-            "event_id",
-            "event_type",
-            "outcome",
-            "reason_code",
-            "tenant_id",
-            "subject_user_id",
-            "actor_user_id",
-            "credential_version",
-            "correlation_id",
-            "idempotency_key",
-        )
+    columns = (
+        "event_id",
+        "event_type",
+        "outcome",
+        "reason_code",
+        "tenant_id",
+        "subject_user_id",
+        "actor_user_id",
+        "credential_version",
+        "correlation_id",
+        "idempotency_key",
     )
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT event_id, event_type, outcome, reason_code, tenant_id,
+                   subject_user_id, actor_user_id, credential_version,
+                   correlation_id, idempotency_key
+            FROM audit.identity_security_event
+            WHERE tenant_id = %s AND subject_user_id = %s
+            ORDER BY occurred_at, event_id
+            """,
+            (tenant_id, user_id),
+        )
+        return [dict(zip(columns, row, strict=True)) for row in cursor.fetchall()]
 
 
 def _event_count(rows, event_type: SecurityEventType) -> int:

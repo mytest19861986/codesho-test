@@ -41,3 +41,13 @@ promotion is authorized.
 - Follow-up prompt:
   `CLAUDE_AUTH_PASSCODE_CHANGE_001F1_END_TO_END_RELEASE_REVIEW_02A_V1`.
 - Follow-up verdict: `PASS`; P0/P1: none; no new P2 or out-of-scope finding.
+
+- CI exact-SHA `f9de519` then exposed a second test-only issue: ORM access to
+  the schema-qualified audit model resolved the relation incorrectly in the CI
+  test database (`relation "audit.identity_security_event" does not exist`).
+- Remediation: `_audit_rows` now uses a parameterized, explicit
+  `FROM audit.identity_security_event` query and reconstructs the same ten
+  bounded columns with strict shape checking. No production code changed.
+- Follow-up prompt:
+  `CLAUDE_AUTH_PASSCODE_CHANGE_001F1_END_TO_END_RELEASE_REVIEW_02B_V1`.
+- Follow-up verdict: `PASS`; P0/P1: none; no new P2 or out-of-scope finding.

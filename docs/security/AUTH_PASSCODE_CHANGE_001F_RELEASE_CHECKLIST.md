@@ -20,6 +20,13 @@ Status: test-only release gate in progress; no Production behavior is enabled.
   `CLAUDE_AUTH_PASSCODE_CHANGE_001F1_END_TO_END_RELEASE_REVIEW_02A_V1`.
 - Review 02A verdict: `PASS`; P0/P1: none; no new P2 findings.
 
+- CI exact-SHA `f9de519` also exposed an ORM schema-resolution failure in the
+  E2E evidence helper. The test now uses a parameterized schema-qualified SQL
+  query; this remains test-only and preserves the same bounded shape.
+- Review 02B prompt:
+  `CLAUDE_AUTH_PASSCODE_CHANGE_001F1_END_TO_END_RELEASE_REVIEW_02B_V1`.
+- Review 02B verdict: `PASS`; P0/P1: none; no new P2 findings.
+
 ## Backend flow evidence
 
 The PostgreSQL/Redis-only HTTP gate exercises mandatory-change login, secure
