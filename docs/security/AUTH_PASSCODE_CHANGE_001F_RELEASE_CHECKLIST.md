@@ -27,6 +27,13 @@ Status: test-only release gate in progress; no Production behavior is enabled.
   `CLAUDE_AUTH_PASSCODE_CHANGE_001F1_END_TO_END_RELEASE_REVIEW_02B_V1`.
 - Review 02B verdict: `PASS`; P0/P1: none; no new P2 findings.
 
+- CI exact-SHA `be73ab5` exposed stale connection visibility in the test-only
+  audit evidence read. The helper now closes and reopens the connection before
+  querying, without changing production behavior or evidence shape.
+- Review 02C prompt:
+  `CLAUDE_AUTH_PASSCODE_CHANGE_001F1_END_TO_END_RELEASE_REVIEW_02C_V1`.
+- Review 02C verdict: `PASS`; P0/P1: none; no new P2 findings.
+
 ## Backend flow evidence
 
 The PostgreSQL/Redis-only HTTP gate exercises mandatory-change login, secure

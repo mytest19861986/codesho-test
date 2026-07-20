@@ -51,6 +51,10 @@ def _audit_rows(*, tenant_id, user_id):
         "correlation_id",
         "idempotency_key",
     )
+    # HTTP requests append through their own transaction boundary; force a
+    # fresh read connection so this evidence query cannot retain an older
+    # transaction snapshot from the test thread.
+    connection.close()
     with connection.cursor() as cursor:
         cursor.execute(
             """
