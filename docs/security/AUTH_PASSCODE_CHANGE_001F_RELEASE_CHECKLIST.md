@@ -10,6 +10,16 @@ Status: test-only release gate in progress; no Production behavior is enabled.
   delta, SameSite assertion, and low-signal `v1` forbidden-value check.
 - Review was limited to the E2E test, handoff, and this checklist.
 
+## CI remediation
+
+- Initial CI backend failure was `404` from the CSRF helper because the test
+  generated a randomized tenant slug but used a hardcoded Alpha host.
+- Fixed within the E2E test by threading the actual tenant-derived host through
+  all Alpha-side requests; the cross-tenant negative path remains unchanged.
+- Review 02A prompt:
+  `CLAUDE_AUTH_PASSCODE_CHANGE_001F1_END_TO_END_RELEASE_REVIEW_02A_V1`.
+- Review 02A verdict: `PASS`; P0/P1: none; no new P2 findings.
+
 ## Backend flow evidence
 
 The PostgreSQL/Redis-only HTTP gate exercises mandatory-change login, secure

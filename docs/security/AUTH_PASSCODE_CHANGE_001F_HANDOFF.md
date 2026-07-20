@@ -28,3 +28,16 @@ promotion is authorized.
 - `git diff --check`: passed.
 - No protected `codesho` promotion, UI work, Production behavior, or Alpha
   user activation was performed.
+
+## CI remediation follow-up
+
+- Initial exact-SHA CI backend run exposed a test-only routing defect: the
+  randomized tenant slug was created correctly, but helper requests still used
+  a hardcoded host and returned 404 in PostgreSQL CI.
+- Remediation: `_csrf`, `_login`, session checks, completion, replay, and
+  re-login requests now use `alpha_host = f"{tenant.slug}.localhost"`.
+  The cross-tenant request remains `f"{second_tenant.slug}.localhost"` and is
+  followed by a successful Alpha completion.
+- Follow-up prompt:
+  `CLAUDE_AUTH_PASSCODE_CHANGE_001F1_END_TO_END_RELEASE_REVIEW_02A_V1`.
+- Follow-up verdict: `PASS`; P0/P1: none; no new P2 or out-of-scope finding.

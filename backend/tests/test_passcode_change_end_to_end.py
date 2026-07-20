@@ -23,18 +23,18 @@ def _client() -> Client:
     return Client(enforce_csrf_checks=True)
 
 
-def _csrf(client: Client) -> dict[str, str]:
-    response = client.get("/api/v1/auth/csrf/", HTTP_HOST="alpha.localhost")
+def _csrf(client: Client, host: str) -> dict[str, str]:
+    response = client.get("/api/v1/auth/csrf/", HTTP_HOST=host)
     assert response.status_code == 204
     return {"HTTP_X_CSRFTOKEN": response.cookies["csrftoken"].value}
 
 
-def _login(client: Client, headers: dict[str, str], passcode: str):
+def _login(client: Client, headers: dict[str, str], passcode: str, host: str):
     return client.post(
         "/api/v1/auth/passcode/login/",
         {"username": "learner", "passcode": passcode},
         content_type="application/json",
-        HTTP_HOST="alpha.localhost",
+        HTTP_HOST=host,
         **headers,
     )
 
@@ -100,6 +100,7 @@ def test_forced_passcode_change_http_release_gate(settings):
     settings.TENANT_BASE_DOMAIN = "localhost"
     settings.ALLOWED_HOSTS = [".localhost", "localhost", "testserver"]
     tenant = Tenant.objects.create(slug=f"alpha-{uuid4()}", name="Alpha")
+    alpha_host = f"{tenant.slug}.localhost"
     user = User.objects.create_user(username="learner", email=f"{uuid4()}@example.com")
     credential = set_passcode(user, "123456", must_change=False)
     with tenant_atomic(tenant.id):
@@ -108,15 +109,15 @@ def test_forced_passcode_change_http_release_gate(settings):
         )
 
     prior = _client()
-    assert _login(prior, _csrf(prior), "123456").status_code == 204
+    assert _login(prior, _csrf(prior, alpha_host), "123456", alpha_host).status_code == 204
     prior_session = prior.session.session_key
     credential.must_change = True
     credential.save(update_fields=["must_change"])
 
     flow = _client()
-    headers = _csrf(flow)
+    headers = _csrf(flow, alpha_host)
     issued_audit_baseline = _audit_rows(tenant_id=tenant.id, user_id=user.id)
-    issued = _login(flow, headers, "123456")
+    issued = _login(flow, headers, "123456", alpha_host)
     assert issued.status_code == 403 and issued.json() == {"code": "passcode_change_required"}
     challenge_cookie = issued.cookies[COOKIE_NAME]
     assert challenge_cookie["secure"] and challenge_cookie["httponly"]
@@ -150,7 +151,7 @@ def test_forced_passcode_change_http_release_gate(settings):
         "/api/v1/auth/passcode/change/complete/",
         {"newPasscode": "654321"},
         content_type="application/json",
-        HTTP_HOST="alpha.localhost",
+        HTTP_HOST=alpha_host,
         **headers,
     )
     assert completed.status_code == 204 and completed.cookies[COOKIE_NAME]["max-age"] == 0
@@ -167,7 +168,7 @@ def test_forced_passcode_change_http_release_gate(settings):
         challenge.state == PasscodeChangeChallenge.State.CONSUMED
         and challenge.secret_digest is None
     )
-    assert prior.get("/api/v1/auth/session/", HTTP_HOST="alpha.localhost").status_code == 401
+    assert prior.get("/api/v1/auth/session/", HTTP_HOST=alpha_host).status_code == 401
 
     completed_audits = _audit_rows(tenant_id=tenant.id, user_id=user.id)
     assert _event_count(completed_audits, SecurityEventType.PASSCODE_CHANGED) == 1
@@ -178,7 +179,7 @@ def test_forced_passcode_change_http_release_gate(settings):
         "/api/v1/auth/passcode/change/complete/",
         {"newPasscode": "000000"},
         content_type="application/json",
-        HTTP_HOST="alpha.localhost",
+        HTTP_HOST=alpha_host,
         HTTP_COOKIE=f"csrftoken={flow.cookies['csrftoken'].value}; {COOKIE_NAME}={cookie_value}",
         **headers,
     )
@@ -187,8 +188,8 @@ def test_forced_passcode_change_http_release_gate(settings):
     assert _event_count(replay_audits, SecurityEventType.PASSCODE_CHANGED) == 1
     assert _event_count(replay_audits, SecurityEventType.PASSCODE_CHANGE_CHALLENGE_CONSUMED) == 1
     _assert_bounded_audit_rows(replay_audits, forbidden_values=sensitive_issue_values)
-    assert _login(flow, _csrf(flow), "123456").status_code == 401
-    fresh = _login(flow, _csrf(flow), "654321")
+    assert _login(flow, _csrf(flow, alpha_host), "123456", alpha_host).status_code == 401
+    fresh = _login(flow, _csrf(flow, alpha_host), "654321", alpha_host)
     assert fresh.status_code == 204 and flow.session.session_key != prior_session
 
 
@@ -201,6 +202,7 @@ def test_same_as_current_and_cross_tenant_cookie_fail_closed(settings):
     settings.ALLOWED_HOSTS = [".localhost", "localhost", "testserver"]
     tenant = Tenant.objects.create(slug=f"alpha-{uuid4()}", name="Alpha")
     second_tenant = Tenant.objects.create(slug=f"beta-{uuid4()}", name="Beta")
+    alpha_host = f"{tenant.slug}.localhost"
     user = User.objects.create_user(username="learner", email=f"{uuid4()}@example.com")
     credential = set_passcode(user, "123456", must_change=True)
     with tenant_atomic(tenant.id):
@@ -209,8 +211,8 @@ def test_same_as_current_and_cross_tenant_cookie_fail_closed(settings):
         )
 
     client = _client()
-    headers = _csrf(client)
-    assert _login(client, headers, "123456").status_code == 403
+    headers = _csrf(client, alpha_host)
+    assert _login(client, headers, "123456", alpha_host).status_code == 403
     cookie_value = client.cookies[COOKIE_NAME].value
     cookie_version, cookie_selector, cookie_secret = _challenge_cookie_parts(cookie_value)
     audit_baseline = _audit_rows(tenant_id=tenant.id, user_id=user.id)
@@ -218,7 +220,7 @@ def test_same_as_current_and_cross_tenant_cookie_fail_closed(settings):
         "/api/v1/auth/passcode/change/complete/",
         {"newPasscode": "123456"},
         content_type="application/json",
-        HTTP_HOST="alpha.localhost",
+        HTTP_HOST=alpha_host,
         **headers,
     )
     assert same.status_code == 409 and COOKIE_NAME not in same.cookies
@@ -264,7 +266,7 @@ def test_same_as_current_and_cross_tenant_cookie_fail_closed(settings):
         "/api/v1/auth/passcode/change/complete/",
         {"newPasscode": "654321"},
         content_type="application/json",
-        HTTP_HOST="alpha.localhost",
+        HTTP_HOST=alpha_host,
         HTTP_COOKIE=f"csrftoken={client.cookies['csrftoken'].value}; {COOKIE_NAME}={cookie_value}",
         **headers,
     )
