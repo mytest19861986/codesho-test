@@ -76,3 +76,11 @@ closed. Canonical OpenAPI status/cookie contracts remain the release authority.
 - Real Alpha users remain blocked.
 - Signup, Recovery, Guardian, OAuth and Onboarding remain deferred.
 - Promotion to protected `codesho` remains forbidden.
+
+## Audit producer remediation 01
+
+- Root cause remediation is limited to the forward-only platform-event migration
+  `0008_harden_audit_append_result`, which makes the append function's inserted
+  row result explicit with `RETURNING` and preserves idempotent no-op behavior.
+- Local Ruff, Django check, migration drift check, full backend tests, and diff
+  check pass; PostgreSQL/Redis HTTP evidence remains a CI/Compose gate.
