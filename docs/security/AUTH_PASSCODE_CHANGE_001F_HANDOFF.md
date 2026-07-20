@@ -42,6 +42,20 @@ promotion is authorized.
   `CLAUDE_AUTH_PASSCODE_CHANGE_001F1_END_TO_END_RELEASE_REVIEW_02A_V1`.
 - Follow-up verdict: `PASS`; P0/P1: none; no new P2 or out-of-scope finding.
 
+## Release checkpoint
+
+- Final implementation checkpoint before this documentation update:
+  `b2d7217`.
+- CI exact-SHA run `29737743438`: success.
+- Compose smoke/restore exact-SHA run `29737743350`: success.
+- CI: https://github.com/mytest19861986/codesho-test/actions/runs/29737743438
+- Compose: https://github.com/mytest19861986/codesho-test/actions/runs/29737743350
+- Local final gates: Ruff passed; focused E2E `2 skipped` only because local
+  PostgreSQL is unavailable; full backend `130 passed, 29 skipped`; staged
+  `git diff --check` passed.
+- Only the E2E test, this handoff, and the release checklist were committed;
+  unrelated coordination changes remain untouched.
+
 - CI exact-SHA `be73ab5` showed the schema-qualified evidence read only the
   issuance baseline; completion and rejection events were not visible through
   the reused Django connection snapshot.

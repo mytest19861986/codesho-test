@@ -34,6 +34,14 @@ Status: test-only release gate in progress; no Production behavior is enabled.
   `CLAUDE_AUTH_PASSCODE_CHANGE_001F1_END_TO_END_RELEASE_REVIEW_02C_V1`.
 - Review 02C verdict: `PASS`; P0/P1: none; no new P2 findings.
 
+## Exact-SHA checkpoint
+
+- Implementation SHA: `b2d7217`.
+- CI run `29737743438`: success.
+- Compose smoke/restore run `29737743350`: success.
+- Local: Ruff passed; focused E2E `2 skipped` for unavailable local
+  PostgreSQL; full backend `130 passed, 29 skipped`; diff check passed.
+
 ## Backend flow evidence
 
 The PostgreSQL/Redis-only HTTP gate exercises mandatory-change login, secure
