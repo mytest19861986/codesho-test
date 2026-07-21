@@ -53,7 +53,7 @@ def _audit_rows(*, tenant_id, user_id):
     )
     # HTTP requests append through their own transaction boundary; reset any
     # stale test-thread snapshot before reading committed audit evidence.
-    connection.rollback()
+    connection.commit()
     connection.close()
     with tenant_atomic(tenant_id), connection.cursor() as cursor:
         cursor.execute(
