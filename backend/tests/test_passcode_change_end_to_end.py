@@ -14,7 +14,7 @@ from modules.identity.challenge_cookie import COOKIE_NAME
 from modules.identity.models import PasscodeChangeChallenge, User
 from modules.identity.passcodes import set_passcode
 from modules.platform_event.security_audit import SecurityEventType
-from modules.platform_tenant.context import tenant_atomic
+from modules.platform_tenant.context import current_tenant_id, tenant_atomic
 from modules.platform_tenant.models import Tenant, TenantMembership
 
 
@@ -90,6 +90,54 @@ def _audit_event_type_counts() -> dict[str, object]:
             """
         )
         return {event_type: count for event_type, count in cursor.fetchall()}
+
+
+def _assertion_visibility_diagnostic(
+    *, event_type: SecurityEventType, tenant_id, user_id, rows
+) -> str:
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                COUNT(*) FILTER (WHERE event_type = %s),
+                COUNT(*) FILTER (WHERE event_type = %s AND tenant_id = %s),
+                COUNT(*) FILTER (WHERE event_type = %s AND subject_user_id = %s),
+                COUNT(*) FILTER (
+                    WHERE event_type = %s AND tenant_id = %s AND subject_user_id = %s
+                )
+            FROM audit.identity_security_event
+            """,
+            (
+                event_type.value,
+                event_type.value,
+                tenant_id,
+                event_type.value,
+                user_id,
+                event_type.value,
+                tenant_id,
+                user_id,
+            ),
+        )
+        event_count, tenant_count, user_count, tenant_user_count = cursor.fetchone()
+    tenant_context = current_tenant_id()
+    assertion_path_count = sum(row["event_type"] == event_type.value for row in rows)
+    return "\n".join(
+        (
+            f"event={event_type.value}",
+            f"event_count={event_count}",
+            f"event_expected_tenant_count={tenant_count}",
+            f"event_expected_user_count={user_count}",
+            f"event_expected_tenant_user_count={tenant_user_count}",
+            f"assertion_path_count={assertion_path_count}",
+            f"tenant_context_present={tenant_context is not None}",
+            f"tenant_context_matches_expected={tenant_context == tenant_id}",
+            f"row_tenant_matches_expected={tenant_count > 0}",
+            f"row_user_matches_expected={user_count > 0}",
+            f"autocommit={connection.get_autocommit()}",
+            f"in_atomic_block={connection.in_atomic_block}",
+            "query_timing=AFTER_REQUEST_RETURNED",
+        )
+    )
 
 
 def _device_signal(client: Client, settings) -> str:
@@ -202,7 +250,12 @@ def test_forced_passcode_change_http_release_gate(settings):
 
     completed_audits = _audit_rows(tenant_id=tenant.id, user_id=user.id)
     assert _event_count(completed_audits, SecurityEventType.PASSCODE_CHANGED) == 1, (
-        _audit_event_type_counts()
+        _assertion_visibility_diagnostic(
+            event_type=SecurityEventType.PASSCODE_CHANGED,
+            tenant_id=tenant.id,
+            user_id=user.id,
+            rows=completed_audits,
+        )
     )
     assert (
         _event_count(completed_audits, SecurityEventType.PASSCODE_CHANGE_CHALLENGE_CONSUMED)
@@ -265,7 +318,12 @@ def test_same_as_current_and_cross_tenant_cookie_fail_closed(settings):
         for row in same_audits
         if row["event_type"] == SecurityEventType.PASSCODE_CHANGE_REJECTED.value
     ]
-    assert len(rejected) == 1, _audit_event_type_counts()
+    assert len(rejected) == 1, _assertion_visibility_diagnostic(
+        event_type=SecurityEventType.PASSCODE_CHANGE_REJECTED,
+        tenant_id=tenant.id,
+        user_id=user.id,
+        rows=same_audits,
+    )
     assert rejected[0]["reason_code"] == "passcode_same_as_current"
     assert len(same_audits) == len(audit_baseline) + 1
     with tenant_atomic(tenant.id):
