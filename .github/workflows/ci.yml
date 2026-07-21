@@ -42,6 +42,7 @@ jobs:
       DATABASE_TEST_NAME: codesho_test
       CELERY_BROKER_URL: redis://localhost:6379/1
       REDIS_URL: redis://localhost:6379/0
+      CODESHO_CI_AUDIT_DIAGNOSTIC: "1"
       # CI-ONLY — DO NOT REUSE outside ephemeral test environments.
       PASSCODE_SIGNAL_HMAC_KEY: c2lnbmFsLWhtYWMta2V5LXgteHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg=
     defaults:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from uuid import uuid4
 
 import pytest
@@ -13,7 +14,7 @@ from modules.identity.abuse import _client as _redis_client
 from modules.identity.challenge_cookie import COOKIE_NAME
 from modules.identity.models import PasscodeChangeChallenge, User
 from modules.identity.passcodes import set_passcode
-from modules.platform_event.security_audit import SecurityEventType
+from modules.platform_event.security_audit import SecurityEventType, ci_audit_diagnostic_state
 from modules.platform_tenant.context import tenant_atomic
 from modules.platform_tenant.models import Tenant, TenantMembership
 
@@ -89,7 +90,14 @@ def _audit_event_type_counts() -> dict[str, object]:
             ORDER BY event_type
             """
         )
-        return {event_type: count for event_type, count in cursor.fetchall()}
+        counts = {event_type: count for event_type, count in cursor.fetchall()}
+    counts["_ci_diagnostic"] = ci_audit_diagnostic_state()
+    return counts
+
+
+def _fail_after_ci_diagnostic() -> None:
+    if os.environ.get("CODESHO_CI_AUDIT_DIAGNOSTIC") == "1":
+        pytest.fail(f"CI_AUDIT_DIAGNOSTIC_FINAL {_audit_event_type_counts()}")
 
 
 def _device_signal(client: Client, settings) -> str:
@@ -226,6 +234,7 @@ def test_forced_passcode_change_http_release_gate(settings):
     assert _login(flow, _csrf(flow, alpha_host), "123456", alpha_host).status_code == 401
     fresh = _login(flow, _csrf(flow, alpha_host), "654321", alpha_host)
     assert fresh.status_code == 204 and flow.session.session_key != prior_session
+    _fail_after_ci_diagnostic()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -306,3 +315,4 @@ def test_same_as_current_and_cross_tenant_cookie_fail_closed(settings):
         **headers,
     )
     assert replacement.status_code == 204
+    _fail_after_ci_diagnostic()
