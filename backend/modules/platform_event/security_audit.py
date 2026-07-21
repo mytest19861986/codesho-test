@@ -15,12 +15,16 @@ class SecurityAuditError(RuntimeError):
 def _ci_audit_diagnostic(*, created: bool | None = None, outcome: str | None = None) -> None:
     if os.environ.get("CODESHO_CI_AUDIT_DIAGNOSTIC") != "1":
         return
+    if outcome == "ROLLBACK":
+        _CI_AUDIT_DIAGNOSTIC_STATE["transaction"] = "ROLLBACK"
+        print("::notice title=CI_AUDIT_DIAGNOSTIC::CI_AUDIT_DIAGNOSTIC transaction=ROLLBACK")
+        return
     with connection.cursor() as cursor:
         cursor.execute(
             """
             SELECT
-                (SELECT MAX(app.applied) FROM codesho.django_migrations AS app
-                 WHERE app.app = 'platform_event'),
+                (SELECT app.name FROM codesho.django_migrations AS app
+                 WHERE app.app = 'platform_event' ORDER BY app.id DESC LIMIT 1),
                 owner.rolname,
                 function.prosecdef,
                 COALESCE(array_to_string(function.proconfig, ','), ''),
@@ -51,17 +55,19 @@ def _ci_audit_diagnostic(*, created: bool | None = None, outcome: str | None = N
         current_user=current_user,
         session_user=session_user,
         current_role=current_role,
-        append_returned=created if created is not None else "<pending>",
-        transaction=outcome or "<pending>",
     )
+    if created is not None:
+        _CI_AUDIT_DIAGNOSTIC_STATE["append_returned"] = created
+    if outcome is not None:
+        _CI_AUDIT_DIAGNOSTIC_STATE["transaction"] = outcome
     diagnostic = (
         "CI_AUDIT_DIAGNOSTIC "
         f"migration={migration} owner={owner} "
         f"security={'DEFINER' if security_definer else 'INVOKER'} "
         f"search_path={search_path or '<default>'} current_user={current_user} "
         f"session_user={session_user} current_role={current_role} "
-        f"append_returned={created if created is not None else '<pending>'} "
-        f"transaction={outcome or '<pending>'}"
+        f"append_returned={_CI_AUDIT_DIAGNOSTIC_STATE.get('append_returned', '<pending>')} "
+        f"transaction={_CI_AUDIT_DIAGNOSTIC_STATE.get('transaction', '<pending>')}"
     )
     print(diagnostic)
     print(f"::notice title=CI_AUDIT_DIAGNOSTIC::{diagnostic}")
