@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass
 from enum import StrEnum
 from uuid import UUID
@@ -7,6 +8,46 @@ from django.db import DatabaseError, connection, transaction
 
 class SecurityAuditError(RuntimeError):
     """Raised when a security audit event cannot be durably appended."""
+
+
+def _ci_audit_diagnostic(*, created: bool | None = None, outcome: str | None = None) -> None:
+    if os.environ.get("CODESHO_CI_AUDIT_DIAGNOSTIC") != "1":
+        return
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                (SELECT MAX(app.applied) FROM codesho.django_migrations AS app
+                 WHERE app.app = 'platform_event'),
+                owner.rolname,
+                function.prosecdef,
+                COALESCE(array_to_string(function.proconfig, ','), ''),
+                current_user,
+                session_user,
+                current_role
+            FROM pg_proc AS function
+            JOIN pg_namespace AS namespace ON namespace.oid = function.pronamespace
+            JOIN pg_roles AS owner ON owner.oid = function.proowner
+            WHERE namespace.nspname = 'audit'
+              AND function.proname = 'append_identity_security_event'
+              AND function.pronargs = 10
+            LIMIT 1
+            """
+        )
+        row = cursor.fetchone()
+    if row is None:
+        print("CI_AUDIT_DIAGNOSTIC function_missing")
+        return
+    migration, owner, security_definer, search_path, current_user, session_user, current_role = row
+    print(
+        "CI_AUDIT_DIAGNOSTIC "
+        f"migration={migration} owner={owner} "
+        f"security={'DEFINER' if security_definer else 'INVOKER'} "
+        f"search_path={search_path or '<default>'} current_user={current_user} "
+        f"session_user={session_user} current_role={current_role} "
+        f"append_returned={created if created is not None else '<pending>'} "
+        f"transaction={outcome or '<pending>'}"
+    )
 
 
 class SecurityEventType(StrEnum):
@@ -229,6 +270,9 @@ def append_security_event(event: SecurityAuditEvent) -> AppendAuditResult:
                 ),
             )
             created = cursor.fetchone()[0]
+            _ci_audit_diagnostic(created=created)
     except DatabaseError as exc:
+        _ci_audit_diagnostic(outcome="ROLLBACK")
         raise SecurityAuditError("security audit append failed") from exc
+    _ci_audit_diagnostic(outcome="COMMIT")
     return AppendAuditResult(event_id=event.event_id if created else None, created=created)
