@@ -96,6 +96,51 @@ def _audit_event_type_counts(*, tenant_id, user_id) -> dict[str, object]:
     return {event_type.value: _event_count(rows, event_type) for event_type in SecurityEventType}
 
 
+def _bounded_target_counts(*, tenant_id, user_id, event_type: SecurityEventType) -> dict[str, int]:
+    with _independent_audit_connection() as audit_connection, audit_connection.cursor() as cursor:
+        cursor.execute("SELECT set_config('app.tenant_id', %s, true)", [str(tenant_id)])
+        cursor.execute(
+            """
+            SELECT COUNT(*),
+                   COUNT(*) FILTER (WHERE tenant_id = %s),
+                   COUNT(*) FILTER (WHERE tenant_id = %s AND subject_user_id = %s),
+                   COUNT(correlation_id),
+                   COUNT(idempotency_key),
+                   COUNT(*) FILTER (
+                       WHERE tenant_id = %s AND subject_user_id = %s
+                   )
+            FROM audit.identity_security_event
+            WHERE event_type = %s
+            """,
+            (
+                tenant_id,
+                tenant_id,
+                user_id,
+                tenant_id,
+                user_id,
+                event_type.value,
+            ),
+        )
+        total, tenant, tenant_user, correlation, idempotency, exact = cursor.fetchone()
+    return {
+        "total_event_type": total,
+        "tenant_match": tenant,
+        "tenant_user_match": tenant_user,
+        "correlation_present": correlation,
+        "idempotency_present": idempotency,
+        "exact_filter_match": exact,
+    }
+
+
+def _bounded_failure_summary(*, tenant_id, user_id, event_type: SecurityEventType) -> str:
+    counts = _bounded_target_counts(
+        tenant_id=tenant_id,
+        user_id=user_id,
+        event_type=event_type,
+    )
+    return f"BOUNDED_TARGET_COUNTS {event_type.value} {counts}"
+
+
 def _device_signal(client: Client, settings) -> str:
     signed = client.cookies[settings.PASSCODE_DEVICE_COOKIE_NAME].value
     return TimestampSigner(salt="codesho.passcode.device").unsign(signed)
@@ -206,7 +251,12 @@ def test_forced_passcode_change_http_release_gate(settings):
 
     completed_audits = _audit_rows(tenant_id=tenant.id, user_id=user.id)
     assert _event_count(completed_audits, SecurityEventType.PASSCODE_CHANGED) == 1, (
-        _audit_event_type_counts(tenant_id=tenant.id, user_id=user.id)
+        _audit_event_type_counts(tenant_id=tenant.id, user_id=user.id),
+        _bounded_failure_summary(
+            tenant_id=tenant.id,
+            user_id=user.id,
+            event_type=SecurityEventType.PASSCODE_CHANGED,
+        ),
     )
     assert (
         _event_count(completed_audits, SecurityEventType.PASSCODE_CHANGE_CHALLENGE_CONSUMED)
@@ -269,7 +319,14 @@ def test_same_as_current_and_cross_tenant_cookie_fail_closed(settings):
         for row in same_audits
         if row["event_type"] == SecurityEventType.PASSCODE_CHANGE_REJECTED.value
     ]
-    assert len(rejected) == 1, _audit_event_type_counts(tenant_id=tenant.id, user_id=user.id)
+    assert len(rejected) == 1, (
+        _audit_event_type_counts(tenant_id=tenant.id, user_id=user.id),
+        _bounded_failure_summary(
+            tenant_id=tenant.id,
+            user_id=user.id,
+            event_type=SecurityEventType.PASSCODE_CHANGE_REJECTED,
+        ),
+    )
     assert rejected[0]["reason_code"] == "passcode_same_as_current"
     assert len(same_audits) == len(audit_baseline) + 1
     with tenant_atomic(tenant.id):
