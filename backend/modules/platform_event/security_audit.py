@@ -54,7 +54,7 @@ def _ci_audit_diagnostic(*, created: bool | None = None, outcome: str | None = N
         append_returned=created if created is not None else "<pending>",
         transaction=outcome or "<pending>",
     )
-    print(
+    diagnostic = (
         "CI_AUDIT_DIAGNOSTIC "
         f"migration={migration} owner={owner} "
         f"security={'DEFINER' if security_definer else 'INVOKER'} "
@@ -63,6 +63,8 @@ def _ci_audit_diagnostic(*, created: bool | None = None, outcome: str | None = N
         f"append_returned={created if created is not None else '<pending>'} "
         f"transaction={outcome or '<pending>'}"
     )
+    print(diagnostic)
+    print(f"::notice title=CI_AUDIT_DIAGNOSTIC::{diagnostic}")
 
 
 def ci_audit_diagnostic_state() -> dict[str, object]:
