@@ -55,7 +55,7 @@ def _audit_rows(*, tenant_id, user_id):
     # fresh read connection so this evidence query cannot retain an older
     # transaction snapshot from the test thread.
     connection.close()
-    with connection.cursor() as cursor:
+    with tenant_atomic(tenant_id), connection.cursor() as cursor:
         cursor.execute(
             """
             SELECT event_id, event_type, outcome, reason_code, tenant_id,
