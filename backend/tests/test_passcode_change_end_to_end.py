@@ -91,11 +91,6 @@ def _event_count(rows, event_type: SecurityEventType) -> int:
     return sum(row["event_type"] == event_type.value for row in rows)
 
 
-def _audit_event_type_counts(*, tenant_id, user_id) -> dict[str, object]:
-    rows = _audit_rows(tenant_id=tenant_id, user_id=user_id)
-    return {event_type.value: _event_count(rows, event_type) for event_type in SecurityEventType}
-
-
 def _bounded_target_counts(*, tenant_id, user_id, event_type: SecurityEventType) -> dict[str, int]:
     with _independent_audit_connection() as audit_connection, audit_connection.cursor() as cursor:
         cursor.execute("SELECT set_config('app.tenant_id', %s, true)", [str(tenant_id)])
@@ -132,13 +127,20 @@ def _bounded_target_counts(*, tenant_id, user_id, event_type: SecurityEventType)
     }
 
 
-def _bounded_failure_summary(*, tenant_id, user_id, event_type: SecurityEventType) -> str:
+def _emit_bounded_failure_diagnostic(*, tenant_id, user_id, event_type: SecurityEventType) -> None:
     counts = _bounded_target_counts(
         tenant_id=tenant_id,
         user_id=user_id,
         event_type=event_type,
     )
-    return f"BOUNDED_TARGET_COUNTS {event_type.value} {counts}"
+    marker = "CHANGED" if event_type is SecurityEventType.PASSCODE_CHANGED else "REJECTED"
+    print(f"EVENT={marker}")
+    print(f"TOTAL={counts['total_event_type']}")
+    print(f"TENANT={counts['tenant_match']}")
+    print(f"TENANT_USER={counts['tenant_user_match']}")
+    print(f"CORR={counts['correlation_present']}")
+    print(f"IDEMP={counts['idempotency_present']}")
+    print(f"EXACT={counts['exact_filter_match']}")
 
 
 def _device_signal(client: Client, settings) -> str:
@@ -250,18 +252,15 @@ def test_forced_passcode_change_http_release_gate(settings):
     assert prior.get("/api/v1/auth/session/", HTTP_HOST=alpha_host).status_code == 401
 
     completed_audits = _audit_rows(tenant_id=tenant.id, user_id=user.id)
-    assert _event_count(completed_audits, SecurityEventType.PASSCODE_CHANGED) == 1, (
-        _audit_event_type_counts(tenant_id=tenant.id, user_id=user.id),
-        _bounded_failure_summary(
+    changed_count = _event_count(completed_audits, SecurityEventType.PASSCODE_CHANGED)
+    if changed_count != 1:
+        _emit_bounded_failure_diagnostic(
             tenant_id=tenant.id,
             user_id=user.id,
             event_type=SecurityEventType.PASSCODE_CHANGED,
-        ),
-    )
-    assert (
-        _event_count(completed_audits, SecurityEventType.PASSCODE_CHANGE_CHALLENGE_CONSUMED)
-        == 1
-    ), _audit_event_type_counts(tenant_id=tenant.id, user_id=user.id)
+        )
+    assert changed_count == 1
+    assert _event_count(completed_audits, SecurityEventType.PASSCODE_CHANGE_CHALLENGE_CONSUMED) == 1
     _assert_bounded_audit_rows(completed_audits, forbidden_values=sensitive_issue_values)
 
     replay = flow.post(
@@ -319,14 +318,14 @@ def test_same_as_current_and_cross_tenant_cookie_fail_closed(settings):
         for row in same_audits
         if row["event_type"] == SecurityEventType.PASSCODE_CHANGE_REJECTED.value
     ]
-    assert len(rejected) == 1, (
-        _audit_event_type_counts(tenant_id=tenant.id, user_id=user.id),
-        _bounded_failure_summary(
+    rejected_count = len(rejected)
+    if rejected_count != 1:
+        _emit_bounded_failure_diagnostic(
             tenant_id=tenant.id,
             user_id=user.id,
             event_type=SecurityEventType.PASSCODE_CHANGE_REJECTED,
-        ),
-    )
+        )
+    assert rejected_count == 1
     assert rejected[0]["reason_code"] == "passcode_same_as_current"
     assert len(same_audits) == len(audit_baseline) + 1
     with tenant_atomic(tenant.id):
