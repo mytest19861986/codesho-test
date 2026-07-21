@@ -13,7 +13,10 @@ from modules.identity.abuse import _client as _redis_client
 from modules.identity.challenge_cookie import COOKIE_NAME
 from modules.identity.models import PasscodeChangeChallenge, User
 from modules.identity.passcodes import set_passcode
-from modules.platform_event.security_audit import SecurityEventType
+from modules.platform_event.security_audit import (
+    SecurityEventType,
+    ci_audit_diagnostic_state,
+)
 from modules.platform_tenant.context import tenant_atomic
 from modules.platform_tenant.models import Tenant, TenantMembership
 
@@ -79,7 +82,7 @@ def _event_count(rows, event_type: SecurityEventType) -> int:
     return sum(row["event_type"] == event_type.value for row in rows)
 
 
-def _audit_event_type_counts() -> dict[str, int]:
+def _audit_event_type_counts() -> dict[str, object]:
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -89,7 +92,9 @@ def _audit_event_type_counts() -> dict[str, int]:
             ORDER BY event_type
             """
         )
-        return {event_type: count for event_type, count in cursor.fetchall()}
+        counts = {event_type: count for event_type, count in cursor.fetchall()}
+    counts["_ci_diagnostic"] = ci_audit_diagnostic_state()
+    return counts
 
 
 def _device_signal(client: Client, settings) -> str:

@@ -5,6 +5,8 @@ from uuid import UUID
 
 from django.db import DatabaseError, connection, transaction
 
+_CI_AUDIT_DIAGNOSTIC_STATE: dict[str, object] = {}
+
 
 class SecurityAuditError(RuntimeError):
     """Raised when a security audit event cannot be durably appended."""
@@ -36,9 +38,22 @@ def _ci_audit_diagnostic(*, created: bool | None = None, outcome: str | None = N
         )
         row = cursor.fetchone()
     if row is None:
+        _CI_AUDIT_DIAGNOSTIC_STATE.clear()
+        _CI_AUDIT_DIAGNOSTIC_STATE["function"] = "missing"
         print("CI_AUDIT_DIAGNOSTIC function_missing")
         return
     migration, owner, security_definer, search_path, current_user, session_user, current_role = row
+    _CI_AUDIT_DIAGNOSTIC_STATE.update(
+        migration=migration,
+        owner=owner,
+        security="DEFINER" if security_definer else "INVOKER",
+        search_path=search_path or "<default>",
+        current_user=current_user,
+        session_user=session_user,
+        current_role=current_role,
+        append_returned=created if created is not None else "<pending>",
+        transaction=outcome or "<pending>",
+    )
     print(
         "CI_AUDIT_DIAGNOSTIC "
         f"migration={migration} owner={owner} "
@@ -48,6 +63,10 @@ def _ci_audit_diagnostic(*, created: bool | None = None, outcome: str | None = N
         f"append_returned={created if created is not None else '<pending>'} "
         f"transaction={outcome or '<pending>'}"
     )
+
+
+def ci_audit_diagnostic_state() -> dict[str, object]:
+    return dict(_CI_AUDIT_DIAGNOSTIC_STATE)
 
 
 class SecurityEventType(StrEnum):
