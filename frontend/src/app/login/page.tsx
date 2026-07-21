@@ -28,6 +28,7 @@ export default function LoginPage() {
     setMessage(next);
     messageRef.current?.focus();
     if (result === "success") setPasscode("");
+    if (result === "must_change") window.location.assign("/passcode-change");
   }
 
   return <main className={styles.page}>

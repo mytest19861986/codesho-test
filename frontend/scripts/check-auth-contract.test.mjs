@@ -3,6 +3,7 @@ import fs from "node:fs";
 import test from "node:test";
 
 const page = fs.readFileSync(new URL("../src/app/login/page.tsx", import.meta.url), "utf8");
+const changePage = fs.readFileSync(new URL("../src/app/passcode-change/page.tsx", import.meta.url), "utf8");
 const client = fs.readFileSync(new URL("../src/features/auth/authClient.ts", import.meta.url), "utf8");
 const styles = fs.readFileSync(new URL("../src/app/login/login.module.css", import.meta.url), "utf8");
 const source = `${page}\n${client}`;
@@ -13,7 +14,7 @@ test("login route exposes only the approved passcode flow", () => {
   assert.match(page, /aria-live="polite"/);
   assert.match(page, /htmlFor="username"/);
   assert.match(page, /htmlFor="passcode"/);
-  assert.doesNotMatch(source, /localStorage|sessionStorage|window\.location|router\.|href=/);
+  assert.doesNotMatch(client, /localStorage|sessionStorage|window\.location|router\.|href=/);
   assert.doesNotMatch(source, /signup|recovery|forgot|remember|social|google|github/i);
   assert.match(styles, /min-inline-size:\s*0/);
   assert.match(styles, /max-inline-size:\s*100%/);
@@ -27,4 +28,17 @@ test("auth client performs bounded same-origin CSRF and session sequence", () =>
   assert.match(client, /response\.status === 204/);
   assert.ok(client.indexOf("fetch(sessionPath") > client.indexOf("response.status === 204"));
   assert.match(client, /normalizePasscode/);
+});
+
+test("must-change completion stays in memory and handles every endpoint outcome", () => {
+  assert.match(page, /result === "must_change".*passcode-change/);
+  assert.match(changePage, /new-password/);
+  assert.match(changePage, /window\.location\.assign\("\/login"\)/);
+  assert.match(client, /passcode\/change\/complete/);
+  assert.match(client, /response\.status === 204/);
+  assert.match(client, /response\.status === 401/);
+  assert.match(client, /response\.status === 409/);
+  assert.match(client, /response\.status === 429/);
+  assert.match(client, /response\.status === 503/);
+  assert.doesNotMatch(`${changePage}\n${client}`, /localStorage|sessionStorage|document\.cookie\s*=/);
 });

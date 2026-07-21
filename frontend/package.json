@@ -9,6 +9,7 @@
     "check:ui-policy": "node scripts/check-ui-policy.mjs",
     "lint": "eslint .",
     "test:ui-policy": "node --test scripts/check-ui-policy.test.mjs",
+    "test:auth-contract": "node --test scripts/check-auth-contract.test.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
