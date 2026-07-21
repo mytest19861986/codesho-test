@@ -54,6 +54,7 @@ def _audit_rows(*, tenant_id, user_id):
     # HTTP requests append through their own transaction boundary; force a
     # fresh read connection so this evidence query cannot retain an older
     # transaction snapshot from the test thread.
+    connection.rollback()
     connection.close()
     with tenant_atomic(tenant_id), connection.cursor() as cursor:
         cursor.execute(
