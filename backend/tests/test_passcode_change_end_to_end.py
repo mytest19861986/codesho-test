@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from uuid import uuid4
 
 import pytest
@@ -38,6 +39,19 @@ def _login(client: Client, headers: dict[str, str], passcode: str, host: str):
     )
 
 
+@contextmanager
+def _independent_audit_connection():
+    params = connection.get_connection_params()
+    audit_connection = connection.get_new_connection(params)
+    try:
+        audit_connection.autocommit = False
+        yield audit_connection
+    finally:
+        if not audit_connection.closed:
+            audit_connection.rollback()
+            audit_connection.close()
+
+
 def _audit_rows(*, tenant_id, user_id):
     columns = (
         "event_id",
@@ -51,21 +65,19 @@ def _audit_rows(*, tenant_id, user_id):
         "correlation_id",
         "idempotency_key",
     )
-    # HTTP requests append through their own transaction boundary; reset any
-    # stale test-thread snapshot before reading committed audit evidence.
-    connection.commit()
-    connection.close()
-    with tenant_atomic(tenant_id), connection.cursor() as cursor:
+    with _independent_audit_connection() as audit_connection, audit_connection.cursor() as cursor:
+        cursor.execute("SELECT set_config('app.tenant_id', %s, true)", [str(tenant_id)])
         cursor.execute(
             """
             SELECT event_id, event_type, outcome, reason_code, tenant_id,
                    subject_user_id, actor_user_id, credential_version,
                    correlation_id, idempotency_key
             FROM audit.identity_security_event
-            WHERE tenant_id = %s OR subject_user_id = %s
+            WHERE (tenant_id = %s OR subject_user_id = %s)
+              AND (tenant_id = %s AND subject_user_id = %s)
             ORDER BY occurred_at, event_id
             """,
-            (tenant_id, user_id),
+            (tenant_id, user_id, tenant_id, user_id),
         )
         rows = [dict(zip(columns, row, strict=True)) for row in cursor.fetchall()]
     assert all(
@@ -79,17 +91,9 @@ def _event_count(rows, event_type: SecurityEventType) -> int:
     return sum(row["event_type"] == event_type.value for row in rows)
 
 
-def _audit_event_type_counts() -> dict[str, object]:
-    with connection.cursor() as cursor:
-        cursor.execute(
-            """
-            SELECT event_type, COUNT(*)
-            FROM audit.identity_security_event
-            GROUP BY event_type
-            ORDER BY event_type
-            """
-        )
-        return {event_type: count for event_type, count in cursor.fetchall()}
+def _audit_event_type_counts(*, tenant_id, user_id) -> dict[str, object]:
+    rows = _audit_rows(tenant_id=tenant_id, user_id=user_id)
+    return {event_type.value: _event_count(rows, event_type) for event_type in SecurityEventType}
 
 
 def _device_signal(client: Client, settings) -> str:
@@ -202,12 +206,12 @@ def test_forced_passcode_change_http_release_gate(settings):
 
     completed_audits = _audit_rows(tenant_id=tenant.id, user_id=user.id)
     assert _event_count(completed_audits, SecurityEventType.PASSCODE_CHANGED) == 1, (
-        _audit_event_type_counts()
+        _audit_event_type_counts(tenant_id=tenant.id, user_id=user.id)
     )
     assert (
         _event_count(completed_audits, SecurityEventType.PASSCODE_CHANGE_CHALLENGE_CONSUMED)
         == 1
-    ), _audit_event_type_counts()
+    ), _audit_event_type_counts(tenant_id=tenant.id, user_id=user.id)
     _assert_bounded_audit_rows(completed_audits, forbidden_values=sensitive_issue_values)
 
     replay = flow.post(
@@ -265,7 +269,7 @@ def test_same_as_current_and_cross_tenant_cookie_fail_closed(settings):
         for row in same_audits
         if row["event_type"] == SecurityEventType.PASSCODE_CHANGE_REJECTED.value
     ]
-    assert len(rejected) == 1, _audit_event_type_counts()
+    assert len(rejected) == 1, _audit_event_type_counts(tenant_id=tenant.id, user_id=user.id)
     assert rejected[0]["reason_code"] == "passcode_same_as_current"
     assert len(same_audits) == len(audit_baseline) + 1
     with tenant_atomic(tenant.id):
