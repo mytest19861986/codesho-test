@@ -319,10 +319,6 @@ def test_postgres_parallel_completion_consumes_a_challenge_once(tenant_member):
                     "config.passcode_change_completion.record_successful_completion_attempt",
                     return_value=allowed(),
                 ),
-                patch(
-                    "config.passcode_change_completion.append_security_event",
-                    side_effect=lambda event: audit_events.append(event),
-                ),
             ):
                 results.append(
                     complete_forced_passcode_change(
@@ -333,8 +329,12 @@ def test_postgres_parallel_completion_consumes_a_challenge_once(tenant_member):
         finally:
             close_old_connections()
     threads = [Thread(target=submit), Thread(target=submit)]
-    [thread.start() for thread in threads]
-    [thread.join(timeout=20) for thread in threads]
+    with patch(
+        "config.passcode_change_completion.append_security_event",
+        side_effect=lambda event: audit_events.append(event),
+    ):
+        [thread.start() for thread in threads]
+        [thread.join(timeout=20) for thread in threads]
     assert all(not thread.is_alive() for thread in threads)
     assert sorted(results) == [CompletionStatus.INVALID, CompletionStatus.SUCCESS]
     user.refresh_from_db()
