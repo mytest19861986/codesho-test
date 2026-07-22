@@ -1,14 +1,16 @@
-# Current Task: Coordination reconciliation after AUTH-PASSCODE-CHANGE-001F2
+# Current Task: SPRINT1-BACKLOG-EVIDENCE-RECONCILE-54
 
 - Owner: Codex
-- Status: complete for this reconciliation checkpoint.
-- Last completed checkpoint: Task51, Claude verification documentation published
-  at `9b426bcced65b90660e1e7440f5a84765cf052de`.
-- Evidence: CI `29919020346` and Compose smoke/restore `29919020662` both
-  succeeded on the published checkpoint.
-- Scope: Task52 only reconciles coordination and UI handoff documentation;
-  it does not begin a feature or implementation task.
-- Next action: no active implementation task exists. Continue only after a
-  separate authorized Task with its own scope and base is issued.
-- Restrictions: no Production activation, real Alpha activation, protected
-  `codesho` promotion, or unapproved UI/Auth expansion.
+- Status: active, documentation-only reconciliation.
+- BASE_SHA: `7f23ec882d30f76cba1f4b0b504849c1fd48b184`.
+- Last published checkpoint: Task53 at this SHA; CI `29919602405` and Compose
+  `29919602325` succeeded.
+- Scope: map Sprint 1 backlog items to existing implementation/test evidence and
+  propose exactly one future candidate; no feature implementation.
+- Candidate: platform-operator/admin scope under decision 2-A. It is proposed
+  only and has no implementation authorization.
+- Next action: complete Task54 reconciliation, then require a separate Task and
+  independent BASE_SHA before implementing the candidate.
+- Gates preserved: Production TLS/`__Host-` proof, legal retention/privacy,
+  Production cleanup scheduling, real Alpha activation, deferred
+  Signup/Recovery/Guardian/OAuth/Onboarding, and protected `codesho` promotion.
