@@ -1,16 +1,16 @@
-# Current Task: SPRINT1-BACKLOG-EVIDENCE-RECONCILE-54
+# Current Task: SPRINT1-PLATFORM-OPERATOR-ADMIN-DESIGN-PUBLISH-57P
 
 - Owner: Codex
-- Status: active, documentation-only reconciliation.
-- BASE_SHA: `7f23ec882d30f76cba1f4b0b504849c1fd48b184`.
-- Last published checkpoint: Task53 at this SHA; CI `29919602405` and Compose
-  `29919602325` succeeded.
-- Scope: map Sprint 1 backlog items to existing implementation/test evidence and
-  propose exactly one future candidate; no feature implementation.
-- Candidate: platform-operator/admin scope under decision 2-A. It is proposed
-  only and has no implementation authorization.
-- Next action: complete Task54 reconciliation, then require a separate Task and
-  independent BASE_SHA before implementing the candidate.
+- Status: accepted for documentation publication; no implementation authorization.
+- BASE_SHA: `64d9afd9d5d7f53076f15424683465298e85cbda`.
+- Last published checkpoint: Task55 at this SHA; CI `29920923743` and Compose
+  `29920923814` succeeded.
+- Scope: define platform-operator/admin policy, permission matrix, tenant
+  boundaries, audit contract, migration impact and future exact file allow-list.
+- Allowed files: `docs/security/platform-operator-admin-design.md` and this file.
+- Next action: publish exactly the two authorized documentation files, observe required CI, and report the resulting evidence.
+- Restrictions: read-only inspection of code/tests/migrations; no code, test,
+  migration, API/OpenAPI, stage, commit, push, CI rerun or worktree mutation.
 - Gates preserved: Production TLS/`__Host-` proof, legal retention/privacy,
   Production cleanup scheduling, real Alpha activation, deferred
   Signup/Recovery/Guardian/OAuth/Onboarding, and protected `codesho` promotion.
