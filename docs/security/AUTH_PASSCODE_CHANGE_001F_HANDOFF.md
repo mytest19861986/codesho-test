@@ -102,3 +102,15 @@ promotion is authorized.
 - Local rerun: Ruff passed; Django check passed; focused E2E `2 skipped` because local PostgreSQL is unavailable; full backend `130 passed, 29 skipped`; `git diff --check` passed.
 - Exact-SHA CI and Compose evidence for `b67e815` remains green: CI `29740298435`, Compose `29740298423`.
 - Remote post-push verification: Compose `29742594591` passed; CI backend `29742594545` failed in the full PostgreSQL suite at the two existing E2E audit-count assertions while frontend passed. The failure annotation reported no `passcode_changed` or `passcode_change_rejected` rows; no assertion was weakened. GitHub rerun endpoint returned `401 Unauthorized`, so a fresh authorized push is required for revalidation.
+
+## Claude verification debt checkpoint — Mock lifecycle
+
+- Prompt: `CLAUDE_AUTH_PASSCODE_CHANGE_001F2_MOCK_LIFECYCLE_REVIEW_01_V1`.
+- Exact review base: `03eb63071e77e40d275eb2634b38eac55c212b56`.
+- Reviewed patch: `ac721b4937e70dc5aa8682f37390472d468b53e0`.
+- Claude verdict: `APPROVE`; P0/P1 findings: none; out-of-scope findings: none.
+- P2 only: `join(timeout=20)` is a bounded wait and not completion proof alone; the subsequent `all(not thread.is_alive())` assertion is the compensating control. No remediation was authorized or applied.
+- Claude PASS matrix: parent patch is active before both worker starts; remains active through both joins; restores on normal and exceptional exits; cannot leak into following E2E tests; concurrency semantics and assertions are unchanged.
+- Sanitized evidence: ordered repetitions `18/18`; backend `164 passed`; CI `29917920277` success; Compose `29917920268` success.
+- Required marker: `CLAUDE_VERIFICATION_DEBT_CLEARED_PENDING_DOC_CHECKPOINT`.
+- This is documentation only. Production code, tests, workflow, dependency, and migration were not changed. No raw Claude response, temporary review path, secret, passcode, cookie, token, or connection string is stored here. This checkpoint is not authorization for promotion to protected `codesho`.

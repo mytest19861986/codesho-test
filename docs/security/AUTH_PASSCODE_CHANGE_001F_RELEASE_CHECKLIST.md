@@ -1,6 +1,6 @@
 # AUTH-PASSCODE-CHANGE-001F release readiness
 
-Status: test-only release gate in progress; no Production behavior is enabled.
+Status: Claude verification debt cleared; documentation checkpoint recorded; no Production behavior is enabled.
 
 ## Review 02
 
@@ -92,3 +92,15 @@ closed. Canonical OpenAPI status/cookie contracts remain the release authority.
 - Verified `inserted boolean := false` plus `RETURN COALESCE(inserted, false)` gives a strict two-valued return contract: true only for a newly inserted row and false on idempotency conflict.
 - Verified `SECURITY DEFINER`, hardened `search_path`, unchanged function signature, conflict behavior, forward-only migration, dependency, and irreversible reverse operation.
 - No out-of-scope changes were implicated.
+
+## Review 04 — Mock lifecycle verification
+
+- Prompt: `CLAUDE_AUTH_PASSCODE_CHANGE_001F2_MOCK_LIFECYCLE_REVIEW_01_V1`.
+- Review base: `03eb63071e77e40d275eb2634b38eac55c212b56`.
+- Reviewed patch commit: `ac721b4937e70dc5aa8682f37390472d468b53e0`.
+- Verdict: `APPROVE`; P0: none; P1: none.
+- P2: low-risk note that `join(timeout=20)` is bounded and is not completion proof by itself; the following `all(not thread.is_alive())` assertion is the compensating control.
+- Acceptance matrix: PASS for parent-scope activation before both starts, coverage through both joins, restoration on normal/exceptional exits, no E2E mock leakage, and unchanged concurrency semantics/assertions.
+- Evidence: ordered repetitions `18/18`; backend suite `164 passed`; CI `29917920277` success; Compose `29917920268` success.
+- Marker: `CLAUDE_VERIFICATION_DEBT_CLEARED_PENDING_DOC_CHECKPOINT`.
+- No automatic remediation was performed. Production code, tests, workflow, dependency, and migration were not changed by this documentation checkpoint. This checkpoint does not authorize promotion to protected `codesho`.
