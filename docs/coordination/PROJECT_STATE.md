@@ -1,6 +1,6 @@
 # Codesho Project State
 
-Updated: 2026-07-16 (S1-004 immutable security-audit foundation in progress)
+Updated: 2026-07-22 (Task52 coordination reconciliation)
 
 ## Current Status
 
@@ -13,10 +13,22 @@ successfully. The employer approved all four Sprint 1 gate decisions on
 - Compose smoke and restore `29427888874`: isolated full-stack startup,
   PostgreSQL RLS/connection-reuse tests, and backup/restore drill passed.
 
-SZ-021 is complete at `dc13cc891dfff2e4df9a70ce61da7d8e73f3a4f2`: it records
-review traceability and prepares, but does not implement, the employer
-decisions that gate Sprint 1 Identity Foundation. Its CI `29430842483` and
-Compose smoke/restore `29430842466` are both successful.
+`codesho-test/main` is at `9b426bcced65b90660e1e7440f5a84765cf052de`.
+Task48 merged the approved test-only mock-lifecycle fix; Task51 published the
+Claude verification documentation checkpoint. CI `29919020346` and Compose
+smoke/restore `29919020662` are both successful.
+
+Task51 is the latest completed checkpoint. Task52 is documentation-only
+reconciliation. No active implementation task exists after Task52; a separate
+authorized Task is required before further feature or implementation work.
+Claude verification debt is closed by the published Task51 checkpoint. The
+historical marker `CLAUDE_VERIFICATION_DEBT_CLEARED_PENDING_DOC_CHECKPOINT`
+remains preserved in the security documents; its documentation checkpoint was
+published by Task51.
+
+Production activation, real Alpha activation, and promotion to protected
+`codesho` remain unauthorized. Existing open legal, TLS, cleanup-scheduling,
+and Alpha-readiness gates remain unchanged; no new claim is made here.
 
 ## Completed
 
