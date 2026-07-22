@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import os
 import sys
+from argparse import ArgumentParser
+from typing import Any
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
@@ -18,7 +20,7 @@ from modules.platform_tenant.models import Tenant, TenantMembership
 class Command(BaseCommand):
     help = "Create or update the synthetic non-production login fixture."
 
-    def add_arguments(self, parser) -> None:
+    def add_arguments(self, parser: ArgumentParser) -> None:
         parser.add_argument("--username", default="login-fixture")
         parser.add_argument("--email", default="login-fixture@example.test")
         parser.add_argument("--tenant-slug", default="login-fixture")
@@ -29,7 +31,7 @@ class Command(BaseCommand):
             help="Read the six-digit passcode from stdin; it is never accepted as an argument.",
         )
 
-    def handle(self, *args, **options) -> str:
+    def handle(self, *args: Any, **options: Any) -> str:
         settings_module = os.environ.get("DJANGO_SETTINGS_MODULE", "")
         if not settings.DEBUG or settings_module.endswith("production"):
             raise CommandError("login fixture command is limited to non-production settings")
