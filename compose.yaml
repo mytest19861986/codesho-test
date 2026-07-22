@@ -47,6 +47,7 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.compose
       DATABASE_URL: ${DATABASE_RUNTIME_URL:?DATABASE_RUNTIME_URL is required}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost},.localhost
     depends_on:
       migrator: { condition: service_completed_successfully }
       redis: { condition: service_healthy }
@@ -62,7 +63,7 @@ services:
     depends_on:
       migrator: { condition: service_completed_successfully }
       redis: { condition: service_healthy }
-    command: ["celery", "-A", "config", "worker", "--loglevel=INFO", "--concurrency=2"]
+    command: ["celery", "-A", "config.celery:app", "worker", "--loglevel=INFO", "--concurrency=2"]
     restart: unless-stopped
 
   beat:
@@ -71,10 +72,11 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.compose
       DATABASE_URL: ${DATABASE_RUNTIME_URL:?DATABASE_RUNTIME_URL is required}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost},.localhost
     depends_on:
       migrator: { condition: service_completed_successfully }
       redis: { condition: service_healthy }
-    command: ["celery", "-A", "config", "beat", "--loglevel=INFO"]
+    command: ["celery", "-A", "config.celery:app", "beat", "--loglevel=INFO"]
     restart: unless-stopped
 
   frontend:
