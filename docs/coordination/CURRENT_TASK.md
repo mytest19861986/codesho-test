@@ -1,16 +1,13 @@
-# Current Task: SPRINT1-PLATFORM-OPERATOR-ADMIN-DESIGN-PUBLISH-57P
-
+# Current Task: SPRINT1-PLATFORM-OPERATOR-ADMIN-DOCS-RECONCILE-58R
 - Owner: Codex
-- Status: accepted for documentation publication; no implementation authorization.
-- BASE_SHA: `64d9afd9d5d7f53076f15424683465298e85cbda`.
-- Last published checkpoint: Task55 at this SHA; CI `29920923743` and Compose
-  `29920923814` succeeded.
-- Scope: define platform-operator/admin policy, permission matrix, tenant
-  boundaries, audit contract, migration impact and future exact file allow-list.
-- Allowed files: `docs/security/platform-operator-admin-design.md` and this file.
-- Next action: publish exactly the two authorized documentation files, observe required CI, and report the resulting evidence.
-- Restrictions: read-only inspection of code/tests/migrations; no code, test,
-  migration, API/OpenAPI, stage, commit, push, CI rerun or worktree mutation.
+- Status: active; documentation PR reconciliation; no implementation authorization.
+- BASE_SHA: `e5325f2dc138607683b8cec29116ff5cc1820fbc`.
+- Publication commit: `36cb6129852db9580a06a5dc0184b9494f60f6a1`.
+- Scope: reconcile Draft PR #2 with current `main` without changing the accepted design.
+- Allowed manual resolution file: `docs/coordination/CURRENT_TASK.md`.
+- Required invariant: `docs/security/platform-operator-admin-design.md` remains byte-identical.
+- Next action: push the reconciliation merge, observe available CI, and report evidence for final merge disposition.
+- Restrictions: no implementation, migration, API/OpenAPI, deployment, policy provisioning or protected-branch promotion.
 - Gates preserved: Production TLS/`__Host-` proof, legal retention/privacy,
-  Production cleanup scheduling, real Alpha activation, deferred
-  Signup/Recovery/Guardian/OAuth/Onboarding, and protected `codesho` promotion.
+Production cleanup scheduling, real Alpha activation, deferred
+Signup/Recovery/Guardian/OAuth/Onboarding, and protected `codesho` promotion.

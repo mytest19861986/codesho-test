@@ -1,6 +1,6 @@
 # Codesho Project State
 
-Updated: 2026-07-22 (Task52 coordination reconciliation)
+Updated: 2026-07-22 (Task54 backlog/evidence reconciliation complete)
 
 ## Current Status
 
@@ -13,15 +13,16 @@ successfully. The employer approved all four Sprint 1 gate decisions on
 - Compose smoke and restore `29427888874`: isolated full-stack startup,
   PostgreSQL RLS/connection-reuse tests, and backup/restore drill passed.
 
-`codesho-test/main` is at `9b426bcced65b90660e1e7440f5a84765cf052de`.
-Task48 merged the approved test-only mock-lifecycle fix; Task51 published the
-Claude verification documentation checkpoint. CI `29919020346` and Compose
-smoke/restore `29919020662` are both successful.
+Task54 backlog/evidence reconciliation is complete at
+`64d9afd9d5d7f53076f15424683465298e85cbda`. CI `29920923743` and Compose
+smoke/restore `29920923814` both succeeded. The reconciliation maps existing
+Sprint 1 evidence, preserves Production/Alpha/protected-repository gates, and
+proposes exactly one future candidate: platform-operator/admin scope. The
+candidate is not authorized for implementation.
 
-Task51 is the latest completed checkpoint. Task52 is documentation-only
-reconciliation. No active implementation task exists after Task52; a separate
-authorized Task is required before further feature or implementation work.
-Claude verification debt is closed by the published Task51 checkpoint. The
+No active implementation task exists after Task54; a separate authorized Task
+with an independent BASE_SHA is required before further feature work. Claude
+verification debt remains closed by the published Task51 checkpoint. The
 historical marker `CLAUDE_VERIFICATION_DEBT_CLEARED_PENDING_DOC_CHECKPOINT`
 remains preserved in the security documents; its documentation checkpoint was
 published by Task51.
@@ -94,9 +95,11 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
 
 ## Next Steps
 
-1. Do not begin Login, Rate Limit, Recovery, UI, or audit-event producer
-   integration without a new Commander task; do not promote to protected
-   `codesho` without employer approval.
+1. Obtain a separate authorized Task and independent BASE_SHA before any
+   platform-operator/admin implementation.
+2. Do not begin Recovery, Guardian, Notification, Signup, Onboarding, OAuth,
+   Production/Alpha activation, or unrelated work without explicit authority.
+3. Do not promote to protected `codesho` without employer approval.
 
 ## Open Decisions / Risks
 
