@@ -3,8 +3,7 @@ import importlib
 import pytest
 from django.core.exceptions import ImproperlyConfigured
 
-from config.settings import base
-from config.settings import local
+from config.settings import base, local
 
 
 def reload_compose_settings():
@@ -49,5 +48,6 @@ def test_compose_settings_accept_valid_synthetic_pepper_configuration(monkeypatc
 
 
 def test_compose_services_use_compose_settings():
-    compose = open("../compose.yaml", encoding="utf-8").read()
+    with open("../compose.yaml", encoding="utf-8") as compose_file:
+        compose = compose_file.read()
     assert compose.count("DJANGO_SETTINGS_MODULE: config.settings.compose") == 4
