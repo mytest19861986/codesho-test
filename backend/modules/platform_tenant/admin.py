@@ -1,21 +1,31 @@
 import uuid
 from typing import TYPE_CHECKING, Any
 
+from django.apps import apps
 from django.contrib import admin
 from django.db.models import Model, QuerySet
 from django.http import HttpRequest
 
-from modules.platform_event.security_audit import (
-    admin_tenant_access_denied,
-    append_security_event,
-)
-
 from .models import Tenant, TenantMembership
 
 if TYPE_CHECKING:
-    _ModelAdminBase = admin.ModelAdmin[Any]
+    _ModelAdminBase = admin.ModelAdmin[Model]
 else:
     _ModelAdminBase = admin.ModelAdmin
+
+
+def _audit_module() -> Any:
+    mod = apps.get_app_config("platform_event").module
+    assert mod is not None
+    return mod.security_audit
+
+
+def append_security_event(event: Any) -> Any:
+    return _audit_module().append_security_event(event)
+
+
+def admin_tenant_access_denied(*args: Any, **kwargs: Any) -> Any:
+    return _audit_module().admin_tenant_access_denied(*args, **kwargs)
 
 
 class DeniedTenantAdmin(_ModelAdminBase):
@@ -41,7 +51,7 @@ class DeniedTenantAdmin(_ModelAdminBase):
         self._audit_denied(request)
         return False
 
-    def get_queryset(self, request: HttpRequest) -> QuerySet[Any]:
+    def get_queryset(self, request: HttpRequest) -> QuerySet[Model]:
         return super().get_queryset(request).none()
 
     def _audit_denied(self, request: HttpRequest) -> None:

@@ -1,17 +1,11 @@
 import uuid
 from typing import TYPE_CHECKING, Any
 
+from django.apps import apps
 from django.contrib import admin
 from django.core.exceptions import PermissionDenied
 from django.db.models import QuerySet
 from django.http import HttpRequest, HttpResponse
-
-from modules.platform_event.security_audit import (
-    SecurityAuditError,
-    admin_user_action_denied,
-    admin_user_viewed,
-    append_security_event,
-)
 
 from .admin_policy import evaluate_admin_policy
 from .models import User
@@ -20,6 +14,24 @@ if TYPE_CHECKING:
     _ModelAdminBase = admin.ModelAdmin[User]
 else:
     _ModelAdminBase = admin.ModelAdmin
+
+
+def _audit_module() -> Any:
+    mod = apps.get_app_config("platform_event").module
+    assert mod is not None
+    return mod.security_audit
+
+
+def append_security_event(event: Any) -> Any:
+    return _audit_module().append_security_event(event)
+
+
+def admin_user_viewed(*args: Any, **kwargs: Any) -> Any:
+    return _audit_module().admin_user_viewed(*args, **kwargs)
+
+
+def admin_user_action_denied(*args: Any, **kwargs: Any) -> Any:
+    return _audit_module().admin_user_action_denied(*args, **kwargs)
 
 
 class SafePlatformUserAdmin(_ModelAdminBase):
@@ -122,6 +134,7 @@ class SafePlatformUserAdmin(_ModelAdminBase):
                     if user and getattr(user, "is_authenticated", False)
                     else None
                 )
+                audit_err_cls = _audit_module().SecurityAuditError
                 try:
                     event = admin_user_viewed(
                         event_id=uuid.uuid4(),
@@ -130,7 +143,7 @@ class SafePlatformUserAdmin(_ModelAdminBase):
                         actor_user_id=actor_id,
                     )
                     append_security_event(event)
-                except SecurityAuditError:
+                except audit_err_cls:
                     raise PermissionDenied("audit logging failed") from None
                 except Exception as exc:
                     raise PermissionDenied("audit logging failed") from exc
