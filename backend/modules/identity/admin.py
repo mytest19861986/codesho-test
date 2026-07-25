@@ -58,25 +58,38 @@ class SafePlatformUserAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        has_list = evaluate_admin_policy(
-            request.user, "identity.User", "list", "platform_user_safe"
-        )
-        has_view = evaluate_admin_policy(
-            request.user, "identity.User", "view", "platform_user_safe"
-        )
-        if not (has_list or has_view):
+        # Determine if request is targeting changelist or specific object view
+        if request and hasattr(request, "path") and "change" in request.path:
+            has_perm = evaluate_admin_policy(
+                request.user, "identity.User", "view", "platform_user_safe"
+            )
+        else:
+            has_perm = evaluate_admin_policy(
+                request.user, "identity.User", "list", "platform_user_safe"
+            )
+        if not has_perm:
             return qs.none()
         return qs
 
     def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
         if object_id is not None:
+            # 1. Strictly enforce View Policy BEFORE object lookup or success audit logging
+            has_view_policy = evaluate_admin_policy(
+                request.user, "identity.User", "view", "platform_user_safe"
+            )
+            if not has_view_policy:
+                # Audit DENIED attempt and reject immediately
+                self._audit_denied(request)
+                raise PermissionDenied("View policy required for object access")
+
+            # 2. Retrieve object only after View Policy is confirmed
             try:
                 obj = self.get_object(request, object_id)
             except Exception:
                 obj = None
 
             if obj is not None:
-                # Must emit audit event before rendering. If append fails, fail-closed!
+                # 3. Must emit audit event before rendering. If append fails, fail-closed!
                 try:
                     event = admin_user_viewed(
                         event_id=uuid.uuid4(),

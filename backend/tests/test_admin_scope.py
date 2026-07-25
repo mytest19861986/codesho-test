@@ -2,6 +2,8 @@ from unittest.mock import patch
 
 import pytest
 from django.contrib.admin.sites import AdminSite
+from django.contrib.messages.storage.fallback import FallbackStorage
+from django.contrib.sessions.backends.db import SessionStore
 from django.core.exceptions import PermissionDenied
 from django.utils import timezone
 
@@ -142,8 +144,6 @@ class TestSafePlatformUserAdmin:
         admin_obj = SafePlatformUserAdmin(User, AdminSite())
         request = rf.get(f"/admin/identity/user/{target_user.id}/change/")
         request.user = operator_user
-        from django.contrib.messages.storage.fallback import FallbackStorage
-        from django.contrib.sessions.backends.db import SessionStore
         request.session = SessionStore()
         request._messages = FallbackStorage(request)
 
@@ -169,8 +169,6 @@ class TestSafePlatformUserAdmin:
         admin_obj = SafePlatformUserAdmin(User, AdminSite())
         request = rf.get(f"/admin/identity/user/{target_user.id}/change/")
         request.user = operator_user
-        from django.contrib.messages.storage.fallback import FallbackStorage
-        from django.contrib.sessions.backends.db import SessionStore
         request.session = SessionStore()
         request._messages = FallbackStorage(request)
 
@@ -181,6 +179,118 @@ class TestSafePlatformUserAdmin:
             assert event.event_type == "admin_user_viewed"
             assert event.subject_user_id == target_user.id
             assert event.actor_user_id == operator_user.id
+
+    def test_list_only_policy_direct_object_url_denied_and_audited(
+        self, rf, operator_user, target_user, superuser
+    ):
+        """1. list-only policy + direct object URL: request denied, VIEWED=0, ACTION_DENIED=1."""
+        PlatformOperatorPolicy.objects.create(
+            operator_user=operator_user,
+            model_label="identity.User",
+            action="list",
+            scope_kind="platform_user_safe",
+            active=True,
+            created_by_user=superuser,
+        )
+        admin_obj = SafePlatformUserAdmin(User, AdminSite())
+        request = rf.get(f"/admin/identity/user/{target_user.id}/change/")
+        request.user = operator_user
+        request.session = SessionStore()
+        request._messages = FallbackStorage(request)
+
+        with patch("modules.identity.admin.append_security_event") as mock_append:
+            with pytest.raises(PermissionDenied):
+                admin_obj.changeform_view(request, object_id=str(target_user.id))
+
+            assert mock_append.call_count == 1
+            event = mock_append.call_args[0][0]
+            assert event.event_type == "admin_user_action_denied"
+            assert event.actor_user_id == operator_user.id
+
+    def test_list_only_policy_existing_object_non_disclosure(
+        self, rf, operator_user, target_user, superuser
+    ):
+        """2. list-only policy + existing object: object existence is not disclosed."""
+        PlatformOperatorPolicy.objects.create(
+            operator_user=operator_user,
+            model_label="identity.User",
+            action="list",
+            scope_kind="platform_user_safe",
+            active=True,
+            created_by_user=superuser,
+        )
+        admin_obj = SafePlatformUserAdmin(User, AdminSite())
+        request = rf.get(f"/admin/identity/user/{target_user.id}/change/")
+        request.user = operator_user
+        request.session = SessionStore()
+        request._messages = FallbackStorage(request)
+
+        with patch("modules.identity.admin.SafePlatformUserAdmin.get_object") as mock_get_object:
+            with pytest.raises(PermissionDenied):
+                admin_obj.changeform_view(request, object_id=str(target_user.id))
+            # get_object must NOT be called if user lacks View Policy!
+            assert not mock_get_object.called
+
+    def test_view_only_policy_direct_object_url_permitted(
+        self, rf, operator_user, target_user, superuser
+    ):
+        """3. view-only policy + direct object URL: permitted, ADMIN_USER_VIEWED emitted once."""
+        PlatformOperatorPolicy.objects.create(
+            operator_user=operator_user,
+            model_label="identity.User",
+            action="view",
+            scope_kind="platform_user_safe",
+            active=True,
+            created_by_user=superuser,
+        )
+        admin_obj = SafePlatformUserAdmin(User, AdminSite())
+        request = rf.get(f"/admin/identity/user/{target_user.id}/change/")
+        request.user = operator_user
+        request.session = SessionStore()
+        request._messages = FallbackStorage(request)
+
+        with patch("modules.identity.admin.append_security_event") as mock_append:
+            admin_obj.changeform_view(request, object_id=str(target_user.id))
+            assert mock_append.call_count == 1
+            event = mock_append.call_args[0][0]
+            assert event.event_type == "admin_user_viewed"
+
+    def test_list_page_with_list_policy_permitted_no_view_audit(
+        self, rf, operator_user, superuser
+    ):
+        """5. list page with list policy: permitted, no accidental ADMIN_USER_VIEWED event."""
+        PlatformOperatorPolicy.objects.create(
+            operator_user=operator_user,
+            model_label="identity.User",
+            action="list",
+            scope_kind="platform_user_safe",
+            active=True,
+            created_by_user=superuser,
+        )
+        admin_obj = SafePlatformUserAdmin(User, AdminSite())
+        request = rf.get("/admin/identity/user/")
+        request.user = operator_user
+
+        with patch("modules.identity.admin.append_security_event") as mock_append:
+            qs = admin_obj.get_queryset(request)
+            assert qs.count() > 0
+            assert not mock_append.called
+
+    def test_direct_view_without_policy_denied(self, rf, operator_user, target_user):
+        """6. direct view without policy: denied, no success audit."""
+        admin_obj = SafePlatformUserAdmin(User, AdminSite())
+        request = rf.get(f"/admin/identity/user/{target_user.id}/change/")
+        request.user = operator_user
+        request.session = SessionStore()
+        request._messages = FallbackStorage(request)
+
+        with patch("modules.identity.admin.append_security_event") as mock_append:
+            with pytest.raises(PermissionDenied):
+                admin_obj.changeform_view(request, object_id=str(target_user.id))
+
+            assert mock_append.call_count == 1
+            event = mock_append.call_args[0][0]
+            assert event.event_type == "admin_user_action_denied"
 
 
 @pytest.mark.django_db
