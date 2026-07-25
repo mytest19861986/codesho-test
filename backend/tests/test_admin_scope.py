@@ -7,12 +7,16 @@ from django.contrib.sessions.backends.db import SessionStore
 from django.core.exceptions import PermissionDenied
 from django.utils import timezone
 
-from modules.identity.admin import SafePlatformUserAdmin
+from config.platform_admin import (
+    DeniedTenantAdmin,
+    DeniedTenantMembershipAdmin,
+    SafePlatformUserAdmin,
+    register_platform_admin,
+)
 from modules.identity.admin_policy import evaluate_admin_policy
 from modules.identity.models import PlatformOperatorPolicy, User
 from modules.platform_event.security_audit import SecurityAuditError
-from modules.platform_tenant.admin import DeniedTenantAdmin
-from modules.platform_tenant.models import Tenant
+from modules.platform_tenant.models import Tenant, TenantMembership
 
 
 @pytest.fixture
@@ -42,6 +46,14 @@ def target_user(db):
         first_name="Target",
         last_name="User",
     )
+
+
+@pytest.mark.django_db
+class TestCompositionRootRegistration:
+    def test_registration_idempotency_and_composition_root(self):
+        """Verify registering platform admin from composition root is idempotent."""
+        register_platform_admin()
+        register_platform_admin()
 
 
 @pytest.mark.django_db
@@ -220,7 +232,6 @@ class TestSafePlatformUserAdmin:
             created_by_user=superuser,
         )
         admin_obj = SafePlatformUserAdmin(User, AdminSite())
-        # URL has 'change' in path but we call get_queryset for changelist
         request = rf.get("/admin/identity/user/?q=change_something")
         request.user = operator_user
 
@@ -239,7 +250,6 @@ class TestSafePlatformUserAdmin:
         )
         admin_obj = SafePlatformUserAdmin(User, AdminSite())
 
-        # Request object without .path property
         class EmptyRequest:
             user = operator_user
 
@@ -265,7 +275,7 @@ class TestSafePlatformUserAdmin:
         request.session = SessionStore()
         request._messages = FallbackStorage(request)
 
-        with patch("modules.identity.admin.append_security_event") as mock_append:
+        with patch("config.platform_admin.append_security_event") as mock_append:
             with pytest.raises(PermissionDenied):
                 admin_obj.changeform_view(request, object_id=str(target_user.id))
 
@@ -291,7 +301,7 @@ class TestSafePlatformUserAdmin:
         request.session = SessionStore()
         request._messages = FallbackStorage(request)
 
-        with patch("modules.identity.admin.append_security_event") as mock_append:
+        with patch("config.platform_admin.append_security_event") as mock_append:
             admin_obj.changeform_view(request, object_id=str(target_user.id))
             assert mock_append.call_count == 1
             event = mock_append.call_args[0][0]
@@ -341,7 +351,7 @@ class TestSafePlatformUserAdmin:
 
         with (
             patch(
-                "modules.identity.admin.append_security_event",
+                "config.platform_admin.append_security_event",
                 side_effect=SecurityAuditError("audit append failed"),
             ),
             pytest.raises(PermissionDenied),
@@ -352,14 +362,16 @@ class TestSafePlatformUserAdmin:
 @pytest.mark.django_db
 class TestDeniedTenantAdmin:
     def test_tenant_admin_strictly_denies_all_users(self, rf, superuser, operator_user):
-        admin_obj = DeniedTenantAdmin(Tenant, AdminSite())
-        for user in (superuser, operator_user):
-            request = rf.get("/admin/platform_tenant/tenant/")
-            request.user = user
-            assert not admin_obj.has_module_permission(request)
-            assert not admin_obj.has_view_permission(request)
-            assert not admin_obj.has_add_permission(request)
-            assert not admin_obj.has_change_permission(request)
-            assert not admin_obj.has_delete_permission(request)
-            assert admin_obj.get_queryset(request).count() == 0
-            assert admin_obj.actions is None
+        admin_tenant = DeniedTenantAdmin(Tenant, AdminSite())
+        admin_membership = DeniedTenantMembershipAdmin(TenantMembership, AdminSite())
+        for admin_obj in (admin_tenant, admin_membership):
+            for user in (superuser, operator_user):
+                request = rf.get("/")
+                request.user = user
+                assert not admin_obj.has_module_permission(request)
+                assert not admin_obj.has_view_permission(request)
+                assert not admin_obj.has_add_permission(request)
+                assert not admin_obj.has_change_permission(request)
+                assert not admin_obj.has_delete_permission(request)
+                assert admin_obj.get_queryset(request).count() == 0
+                assert admin_obj.actions is None
