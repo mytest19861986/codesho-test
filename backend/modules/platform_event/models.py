@@ -40,6 +40,15 @@ SECURITY_EVENT_TYPES = (
     "authentication_failed",
     "authentication_blocked",
     "session_logged_out",
+    "passcode_change_challenge_issued",
+    "passcode_change_challenge_revoked",
+    "passcode_change_challenge_consumed",
+    "passcode_change_challenge_expired",
+    "passcode_change_rejected",
+    "admin_user_viewed",
+    "admin_user_action_denied",
+    "admin_tenant_access_denied",
+    "admin_policy_evaluated",
 )
 SECURITY_EVENT_OUTCOMES = ("success", "failure", "blocked", "detected")
 SECURITY_EVENT_REASON_CODES = (
@@ -58,6 +67,17 @@ SECURITY_EVENT_REASON_CODES = (
     "login_blocked",
     "session_logged_out",
     "passcode_change_required",
+    "challenge_issued",
+    "challenge_superseded",
+    "challenge_consumed",
+    "challenge_expired",
+    "challenge_invalid",
+    "passcode_same_as_current",
+    "challenge_revoked_pepper_rotation",
+    "admin_user_viewed",
+    "admin_user_action_denied",
+    "admin_tenant_access_denied",
+    "admin_policy_evaluated",
 )
 
 
