@@ -1,6 +1,9 @@
 import uuid
+from typing import TYPE_CHECKING, Any
 
 from django.contrib import admin
+from django.db.models import Model, QuerySet
+from django.http import HttpRequest
 
 from modules.platform_event.security_audit import (
     admin_tenant_access_denied,
@@ -9,36 +12,46 @@ from modules.platform_event.security_audit import (
 
 from .models import Tenant, TenantMembership
 
+if TYPE_CHECKING:
+    _ModelAdminBase = admin.ModelAdmin[Any]
+else:
+    _ModelAdminBase = admin.ModelAdmin
 
-class DeniedTenantAdmin(admin.ModelAdmin):
+
+class DeniedTenantAdmin(_ModelAdminBase):
     actions = None
 
-    def has_module_permission(self, request) -> bool:
+    def has_module_permission(self, request: HttpRequest) -> bool:
         self._audit_denied(request)
         return False
 
-    def has_view_permission(self, request, obj=None) -> bool:
+    def has_view_permission(self, request: HttpRequest, obj: Model | None = None) -> bool:
         self._audit_denied(request)
         return False
 
-    def has_add_permission(self, request) -> bool:
+    def has_add_permission(self, request: HttpRequest) -> bool:
         self._audit_denied(request)
         return False
 
-    def has_change_permission(self, request, obj=None) -> bool:
+    def has_change_permission(self, request: HttpRequest, obj: Model | None = None) -> bool:
         self._audit_denied(request)
         return False
 
-    def has_delete_permission(self, request, obj=None) -> bool:
+    def has_delete_permission(self, request: HttpRequest, obj: Model | None = None) -> bool:
         self._audit_denied(request)
         return False
 
-    def get_queryset(self, request):
+    def get_queryset(self, request: HttpRequest) -> QuerySet[Any]:
         return super().get_queryset(request).none()
 
-    def _audit_denied(self, request) -> None:
+    def _audit_denied(self, request: HttpRequest) -> None:
         try:
-            actor_id = request.user.id if request.user and request.user.is_authenticated else None
+            user = getattr(request, "user", None)
+            actor_id = (
+                getattr(user, "id", None)
+                if user and getattr(user, "is_authenticated", False)
+                else None
+            )
             event = admin_tenant_access_denied(
                 event_id=uuid.uuid4(),
                 correlation_id=uuid.uuid4(),
