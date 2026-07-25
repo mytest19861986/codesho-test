@@ -43,10 +43,7 @@ class SafePlatformUserAdmin(admin.ModelAdmin):
         return True
 
     def has_view_permission(self, request, obj=None) -> bool:
-        if obj is not None or (request and hasattr(request, "path") and "change" in request.path):
-            action = "view"
-        else:
-            action = "list"
+        action = "view" if obj is not None else "list"
 
         allowed = evaluate_admin_policy(
             request.user, "identity.User", action, "platform_user_safe"
@@ -58,18 +55,30 @@ class SafePlatformUserAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        # Determine if request is targeting changelist or specific object view
-        if request and hasattr(request, "path") and "change" in request.path:
-            has_perm = evaluate_admin_policy(
-                request.user, "identity.User", "view", "platform_user_safe"
-            )
-        else:
-            has_perm = evaluate_admin_policy(
-                request.user, "identity.User", "list", "platform_user_safe"
-            )
-        if not has_perm:
-            return qs.none()
-        return qs
+        has_list = evaluate_admin_policy(
+            request.user, "identity.User", "list", "platform_user_safe"
+        )
+        has_view = evaluate_admin_policy(
+            request.user, "identity.User", "view", "platform_user_safe"
+        )
+
+        if has_list:
+            return qs
+
+        if has_view and getattr(request, "_allow_object_lookup", False):
+            return qs
+
+        return qs.none()
+
+    def get_object(self, request, object_id, from_field=None):
+        has_view = evaluate_admin_policy(
+            request.user, "identity.User", "view", "platform_user_safe"
+        )
+        if not has_view:
+            return None
+
+        request._allow_object_lookup = True
+        return super().get_object(request, object_id, from_field=from_field)
 
     def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
         if object_id is not None:
@@ -83,10 +92,7 @@ class SafePlatformUserAdmin(admin.ModelAdmin):
                 raise PermissionDenied("View policy required for object access")
 
             # 2. Retrieve object only after View Policy is confirmed
-            try:
-                obj = self.get_object(request, object_id)
-            except Exception:
-                obj = None
+            obj = self.get_object(request, object_id)
 
             if obj is not None:
                 # 3. Must emit audit event before rendering. If append fails, fail-closed!
