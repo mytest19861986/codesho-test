@@ -80,8 +80,8 @@ separate authorization; no Ready or merge transition remains for Task70A.
 
 ## Authority and exclusions
 
-Commit, push, Draft PR, in-scope remediation, Ready transition, and guarded
-merge are authorized after all gates pass. Direct push to `main`, force-push,
+Commit, push, Draft PR, and in-scope documentation remediation are authorized.
+`READY TRANSITION: NOT YET AUTHORIZED`; `MERGE: NOT AUTHORIZED`. Direct push to `main`, force-push,
 rebase, source-branch deletion, PR #5 mutation/merge, backfill, public API,
 frontend, account/user/membership/session creation, external providers, real
 data, deployment, release, Alpha/Production, and protected `codesho`
