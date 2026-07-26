@@ -6,6 +6,59 @@ from django.db import migrations, models
 from django.db.models import Q
 
 
+def create_platform_operator_policy_immutability(apps, schema_editor):
+    if schema_editor.connection.vendor != "postgresql":
+        return
+    schema_editor.execute(
+        """
+        CREATE OR REPLACE FUNCTION codesho.enforce_platform_operator_policy_immutability()
+        RETURNS trigger
+        LANGUAGE plpgsql
+        AS $$
+        BEGIN
+            IF TG_OP = 'DELETE' THEN
+                RAISE EXCEPTION 'platform operator policy rows are append-only';
+            END IF;
+
+            IF OLD.active IS FALSE THEN
+                RAISE EXCEPTION 'revoked platform operator policies are immutable';
+            END IF;
+
+            IF NEW.operator_user_id IS DISTINCT FROM OLD.operator_user_id
+               OR NEW.model_label IS DISTINCT FROM OLD.model_label
+               OR NEW.action IS DISTINCT FROM OLD.action
+               OR NEW.scope_kind IS DISTINCT FROM OLD.scope_kind
+               OR NEW.created_at IS DISTINCT FROM OLD.created_at
+               OR NEW.created_by_user_id IS DISTINCT FROM OLD.created_by_user_id
+               OR NEW.active IS NOT FALSE
+               OR NEW.revoked_at IS NULL
+               OR NEW.revoked_by_user_id IS NULL THEN
+                RAISE EXCEPTION 'platform operator policy may only transition to revoked';
+            END IF;
+
+            RETURN NEW;
+        END;
+        $$;
+
+        CREATE TRIGGER platform_operator_policy_immutable
+        BEFORE UPDATE OR DELETE ON codesho.identity_platformoperatorpolicy
+        FOR EACH ROW EXECUTE FUNCTION codesho.enforce_platform_operator_policy_immutability();
+        """
+    )
+
+
+def drop_platform_operator_policy_immutability(apps, schema_editor):
+    if schema_editor.connection.vendor != "postgresql":
+        return
+    schema_editor.execute(
+        """
+        DROP TRIGGER IF EXISTS platform_operator_policy_immutable
+        ON codesho.identity_platformoperatorpolicy;
+        DROP FUNCTION IF EXISTS codesho.enforce_platform_operator_policy_immutability();
+        """
+    )
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -125,5 +178,9 @@ class Migration(migrations.Migration):
                     ),
                 ],
             },
+        ),
+        migrations.RunPython(
+            create_platform_operator_policy_immutability,
+            drop_platform_operator_policy_immutability,
         ),
     ]

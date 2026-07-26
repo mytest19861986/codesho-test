@@ -39,12 +39,18 @@ class SafePlatformUserAdmin(_UserAdminBase):
         self._allowed_lookup_requests: set[int] = set()
 
     def has_add_permission(self, request: HttpRequest) -> bool:
+        if request.method == "POST":
+            self._audit_denied(request)
         return False
 
     def has_change_permission(self, request: HttpRequest, obj: User | None = None) -> bool:
+        if request.method == "POST":
+            self._audit_denied(request, subject_user_id=obj.id if obj else None)
         return False
 
     def has_delete_permission(self, request: HttpRequest, obj: User | None = None) -> bool:
+        if request.method == "POST":
+            self._audit_denied(request, subject_user_id=obj.id if obj else None)
         return False
 
     def has_module_permission(self, request: HttpRequest) -> bool:
@@ -107,6 +113,9 @@ class SafePlatformUserAdmin(_UserAdminBase):
         extra_context: dict[str, Any] | None = None,
     ) -> HttpResponse:
         if object_id is not None:
+            if request.method == "POST":
+                self._audit_denied(request)
+                raise PermissionDenied("administrative mutations are disabled")
             # 1. Strictly enforce View Policy BEFORE object lookup or success audit logging
             user = getattr(request, "user", None)
             has_view_policy = evaluate_admin_policy(
@@ -142,9 +151,40 @@ class SafePlatformUserAdmin(_UserAdminBase):
 
         return super().changeform_view(request, object_id, form_url, extra_context)
 
+    def add_view(
+        self,
+        request: HttpRequest,
+        form_url: str = "",
+        extra_context: dict[str, Any] | None = None,
+    ) -> HttpResponse:
+        if request.method == "POST":
+            self._audit_denied(request)
+            raise PermissionDenied("administrative mutations are disabled")
+        return super().add_view(request, form_url, extra_context)
+
+    def delete_view(
+        self,
+        request: HttpRequest,
+        object_id: str,
+        extra_context: dict[str, Any] | None = None,
+    ) -> HttpResponse:
+        self._audit_denied(request)
+        raise PermissionDenied("administrative mutations are disabled")
+
+    def changelist_view(
+        self, request: HttpRequest, extra_context: dict[str, Any] | None = None
+    ) -> HttpResponse:
+        if request.method == "POST":
+            self._audit_denied(request)
+            raise PermissionDenied("administrative mutations are disabled")
+        return super().changelist_view(request, extra_context)
+
     def _audit_denied(
         self, request: HttpRequest, subject_user_id: uuid.UUID | None = None
     ) -> None:
+        if request.META.get("_codesho_admin_denial_audited"):
+            return
+        request.META["_codesho_admin_denial_audited"] = True
         try:
             user = getattr(request, "user", None)
             actor_id = (
@@ -160,11 +200,14 @@ class SafePlatformUserAdmin(_UserAdminBase):
             )
             append_security_event(event)
         except Exception:
-            pass
+            raise PermissionDenied("administrative access denied") from None
 
 
 class BaseDeniedTenantAdminMixin:
     def _audit_denied(self, request: HttpRequest) -> None:
+        if request.META.get("_codesho_admin_denial_audited"):
+            return
+        request.META["_codesho_admin_denial_audited"] = True
         try:
             user = getattr(request, "user", None)
             actor_id = (
@@ -179,7 +222,7 @@ class BaseDeniedTenantAdminMixin:
             )
             append_security_event(event)
         except Exception:
-            pass
+            raise PermissionDenied("administrative access denied") from None
 
 
 class DeniedTenantAdmin(_TenantAdminBase, BaseDeniedTenantAdminMixin):

@@ -1,6 +1,8 @@
 import uuid
+from typing import Any
 
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 
@@ -210,3 +212,44 @@ class PlatformOperatorPolicy(models.Model):
             f"PlatformOperatorPolicy({self.operator_user_id}, {self.model_label}, "
             f"{self.action}, {self.scope_kind}, active={self.active})"
         )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Permit creation and one irreversible active-to-revoked transition only.
+
+        PostgreSQL triggers enforce the same rule for queryset and raw-SQL
+        paths.  This guard makes ordinary ORM use fail closed before a write.
+        """
+        if self._state.adding:
+            super().save(*args, **kwargs)
+            return
+
+        previous = type(self).objects.filter(pk=self.pk).values(
+            "operator_user_id",
+            "model_label",
+            "action",
+            "scope_kind",
+            "active",
+            "created_by_user_id",
+            "revoked_at",
+            "revoked_by_user_id",
+        ).first()
+        if previous is None:
+            raise ValidationError("operator policy does not exist")
+        if not previous["active"]:
+            raise ValidationError("revoked operator policy is immutable")
+
+        if (
+            previous["operator_user_id"] != self.operator_user_id
+            or previous["model_label"] != self.model_label
+            or previous["action"] != self.action
+            or previous["scope_kind"] != self.scope_kind
+            or previous["created_by_user_id"] != self.created_by_user_id
+        ):
+            raise ValidationError("operator policy grants are immutable")
+        if self.active or self.revoked_at is None or self.revoked_by_user_id is None:
+            raise ValidationError("operator policy may only be revoked once")
+
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: object, **kwargs: object) -> tuple[int, dict[str, int]]:
+        raise ValidationError("operator policy rows are append-only")

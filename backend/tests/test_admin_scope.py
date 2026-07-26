@@ -4,7 +4,8 @@ import pytest
 from django.contrib.admin.sites import AdminSite
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.contrib.sessions.backends.db import SessionStore
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import DatabaseError, connection
 from django.utils import timezone
 
 from config.platform_admin import (
@@ -358,6 +359,55 @@ class TestSafePlatformUserAdmin:
         ):
             admin_obj.changeform_view(request, object_id=str(target_user.id))
 
+    @pytest.mark.parametrize("mutation", ["add", "change", "delete", "action"])
+    def test_direct_mutation_posts_emit_one_denial_and_never_view_event(
+        self, rf, operator_user, target_user, superuser, mutation
+    ):
+        PlatformOperatorPolicy.objects.create(
+            operator_user=operator_user,
+            model_label="identity.User",
+            action="view",
+            scope_kind="platform_user_safe",
+            active=True,
+            created_by_user=superuser,
+        )
+        admin_obj = SafePlatformUserAdmin(User, AdminSite())
+        request = rf.post("/admin/identity/user/")
+        request.user = operator_user
+        request.session = SessionStore()
+        request._messages = FallbackStorage(request)
+
+        with patch("config.platform_admin.append_security_event") as mock_append, pytest.raises(
+            PermissionDenied
+        ):
+            if mutation == "add":
+                admin_obj.add_view(request)
+            elif mutation == "change":
+                admin_obj.changeform_view(request, object_id=str(target_user.id))
+            elif mutation == "delete":
+                admin_obj.delete_view(request, object_id=str(target_user.id))
+            else:
+                admin_obj.changelist_view(request)
+
+        assert mock_append.call_count == 1
+        assert mock_append.call_args.args[0].event_type == "admin_user_action_denied"
+
+    def test_denied_mutation_audit_failure_has_no_user_data(self, rf, operator_user, target_user):
+        admin_obj = SafePlatformUserAdmin(User, AdminSite())
+        request = rf.post(f"/admin/identity/user/{target_user.id}/change/")
+        request.user = operator_user
+        request.session = SessionStore()
+        request._messages = FallbackStorage(request)
+
+        with patch(
+            "config.platform_admin.append_security_event",
+            side_effect=SecurityAuditError("audit append failed"),
+        ), pytest.raises(PermissionDenied) as exc_info:
+            admin_obj.changeform_view(request, object_id=str(target_user.id))
+
+        assert str(target_user.id) not in str(exc_info.value)
+        assert target_user.email not in str(exc_info.value)
+
 
 @pytest.mark.django_db
 class TestDeniedTenantAdmin:
@@ -368,10 +418,78 @@ class TestDeniedTenantAdmin:
             for user in (superuser, operator_user):
                 request = rf.get("/")
                 request.user = user
-                assert not admin_obj.has_module_permission(request)
-                assert not admin_obj.has_view_permission(request)
-                assert not admin_obj.has_add_permission(request)
-                assert not admin_obj.has_change_permission(request)
-                assert not admin_obj.has_delete_permission(request)
-                assert admin_obj.get_queryset(request).count() == 0
-                assert admin_obj.actions is None
+                with patch("config.platform_admin.append_security_event"):
+                    assert not admin_obj.has_module_permission(request)
+                    assert not admin_obj.has_view_permission(request)
+                    assert not admin_obj.has_add_permission(request)
+                    assert not admin_obj.has_change_permission(request)
+                    assert not admin_obj.has_delete_permission(request)
+                    assert admin_obj.get_queryset(request).count() == 0
+                    assert admin_obj.actions is None
+
+
+@pytest.mark.django_db
+class TestPlatformOperatorPolicyImmutability:
+    def test_model_only_allows_one_active_to_revoked_transition(self, operator_user, superuser):
+        policy = PlatformOperatorPolicy.objects.create(
+            operator_user=operator_user,
+            model_label="identity.User",
+            action="list",
+            scope_kind="platform_user_safe",
+            active=True,
+            created_by_user=superuser,
+        )
+
+        policy.action = "view"
+        with pytest.raises(ValidationError):
+            policy.save()
+        policy.refresh_from_db()
+
+        policy.active = False
+        policy.revoked_at = timezone.now()
+        policy.revoked_by_user = superuser
+        policy.save()
+
+        policy.active = True
+        with pytest.raises(ValidationError):
+            policy.save()
+        with pytest.raises(ValidationError):
+            policy.delete()
+
+    @pytest.mark.skipif(connection.vendor != "postgresql", reason="requires PostgreSQL trigger")
+    def test_postgresql_rejects_raw_sql_delete_reactivation_and_broadening(
+        self, operator_user, superuser
+    ):
+        policy = PlatformOperatorPolicy.objects.create(
+            operator_user=operator_user,
+            model_label="identity.User",
+            action="list",
+            scope_kind="platform_user_safe",
+            active=True,
+            created_by_user=superuser,
+        )
+        with connection.cursor() as cursor:
+            with pytest.raises(DatabaseError):
+                cursor.execute(
+                    "DELETE FROM codesho.identity_platformoperatorpolicy WHERE id = %s", [policy.id]
+                )
+            with pytest.raises(DatabaseError):
+                cursor.execute(
+                    "UPDATE codesho.identity_platformoperatorpolicy "
+                    "SET action = 'view' WHERE id = %s",
+                    [policy.id],
+                )
+            cursor.execute(
+                """
+                UPDATE codesho.identity_platformoperatorpolicy
+                SET active = FALSE, revoked_at = CURRENT_TIMESTAMP, revoked_by_user_id = %s
+                WHERE id = %s
+                """,
+                [superuser.id, policy.id],
+            )
+            with pytest.raises(DatabaseError):
+                cursor.execute(
+                    "UPDATE codesho.identity_platformoperatorpolicy "
+                    "SET active = TRUE WHERE id = %s",
+                    [policy.id],
+                )
