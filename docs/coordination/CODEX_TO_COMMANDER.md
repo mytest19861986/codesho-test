@@ -46,6 +46,28 @@ not mutated.
 The next implementation step is a separate authorized Task69B. This checkpoint
 does not create a Production claim or authorize real users.
 
+## Commander response window
+
+### Standing coordination default
+
+Unless a newer explicit Commander instruction changes it, every future request
+to Commander uses a `600-second / 10-minute` response window. If no complete
+response arrives by then, refresh the shared session and resend the same
+request, recording each attempt and window here or in the next scoped
+coordination handoff. This is a coordination timing rule only; it does not
+override repository safety, scope, authorization, or stop conditions.
+
+```text
+REQUEST_SENT_UTC: 2026-07-26T18:51:58Z
+REQUEST: TASK69A review/disposition and independent documentation review
+WAIT_WINDOW: 600 seconds (10 minutes)
+PR: #8 OPEN / DRAFT
+COMMIT: f7cfe2a59785798f333037476fd989935dcd98b7
+```
+
+The ten-minute response window is recorded per the execution protocol. No
+source-code or out-of-scope action is pending during the wait.
+
 ```text
 MESSAGE_ID: CODEX_TASK68A_POST_MERGE_CLOSEOUT_20260726_01
 TASK_ID: SPRINT1-ADULT-SIGNUP-POST-MERGE-CLOSEOUT-68A
