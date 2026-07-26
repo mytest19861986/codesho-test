@@ -1,4 +1,35 @@
-# Codex to Commander — Task69B
+# Codex to Commander — Task70A
+
+## Current closeout: Task69B
+
+```text
+TASK_ID: SPRINT1-TASK69B-POST-MERGE-CLOSEOUT-70A
+STATUS: COMPLETE / MERGED / VERIFIED
+BASE_SHA: 5be173afb03197cbc2e293e2ff28e1f9156a47ad
+IMPLEMENTATION_HEAD: 889d1e998a1433c31646179856922fa2d0b6c449
+CI_EVIDENCE_HEAD: 57e235cd088174e5a75132ea89f82a105191adfc
+DOCUMENTATION_CHECKPOINT_HEAD: 0aea2e0a1dbba925343a854de35683b84d83a748
+MERGE_COMMIT: 5be173afb03197cbc2e293e2ff28e1f9156a47ad
+MERGE_PARENTS:
+- 27a8626d29bfa7e21c5e770455db6b20a4521ccc
+- 0aea2e0a1dbba925343a854de35683b84d83a748
+PR_9: CLOSED / MERGED
+SOURCE_BRANCH: agent/task69b-provenance-synthetic / PRESERVED
+PR_5: OPEN / DRAFT / UNCHANGED / HEAD ee708a59fda89f08b824b079ebece2eed3b5515b
+PRODUCTION/DEPLOYMENT/RELEASE: NOT_AUTHORIZED
+REAL_USERS/PUBLIC_API/BACKFILL/PROVIDER: NOT_AUTHORIZED
+PROTECTED_CODESHO_PROMOTION: NOT_AUTHORIZED
+NEXT_STATE: WAITING_FOR_NEXT_SEPARATE_AUTHORIZATION
+LEGAL_RETENTION/DELETION/HOLD: LEGAL_PENDING
+```
+
+Task69B has passed its implementation, review, CI, merge, and post-merge
+verification gates. The remaining Task69B Draft/Ready/pending statements below
+are historical records only and do not describe current repository state.
+
+---
+
+# Historical Codex to Commander — Task69B
 
 ```text
 MESSAGE_ID: CODEX_TASK69B_PROVENANCE_SYNTHETIC_CHECKPOINT_20260726_07
@@ -9,7 +40,7 @@ STATUS: FINAL_REVIEW_PASS / DOCUMENTATION_CHECKPOINT / INTERNAL_SYNTHETIC_ONLY
 IMPLEMENTATION_HEAD: 889d1e998a1433c31646179856922fa2d0b6c449
 CI_EVIDENCE_HEAD: 57e235cd088174e5a75132ea89f82a105191adfc
 DOCUMENTATION_CHECKPOINT: this coordination commit (docs-only after CI evidence)
-PR_9: OPEN / DRAFT / FINAL_REVIEW_PASS / READY_PENDING_WORKFLOW_STATE
+PR_9: HISTORICAL / OPEN-DRAFT-THEN-MERGED / SUPERSEDED_BY_TASK70A_CLOSEOUT
 PR_5: PRESERVED_AS_DRAFT / UNCHANGED
 REAL_USERS: NOT_AUTHORIZED
 PRODUCTION/DEPLOYMENT/RELEASE: NOT_AUTHORIZED
@@ -51,6 +82,9 @@ review prompts/responses remain outside the repository.
 
 ## Task69B independent review checkpoint
 
+Historical snapshot before merge; all status and gate statements in this
+section describe that earlier checkpoint only.
+
 Historical Commander response `COMMANDER_TASK69B_INDEPENDENT_REVIEW_20260726_07`
 returned `CHANGES_REQUIRED` on an earlier head. Backend PostgreSQL CI run
 `30216804608` failed four FORCE-RLS tests because provenance reads and migrator
@@ -59,15 +93,16 @@ smoke_restore run `30216804605` succeeded. This is recorded as
 `69B-DB-01`: DISPOSED / PASS. The cross-tenant assertion uses beta context,
 beta provenance tenant, alpha source attestation, and the explicit linkage
 mismatch message. `69B-CI-02`: DISPOSED / PASS. `69B-DOC-02`: this checkpoint
-disposes the stale-head documentation mismatch. PR #9 remains Draft pending
+disposes the stale-head documentation mismatch. At that historical snapshot,
+PR #9 remained Draft pending
 final CI/re-review on this documentation head.
 
 Implementation head is `889d1e998a1433c31646179856922fa2d0b6c449`; cross-tenant
 remediation is `585b3b9`; final documentation head is
 `57e235cd088174e5a75132ea89f82a105191adfc`. Final-head CI was successful:
 CI `30218263108` / workflow #194 and smoke_restore `30218263084` / workflow
-#192. The final review verdict is PASS, subject only to the allowed
-Draft-to-Ready workflow state transition. Local focused tests remain `28
+#192. The final review verdict was PASS, followed by the authorized
+Draft-to-Ready transition. Local focused tests remain `28
 passed / 4 PostgreSQL-only skipped`; full backend SQLite tests remain `190
 passed / 34 skipped`.
 

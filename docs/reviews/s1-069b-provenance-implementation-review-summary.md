@@ -1,9 +1,25 @@
 # Task69B Provenance Implementation Review Summary
 
-Status: `FINAL_REVIEW_PASS / DRAFT_PENDING_WORKFLOW_STATE`
+Status: `COMPLETE / MERGED / VERIFIED`
 
 Task: `SPRINT1-ADULT-SIGNUP-PROVENANCE-SYNTHETIC-IMPLEMENT-69B`
 Base: `27a8626d29bfa7e21c5e770455db6b20a4521ccc`
+
+## Post-merge closeout
+
+Task70A confirms that PR #9 is `CLOSED / MERGED` at
+`5be173afb03197cbc2e293e2ff28e1f9156a47ad`, with parents
+`27a8626d29bfa7e21c5e770455db6b20a4521ccc` and
+`0aea2e0a1dbba925343a854de35683b84d4`. The source branch
+`agent/task69b-provenance-synthetic` is preserved. Final CI was successful:
+backend PostgreSQL 224 passed, frontend passed, and smoke_restore passed.
+PR #5 remains `OPEN / DRAFT / UNCHANGED` at head
+`ee708a59fda89f08b824b079ebece2eed3b5515b`. The project is waiting for the
+next separate authorization. No Production, deployment, release, real-user,
+public API, backfill, provider, or protected-repository promotion is implied.
+
+The Draft/Ready-pending, review-pending, and merge-pending wording in the
+historical implementation records below is superseded by this closeout.
 
 ## Scope
 
