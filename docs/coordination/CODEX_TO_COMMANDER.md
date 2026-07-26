@@ -1,12 +1,40 @@
-# Codex to Commander — Task67A
+# Codex to Commander — Task68A
+
+```text
+MESSAGE_ID: CODEX_TASK68A_POST_MERGE_CLOSEOUT_20260726_01
+TASK_ID: SPRINT1-ADULT-SIGNUP-POST-MERGE-CLOSEOUT-68A
+BASE_SHA: e11557f378231469d22348f4959caa554dbbd406
+BRANCH: agent/task68a-post-merge-closeout
+PR_6: CLOSED / MERGED
+MERGED_AT: 2026-07-26T12:48:10Z
+MERGE_COMMIT: e11557f378231469d22348f4959caa554dbbd406
+STATUS: IMPLEMENTATION_COMPLETE / CI_REQUIRED / MERGE_NOT_AUTHORIZED
+```
+
+## Verified merge checkpoint
+
+- Authorized PR head:
+  `9247bec6e22e8415344d78ee90018ea8eaaeac90`.
+- Merge parents: `5ef6323a42739613b05eab1fcbb07e009a87e859` and
+  `9247bec6e22e8415344d78ee90018ea8eaaeac90`.
+- Merge method: merge commit.
+- backend PostgreSQL: SUCCESS.
+- frontend: SUCCESS.
+- smoke_restore: SUCCESS.
+- No deployment, release, Production activation, real-user activation,
+  protected `codesho` promotion, direct push, rebase, force-push, or branch
+  deletion occurred as part of Task67C.
+
+Task68A only reconciles the four allow-listed documents with this verified
+state. Its merge requires separate employer authorization.
 
 ```text
 MESSAGE_ID: CODEX_TASK67B_CLOSEOUT_20260726_01
 TASK_ID: SPRINT1-ADULT-SIGNUP-CLOSEOUT-67B
 BASE_SHA: a7caa268e0ce32b4b8e074d539add0ea4d07143d
 BRANCH: codex/task67a-adult-signup-internal
-PR: #6 OPEN / READY / UNMERGED
-STATUS: DOCUMENTATION_CLOSEOUT_IN_PROGRESS
+HISTORICAL_PR_STATE: #6 OPEN / READY / UNMERGED
+STATUS: COMPLETED / MERGED_BY_PR_6
 ```
 
 ## Commander-confirmed gate disposition
@@ -22,8 +50,9 @@ STATUS: DOCUMENTATION_CLOSEOUT_IN_PROGRESS
   public availability, or Production enablement.
 - P2 findings: non-blocking technical debt.
 
-This closeout makes no Production or real-user readiness claim. Merge,
-deployment, force-push, PR state change, and promotion to `codesho` remain
+This closeout made no Production or real-user readiness claim. Its merge was
+later separately authorized and completed by Task67C. Deployment, release,
+Production enablement, real-user activation, and promotion to `codesho` remain
 forbidden.
 
 ```text
@@ -71,11 +100,11 @@ attributed to Task67A. check:ui-policy: NO_RUN (blocked by that test failure)
 git diff --check: PASS
 ```
 
-## Superseded pending state
+## Historical pending state
 
-The former Draft-PR, CI-pending, and review-pending state is superseded by
-Task67B: PR #6 is OPEN / READY / UNMERGED; backend PostgreSQL, frontend, and
-smoke_restore are SUCCESS; and Security, Privacy, and Database are
+The former Draft-PR, CI-pending, review-pending, and OPEN / READY / UNMERGED
+states are historical. PR #6 is CLOSED / MERGED; backend PostgreSQL, frontend,
+and smoke_restore are SUCCESS; and Security, Privacy, and Database are
 APPROVED_WITH_NON_BLOCKING_NOTES.
 
 Commander-message transport was also attempted through the mandated shared
@@ -91,8 +120,10 @@ the employer supplies an authenticated controllable session.
 REAL_USERS: NOT_AUTHORIZED
 FRONTEND_PUBLIC_SIGNUP: NOT_IMPLEMENTED / NOT_AUTHORIZED
 GUARDIAN_RECOVERY: NOT_AUTHORIZED
-READY_FOR_REVIEW: NOT_AUTHORIZED
-MERGE: NOT_AUTHORIZED
+PR_6_READY_TRANSITION: COMPLETED UNDER SEPARATE AUTHORIZATION
+PR_6_MERGE: COMPLETED UNDER SEPARATE TASK67C AUTHORIZATION
+TASK68A_MERGE: NOT_AUTHORIZED
 DEPLOYMENT: NOT_AUTHORIZED
+RELEASE: NOT_AUTHORIZED
 PROTECTED_CODESHO_PROMOTION: NOT_AUTHORIZED
 ```

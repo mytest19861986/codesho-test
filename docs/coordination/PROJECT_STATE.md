@@ -1,19 +1,21 @@
 # Codesho Project State
 
-Updated: 2026-07-26 (Task67B adult signup documentation closeout)
+Updated: 2026-07-26 (Task68A adult signup post-merge closeout)
 
 ## Current Status
 
-Task67A implementation is at `a7caa268e0ce32b4b8e074d539add0ea4d07143d` on
-`codex/task67a-adult-signup-internal`. Task67B is a documentation-only
-closeout on that exact SHA. Employer authority remains limited to development
-and internal synthetic-data testing.
+Task67A implementation and Task67B documentation closeout were merged through
+PR #6 at `2026-07-26T12:48:10Z`. PR #6 is CLOSED / MERGED. The resulting
+`codesho-test/main` commit is
+`e11557f378231469d22348f4959caa554dbbd406`, with parents
+`5ef6323a42739613b05eab1fcbb07e009a87e859` and
+`9247bec6e22e8415344d78ee90018ea8eaaeac90`.
 
-PR #6 is OPEN / READY / UNMERGED. Its required gates are confirmed:
-backend PostgreSQL SUCCESS, frontend SUCCESS, and smoke_restore SUCCESS.
-Security, Privacy, and Database review verdicts are each
-APPROVED_WITH_NON_BLOCKING_NOTES. This does not authorize Production,
-real-user availability, merge, deployment, or protected-repository promotion.
+The merged head passed backend PostgreSQL, frontend, and smoke_restore.
+Security, Privacy, and Database review verdicts were each
+APPROVED_WITH_NON_BLOCKING_NOTES. This merge does not authorize Production,
+real-user availability, deployment, release, or protected-repository
+promotion.
 
 The foundation records only an explicit adult self-attestation for an opaque
 synthetic UUID. It is disabled by default, rejected by production settings,
@@ -22,7 +24,7 @@ bound atomically to allow-listed security audit evidence. It creates no user,
 credential, membership, session, frontend signup route, Guardian/Recovery
 relationship, or real-user capability.
 
-`codesho-test/main` is at merged commit
+The earlier Platform Operator/Admin merge remains recorded at
 `49acc1818b6afb1d78e5e8155d0dd9b90fbbf784`. PR #3 is merged and closed; its
 parents are `98c8132312d67094fbc316dea68feb454c4ffe68` and
 `75c3dcd7382d354fec10315daad9d30ef466c982`.
@@ -42,10 +44,10 @@ Sprint 1 evidence and preserved Production/Alpha/protected-repository gates;
 its platform-operator/admin candidate was later separately authorized,
 implemented, merged as PR #3, and verified by Task62V.
 
-Task63D is a documentation-only closeout. No active implementation task exists
-after this checkpoint; a separate authorized Task with an independent BASE_SHA
-is required before further feature work. Claude
-verification debt remains closed by the published Task51 checkpoint. The
+Task68A is a documentation-only post-merge reconciliation based on
+`e11557f378231469d22348f4959caa554dbbd406`. No product implementation is
+authorized by this checkpoint. Claude verification debt remains closed by the
+published Task51 checkpoint. The
 historical marker `CLAUDE_VERIFICATION_DEBT_CLEARED_PENDING_DOC_CHECKPOINT`
 remains preserved in the security documents; its documentation checkpoint was
 published by Task51.
@@ -108,7 +110,7 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
   process-argument exposure. Local checks remain green. Final checkpoint
   `a7d4fbf` passed CI `29436322030` and Compose smoke/restore `29436321886`.
 
-## Task67B review disposition and future gates
+## Task67A/67B review disposition and future gates
 
 - The Database `get_or_create` P1 was rejected: Django catches the
   uniqueness-race `IntegrityError` and retrieves the winning row using the
@@ -127,8 +129,8 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
 
 ## Next Steps
 
-1. Keep PR #6 OPEN / READY / UNMERGED; no merge, deployment, or readiness
-   expansion is authorized by Task67B.
+1. Complete Task68A documentation CI and hold its merge for separate employer
+   authorization.
 2. Resolve the mandatory privacy provenance-separation gate before any future
    real-user, public-availability, or Production decision.
 3. Recovery, Guardian, Notification, user creation, OAuth and Onboarding require
