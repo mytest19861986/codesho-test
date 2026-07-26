@@ -4,6 +4,13 @@ Updated: 2026-07-26 (Task69B synthetic provenance implementation)
 
 ## Current Status
 
+Task69B is currently `REMEDIATION_REQUIRED`. PR #9 remains Draft. On reviewed
+head `b8f2d103e5655a547fb00554c64df85f3de64caa`, backend PostgreSQL CI failed
+(run `30216804608`); frontend succeeded on that run and smoke_restore succeeded
+(run `30216804605`). Ready/Merge are blocked pending the authorized RLS-test
+remediation, replacement CI, and independent re-review. Any earlier green
+CI/staging wording in this file is historical and does not describe Task69B.
+
 Task67A/67B and the Task68A documentation closeout are merged. PR #7 is
 CLOSED / MERGED at `fc2aa2f4d7261dc7bb597886dbe782163313eceb`. Its parents
 are `e11557f378231469d22348f4959caa554dbbd406` and
