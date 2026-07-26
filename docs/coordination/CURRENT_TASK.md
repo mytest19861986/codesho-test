@@ -1,14 +1,12 @@
-# Current Task: SPRINT1-ADULT-SIGNUP-IMPLEMENT-67A
+# Current Task: SPRINT1-ADULT-SIGNUP-CLOSEOUT-67B
 
 - Owner: Codex
-- Status: implementation checkpoint committed and pushed to the authorized
-  branch. Draft PR creation is blocked pending authenticated GitHub browser
-  access; PostgreSQL CI and required external review remain pending.
-  Development/internal synthetic-data authority only.
-- BASE_SHA: `5ef6323a42739613b05eab1fcbb07e009a87e859`.
+- Status: documentation-only closeout in progress. PR #6 is OPEN / READY /
+  UNMERGED. Development/internal synthetic-data authority only.
+- BASE_SHA: `a7caa268e0ce32b4b8e074d539add0ea4d07143d`.
 - Target repository: `mytest19861986/codesho-test`.
 - Branch: `codex/task67a-adult-signup-internal`.
-- Checkpoint commit: `d1d70e0fdc9cd9849b9e88244b47d86e95e31576`.
+- Checkpoint commit: `a7caa268e0ce32b4b8e074d539add0ea4d07143d`.
 - Employer authorization date: `2026-07-26`.
 
 ## Goal
@@ -18,57 +16,30 @@ flow. The endpoint may record only a self-attested `18+` status and minimal
 immutable evidence for a synthetic opaque subject. It does not create a user,
 credential, membership, session, Guardian relationship, or public signup flow.
 
-## Exact allow-list
+## Task67B exact allow-list
 
 ```text
-.env.example
-backend/config/adult_signup.py
-backend/config/settings/base.py
-backend/config/settings/local.py
-backend/config/settings/production.py
-backend/config/urls.py
-backend/modules/identity/models.py
-backend/modules/identity/migrations/0008_adult_age_attestation.py
-backend/modules/platform_event/models.py
-backend/modules/platform_event/security_audit.py
-backend/modules/platform_event/migrations/0010_adult_signup_events.py
-backend/tests/test_adult_signup.py
 docs/coordination/CODEX_TO_COMMANDER.md
 docs/coordination/CURRENT_TASK.md
 docs/coordination/PROJECT_STATE.md
-docs/data-dictionary.md
-docs/decisions/2026-07-26-adult-signup-internal.md
-docs/openapi.yaml
 docs/reviews/s1-067a-adult-signup-review-summary.md
 ```
 
-No frontend, workflow, Docker/Compose, Nginx, deployment, protected-repository,
-Guardian/Recovery, birth-date, identity-document, or real-user file is in scope.
+No backend, frontend, migration, OpenAPI, workflow, configuration,
+architecture, product, UI, deployment, protected-repository, Guardian/Recovery,
+or real-user file is in scope.
 
-## Acceptance criteria
+## Task67B acceptance criteria
 
-1. The feature defaults to disabled and production settings reject activation.
-2. Only `internal_test` mode with the exact server policy version can persist
-   an attestation.
-3. The request requires explicit boolean `true`; false or missing values fail
-   closed and never create an attestation.
-4. Only synthetic opaque UUIDs are accepted as subjects. No date of birth,
-   numeric age, identity document, national identifier, raw IP, or free text is
-   accepted or stored.
-5. Valid requests are subject to fail-closed HMAC-anonymous Redis limits by
-   synthetic subject and client IP; raw signals are never Redis keys.
-6. Accepted attestations and the supported rejection are recorded in the
-   immutable security audit ledger with allow-listed metadata.
-7. Attestation persistence and accepted audit append are atomic and
-   idempotent for tenant, subject, and policy version.
-8. Attestation rows are append-only in application code and PostgreSQL; the
-   runtime role has no update, delete, or truncate privilege on the table.
-9. The API and OpenAPI contract expose no account-creation claim.
-10. Focused tests cover disabled mode, exact request shape, missing/false
-   attestation, policy mismatch, tampering fields, idempotency, audit failure,
-   rate limiting/backend failure, tenant separation, immutability, and
-   prohibited data-field absence.
-11. Repository-defined backend CI checks and `git diff --check` pass.
+1. Record the confirmed gates: backend PostgreSQL SUCCESS, frontend SUCCESS,
+   smoke_restore SUCCESS, and security/privacy/database APPROVED_WITH_NON_BLOCKING_NOTES.
+2. Record the rejected database `get_or_create` P1 rationale and the mandatory
+   future privacy provenance-separation gate.
+3. Record P2 findings as non-blocking technical debt.
+4. Preserve PR #6 as OPEN / READY / UNMERGED and make no Production or
+   real-user readiness claim.
+5. Keep the diff limited to this task's four-file allow-list and pass
+   `git diff --check`.
 
 ## Review and release gates
 

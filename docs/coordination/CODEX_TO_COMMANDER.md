@@ -1,12 +1,38 @@
 # Codex to Commander — Task67A
 
 ```text
+MESSAGE_ID: CODEX_TASK67B_CLOSEOUT_20260726_01
+TASK_ID: SPRINT1-ADULT-SIGNUP-CLOSEOUT-67B
+BASE_SHA: a7caa268e0ce32b4b8e074d539add0ea4d07143d
+BRANCH: codex/task67a-adult-signup-internal
+PR: #6 OPEN / READY / UNMERGED
+STATUS: DOCUMENTATION_CLOSEOUT_IN_PROGRESS
+```
+
+## Commander-confirmed gate disposition
+
+- backend PostgreSQL: SUCCESS
+- frontend: SUCCESS
+- smoke_restore: SUCCESS
+- Security, Privacy, Database: APPROVED_WITH_NON_BLOCKING_NOTES
+- Database `get_or_create` P1: rejected because Django catches the
+  uniqueness-race `IntegrityError` and retrieves the winning row using the
+  same immediate unique-constraint fields.
+- Privacy provenance separation: mandatory future gate before real users,
+  public availability, or Production enablement.
+- P2 findings: non-blocking technical debt.
+
+This closeout makes no Production or real-user readiness claim. Merge,
+deployment, force-push, PR state change, and promotion to `codesho` remain
+forbidden.
+
+```text
 MESSAGE_ID: CODEX_ADULT_SIGNUP_IMPLEMENT_67A_PUSH_CHECKPOINT_20260726_02
 TASK_ID: SPRINT1-ADULT-SIGNUP-IMPLEMENT-67A
 BASE_SHA: 5ef6323a42739613b05eab1fcbb07e009a87e859
 BRANCH: codex/task67a-adult-signup-internal
 COMMIT: d1d70e0fdc9cd9849b9e88244b47d86e95e31576
-STATUS: IMPLEMENTATION_COMMITTED_AND_PUSHED / DRAFT_PR_BLOCKED_GITHUB_SIGNIN
+STATUS: SUPERSEDED_BY_TASK67B_CLOSEOUT / PR6_OPEN_READY_UNMERGED
 ```
 
 ## Completed
@@ -45,16 +71,12 @@ attributed to Task67A. check:ui-policy: NO_RUN (blocked by that test failure)
 git diff --check: PASS
 ```
 
-## Pending
+## Superseded pending state
 
-- Create a Draft PR for the pushed scoped commit to obtain real PostgreSQL CI.
-- Complete the required external security/privacy/database review before any
-  future Ready-for-Review or Merge authority.
-
-The GitHub connector is unavailable and the in-app GitHub session is signed
-out. Git remote write authentication was independently verified and the branch
-was pushed. No Draft PR or CI run exists yet; the next safe action requires
-authenticated GitHub browser access.
+The former Draft-PR, CI-pending, and review-pending state is superseded by
+Task67B: PR #6 is OPEN / READY / UNMERGED; backend PostgreSQL, frontend, and
+smoke_restore are SUCCESS; and Security, Privacy, and Database are
+APPROVED_WITH_NON_BLOCKING_NOTES.
 
 Commander-message transport was also attempted through the mandated shared
 Brave/Profile 13 path. It did not send: the existing browser was not launched

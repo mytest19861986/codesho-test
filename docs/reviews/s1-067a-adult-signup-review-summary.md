@@ -1,4 +1,4 @@
-# Task67A adult signup review summary
+# Task67A adult signup review summary and Task67B closeout
 
 ## Scope
 
@@ -48,13 +48,23 @@ unwritable `/root/.npm` cache and left an incomplete `node_modules`. The
 incomplete directory was moved to `/tmp`; `npm ci` and all frontend checks
 then passed with an explicit `/tmp` cache. No tracked frontend file changed.
 
+## Task67B confirmed CI and review disposition
+
+PR #6 is OPEN / READY / UNMERGED. Its backend PostgreSQL, frontend, and
+smoke_restore required jobs are SUCCESS. The Security, Privacy, and Database
+reviews are APPROVED_WITH_NON_BLOCKING_NOTES.
+
+The Database `get_or_create` P1 is rejected: Django catches the
+uniqueness-race `IntegrityError` and retrieves the winning row using the same
+immediate unique-constraint fields. This disposition makes no change to the
+implemented contract.
+
+Privacy provenance separation is a mandatory future gate before real users,
+public availability, or Production enablement. P2 findings are non-blocking
+technical debt. None of these statements authorizes merge, deployment,
+Production, or real-user availability.
+
 ## Remaining gates
 
-- PostgreSQL migration, trigger, runtime-grant, and real audit-function tests
-  require the repository CI service because Docker/PostgreSQL is unavailable
-  locally.
-- The repository requires sequential Claude security/privacy/database review
-  before Merge. No Claude review was available in this execution environment,
-  so the checkpoint is explicitly `NOT_CLAUDE_VERIFIED`.
 - Real-user Legal approval, Ready for Review, Merge, Deployment, and protected
   repository promotion remain unauthorized.
