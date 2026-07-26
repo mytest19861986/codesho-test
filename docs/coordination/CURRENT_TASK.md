@@ -1,50 +1,50 @@
-# Current Task: SPRINT1-ADULT-SIGNUP-POST-MERGE-CLOSEOUT-68A
+# Current Task: SPRINT1-ADULT-SIGNUP-PROVENANCE-ARCHITECTURE-69A
 
 - Owner: Codex
-- Status: documentation checkpoint prepared; merge requires separate employer
-  authorization.
-- BASE_SHA: `e11557f378231469d22348f4959caa554dbbd406`.
+- Status: architecture/privacy-gate definition in progress.
+- BASE_SHA: `fc2aa2f4d7261dc7bb597886dbe782163313eceb`.
 - Target repository: `mytest19861986/codesho-test`.
-- Branch: `agent/task68a-post-merge-closeout`.
+- Branch: `agent/task69a-provenance-architecture`.
 - Employer standing authorization date: `2026-07-26`.
 
 ## Goal
 
-Reconcile the coordination and review documents with the verified merge of
-Task67A/67B through PR #6. This task changes no product code, architecture,
-API, migration, workflow, configuration, or UI.
+Define a precise, provider-neutral privacy/provenance separation contract for
+the internal synthetic adult-attestation foundation. This task changes
+documentation only and creates no Production claim.
 
 ## Exact allow-list
 
 ```text
+docs/decisions/2026-07-26-adult-signup-provenance-separation.md
 docs/coordination/CODEX_TO_COMMANDER.md
 docs/coordination/CURRENT_TASK.md
 docs/coordination/PROJECT_STATE.md
-docs/reviews/s1-067a-adult-signup-review-summary.md
 ```
 
 ## Acceptance criteria
 
-1. Record PR #6 as `CLOSED / MERGED` at `2026-07-26T12:48:10Z`.
-2. Record merge commit `e11557f378231469d22348f4959caa554dbbd406`
-   and parents `5ef6323a42739613b05eab1fcbb07e009a87e859` and
-   `9247bec6e22e8415344d78ee90018ea8eaaeac90`.
-3. Preserve the successful backend, frontend, and smoke_restore evidence.
-4. Remove stale statements that PR #6 is open, ready, or unmerged.
-5. Preserve Legal, privacy provenance-separation, real-user, Production,
-   deployment, release, and protected-repository gates.
-6. Keep the diff limited to the four-file allow-list and pass
+1. Base and PR #7 merge evidence match the Commander disposition.
+2. The new decision document contains all required sections and contract
+   invariants, options A/B/C, and `LEGAL_PENDING` treatment.
+3. Coordination records state PR #7 `CLOSED / MERGED`, main
+   `fc2aa2f4d7261dc7bb597886dbe782163313eceb`, and Task69A architecture-only
+   status.
+4. No stale PR #7 unmerged claim remains except explicit historical context.
+5. No model, migration, endpoint, OpenAPI, configuration, test, or source
+   code changes are made.
+6. The final diff contains exactly four allow-listed files and passes
    `git diff --check`.
-7. Commit and push the completed documentation checkpoint; do not merge it.
 
 ## Review and release gates
 
 ```text
-Task67A Security/Privacy/Database reviews: PASSED WITH NON-BLOCKING NOTES
-Task67A repository CI: PASSED
-Task68A documentation CI: REQUIRED BEFORE CLOSEOUT
+Task68E: COMPLETED / CLOSED; PR #7 CLOSED / MERGED
+Provider-neutral independent documentation review: REQUIRED
+Privacy architecture verdict: PASS REQUIRED
+Internal consistency: PASS REQUIRED
+Task69A CI (backend/frontend/smoke_restore): REQUIRED
 Real-user Legal approval: REQUIRED / BLOCKING
-Task68A merge: SEPARATE EMPLOYER AUTHORIZATION REQUIRED
 Deployment: NOT AUTHORIZED
 Release: NOT AUTHORIZED
 Protected codesho promotion: NOT AUTHORIZED
@@ -52,6 +52,6 @@ Protected codesho promotion: NOT AUTHORIZED
 
 ## Stop conditions
 
-Stop if completion requires a file outside the allow-list, product or
-architecture changes, Guardian/Recovery work, real user data, Merge,
-Deployment, Release, Production enablement, or protected-repository promotion.
+Stop if completion requires a file outside the allow-list, product/source
+changes, real user data, PR #5 mutation, deployment, release, Production
+enablement, or protected-repository promotion.
