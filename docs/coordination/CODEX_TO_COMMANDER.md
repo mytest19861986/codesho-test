@@ -5,9 +5,10 @@ MESSAGE_ID: CODEX_TASK69B_PROVENANCE_SYNTHETIC_CHECKPOINT_20260726_07
 TASK_ID: SPRINT1-ADULT-SIGNUP-PROVENANCE-SYNTHETIC-IMPLEMENT-69B
 BASE_SHA: 27a8626d29bfa7e21c5e770455db6b20a4521ccc
 BRANCH: agent/task69b-provenance-synthetic
-STATUS: IMPLEMENTATION_IN_PROGRESS / INTERNAL_SYNTHETIC_ONLY
+STATUS: FINAL_REVIEW_PASS / DOCUMENTATION_CHECKPOINT / INTERNAL_SYNTHETIC_ONLY
 IMPLEMENTATION_HEAD: 889d1e998a1433c31646179856922fa2d0b6c449
-CURRENT_HEAD: fcd48f030bde145b5b966ba6f9fc68562deb81d4
+CI_EVIDENCE_HEAD: 57e235cd088174e5a75132ea89f82a105191adfc
+DOCUMENTATION_CHECKPOINT: this coordination commit (docs-only after CI evidence)
 PR_9: OPEN / DRAFT / FINAL_REVIEW_PASS / READY_PENDING_WORKFLOW_STATE
 PR_5: PRESERVED_AS_DRAFT / UNCHANGED
 REAL_USERS: NOT_AUTHORIZED
@@ -63,9 +64,9 @@ final CI/re-review on this documentation head.
 
 Implementation head is `889d1e998a1433c31646179856922fa2d0b6c449`; cross-tenant
 remediation is `585b3b9`; final documentation head is
-`b1bbd3ce14480379d55400f2d0cbc3ba0ee4ab86`. Final-head CI was successful:
-CI `30218069613` / workflow #193 and smoke_restore `30218069610` / workflow
-#191. The final review verdict is PASS, subject only to the allowed
+`57e235cd088174e5a75132ea89f82a105191adfc`. Final-head CI was successful:
+CI `30218263108` / workflow #194 and smoke_restore `30218263084` / workflow
+#192. The final review verdict is PASS, subject only to the allowed
 Draft-to-Ready workflow state transition. Local focused tests remain `28
 passed / 4 PostgreSQL-only skipped`; full backend SQLite tests remain `190
 passed / 34 skipped`.

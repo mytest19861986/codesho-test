@@ -1,7 +1,7 @@
 # Current Task: SPRINT1-ADULT-SIGNUP-PROVENANCE-SYNTHETIC-IMPLEMENT-69B
 
 - Owner: Codex
-- Status: implementation in progress; internal synthetic only.
+- Status: final review PASS; documentation checkpoint complete; internal synthetic only.
 - BASE_SHA: `27a8626d29bfa7e21c5e770455db6b20a4521ccc`.
 - Target repository: `mytest19861986/codesho-test`.
 - Branch: `agent/task69b-provenance-synthetic`.
@@ -63,8 +63,9 @@ PRODUCTION INTERNAL MODE: REJECTED
 
 Required reviews are sequential: self-review, security, privacy, database/RLS,
 and provider-neutral review. All findings require disposition; raw prompts and
-responses stay outside the repository. Final CI must pass backend, frontend,
-and smoke_restore with exactly nine changed allow-listed files.
+responses stay outside the repository. Final CI passed backend, frontend, and
+smoke_restore with exactly nine changed allow-listed files. Only the guarded
+Draft-to-Ready workflow transition remains; merge remains separately gated.
 
 ## Authority and exclusions
 

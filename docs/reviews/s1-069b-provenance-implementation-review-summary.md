@@ -74,7 +74,7 @@ used a merge-ref rather than final documentation head
 `e3442ce35351f6e5057f784e8bf3639129a34479`. Cross-tenant remediation is
 `585b3b9`; final documentation head is
 `b660d95c4e13072356d896922b3e326b878850d4`; final documentation head is
-`b1bbd3ce14480379d55400f2d0cbc3ba0ee4ab86`, and final-head CI succeeded.
+`57e235cd088174e5a75132ea89f82a105191adfc`, and final-head CI succeeded.
 
 The final re-review `COMMANDER_TASK69B_FINAL_REREVIEW_20260726_09` found:
 
@@ -87,9 +87,9 @@ The final re-review `COMMANDER_TASK69B_FINAL_REREVIEW_20260726_09` found:
 Final review evidence:
 
 ```text
-FINAL_HEAD: b1bbd3ce14480379d55400f2d0cbc3ba0ee4ab86
-CI: 30218069613 / SUCCESS / backend PostgreSQL 224 passed + frontend SUCCESS
-smoke_restore: 30218069610 / SUCCESS
+CI_EVIDENCE_HEAD: 57e235cd088174e5a75132ea89f82a105191adfc
+CI: 30218263108 / SUCCESS / backend PostgreSQL 224 passed + frontend SUCCESS
+smoke_restore: 30218263084 / SUCCESS
 CHANGED_FILES: EXACTLY 9 ALLOW-LISTED FILES
 PR #5: UNCHANGED
 ```
