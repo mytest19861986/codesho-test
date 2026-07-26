@@ -1,4 +1,73 @@
-# Codex to Commander — Task68A
+# Codex to Commander — Task69A
+
+```text
+MESSAGE_ID: CODEX_TASK69A_PROVENANCE_ARCHITECTURE_CHECKPOINT_20260726_01
+TASK_ID: SPRINT1-ADULT-SIGNUP-PROVENANCE-ARCHITECTURE-69A
+BASE_SHA: fc2aa2f4d7261dc7bb597886dbe782163313eceb
+BRANCH: agent/task69a-provenance-architecture
+PR_7: CLOSED / MERGED
+MERGE_COMMIT: fc2aa2f4d7261dc7bb597886dbe782163313eceb
+STATUS: ARCHITECTURE_ONLY / PRIVACY_GATE / REVIEW_REQUIRED
+REAL_USERS: NOT_AUTHORIZED
+PRODUCTION/DEPLOYMENT/RELEASE: NOT_AUTHORIZED
+PROTECTED_CODESHO_PROMOTION: NOT_AUTHORIZED
+PR_5: PRESERVED_AS_DRAFT / UNCHANGED
+```
+
+## Task69A checkpoint
+
+Added the provider-neutral architecture decision
+`docs/decisions/2026-07-26-adult-signup-provenance-separation.md`. It defines
+the separation of the minimal `adult_attested` claim from restricted opaque
+provenance, distinguishes subject/attestation/provenance/security-audit
+boundaries, specifies tenant/RLS fail-closed, immutability, idempotency and
+data-minimization invariants, compares Options A/B/C, and records legal
+retention/deletion/hold questions as `LEGAL_PENDING`.
+
+No model, migration, endpoint, OpenAPI, configuration, test, frontend,
+account, credential, provider, deployment, release, or real-user behavior was
+changed. No sensitive or raw review content is included.
+
+Task68E was accepted and verified: PR #7 is CLOSED / MERGED with parents
+`e11557f378231469d22348f4959caa554dbbd406` and
+`3c61ae6b4b2408a8f2dd759eb266089ac3a3ccff`. PR #5 remains a draft and was
+not mutated.
+
+## Required gates before closeout
+
+- self-review and internal consistency: required;
+- provider-neutral independent documentation review: required;
+- privacy architecture verdict: PASS required;
+- exact four-file allow-list and `git diff --check`: required;
+- new backend, frontend, and smoke_restore CI: required;
+- commit, push, draft PR, ready transition, and merge only under Task69A
+  authorization and after all gates pass.
+
+The next implementation step is a separate authorized Task69B. This checkpoint
+does not create a Production claim or authorize real users.
+
+## Commander response window
+
+### Standing coordination default
+
+Unless a newer explicit Commander instruction changes it, every future request
+to Commander uses a `600-second / 10-minute` response window. If no complete
+response arrives by then, refresh the shared session and resend the same
+request, recording each attempt and window here or in the next scoped
+coordination handoff. This is a coordination timing rule only; it does not
+override repository safety, scope, authorization, or stop conditions.
+
+```text
+REQUEST_SENT_UTC: 2026-07-26T18:51:58Z
+REQUEST: TASK69A review/disposition and independent documentation review
+WAIT_WINDOW: 600 seconds (10 minutes)
+PR: #8 OPEN / DRAFT
+HISTORICAL_INTERMEDIATE_COMMIT: f7cfe2a59785798f333037476fd989935dcd98b7
+FINAL_HEAD: 0d13d2bd432e746475198e2a81deef494f74d380
+```
+
+The ten-minute response window is recorded per the execution protocol. No
+source-code or out-of-scope action is pending during the wait.
 
 ```text
 MESSAGE_ID: CODEX_TASK68A_POST_MERGE_CLOSEOUT_20260726_01
@@ -61,7 +130,7 @@ TASK_ID: SPRINT1-ADULT-SIGNUP-IMPLEMENT-67A
 BASE_SHA: 5ef6323a42739613b05eab1fcbb07e009a87e859
 BRANCH: codex/task67a-adult-signup-internal
 COMMIT: d1d70e0fdc9cd9849b9e88244b47d86e95e31576
-STATUS: SUPERSEDED_BY_TASK67B_CLOSEOUT / PR6_OPEN_READY_UNMERGED
+STATUS: HISTORICAL / SUPERSEDED_BY_TASK67B_CLOSEOUT / PR6_OPEN_READY_UNMERGED
 ```
 
 ## Completed

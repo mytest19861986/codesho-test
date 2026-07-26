@@ -1,15 +1,14 @@
 # Codesho Project State
 
-Updated: 2026-07-26 (Task68A adult signup post-merge closeout)
+Updated: 2026-07-26 (Task69A provenance architecture/privacy gate)
 
 ## Current Status
 
-Task67A implementation and Task67B documentation closeout were merged through
-PR #6 at `2026-07-26T12:48:10Z`. PR #6 is CLOSED / MERGED. The resulting
-`codesho-test/main` commit is
-`e11557f378231469d22348f4959caa554dbbd406`, with parents
-`5ef6323a42739613b05eab1fcbb07e009a87e859` and
-`9247bec6e22e8415344d78ee90018ea8eaaeac90`.
+Task67A/67B and the Task68A documentation closeout are merged. PR #7 is
+CLOSED / MERGED at `fc2aa2f4d7261dc7bb597886dbe782163313eceb`. Its parents
+are `e11557f378231469d22348f4959caa554dbbd406` and
+`3c61ae6b4b2408a8f2dd759eb266089ac3a3ccff`. The resulting
+`codesho-test/main` commit is `fc2aa2f4d7261dc7bb597886dbe782163313eceb`.
 
 The merged head passed backend PostgreSQL, frontend, and smoke_restore.
 Security, Privacy, and Database review verdicts were each
@@ -44,9 +43,9 @@ Sprint 1 evidence and preserved Production/Alpha/protected-repository gates;
 its platform-operator/admin candidate was later separately authorized,
 implemented, merged as PR #3, and verified by Task62V.
 
-Task68A is a documentation-only post-merge reconciliation based on
-`e11557f378231469d22348f4959caa554dbbd406`. No product implementation is
-authorized by this checkpoint. Claude verification debt remains closed by the
+Task69A is an architecture/privacy-gate definition based on
+`fc2aa2f4d7261dc7bb597886dbe782163313eceb`. It is documentation-only and
+does not authorize implementation. Claude verification debt remains closed by the
 published Task51 checkpoint. The
 historical marker `CLAUDE_VERIFICATION_DEBT_CLEARED_PENDING_DOC_CHECKPOINT`
 remains preserved in the security documents; its documentation checkpoint was
@@ -115,8 +114,9 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
 - The Database `get_or_create` P1 was rejected: Django catches the
   uniqueness-race `IntegrityError` and retrieves the winning row using the
   same immediate unique-constraint fields.
-- Privacy provenance separation remains a mandatory future gate before real
-  users, public availability, or Production enablement.
+- Privacy provenance separation is defined by
+  `docs/decisions/2026-07-26-adult-signup-provenance-separation.md`; legal
+  retention, deletion, and linkage decisions remain `LEGAL_PENDING`.
 - All P2 review findings are recorded as non-blocking technical debt; they do
   not alter the confirmed Task67A gate results.
 
@@ -129,13 +129,14 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
 
 ## Next Steps
 
-1. Complete Task68A documentation CI and hold its merge for separate employer
-   authorization.
-2. Resolve the mandatory privacy provenance-separation gate before any future
+1. Complete Task69A documentation review and CI; hold implementation for a
+   separate authorized Task69B.
+2. Resolve legal retention/deletion/linkage decisions before any future
    real-user, public-availability, or Production decision.
 3. Recovery, Guardian, Notification, user creation, OAuth and Onboarding require
    separate authorized Tasks.
-4. Do not activate Production or real Alpha, deploy, provision policy, or
+4. Do not mutate or merge PR #5 without a separate disposition. Do not activate
+   Production or real Alpha, deploy, provision policy, or
    promote to protected `codesho` without explicit employer approval.
 
 ## Open Decisions / Risks
