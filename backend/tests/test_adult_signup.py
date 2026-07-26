@@ -14,7 +14,6 @@ from psycopg.errors import InsufficientPrivilege, RaiseException
 
 from config.adult_signup import AdultSignupRateDecision, check_adult_signup_rate
 from modules.identity.models import AdultAgeAttestation
-from modules.platform_event.models import IdentitySecurityEvent
 from modules.platform_event.security_audit import (
     AppendAuditResult,
     SecurityAuditError,
@@ -457,8 +456,22 @@ def test_postgres_endpoint_commits_attestation_and_audit_atomically(adult_signup
         response = post(client, headers, payload(subject_id))
     assert response.status_code == 201
     attestation = AdultAgeAttestation.objects.get(subject_id=subject_id)
-    event = IdentitySecurityEvent.objects.get(event_id=attestation.audit_event_id)
-    assert event.event_type == "adult_age_attestation_accepted"
-    assert event.reason_code == "adult_attested"
-    assert event.subject_user_id == subject_id
-    assert event.tenant_id == adult_signup.id
+    # The immutable audit relation is in a dedicated PostgreSQL schema. Django
+    # quotes a dotted db_table name as one identifier, so use a schema-qualified
+    # cursor query here rather than an ORM read of that state-only model.
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT event_type, reason_code, subject_user_id, tenant_id
+            FROM audit.identity_security_event
+            WHERE event_id = %s
+            """,
+            (attestation.audit_event_id,),
+        )
+        event = cursor.fetchone()
+    assert event == (
+        "adult_age_attestation_accepted",
+        "adult_attested",
+        subject_id,
+        adult_signup.id,
+    )
