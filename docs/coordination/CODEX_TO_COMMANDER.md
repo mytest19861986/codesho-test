@@ -7,7 +7,7 @@ BASE_SHA: 27a8626d29bfa7e21c5e770455db6b20a4521ccc
 BRANCH: agent/task69b-provenance-synthetic
 STATUS: IMPLEMENTATION_IN_PROGRESS / INTERNAL_SYNTHETIC_ONLY
 IMPLEMENTATION_HEAD: 889d1e998a1433c31646179856922fa2d0b6c449
-CURRENT_HEAD: e3442ce35351f6e5057f784e8bf3639129a34479
+CURRENT_HEAD: 585b3b9 (final remediation candidate)
 PR_9: OPEN / DRAFT / CHANGES_REQUIRED
 PR_5: PRESERVED_AS_DRAFT / UNCHANGED
 REAL_USERS: NOT_AUTHORIZED
@@ -55,12 +55,12 @@ Commander response `COMMANDER_TASK69B_INDEPENDENT_REVIEW_20260726_07` returned
 `30216804608` failed four FORCE-RLS tests because provenance reads and migrator
 mutation assertions lacked tenant context; frontend succeeded and Compose
 smoke_restore run `30216804605` succeeded. This is recorded as
-`69B-DB-01 / P1 / REMEDIATION_REQUIRED`. The cross-tenant assertion still
-needs destination-tenant context and an explicit linkage-mismatch message.
-PR #9 remains Draft and Ready/Merge are blocked.
+`69B-DB-01 / P1 / REMEDIATION_REQUIRED` was addressed by setting context to
+the beta destination and asserting the explicit linkage-mismatch message.
+Final-head CI and re-review remain required; PR #9 remains Draft.
 
-The fixture remediation was committed as `889d1e9`; the next final-head
-remediation and checkpoint must trigger CI on the resulting final SHA. Local
+The fixture remediation was committed as `889d1e9`, cross-tenant remediation as
+`585b3b9`; CI must run on the resulting final SHA. Local
 focused tests remain `28 passed / 4 PostgreSQL-only skipped`; full backend
 SQLite tests remain `190 passed / 34 skipped`.
 

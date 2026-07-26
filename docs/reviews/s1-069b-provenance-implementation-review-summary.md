@@ -70,7 +70,8 @@ frontend, smoke_restore, exact-file, and independent re-review gates.
 Implementation head `889d1e998a1433c31646179856922fa2d0b6c449` passed CI
 (`30217280624`) and Compose smoke_restore (`30217280594`), but those checks
 used a merge-ref rather than final documentation head
-`e3442ce35351f6e5057f784e8bf3639129a34479`.
+`e3442ce35351f6e5057f784e8bf3639129a34479`. Cross-tenant remediation is now
+candidate head `585b3b9`; final-head CI is pending.
 
 The re-review found:
 
