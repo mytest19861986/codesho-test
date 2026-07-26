@@ -1,8 +1,26 @@
 # Codesho Project State
 
-Updated: 2026-07-26 (Task63D platform-operator/admin closeout)
+Updated: 2026-07-26 (Task67B adult signup documentation closeout)
 
 ## Current Status
+
+Task67A implementation is at `a7caa268e0ce32b4b8e074d539add0ea4d07143d` on
+`codex/task67a-adult-signup-internal`. Task67B is a documentation-only
+closeout on that exact SHA. Employer authority remains limited to development
+and internal synthetic-data testing.
+
+PR #6 is OPEN / READY / UNMERGED. Its required gates are confirmed:
+backend PostgreSQL SUCCESS, frontend SUCCESS, and smoke_restore SUCCESS.
+Security, Privacy, and Database review verdicts are each
+APPROVED_WITH_NON_BLOCKING_NOTES. This does not authorize Production,
+real-user availability, merge, deployment, or protected-repository promotion.
+
+The foundation records only an explicit adult self-attestation for an opaque
+synthetic UUID. It is disabled by default, rejected by production settings,
+rate-limited through HMAC-anonymous Redis keys, tenant-scoped, immutable, and
+bound atomically to allow-listed security audit evidence. It creates no user,
+credential, membership, session, frontend signup route, Guardian/Recovery
+relationship, or real-user capability.
 
 `codesho-test/main` is at merged commit
 `49acc1818b6afb1d78e5e8155d0dd9b90fbbf784`. PR #3 is merged and closed; its
@@ -90,19 +108,32 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
   process-argument exposure. Local checks remain green. Final checkpoint
   `a7d4fbf` passed CI `29436322030` and Compose smoke/restore `29436321886`.
 
+## Task67B review disposition and future gates
+
+- The Database `get_or_create` P1 was rejected: Django catches the
+  uniqueness-race `IntegrityError` and retrieves the winning row using the
+  same immediate unique-constraint fields.
+- Privacy provenance separation remains a mandatory future gate before real
+  users, public availability, or Production enablement.
+- All P2 review findings are recorded as non-blocking technical debt; they do
+  not alter the confirmed Task67A gate results.
+
 ## Blockers
 
+- Real users remain blocked by `LEGAL_PENDING`.
 - No active blocker remains for the Platform Operator/Admin closeout.
 - Historical local-environment limitations in earlier checkpoints are retained
   in their original records and do not represent an unresolved Task63D gate.
 
 ## Next Steps
 
-1. Obtain a separate authorized Task and independent BASE_SHA before any new
-   implementation.
-2. Recovery, Guardian, Notification, Signup, OAuth and Onboarding require
+1. Keep PR #6 OPEN / READY / UNMERGED; no merge, deployment, or readiness
+   expansion is authorized by Task67B.
+2. Resolve the mandatory privacy provenance-separation gate before any future
+   real-user, public-availability, or Production decision.
+3. Recovery, Guardian, Notification, user creation, OAuth and Onboarding require
    separate authorized Tasks.
-3. Do not activate Production or real Alpha, deploy, provision policy, or
+4. Do not activate Production or real Alpha, deploy, provision policy, or
    promote to protected `codesho` without explicit employer approval.
 
 ## Open Decisions / Risks

@@ -33,6 +33,10 @@ class SecurityEventType(StrEnum):
     ADMIN_USER_ACTION_DENIED = "admin_user_action_denied"
     ADMIN_TENANT_ACCESS_DENIED = "admin_tenant_access_denied"
     ADMIN_POLICY_EVALUATED = "admin_policy_evaluated"
+    ADULT_AGE_ATTESTATION_ACCEPTED = "adult_age_attestation_accepted"
+    ADULT_SIGNUP_REJECTED_AGE_ATTESTATION_MISSING = (
+        "adult_signup_rejected_age_attestation_missing"
+    )
 
 
 class SecurityEventOutcome(StrEnum):
@@ -71,6 +75,8 @@ class ReasonCode(StrEnum):
     ADMIN_USER_ACTION_DENIED = "admin_user_action_denied"
     ADMIN_TENANT_ACCESS_DENIED = "admin_tenant_access_denied"
     ADMIN_POLICY_EVALUATED = "admin_policy_evaluated"
+    ADULT_ATTESTED = "adult_attested"
+    AGE_ATTESTATION_REQUIRED = "age_attestation_required"
 
 
 @dataclass(frozen=True, slots=True)
@@ -281,6 +287,44 @@ def admin_policy_evaluated(
         reason_code=ReasonCode.ADMIN_POLICY_EVALUATED,
         correlation_id=correlation_id,
         actor_user_id=actor_user_id,
+        idempotency_key=idempotency_key,
+    )
+
+
+def adult_age_attestation_accepted(
+    event_id: UUID,
+    correlation_id: UUID,
+    tenant_id: UUID,
+    subject_id: UUID,
+    idempotency_key: str,
+) -> SecurityAuditEvent:
+    return SecurityAuditEvent(
+        event_id=event_id,
+        event_type=SecurityEventType.ADULT_AGE_ATTESTATION_ACCEPTED,
+        outcome=SecurityEventOutcome.SUCCESS,
+        reason_code=ReasonCode.ADULT_ATTESTED,
+        correlation_id=correlation_id,
+        subject_user_id=subject_id,
+        tenant_id=tenant_id,
+        idempotency_key=idempotency_key,
+    )
+
+
+def adult_signup_rejected_age_attestation_missing(
+    event_id: UUID,
+    correlation_id: UUID,
+    tenant_id: UUID,
+    subject_id: UUID,
+    idempotency_key: str,
+) -> SecurityAuditEvent:
+    return SecurityAuditEvent(
+        event_id=event_id,
+        event_type=SecurityEventType.ADULT_SIGNUP_REJECTED_AGE_ATTESTATION_MISSING,
+        outcome=SecurityEventOutcome.BLOCKED,
+        reason_code=ReasonCode.AGE_ATTESTATION_REQUIRED,
+        correlation_id=correlation_id,
+        subject_user_id=subject_id,
+        tenant_id=tenant_id,
         idempotency_key=idempotency_key,
     )
 

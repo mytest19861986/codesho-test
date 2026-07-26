@@ -32,6 +32,9 @@ validate_abuse_settings(  # noqa: F405
     PASSCODE_PROGRESSIVE_DELAYS_MS,
 )
 
+if ADULT_SIGNUP_MODE != "disabled":  # noqa: F405
+    raise ImproperlyConfigured("adult signup must remain disabled in production")
+
 if (
     COOKIE_NAME != "__Host-codesho-passcode-change"
     or not COOKIE_SECURE

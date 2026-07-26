@@ -5,6 +5,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 # Explicit static import for platform admin site registration in Composition Root
 from config import auth_views
 from config import platform_admin as _platform_admin  # noqa: F401
+from config.adult_signup import adult_age_attestation
 from modules.platform_event.views import health_live, health_ready
 
 urlpatterns = [
@@ -12,6 +13,11 @@ urlpatterns = [
     path("health/live/", health_live, name="health-live"),
     path("health/ready/", health_ready, name="health-ready"),
     path("api/v1/auth/csrf/", auth_views.csrf, name="auth-csrf"),
+    path(
+        "api/v1/auth/signup/adult-attestation/",
+        adult_age_attestation,
+        name="adult-age-attestation",
+    ),
     path("api/v1/auth/passcode/login/", auth_views.passcode_login, name="passcode-login"),
     path(
         "api/v1/auth/passcode/change/complete/",
