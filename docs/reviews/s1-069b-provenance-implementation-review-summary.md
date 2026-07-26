@@ -67,5 +67,6 @@ smoke_restore: SUCCESS (run 30216804605)
 The PR must remain Draft until the replacement head passes PostgreSQL/RLS,
 frontend, smoke_restore, exact-file, and independent re-review gates.
 
-Remediation head: `b321aae` (pushed to PR #9). Local focused and full SQLite
-tests remain green; the replacement PostgreSQL CI result is pending.
+Remediation head: `889d1e9` (pushed to PR #9). Local focused and full SQLite
+tests remain green. Replacement CI is green: CI run `30217280624` and Compose
+smoke_restore run `30217280594`. Independent re-review remains required.

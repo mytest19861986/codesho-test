@@ -6,7 +6,7 @@ TASK_ID: SPRINT1-ADULT-SIGNUP-PROVENANCE-SYNTHETIC-IMPLEMENT-69B
 BASE_SHA: 27a8626d29bfa7e21c5e770455db6b20a4521ccc
 BRANCH: agent/task69b-provenance-synthetic
 STATUS: IMPLEMENTATION_IN_PROGRESS / INTERNAL_SYNTHETIC_ONLY
-CURRENT_HEAD: b321aae (remediation head)
+CURRENT_HEAD: 889d1e9 (CI-green remediation head)
 PR_9: OPEN / DRAFT / CHANGES_REQUIRED
 PR_5: PRESERVED_AS_DRAFT / UNCHANGED
 REAL_USERS: NOT_AUTHORIZED
@@ -57,10 +57,11 @@ smoke_restore run `30216804605` succeeded. This is recorded as
 `69B-DB-01 / P1 / REMEDIATION_REQUIRED`. The tests are being corrected within
 the exact nine-file allow-list; PR #9 remains Draft and Ready/Merge are blocked.
 
-Remediation was committed as `b321aae` and pushed to the same branch. Local
-focused tests remain `28 passed / 4 PostgreSQL-only skipped`; full backend
-SQLite tests remain `190 passed / 34 skipped`. Replacement PostgreSQL CI and
-independent re-review are required.
+The fixture remediation was committed as `889d1e9` and pushed to the same
+branch. Local focused tests remain `28 passed / 4 PostgreSQL-only skipped`;
+full backend SQLite tests remain `190 passed / 34 skipped`. Replacement CI is
+green: CI run `30217280624` and Compose smoke_restore run `30217280594`.
+Independent re-review on this new head is required before Ready or merge.
 
 ```text
 MESSAGE_ID: CODEX_TASK69A_PROVENANCE_ARCHITECTURE_CHECKPOINT_20260726_01
