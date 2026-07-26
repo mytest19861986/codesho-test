@@ -16,11 +16,6 @@ migration, API, configuration, product capability, or user behavior.
 ## Exact allow-list
 
 ```text
-backend/config/adult_signup.py
-backend/modules/identity/models.py
-backend/modules/identity/migrations/0009_adult_attestation_provenance.py
-backend/tests/test_adult_signup.py
-docs/data-dictionary.md
 docs/coordination/CODEX_TO_COMMANDER.md
 docs/coordination/CURRENT_TASK.md
 docs/coordination/PROJECT_STATE.md
@@ -78,9 +73,10 @@ PRODUCTION INTERNAL MODE: REJECTED
 
 Required reviews are sequential: self-review, security, privacy, database/RLS,
 and provider-neutral review. All findings require disposition; raw prompts and
-responses stay outside the repository. Final CI passed backend, frontend, and
-smoke_restore with exactly nine changed allow-listed files. Only the guarded
-Draft-to-Ready workflow transition remains; merge remains separately gated.
+responses stay outside the repository. Task70A changed exactly four
+allow-listed documentation files; CI passed backend, frontend, and
+smoke_restore on the merged Task69B head. The project is waiting for the next
+separate authorization; no Ready or merge transition remains for Task70A.
 
 ## Authority and exclusions
 

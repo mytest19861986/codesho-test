@@ -7,7 +7,7 @@ Updated: 2026-07-26 (Task70A Task69B post-merge closeout)
 Task69B is `COMPLETE / MERGED / VERIFIED`. PR #9 is `CLOSED / MERGED` at
 `5be173afb03197cbc2e293e2ff28e1f9156a47ad`, with parents
 `27a8626d29bfa7e21c5e770455db6b20a4521ccc` and
-`0aea2e0a1dbba925343a854de35683b84d4`. Its source branch remains preserved.
+`0aea2e0a1dbba925343a854de35683b84d83a748`. Its source branch remains preserved.
 CI evidence is green (backend PostgreSQL 224 passed, frontend success,
 smoke_restore success); exact scope and review gates passed. PR #5 remains
 `OPEN / DRAFT / UNCHANGED` at head `ee708a59fda89f08b824b079ebece2eed3b5515b`.
@@ -145,8 +145,8 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
 
 ## Next Steps
 
-1. Complete Task69B PostgreSQL/RLS/security/privacy review and CI before any
-   Ready or merge transition.
+1. Wait for the next separate authorized Task; Task69B review, CI, Ready, and
+   merge work are complete.
 2. Resolve legal retention/deletion/linkage decisions before any future
    real-user, public-availability, or Production decision.
 3. Recovery, Guardian, Notification, user creation, OAuth and Onboarding require
