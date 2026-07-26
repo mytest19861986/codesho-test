@@ -4,16 +4,15 @@ Updated: 2026-07-26 (Task69B synthetic provenance implementation)
 
 ## Current Status
 
-Task69B is currently `REMEDIATION_REQUIRED`. PR #9 remains Draft. The reviewed
-head `b8f2d103e5655a547fb00554c64df85f3de64caa` had backend PostgreSQL CI fail
-(run `30216804608`); frontend succeeded on that run and smoke_restore succeeded
-(run `30216804605`). Ready/Merge are blocked pending the authorized RLS-test
-remediation, replacement CI, and independent re-review. Any earlier green
-CI/staging wording in this file is historical and does not describe Task69B.
-The implementation head `889d1e998a1433c31646179856922fa2d0b6c449` passed CI
-on its merge-ref. Cross-tenant destination-context/message remediation is now
-at candidate head `585b3b9`; final-head CI and independent re-review are
-required before Ready/Merge.
+Task69B final review is `PASS` for security/privacy/database/RLS, with
+69B-DB-01 and 69B-CI-02 disposed. PR #9 remains Draft pending the final
+workflow-state transition. Current head is `c8c6212` (documentation finalization
+candidate); implementation head is
+`889d1e998a1433c31646179856922fa2d0b6c449`. Final-head CI succeeded:
+`30217706854` (backend/frontend, PostgreSQL 224 passed) and `30217706856`
+(smoke_restore) on the prior implementation/documentation head. 69B-DOC-02 is
+disposed by this checkpoint; final CI for this documentation candidate is
+required. Any earlier failure or pending statements below are historical.
 
 Task67A/67B and the Task68A documentation closeout are merged. PR #7 is
 CLOSED / MERGED at `fc2aa2f4d7261dc7bb597886dbe782163313eceb`. Its parents
