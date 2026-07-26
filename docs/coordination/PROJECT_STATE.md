@@ -1,13 +1,17 @@
 # Codesho Project State
 
-Updated: 2026-07-22 (Task54 backlog/evidence reconciliation complete)
+Updated: 2026-07-26 (Task63D platform-operator/admin closeout)
 
 ## Current Status
 
-Sprint Zero is technically closed at `013bccc834b31c91a1424c14a304eb6acc01ff0a`
-on `codesho-test/main`. Its two required GitHub Actions workflows completed
-successfully. The employer approved all four Sprint 1 gate decisions on
-2026-07-15, authorizing S1-001 PostgreSQL migrator/runtime separation.
+`codesho-test/main` is at merged commit
+`49acc1818b6afb1d78e5e8155d0dd9b90fbbf784`. PR #3 is merged and closed; its
+parents are `98c8132312d67094fbc316dea68feb454c4ffe68` and
+`75c3dcd7382d354fec10315daad9d30ef466c982`.
+
+Task62V verified the merged Platform Operator/Admin implementation
+post-merge. The exact verification evidence is recorded in
+`CODEX_TO_COMMANDER.md` under `TASK62V_COMPLETE_20260726_07`.
 
 - CI `29427888761`: backend and frontend checks passed.
 - Compose smoke and restore `29427888874`: isolated full-stack startup,
@@ -15,13 +19,14 @@ successfully. The employer approved all four Sprint 1 gate decisions on
 
 Task54 backlog/evidence reconciliation is complete at
 `64d9afd9d5d7f53076f15424683465298e85cbda`. CI `29920923743` and Compose
-smoke/restore `29920923814` both succeeded. The reconciliation maps existing
-Sprint 1 evidence, preserves Production/Alpha/protected-repository gates, and
-proposes exactly one future candidate: platform-operator/admin scope. The
-candidate is not authorized for implementation.
+smoke/restore `29920923814` both succeeded. The reconciliation mapped existing
+Sprint 1 evidence and preserved Production/Alpha/protected-repository gates;
+its platform-operator/admin candidate was later separately authorized,
+implemented, merged as PR #3, and verified by Task62V.
 
-No active implementation task exists after Task54; a separate authorized Task
-with an independent BASE_SHA is required before further feature work. Claude
+Task63D is a documentation-only closeout. No active implementation task exists
+after this checkpoint; a separate authorized Task with an independent BASE_SHA
+is required before further feature work. Claude
 verification debt remains closed by the published Task51 checkpoint. The
 historical marker `CLAUDE_VERIFICATION_DEBT_CLEARED_PENDING_DOC_CHECKPOINT`
 remains preserved in the security documents; its documentation checkpoint was
@@ -67,7 +72,7 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
   current closure evidence.
 - The current closure evidence is the successful pair for `013bccc` above.
 
-## In Progress
+## Historical Sprint 1 Checkpoints (closed)
 
 - S1-004 Immutable Credential Security Audit Foundation is complete at
   `924f76f`. The audit ledger is immutable, runtime has only EXECUTE access to
@@ -87,19 +92,18 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
 
 ## Blockers
 
-- Local Docker daemon remains unavailable:
-  `failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine`.
-  The required S1-001 Compose gate passed in isolated GitHub Actions.
-- Local Docker daemon remains unavailable for an on-workstation Compose run;
-  the replacement CI/Compose evidence will be collected after this commit.
+- No active blocker remains for the Platform Operator/Admin closeout.
+- Historical local-environment limitations in earlier checkpoints are retained
+  in their original records and do not represent an unresolved Task63D gate.
 
 ## Next Steps
 
-1. Obtain a separate authorized Task and independent BASE_SHA before any
-   platform-operator/admin implementation.
-2. Do not begin Recovery, Guardian, Notification, Signup, Onboarding, OAuth,
-   Production/Alpha activation, or unrelated work without explicit authority.
-3. Do not promote to protected `codesho` without employer approval.
+1. Obtain a separate authorized Task and independent BASE_SHA before any new
+   implementation.
+2. Recovery, Guardian, Notification, Signup, OAuth and Onboarding require
+   separate authorized Tasks.
+3. Do not activate Production or real Alpha, deploy, provision policy, or
+   promote to protected `codesho` without explicit employer approval.
 
 ## Open Decisions / Risks
 
