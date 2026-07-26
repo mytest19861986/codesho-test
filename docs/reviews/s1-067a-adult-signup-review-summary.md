@@ -50,9 +50,9 @@ then passed with an explicit `/tmp` cache. No tracked frontend file changed.
 
 ## Task67B confirmed CI and review disposition
 
-PR #6 is OPEN / READY / UNMERGED. Its backend PostgreSQL, frontend, and
-smoke_restore required jobs are SUCCESS. The Security, Privacy, and Database
-reviews are APPROVED_WITH_NON_BLOCKING_NOTES.
+Before merge, PR #6 was OPEN / READY / UNMERGED and its backend PostgreSQL,
+frontend, and smoke_restore required jobs were SUCCESS. The Security, Privacy,
+and Database reviews were APPROVED_WITH_NON_BLOCKING_NOTES.
 
 The Database `get_or_create` P1 is rejected: Django catches the
 uniqueness-race `IntegrityError` and retrieves the winning row using the same
@@ -61,10 +61,30 @@ implemented contract.
 
 Privacy provenance separation is a mandatory future gate before real users,
 public availability, or Production enablement. P2 findings are non-blocking
-technical debt. None of these statements authorizes merge, deployment,
-Production, or real-user availability.
+technical debt.
+
+## Verified merge disposition
+
+PR #6 was separately authorized and merged at `2026-07-26T12:48:10Z` using a
+merge commit. Its final state is CLOSED / MERGED.
+
+```text
+AUTHORIZED_HEAD: 9247bec6e22e8415344d78ee90018ea8eaaeac90
+CODESHO_TEST_MAIN: e11557f378231469d22348f4959caa554dbbd406
+PARENT_1: 5ef6323a42739613b05eab1fcbb07e009a87e859
+PARENT_2: 9247bec6e22e8415344d78ee90018ea8eaaeac90
+backend: SUCCESS
+frontend: SUCCESS
+smoke_restore: SUCCESS
+```
+
+The merge did not authorize or perform deployment, release, Production
+enablement, real-user activation, or promotion to the protected `codesho`
+repository.
 
 ## Remaining gates
 
-- Real-user Legal approval, Ready for Review, Merge, Deployment, and protected
-  repository promotion remain unauthorized.
+- Real-user Legal approval, Deployment, Release, Production enablement, and
+  protected-repository promotion remain unauthorized.
+- The Task68A documentation-only closeout requires its own separate merge
+  authorization.
