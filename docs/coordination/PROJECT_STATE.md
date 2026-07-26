@@ -1,17 +1,22 @@
 # Codesho Project State
 
-Updated: 2026-07-26 (Task69B synthetic provenance implementation)
+Updated: 2026-07-26 (Task70A Task69B post-merge closeout)
 
 ## Current Status
 
-Task69B final review is `PASS` for security/privacy/database/RLS, with
-69B-DB-01 and 69B-CI-02 disposed. PR #9 remains Draft pending the final
-workflow-state transition. CI evidence head is
-`57e235cd088174e5a75132ea89f82a105191adfc`; implementation head is
-`889d1e998a1433c31646179856922fa2d0b6c449`. Final-head CI succeeded:
-`30218263108` (backend/frontend, PostgreSQL 224 passed) and `30218263084`
-(smoke_restore). 69B-DOC-02 is disposed by this documentation checkpoint. Any earlier
-failure or pending statements below are historical.
+Task69B is `COMPLETE / MERGED / VERIFIED`. PR #9 is `CLOSED / MERGED` at
+`5be173afb03197cbc2e293e2ff28e1f9156a47ad`, with parents
+`27a8626d29bfa7e21c5e770455db6b20a4521ccc` and
+`0aea2e0a1dbba925343a854de35683b84d83a748`. Its source branch remains preserved.
+CI evidence is green (backend PostgreSQL 224 passed, frontend success,
+smoke_restore success); exact scope and review gates passed. PR #5 remains
+`OPEN / DRAFT / UNCHANGED` at head `ee708a59fda89f08b824b079ebece2eed3b5515b`.
+The project is `WAITING_FOR_NEXT_SEPARATE_AUTHORIZATION`. No Production,
+deployment, release, real-user, public API, backfill, provider, or protected
+`codesho` promotion is authorized. Legal decisions remain `LEGAL_PENDING`.
+
+Any later Draft, Ready-pending, review-pending, CI-pending, or merge-pending
+Task69B wording in this file is historical only.
 
 Task67A/67B and the Task68A documentation closeout are merged. PR #7 is
 CLOSED / MERGED at `fc2aa2f4d7261dc7bb597886dbe782163313eceb`. Its parents
@@ -140,8 +145,8 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
 
 ## Next Steps
 
-1. Complete Task69B PostgreSQL/RLS/security/privacy review and CI before any
-   Ready or merge transition.
+1. Wait for the next separate authorized Task; Task69B review, CI, Ready, and
+   merge work are complete.
 2. Resolve legal retention/deletion/linkage decisions before any future
    real-user, public-availability, or Production decision.
 3. Recovery, Guardian, Notification, user creation, OAuth and Onboarding require

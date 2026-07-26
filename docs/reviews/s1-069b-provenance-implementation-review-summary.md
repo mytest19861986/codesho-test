@@ -1,14 +1,32 @@
 # Task69B Provenance Implementation Review Summary
 
-Status: `FINAL_REVIEW_PASS / DRAFT_PENDING_WORKFLOW_STATE`
+Status: `COMPLETE / MERGED / VERIFIED`
 
 Task: `SPRINT1-ADULT-SIGNUP-PROVENANCE-SYNTHETIC-IMPLEMENT-69B`
 Base: `27a8626d29bfa7e21c5e770455db6b20a4521ccc`
 
+## Post-merge closeout
+
+Task70A confirms that PR #9 is `CLOSED / MERGED` at
+`5be173afb03197cbc2e293e2ff28e1f9156a47ad`, with parents
+`27a8626d29bfa7e21c5e770455db6b20a4521ccc` and
+`0aea2e0a1dbba925343a854de35683b84d83a748`. The source branch
+`agent/task69b-provenance-synthetic` is preserved. Final CI was successful:
+backend PostgreSQL 224 passed, frontend passed, and smoke_restore passed.
+PR #5 remains `OPEN / DRAFT / UNCHANGED` at head
+`ee708a59fda89f08b824b079ebece2eed3b5515b`. The project is waiting for the
+next separate authorization. No Production, deployment, release, real-user,
+public API, backfill, provider, or protected-repository promotion is implied.
+
+The Draft/Ready-pending, review-pending, and merge-pending wording in the
+historical implementation records below is superseded by this closeout.
+
 ## Scope
 
-This review covers only the nine Task69B allow-listed files and the internal
-synthetic `Option B` provenance contract. It does not authorize real users,
+This historical implementation review covers the nine Task69B allow-listed
+files and the internal synthetic `Option B` provenance contract. The current
+Task70A closeout scope is exactly the four documentation files listed above.
+It does not authorize real users,
 Production, deployment, release, public API, backfill, providers, or PR #5.
 
 ## Implemented contract inspected
@@ -90,6 +108,7 @@ Final review evidence:
 CI_EVIDENCE_HEAD: 57e235cd088174e5a75132ea89f82a105191adfc
 CI: 30218263108 / SUCCESS / backend PostgreSQL 224 passed + frontend SUCCESS
 smoke_restore: 30218263084 / SUCCESS
-CHANGED_FILES: EXACTLY 9 ALLOW-LISTED FILES
+TASK69B IMPLEMENTATION CHANGED_FILES: EXACTLY 9 ALLOW-LISTED FILES
+TASK70A CLOSEOUT CHANGED_FILES: EXACTLY 4 ALLOW-LISTED FILES
 PR #5: UNCHANGED
 ```
