@@ -631,7 +631,7 @@ def test_postgres_provenance_rejects_cross_tenant_linkage(adult_signup):
         )
 
     with connect(migrator_url) as migrator, migrator.cursor() as cursor:
-        cursor.execute("SELECT set_config('app.tenant_id', %s, true)", [str(adult_signup.id)])
+        cursor.execute("SELECT set_config('app.tenant_id', %s, true)", [str(beta.id)])
         try:
             cursor.execute(
                 """
@@ -644,7 +644,8 @@ def test_postgres_provenance_rejects_cross_tenant_linkage(adult_signup):
                 """,
                 (str(uuid4()), str(beta.id), str(attestation.id)),
             )
-        except RaiseException:
+        except RaiseException as exc:
+            assert "attestation and provenance tenant mismatch" in str(exc)
             migrator.rollback()
         else:
             pytest.fail("cross-tenant provenance linkage was accepted")

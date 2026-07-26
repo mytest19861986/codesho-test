@@ -10,9 +10,11 @@ head `b8f2d103e5655a547fb00554c64df85f3de64caa` had backend PostgreSQL CI fail
 (run `30216804605`). Ready/Merge are blocked pending the authorized RLS-test
 remediation, replacement CI, and independent re-review. Any earlier green
 CI/staging wording in this file is historical and does not describe Task69B.
-The authorized remediation is pushed as head `889d1e9`. Replacement CI is
-green: CI run `30217280624` and Compose smoke_restore run `30217280594`.
-Independent re-review is pending before Ready/Merge.
+The implementation head `889d1e998a1433c31646179856922fa2d0b6c449` passed CI,
+but that run used a merge-ref rather than the final documentation head
+`e3442ce35351f6e5057f784e8bf3639129a34479`. The cross-tenant test still needs
+destination-context/message remediation. Final-head CI and independent
+re-review are required before Ready/Merge.
 
 Task67A/67B and the Task68A documentation closeout are merged. PR #7 is
 CLOSED / MERGED at `fc2aa2f4d7261dc7bb597886dbe782163313eceb`. Its parents

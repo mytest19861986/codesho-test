@@ -67,6 +67,20 @@ smoke_restore: SUCCESS (run 30216804605)
 The PR must remain Draft until the replacement head passes PostgreSQL/RLS,
 frontend, smoke_restore, exact-file, and independent re-review gates.
 
-Remediation head: `889d1e9` (pushed to PR #9). Local focused and full SQLite
-tests remain green. Replacement CI is green: CI run `30217280624` and Compose
-smoke_restore run `30217280594`. Independent re-review remains required.
+Implementation head `889d1e998a1433c31646179856922fa2d0b6c449` passed CI
+(`30217280624`) and Compose smoke_restore (`30217280594`), but those checks
+used a merge-ref rather than final documentation head
+`e3442ce35351f6e5057f784e8bf3639129a34479`.
+
+The re-review found:
+
+- `69B-DB-01` (`P1`, still blocking): cross-tenant test used source-tenant
+  context, so it proved context mismatch rather than attestation/provenance
+  linkage mismatch. Disposition: set context and `NEW.tenant_id` to the beta
+  destination, retain the source attestation, and assert the explicit linkage
+  error; missing-context coverage remains separate.
+- `69B-CI-02` (`P1`): final-head CI missing. Disposition: trigger and verify
+  backend, frontend, and smoke_restore on the final post-remediation SHA.
+- `69B-DOC-02` (`P2`): implementation and final heads were conflated.
+  Disposition: coordination now distinguishes `IMPLEMENTATION_HEAD` and
+  `CURRENT_HEAD`; the final SHA will be updated after remediation.
