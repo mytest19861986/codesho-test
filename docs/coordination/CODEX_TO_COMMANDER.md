@@ -7,8 +7,8 @@ BASE_SHA: 27a8626d29bfa7e21c5e770455db6b20a4521ccc
 BRANCH: agent/task69b-provenance-synthetic
 STATUS: IMPLEMENTATION_IN_PROGRESS / INTERNAL_SYNTHETIC_ONLY
 IMPLEMENTATION_HEAD: 889d1e998a1433c31646179856922fa2d0b6c449
-CURRENT_HEAD: 585b3b9 (final remediation candidate)
-PR_9: OPEN / DRAFT / CHANGES_REQUIRED
+CURRENT_HEAD: b660d95c4e13072356d896922b3e326b878850d4
+PR_9: OPEN / DRAFT / FINAL_REVIEW_PASS / READY_PENDING_WORKFLOW_STATE
 PR_5: PRESERVED_AS_DRAFT / UNCHANGED
 REAL_USERS: NOT_AUTHORIZED
 PRODUCTION/DEPLOYMENT/RELEASE: NOT_AUTHORIZED
@@ -50,19 +50,24 @@ review prompts/responses remain outside the repository.
 
 ## Task69B independent review checkpoint
 
-Commander response `COMMANDER_TASK69B_INDEPENDENT_REVIEW_20260726_07` returned
-`CHANGES_REQUIRED` on the current head. Backend PostgreSQL CI run
+Historical Commander response `COMMANDER_TASK69B_INDEPENDENT_REVIEW_20260726_07`
+returned `CHANGES_REQUIRED` on an earlier head. Backend PostgreSQL CI run
 `30216804608` failed four FORCE-RLS tests because provenance reads and migrator
 mutation assertions lacked tenant context; frontend succeeded and Compose
 smoke_restore run `30216804605` succeeded. This is recorded as
-`69B-DB-01 / P1 / REMEDIATION_REQUIRED` was addressed by setting context to
-the beta destination and asserting the explicit linkage-mismatch message.
-Final-head CI and re-review remain required; PR #9 remains Draft.
+`69B-DB-01`: DISPOSED / PASS. The cross-tenant assertion uses beta context,
+beta provenance tenant, alpha source attestation, and the explicit linkage
+mismatch message. `69B-CI-02`: DISPOSED / PASS. `69B-DOC-02`: this checkpoint
+disposes the stale-head documentation mismatch. PR #9 remains Draft pending
+final CI/re-review on this documentation head.
 
-The fixture remediation was committed as `889d1e9`, cross-tenant remediation as
-`585b3b9`; CI must run on the resulting final SHA. Local
-focused tests remain `28 passed / 4 PostgreSQL-only skipped`; full backend
-SQLite tests remain `190 passed / 34 skipped`.
+Implementation head is `889d1e998a1433c31646179856922fa2d0b6c449`; cross-tenant
+remediation is `585b3b9`; documentation head is `b660d95`. CI on this head was
+successful: CI `30217706854` / workflow #190 and smoke_restore `30217706856` /
+workflow #188. The final review verdict is PASS, subject only to the allowed
+Draft-to-Ready workflow state transition. Local focused tests remain `28
+passed / 4 PostgreSQL-only skipped`; full backend SQLite tests remain `190
+passed / 34 skipped`.
 
 ```text
 MESSAGE_ID: CODEX_TASK69A_PROVENANCE_ARCHITECTURE_CHECKPOINT_20260726_01

@@ -1,6 +1,6 @@
 # Task69B Provenance Implementation Review Summary
 
-Status: `REMEDIATION_REQUIRED / DRAFT_MUST_REMAIN`
+Status: `FINAL_REVIEW_PASS / DRAFT_PENDING_WORKFLOW_STATE`
 
 Task: `SPRINT1-ADULT-SIGNUP-PROVENANCE-SYNTHETIC-IMPLEMENT-69B`
 Base: `27a8626d29bfa7e21c5e770455db6b20a4521ccc`
@@ -64,24 +64,31 @@ frontend: SUCCESS (run 30216804608)
 smoke_restore: SUCCESS (run 30216804605)
 ```
 
-The PR must remain Draft until the replacement head passes PostgreSQL/RLS,
-frontend, smoke_restore, exact-file, and independent re-review gates.
+The earlier reviewed head had to remain Draft; the final review on the final
+head is PASS. PR #9 may transition to Ready only after the final scope and
+workflow-state checks below; merge remains separately gated.
 
 Implementation head `889d1e998a1433c31646179856922fa2d0b6c449` passed CI
 (`30217280624`) and Compose smoke_restore (`30217280594`), but those checks
 used a merge-ref rather than final documentation head
-`e3442ce35351f6e5057f784e8bf3639129a34479`. Cross-tenant remediation is now
-candidate head `585b3b9`; final-head CI is pending.
+`e3442ce35351f6e5057f784e8bf3639129a34479`. Cross-tenant remediation is
+`585b3b9`; final documentation head is
+`b660d95c4e13072356d896922b3e326b878850d4`, and final-head CI succeeded.
 
-The re-review found:
+The final re-review `COMMANDER_TASK69B_FINAL_REREVIEW_20260726_09` found:
 
-- `69B-DB-01` (`P1`, still blocking): cross-tenant test used source-tenant
-  context, so it proved context mismatch rather than attestation/provenance
-  linkage mismatch. Disposition: set context and `NEW.tenant_id` to the beta
-  destination, retain the source attestation, and assert the explicit linkage
-  error; missing-context coverage remains separate.
-- `69B-CI-02` (`P1`): final-head CI missing. Disposition: trigger and verify
-  backend, frontend, and smoke_restore on the final post-remediation SHA.
-- `69B-DOC-02` (`P2`): implementation and final heads were conflated.
-  Disposition: coordination now distinguishes `IMPLEMENTATION_HEAD` and
-  `CURRENT_HEAD`; the final SHA will be updated after remediation.
+- `69B-DB-01`: DISPOSED / PASS. Cross-tenant linkage, missing context,
+  FORCE-RLS reads, migrator mutation, atomicity, replay, and concurrency pass.
+- `69B-CI-02`: DISPOSED / PASS. Final-head CI and smoke_restore succeeded.
+- `69B-DOC-02`: DISPOSED / PASS by this documentation checkpoint; the
+  implementation and current heads, statuses, and CI evidence are explicit.
+
+Final review evidence:
+
+```text
+FINAL_HEAD: b660d95c4e13072356d896922b3e326b878850d4
+CI: 30217706854 / SUCCESS / backend PostgreSQL 224 passed + frontend SUCCESS
+smoke_restore: 30217706856 / SUCCESS
+CHANGED_FILES: EXACTLY 9 ALLOW-LISTED FILES
+PR #5: UNCHANGED
+```
