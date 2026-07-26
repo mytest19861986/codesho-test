@@ -1,4 +1,49 @@
-# Codex to Commander — Task69A
+# Codex to Commander — Task69B
+
+```text
+MESSAGE_ID: CODEX_TASK69B_PROVENANCE_SYNTHETIC_CHECKPOINT_20260726_07
+TASK_ID: SPRINT1-ADULT-SIGNUP-PROVENANCE-SYNTHETIC-IMPLEMENT-69B
+BASE_SHA: 27a8626d29bfa7e21c5e770455db6b20a4521ccc
+BRANCH: agent/task69b-provenance-synthetic
+STATUS: IMPLEMENTATION_IN_PROGRESS / INTERNAL_SYNTHETIC_ONLY
+PR_5: PRESERVED_AS_DRAFT / UNCHANGED
+REAL_USERS: NOT_AUTHORIZED
+PRODUCTION/DEPLOYMENT/RELEASE: NOT_AUTHORIZED
+PROTECTED_CODESHO_PROMOTION: NOT_AUTHORIZED
+```
+
+## Task69B implementation checkpoint
+
+Implemented the minimum Option B provenance boundary in the exact allow-list:
+
+- independent append-only `AdultAttestationProvenance` model and migration;
+- server-generated opaque UUID, tenant UUID, one-to-one attestation reference,
+  controlled constants, and UTC timestamp only;
+- `tenant_atomic` context for the attestation/provenance/audit transaction;
+- PostgreSQL RLS/FORCE RLS, same-tenant trigger validation, immutable trigger,
+  and runtime INSERT-only grants;
+- replay, rollback, prohibited-field, cross-tenant, runtime privilege, API
+  non-disclosure, and PostgreSQL contract tests;
+- data dictionary entry without raw or sensitive review content.
+
+No public API, OpenAPI, frontend, account/user/session, backfill, provider,
+Production, deployment, release, or real-user behavior was added. PR #5 was
+not changed.
+
+## Local checkpoint evidence
+
+```text
+makemigrations --check --dry-run: PASS
+focused tests (SQLite): 28 passed / 4 PostgreSQL-only skipped
+ruff (focused files): PASS
+mypy (focused source/migration): PASS
+django check: PASS
+docker compose local run: BLOCKED by missing required DATABASE_MIGRATOR_URL environment input
+```
+
+PostgreSQL/RLS/grant/trigger gates remain required in CI or an explicitly
+configured real PostgreSQL role environment. Reviews are sequential and raw
+review prompts/responses remain outside the repository.
 
 ```text
 MESSAGE_ID: CODEX_TASK69A_PROVENANCE_ARCHITECTURE_CHECKPOINT_20260726_01

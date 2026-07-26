@@ -1,57 +1,77 @@
-# Current Task: SPRINT1-ADULT-SIGNUP-PROVENANCE-ARCHITECTURE-69A
+# Current Task: SPRINT1-ADULT-SIGNUP-PROVENANCE-SYNTHETIC-IMPLEMENT-69B
 
 - Owner: Codex
-- Status: architecture/privacy-gate definition in progress.
-- BASE_SHA: `fc2aa2f4d7261dc7bb597886dbe782163313eceb`.
+- Status: implementation in progress; internal synthetic only.
+- BASE_SHA: `27a8626d29bfa7e21c5e770455db6b20a4521ccc`.
 - Target repository: `mytest19861986/codesho-test`.
-- Branch: `agent/task69a-provenance-architecture`.
+- Branch: `agent/task69b-provenance-synthetic`.
+- Worktree: new clean isolated worktree; old dirty checkout preserved.
 - Employer standing authorization date: `2026-07-26`.
 
 ## Goal
 
-Define a precise, provider-neutral privacy/provenance separation contract for
-the internal synthetic adult-attestation foundation. This task changes
-documentation only and creates no Production claim.
+Implement the minimum Option B provenance record for `internal_test` and
+synthetic data only. The attestation request/response and public API remain
+unchanged; no real users or Production capability are introduced.
 
 ## Exact allow-list
 
 ```text
-docs/decisions/2026-07-26-adult-signup-provenance-separation.md
+backend/config/adult_signup.py
+backend/modules/identity/models.py
+backend/modules/identity/migrations/0009_adult_attestation_provenance.py
+backend/tests/test_adult_signup.py
+docs/data-dictionary.md
 docs/coordination/CODEX_TO_COMMANDER.md
 docs/coordination/CURRENT_TASK.md
 docs/coordination/PROJECT_STATE.md
+docs/reviews/s1-069b-provenance-implementation-review-summary.md
 ```
 
-## Acceptance criteria
+## Contract
 
-1. Base and PR #7 merge evidence match the Commander disposition.
-2. The new decision document contains all required sections and contract
-   invariants, options A/B/C, and `LEGAL_PENDING` treatment.
-3. Coordination records state PR #7 `CLOSED / MERGED`, main
-   `fc2aa2f4d7261dc7bb597886dbe782163313eceb`, and Task69A architecture-only
-   status.
-4. No stale PR #7 unmerged claim remains except explicit historical context.
-5. No model, migration, endpoint, OpenAPI, configuration, test, or source
-   code changes are made.
-6. The final diff contains exactly four allow-listed files and passes
-   `git diff --check`.
+The independent append-only provenance table contains only a server UUIDv4,
+opaque tenant UUID, unique opaque attestation reference, constants
+`internal_synthetic_harness` and `self_attestation`, and a server UTC
+timestamp. It contains no subject, PII, raw signal, operator identity,
+document, digest, cookie, payload, free text, or metadata map.
 
-## Review and release gates
+It is created only for a newly created attestation in the same
+`tenant_atomic` transaction. Replay creates no new provenance; failures of
+provenance or audit roll back the full acceptance. PostgreSQL RLS, same-tenant
+trigger validation, append-only trigger, and runtime INSERT-only grants are
+mandatory. No legacy backfill is allowed.
+
+## Acceptance criteria and gates
 
 ```text
-Task68E: COMPLETED / CLOSED; PR #7 CLOSED / MERGED
-Provider-neutral independent documentation review: REQUIRED
-Privacy architecture verdict: PASS REQUIRED
-Internal consistency: PASS REQUIRED
-Task69A CI (backend/frontend/smoke_restore): REQUIRED
-Real-user Legal approval: REQUIRED / BLOCKING
-Deployment: NOT AUTHORIZED
-Release: NOT AUTHORIZED
-Protected codesho promotion: NOT AUTHORIZED
+MIGRATION DRIFT: NONE
+EMPTY POSTGRESQL MIGRATION: REQUIRED
+MODEL/MIGRATION CONSISTENCY: REQUIRED
+ATTESTATION + PROVENANCE + AUDIT ATOMICITY: REQUIRED
+IDEMPOTENT REPLAY: REQUIRED
+CONCURRENT DUPLICATE SAFETY: REQUIRED
+CROSS-TENANT LINKAGE: REJECTED
+RLS FAIL-CLOSED: REQUIRED
+RUNTIME SELECT/UPDATE/DELETE/TRUNCATE: REJECTED
+DATABASE UPDATE/DELETE: REJECTED
+PROVENANCE IN API/AUDIT/LOG: NONE
+PROHIBITED OR FREE-TEXT FIELDS: NONE
+LEGACY BACKFILL: NONE
+PRODUCTION INTERNAL MODE: REJECTED
 ```
 
-## Stop conditions
+Required reviews are sequential: self-review, security, privacy, database/RLS,
+and provider-neutral review. All findings require disposition; raw prompts and
+responses stay outside the repository. Final CI must pass backend, frontend,
+and smoke_restore with exactly nine changed allow-listed files.
 
-Stop if completion requires a file outside the allow-list, product/source
-changes, real user data, PR #5 mutation, deployment, release, Production
-enablement, or protected-repository promotion.
+## Authority and exclusions
+
+Commit, push, Draft PR, in-scope remediation, Ready transition, and guarded
+merge are authorized after all gates pass. Direct push to `main`, force-push,
+rebase, source-branch deletion, PR #5 mutation/merge, backfill, public API,
+frontend, account/user/membership/session creation, external providers, real
+data, deployment, release, Alpha/Production, and protected `codesho`
+promotion are forbidden. Legal retention/deletion/hold policies remain
+`LEGAL_PENDING` and unchanged.

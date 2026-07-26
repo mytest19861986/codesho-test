@@ -12,12 +12,11 @@ from uuid import UUID, uuid4
 
 import redis
 from django.conf import settings
-from django.db import transaction
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 
-from modules.identity.models import AdultAgeAttestation
+from modules.identity.models import AdultAgeAttestation, AdultAttestationProvenance
 from modules.identity.request_signals import extract_client_ip
 from modules.platform_event.security_audit import (
     SecurityAuditError,
@@ -25,6 +24,7 @@ from modules.platform_event.security_audit import (
     adult_signup_rejected_age_attestation_missing,
     append_security_event,
 )
+from modules.platform_tenant.context import tenant_atomic
 from modules.platform_tenant.middleware import TenantRequest
 
 EXPECTED_FIELDS = {"adultAttestation", "policyVersion", "subjectId"}
@@ -187,12 +187,17 @@ def adult_age_attestation(request: HttpRequest) -> HttpResponse:
         return _error("adult_attestation_required", 403)
 
     try:
-        with transaction.atomic():
+        with tenant_atomic(tenant_id):
             attestation, created = AdultAgeAttestation.objects.get_or_create(
                 tenant_id=tenant_id,
                 subject_id=subject_id,
                 policy_version=policy_version,
             )
+            if created:
+                AdultAttestationProvenance.objects.create(
+                    tenant_id=tenant_id,
+                    attestation=attestation,
+                )
             append_security_event(
                 adult_age_attestation_accepted(
                     attestation.audit_event_id,

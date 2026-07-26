@@ -1,6 +1,6 @@
 # Codesho Project State
 
-Updated: 2026-07-26 (Task69A provenance architecture/privacy gate)
+Updated: 2026-07-26 (Task69B synthetic provenance implementation)
 
 ## Current Status
 
@@ -43,9 +43,10 @@ Sprint 1 evidence and preserved Production/Alpha/protected-repository gates;
 its platform-operator/admin candidate was later separately authorized,
 implemented, merged as PR #3, and verified by Task62V.
 
-Task69A is an architecture/privacy-gate definition based on
-`fc2aa2f4d7261dc7bb597886dbe782163313eceb`. It is documentation-only and
-does not authorize implementation. Claude verification debt remains closed by the
+Task69A architecture/privacy gate was accepted and merged as PR #8 at
+`27a8626d29bfa7e21c5e770455db6b20a4521ccc`. Task69B is the separately
+authorized internal synthetic implementation based on that contract. Claude
+verification debt remains closed by the
 published Task51 checkpoint. The
 historical marker `CLAUDE_VERIFICATION_DEBT_CLEARED_PENDING_DOC_CHECKPOINT`
 remains preserved in the security documents; its documentation checkpoint was
@@ -116,7 +117,8 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
   same immediate unique-constraint fields.
 - Privacy provenance separation is defined by
   `docs/decisions/2026-07-26-adult-signup-provenance-separation.md`; legal
-  retention, deletion, and linkage decisions remain `LEGAL_PENDING`.
+  retention, deletion, and linkage decisions remain `LEGAL_PENDING`. Task69B
+  adds no real-user or Production capability.
 - All P2 review findings are recorded as non-blocking technical debt; they do
   not alter the confirmed Task67A gate results.
 
@@ -129,8 +131,8 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
 
 ## Next Steps
 
-1. Complete Task69A documentation review and CI; hold implementation for a
-   separate authorized Task69B.
+1. Complete Task69B PostgreSQL/RLS/security/privacy review and CI before any
+   Ready or merge transition.
 2. Resolve legal retention/deletion/linkage decisions before any future
    real-user, public-availability, or Production decision.
 3. Recovery, Guardian, Notification, user creation, OAuth and Onboarding require

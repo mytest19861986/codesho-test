@@ -23,6 +23,28 @@ makes retries idempotent. Birth date, birth year, numeric age, national
 identifier, identity document, Guardian data, raw IP, raw payload, and free
 text are prohibited.
 
+## `identity_adultattestationprovenance`
+
+Internal synthetic-data collection receipt only. This is a separate restricted
+boundary and is not an identity, user, account, audit-metadata, or raw-evidence
+table. It is created only with a newly created attestation inside the same
+tenant transaction; prior attestations are never backfilled.
+
+| Field | Meaning | Security/immutability rule |
+|---|---|---|
+| `id` | Opaque provenance UUID | Server-generated and append-only. |
+| `tenant_id` | Opaque tenant UUID | RLS and a database trigger require the active tenant context and same-tenant attestation. |
+| `attestation_id` | Opaque unique reference to one attestation | One-to-one; no subject or identity fields are copied. |
+| `collection_context` | Constant `internal_synthetic_harness` | Controlled enum only; no free text. |
+| `receipt_kind` | Constant `self_attestation` | Controlled enum only; no provider or operator identity. |
+| `recorded_at` | Server UTC timestamp | Generated on insert and immutable. |
+
+The table contains no subject ID, name, phone, birth date, numeric age, IP,
+device signal, operator identity, document, digest, cookie, payload, or
+metadata map. `codesho_runtime` has only INSERT and no ordinary SELECT,
+UPDATE, DELETE, or TRUNCATE privilege. Provenance is not returned by the
+adult-attestation API and is never copied into security-audit events or logs.
+
 ## `identity_passcodecredential`
 
 | Field | Meaning | Security/immutability rule |
