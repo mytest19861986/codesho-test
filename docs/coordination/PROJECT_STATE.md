@@ -6,13 +6,12 @@ Updated: 2026-07-26 (Task69B synthetic provenance implementation)
 
 Task69B final review is `PASS` for security/privacy/database/RLS, with
 69B-DB-01 and 69B-CI-02 disposed. PR #9 remains Draft pending the final
-workflow-state transition. Current head is `c8c6212` (documentation finalization
+workflow-state transition. Current head is `b1bbd3ce14480379d55400f2d0cbc3ba0ee4ab86`
 candidate); implementation head is
 `889d1e998a1433c31646179856922fa2d0b6c449`. Final-head CI succeeded:
-`30217706854` (backend/frontend, PostgreSQL 224 passed) and `30217706856`
-(smoke_restore) on the prior implementation/documentation head. 69B-DOC-02 is
-disposed by this checkpoint; final CI for this documentation candidate is
-required. Any earlier failure or pending statements below are historical.
+`30218069613` (backend/frontend, PostgreSQL 224 passed) and `30218069610`
+(smoke_restore). 69B-DOC-02 is disposed by this checkpoint. Any earlier
+failure or pending statements below are historical.
 
 Task67A/67B and the Task68A documentation closeout are merged. PR #7 is
 CLOSED / MERGED at `fc2aa2f4d7261dc7bb597886dbe782163313eceb`. Its parents

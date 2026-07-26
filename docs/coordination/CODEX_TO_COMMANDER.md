@@ -63,9 +63,9 @@ final CI/re-review on this documentation head.
 
 Implementation head is `889d1e998a1433c31646179856922fa2d0b6c449`; cross-tenant
 remediation is `585b3b9`; final documentation head is
-`fcd48f030bde145b5b966ba6f9fc68562deb81d4`. Prior final-head CI was
-successful: CI `30217706854` / workflow #190 and smoke_restore `30217706856` /
-workflow #188. New CI for this exact final head is required. The final review verdict is PASS, subject only to the allowed
+`b1bbd3ce14480379d55400f2d0cbc3ba0ee4ab86`. Final-head CI was successful:
+CI `30218069613` / workflow #193 and smoke_restore `30218069610` / workflow
+#191. The final review verdict is PASS, subject only to the allowed
 Draft-to-Ready workflow state transition. Local focused tests remain `28
 passed / 4 PostgreSQL-only skipped`; full backend SQLite tests remain `190
 passed / 34 skipped`.
