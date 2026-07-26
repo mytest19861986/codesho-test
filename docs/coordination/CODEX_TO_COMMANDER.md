@@ -7,7 +7,7 @@ BASE_SHA: 27a8626d29bfa7e21c5e770455db6b20a4521ccc
 BRANCH: agent/task69b-provenance-synthetic
 STATUS: IMPLEMENTATION_IN_PROGRESS / INTERNAL_SYNTHETIC_ONLY
 IMPLEMENTATION_HEAD: 889d1e998a1433c31646179856922fa2d0b6c449
-CURRENT_HEAD: b660d95c4e13072356d896922b3e326b878850d4
+CURRENT_HEAD: fcd48f030bde145b5b966ba6f9fc68562deb81d4
 PR_9: OPEN / DRAFT / FINAL_REVIEW_PASS / READY_PENDING_WORKFLOW_STATE
 PR_5: PRESERVED_AS_DRAFT / UNCHANGED
 REAL_USERS: NOT_AUTHORIZED
@@ -62,9 +62,10 @@ disposes the stale-head documentation mismatch. PR #9 remains Draft pending
 final CI/re-review on this documentation head.
 
 Implementation head is `889d1e998a1433c31646179856922fa2d0b6c449`; cross-tenant
-remediation is `585b3b9`; documentation head is `b660d95`. CI on this head was
+remediation is `585b3b9`; final documentation head is
+`fcd48f030bde145b5b966ba6f9fc68562deb81d4`. Prior final-head CI was
 successful: CI `30217706854` / workflow #190 and smoke_restore `30217706856` /
-workflow #188. The final review verdict is PASS, subject only to the allowed
+workflow #188. New CI for this exact final head is required. The final review verdict is PASS, subject only to the allowed
 Draft-to-Ready workflow state transition. Local focused tests remain `28
 passed / 4 PostgreSQL-only skipped`; full backend SQLite tests remain `190
 passed / 34 skipped`.
