@@ -4,6 +4,21 @@ Status: `BLOCKED_PENDING_EMPLOYER_LEGAL_DECISION`
 Date: 2026-07-26
 Task: `SPRINT1-GUARDIAN-RECOVERY-DECISION-GATE-66D`
 
+## Commander status update
+
+Commander accepted Task66D on 2026-07-26. The gate is now
+`EMPLOYER_DECISIONS_RECEIVED / LEGAL_AND_AUTHORITY_DESIGNATIONS_PENDING`.
+The following authorities remain intentionally unassigned:
+
+- Security Owner: `PENDING_EMPLOYER_DESIGNATION`
+- Data Controller: `PENDING_EMPLOYER_LEGAL_DESIGNATION`
+- Legal Approver: `LEGAL_PENDING / فعلاً تعیین نشده`
+
+PR #5 remains draft and unmerged. This update records an authority gap only:
+Guardian/Recovery implementation remains `NOT_AUTHORIZED` until an independent
+Commander task names the authorities and provides a base SHA, exact allow-list,
+acceptance criteria, and explicit implementation authority.
+
 ## Problem
 
 Codesho has a `guardian` membership role but no approved definition of a
