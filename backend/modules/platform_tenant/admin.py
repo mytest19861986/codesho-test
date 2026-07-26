@@ -1,6 +1,1 @@
-from django.contrib import admin
-
-from .models import Tenant, TenantMembership
-
-admin.site.register(Tenant)
-admin.site.register(TenantMembership)
+# Platform operator admin policies are composed in backend/config/platform_admin.py

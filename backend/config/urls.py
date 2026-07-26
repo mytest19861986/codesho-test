@@ -2,7 +2,9 @@ from django.contrib import admin
 from django.urls import path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+# Explicit static import for platform admin site registration in Composition Root
 from config import auth_views
+from config import platform_admin as _platform_admin  # noqa: F401
 from modules.platform_event.views import health_live, health_ready
 
 urlpatterns = [

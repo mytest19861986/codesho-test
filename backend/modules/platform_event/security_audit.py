@@ -29,6 +29,10 @@ class SecurityEventType(StrEnum):
     PASSCODE_CHANGE_CHALLENGE_CONSUMED = "passcode_change_challenge_consumed"
     PASSCODE_CHANGE_CHALLENGE_EXPIRED = "passcode_change_challenge_expired"
     PASSCODE_CHANGE_REJECTED = "passcode_change_rejected"
+    ADMIN_USER_VIEWED = "admin_user_viewed"
+    ADMIN_USER_ACTION_DENIED = "admin_user_action_denied"
+    ADMIN_TENANT_ACCESS_DENIED = "admin_tenant_access_denied"
+    ADMIN_POLICY_EVALUATED = "admin_policy_evaluated"
 
 
 class SecurityEventOutcome(StrEnum):
@@ -63,6 +67,10 @@ class ReasonCode(StrEnum):
     CHALLENGE_INVALID = "challenge_invalid"
     PASSCODE_SAME_AS_CURRENT = "passcode_same_as_current"
     CHALLENGE_REVOKED_PEPPER_ROTATION = "challenge_revoked_pepper_rotation"
+    ADMIN_USER_VIEWED = "admin_user_viewed"
+    ADMIN_USER_ACTION_DENIED = "admin_user_action_denied"
+    ADMIN_TENANT_ACCESS_DENIED = "admin_tenant_access_denied"
+    ADMIN_POLICY_EVALUATED = "admin_policy_evaluated"
 
 
 @dataclass(frozen=True, slots=True)
@@ -199,6 +207,81 @@ def passcode_change_challenge_revoked_for_pepper_rotation(
         SecurityEventType.PASSCODE_CHANGE_CHALLENGE_REVOKED,
         SecurityEventOutcome.DETECTED,
         ReasonCode.CHALLENGE_REVOKED_PEPPER_ROTATION,
+    )
+
+
+def admin_user_viewed(
+    event_id: UUID,
+    correlation_id: UUID,
+    subject_user_id: UUID,
+    actor_user_id: UUID | None = None,
+    idempotency_key: str | None = None,
+) -> SecurityAuditEvent:
+    return SecurityAuditEvent(
+        event_id=event_id,
+        event_type=SecurityEventType.ADMIN_USER_VIEWED,
+        outcome=SecurityEventOutcome.SUCCESS,
+        reason_code=ReasonCode.ADMIN_USER_VIEWED,
+        correlation_id=correlation_id,
+        subject_user_id=subject_user_id,
+        actor_user_id=actor_user_id,
+        idempotency_key=idempotency_key,
+    )
+
+
+def admin_user_action_denied(
+    event_id: UUID,
+    correlation_id: UUID,
+    subject_user_id: UUID | None = None,
+    actor_user_id: UUID | None = None,
+    idempotency_key: str | None = None,
+) -> SecurityAuditEvent:
+    return SecurityAuditEvent(
+        event_id=event_id,
+        event_type=SecurityEventType.ADMIN_USER_ACTION_DENIED,
+        outcome=SecurityEventOutcome.BLOCKED,
+        reason_code=ReasonCode.ADMIN_USER_ACTION_DENIED,
+        correlation_id=correlation_id,
+        subject_user_id=subject_user_id,
+        actor_user_id=actor_user_id,
+        idempotency_key=idempotency_key,
+    )
+
+
+def admin_tenant_access_denied(
+    event_id: UUID,
+    correlation_id: UUID,
+    actor_user_id: UUID | None = None,
+    tenant_id: UUID | None = None,
+    idempotency_key: str | None = None,
+) -> SecurityAuditEvent:
+    return SecurityAuditEvent(
+        event_id=event_id,
+        event_type=SecurityEventType.ADMIN_TENANT_ACCESS_DENIED,
+        outcome=SecurityEventOutcome.BLOCKED,
+        reason_code=ReasonCode.ADMIN_TENANT_ACCESS_DENIED,
+        correlation_id=correlation_id,
+        actor_user_id=actor_user_id,
+        tenant_id=tenant_id,
+        idempotency_key=idempotency_key,
+    )
+
+
+def admin_policy_evaluated(
+    event_id: UUID,
+    correlation_id: UUID,
+    outcome: SecurityEventOutcome,
+    actor_user_id: UUID | None = None,
+    idempotency_key: str | None = None,
+) -> SecurityAuditEvent:
+    return SecurityAuditEvent(
+        event_id=event_id,
+        event_type=SecurityEventType.ADMIN_POLICY_EVALUATED,
+        outcome=outcome,
+        reason_code=ReasonCode.ADMIN_POLICY_EVALUATED,
+        correlation_id=correlation_id,
+        actor_user_id=actor_user_id,
+        idempotency_key=idempotency_key,
     )
 
 

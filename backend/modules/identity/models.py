@@ -1,6 +1,8 @@
 import uuid
+from typing import Any
 
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 
@@ -126,3 +128,130 @@ class PasscodeChangeChallenge(models.Model):
 
     def __str__(self) -> str:
         return f"Passcode change challenge {self.id}"
+
+
+class PlatformOperatorPolicy(models.Model):
+    """Platform operator administrative access policy."""
+
+    class ModelLabel(models.TextChoices):
+        IDENTITY_USER = "identity.User", "identity.User"
+        PLATFORM_TENANT_TENANT = "platform_tenant.Tenant", "platform_tenant.Tenant"
+        PLATFORM_TENANT_TENANT_MEMBERSHIP = (
+            "platform_tenant.TenantMembership",
+            "platform_tenant.TenantMembership",
+        )
+
+    class Action(models.TextChoices):
+        LIST = "list", "List"
+        VIEW = "view", "View"
+
+    class ScopeKind(models.TextChoices):
+        PLATFORM_USER_SAFE = "platform_user_safe", "Platform user safe"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    operator_user = models.ForeignKey(
+        User,
+        on_delete=models.RESTRICT,
+        related_name="platform_operator_policies",
+    )
+    model_label = models.CharField(max_length=128, choices=ModelLabel.choices)
+    action = models.CharField(max_length=64, choices=Action.choices)
+    scope_kind = models.CharField(max_length=64, choices=ScopeKind.choices)
+    active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by_user = models.ForeignKey(
+        User,
+        on_delete=models.RESTRICT,
+        related_name="created_operator_policies",
+    )
+    revoked_at = models.DateTimeField(null=True, blank=True)
+    revoked_by_user = models.ForeignKey(
+        User,
+        on_delete=models.RESTRICT,
+        null=True,
+        blank=True,
+        related_name="revoked_operator_policies",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["operator_user", "model_label", "action", "scope_kind"],
+                condition=Q(active=True),
+                name="unique_active_operator_policy",
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    model_label__in=[
+                        "identity.User",
+                        "platform_tenant.Tenant",
+                        "platform_tenant.TenantMembership",
+                    ]
+                ),
+                name="operator_policy_model_label_valid",
+            ),
+            models.CheckConstraint(
+                condition=Q(action__in=["list", "view"]),
+                name="operator_policy_action_valid",
+            ),
+            models.CheckConstraint(
+                condition=Q(scope_kind__in=["platform_user_safe"]),
+                name="operator_policy_scope_kind_valid",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(active=True, revoked_at__isnull=True, revoked_by_user__isnull=True)
+                    | Q(active=False, revoked_at__isnull=False, revoked_by_user__isnull=False)
+                ),
+                name="operator_policy_revocation_consistent",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return (
+            f"PlatformOperatorPolicy({self.operator_user_id}, {self.model_label}, "
+            f"{self.action}, {self.scope_kind}, active={self.active})"
+        )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Permit creation and one irreversible active-to-revoked transition only.
+
+        PostgreSQL triggers enforce the same rule for queryset and raw-SQL
+        paths.  This guard makes ordinary ORM use fail closed before a write.
+        """
+        if self._state.adding:
+            super().save(*args, **kwargs)
+            return
+
+        previous = type(self).objects.filter(pk=self.pk).values(
+            "operator_user_id",
+            "model_label",
+            "action",
+            "scope_kind",
+            "active",
+            "created_at",
+            "created_by_user_id",
+            "revoked_at",
+            "revoked_by_user_id",
+        ).first()
+        if previous is None:
+            raise ValidationError("operator policy does not exist")
+        if not previous["active"]:
+            raise ValidationError("revoked operator policy is immutable")
+
+        if (
+            previous["operator_user_id"] != self.operator_user_id
+            or previous["model_label"] != self.model_label
+            or previous["action"] != self.action
+            or previous["scope_kind"] != self.scope_kind
+            or previous["created_at"] != self.created_at
+            or previous["created_by_user_id"] != self.created_by_user_id
+        ):
+            raise ValidationError("operator policy grants are immutable")
+        if self.active or self.revoked_at is None or self.revoked_by_user_id is None:
+            raise ValidationError("operator policy may only be revoked once")
+
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: object, **kwargs: object) -> tuple[int, dict[str, int]]:
+        raise ValidationError("operator policy rows are append-only")

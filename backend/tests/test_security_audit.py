@@ -319,3 +319,39 @@ def migrator_connection():
     if not migrator_url:
         pytest.skip("migrator connection is not configured")
     return connect(migrator_url, autocommit=True)
+
+
+def test_admin_security_audit_builders():
+    from modules.platform_event.security_audit import (
+        admin_policy_evaluated,
+        admin_tenant_access_denied,
+        admin_user_action_denied,
+        admin_user_viewed,
+    )
+
+    event_id = uuid4()
+    corr_id = uuid4()
+    subj_id = uuid4()
+    actor_id = uuid4()
+
+    view_event = admin_user_viewed(event_id, corr_id, subj_id, actor_id)
+    assert view_event.event_type == SecurityEventType.ADMIN_USER_VIEWED
+    assert view_event.outcome == SecurityEventOutcome.SUCCESS
+    assert view_event.reason_code == ReasonCode.ADMIN_USER_VIEWED
+
+    denied_action_event = admin_user_action_denied(event_id, corr_id, subj_id, actor_id)
+    assert denied_action_event.event_type == SecurityEventType.ADMIN_USER_ACTION_DENIED
+    assert denied_action_event.outcome == SecurityEventOutcome.BLOCKED
+    assert denied_action_event.reason_code == ReasonCode.ADMIN_USER_ACTION_DENIED
+
+    tenant_denied_event = admin_tenant_access_denied(event_id, corr_id, actor_id)
+    assert tenant_denied_event.event_type == SecurityEventType.ADMIN_TENANT_ACCESS_DENIED
+    assert tenant_denied_event.outcome == SecurityEventOutcome.BLOCKED
+    assert tenant_denied_event.reason_code == ReasonCode.ADMIN_TENANT_ACCESS_DENIED
+
+    policy_eval_event = admin_policy_evaluated(
+        event_id, corr_id, SecurityEventOutcome.SUCCESS, actor_id
+    )
+    assert policy_eval_event.event_type == SecurityEventType.ADMIN_POLICY_EVALUATED
+    assert policy_eval_event.outcome == SecurityEventOutcome.SUCCESS
+    assert policy_eval_event.reason_code == ReasonCode.ADMIN_POLICY_EVALUATED
