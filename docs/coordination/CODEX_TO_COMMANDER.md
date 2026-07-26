@@ -56,6 +56,13 @@ out. Git remote write authentication was independently verified and the branch
 was pushed. No Draft PR or CI run exists yet; the next safe action requires
 authenticated GitHub browser access.
 
+Commander-message transport was also attempted through the mandated shared
+Brave/Profile 13 path. It did not send: the existing browser was not launched
+with the required control endpoint, and the helper requested closing it. The
+repository instruction prohibits closing or replacing the shared session, so
+no unsafe recovery was attempted. This document is the auditable handoff until
+the employer supplies an authenticated controllable session.
+
 ## Explicit restrictions
 
 ```text
