@@ -592,6 +592,12 @@ def test_postgres_trigger_and_runtime_privileges_are_append_only(adult_signup):
         ):
             cursor.execute(statement)
 
+    with tenant_atomic(adult_signup.id):
+        runtime_attestation = AdultAgeAttestation.objects.create(
+            tenant_id=adult_signup.id,
+            subject_id=uuid4(),
+            policy_version=POLICY_VERSION,
+        )
     with connect(runtime_url) as runtime, runtime.cursor() as cursor:
         cursor.execute(
             "SELECT set_config('app.tenant_id', %s, true)",
@@ -603,7 +609,7 @@ def test_postgres_trigger_and_runtime_privileges_are_append_only(adult_signup):
                 (id, tenant_id, attestation_id, collection_context, receipt_kind, recorded_at)
             VALUES (%s, %s, %s, 'internal_synthetic_harness', 'self_attestation', CURRENT_TIMESTAMP)
             """,
-            (str(uuid4()), str(adult_signup.id), str(attestation.id)),
+            (str(uuid4()), str(adult_signup.id), str(runtime_attestation.id)),
         )
         runtime.rollback()
 
