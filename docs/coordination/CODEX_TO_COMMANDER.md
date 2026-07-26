@@ -1,11 +1,12 @@
 # Codex to Commander — Task67A
 
 ```text
-MESSAGE_ID: CODEX_ADULT_SIGNUP_IMPLEMENT_67A_LOCAL_CHECKPOINT_20260726_01
+MESSAGE_ID: CODEX_ADULT_SIGNUP_IMPLEMENT_67A_PUSH_CHECKPOINT_20260726_02
 TASK_ID: SPRINT1-ADULT-SIGNUP-IMPLEMENT-67A
 BASE_SHA: 5ef6323a42739613b05eab1fcbb07e009a87e859
 BRANCH: codex/task67a-adult-signup-internal
-STATUS: LOCAL_IMPLEMENTATION_COMPLETE / PUBLICATION_BLOCKED_MISSING_GH
+COMMIT: d1d70e0fdc9cd9849b9e88244b47d86e95e31576
+STATUS: IMPLEMENTATION_COMMITTED_AND_PUSHED / DRAFT_PR_BLOCKED_GITHUB_SIGNIN
 ```
 
 ## Completed
@@ -37,20 +38,23 @@ docs/openapi.yaml validation: PASS
 Focused Task67A: 27 passed / 2 PostgreSQL-only skipped locally
 Full backend: 189 passed / 32 PostgreSQL-only skipped locally
 Coverage: 87.04% (80% required)
-Frontend: 10 UI-policy tests + policy + lint + typecheck + build PASS
+Frontend lint + typecheck + build: PASS
+Frontend UI-policy: 9 passed / 1 failed on legacy CSS baseline hashes; the
+frontend tree is unchanged from BASE_SHA, so this pre-existing failure is not
+attributed to Task67A. check:ui-policy: NO_RUN (blocked by that test failure)
 git diff --check: PASS
 ```
 
 ## Pending
 
-- Install and authenticate the required GitHub CLI in the Codex environment,
-  then push the scoped commit and open a Draft PR to obtain real PostgreSQL CI.
+- Create a Draft PR for the pushed scoped commit to obtain real PostgreSQL CI.
 - Complete the required external security/privacy/database review before any
   future Ready-for-Review or Merge authority.
 
-The GitHub publication workflow explicitly requires `gh`; it is not installed
-in this environment. No local commit, push, Draft PR, or CI run was created,
-and the connector was not used to bypass that prerequisite.
+The GitHub connector is unavailable and the in-app GitHub session is signed
+out. Git remote write authentication was independently verified and the branch
+was pushed. No Draft PR or CI run exists yet; the next safe action requires
+authenticated GitHub browser access.
 
 ## Explicit restrictions
 

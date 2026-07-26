@@ -108,9 +108,10 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
 
 - Task67A cannot advance to Ready for Review or Merge without successful real
   PostgreSQL CI and sequential external security/privacy/database review.
-- Draft publication is currently blocked because the GitHub publish workflow
-  requires `gh`, which is not installed in this execution environment. No
-  commit, push, PR, or CI run was created.
+- Task67A commit `d1d70e0fdc9cd9849b9e88244b47d86e95e31576` is pushed to
+  `codex/task67a-adult-signup-internal`. Draft PR publication is blocked only
+  by unavailable authenticated GitHub browser/connector access; no PR or CI
+  run exists yet.
 - Real users remain blocked by `LEGAL_PENDING`.
 - No active blocker remains for the Platform Operator/Admin closeout.
 - Historical local-environment limitations in earlier checkpoints are retained

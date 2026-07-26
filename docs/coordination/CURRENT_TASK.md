@@ -1,12 +1,14 @@
 # Current Task: SPRINT1-ADULT-SIGNUP-IMPLEMENT-67A
 
 - Owner: Codex
-- Status: local implementation complete; publication is blocked because the
-  required GitHub CLI is unavailable. PostgreSQL CI and required external
-  review remain pending. Development/internal synthetic-data authority only.
+- Status: implementation checkpoint committed and pushed to the authorized
+  branch. Draft PR creation is blocked pending authenticated GitHub browser
+  access; PostgreSQL CI and required external review remain pending.
+  Development/internal synthetic-data authority only.
 - BASE_SHA: `5ef6323a42739613b05eab1fcbb07e009a87e859`.
 - Target repository: `mytest19861986/codesho-test`.
 - Branch: `codex/task67a-adult-signup-internal`.
+- Checkpoint commit: `d1d70e0fdc9cd9849b9e88244b47d86e95e31576`.
 - Employer authorization date: `2026-07-26`.
 
 ## Goal
