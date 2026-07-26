@@ -114,9 +114,29 @@ TENANT_BYPASS_PATHS = (
 )
 TENANT_PREAUTH_PATHS = (
     "/api/v1/auth/csrf/",
+    "/api/v1/auth/signup/adult-attestation/",
     "/api/v1/auth/passcode/login/",
     "/api/v1/auth/passcode/change/complete/",
 )
+ADULT_SIGNUP_MODE = env("ADULT_SIGNUP_MODE", default="disabled")
+ADULT_SIGNUP_POLICY_VERSION = env(
+    "ADULT_SIGNUP_POLICY_VERSION", default="adult-internal-2026-07-26"
+)
+if ADULT_SIGNUP_MODE not in {"disabled", "internal_test"}:
+    raise ImproperlyConfigured("ADULT_SIGNUP_MODE must be disabled or internal_test")
+if ADULT_SIGNUP_MODE == "internal_test" and not 1 <= len(ADULT_SIGNUP_POLICY_VERSION) <= 64:
+    raise ImproperlyConfigured(
+        "ADULT_SIGNUP_POLICY_VERSION must contain 1 to 64 characters in internal_test mode"
+    )
+ADULT_SIGNUP_RATE_WINDOW_SECONDS = env.int("ADULT_SIGNUP_RATE_WINDOW_SECONDS", default=900)
+ADULT_SIGNUP_SUBJECT_MAX_ATTEMPTS = env.int("ADULT_SIGNUP_SUBJECT_MAX_ATTEMPTS", default=5)
+ADULT_SIGNUP_IP_MAX_ATTEMPTS = env.int("ADULT_SIGNUP_IP_MAX_ATTEMPTS", default=30)
+if (
+    ADULT_SIGNUP_RATE_WINDOW_SECONDS <= 0
+    or ADULT_SIGNUP_SUBJECT_MAX_ATTEMPTS <= 0
+    or ADULT_SIGNUP_IP_MAX_ATTEMPTS <= 0
+):
+    raise ImproperlyConfigured("adult signup rate limits must be positive")
 SESSION_COOKIE_AGE = env.int("SESSION_COOKIE_AGE", default=43_200)
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 CSRF_FAILURE_VIEW = "config.auth_views.csrf_failure"

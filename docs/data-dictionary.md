@@ -1,5 +1,28 @@
 # Codesho Data Dictionary
 
+## `identity_adultageattestation`
+
+Internal synthetic-data evidence only. This table is not an account, user,
+credential, membership, date-of-birth record, or proof of identity.
+
+| Field | Meaning | Security/immutability rule |
+|---|---|---|
+| `id` | Opaque attestation UUID | Server-generated; safe receipt identifier. |
+| `tenant_id` | Opaque tenant routing UUID | No tenant name or free text is copied into evidence. |
+| `subject_id` | Synthetic UUIDv4 supplied by the internal test harness | Must never map to a real person before separate Legal and release approval. |
+| `status` | Constant `adult_attested` | No Minor value or inferred age exists. |
+| `policy_version` | Exact server-approved consent text version | Maximum 64 characters; request mismatch is rejected. |
+| `source` | Constant `internal_test_api` | No public, Alpha, provider, or Guardian source is allowed. |
+| `audit_event_id` | Opaque immutable audit-ledger event UUID | Links the accepted attestation to one allow-listed event. |
+| `attested_at` | Server UTC timestamp | Generated on insert and never client supplied. |
+
+Rows are append-only. Application model methods reject update/delete,
+PostgreSQL triggers reject direct mutation, and the runtime role has only
+`SELECT`/`INSERT` access. Uniqueness on tenant, subject, and policy version
+makes retries idempotent. Birth date, birth year, numeric age, national
+identifier, identity document, Guardian data, raw IP, raw payload, and free
+text are prohibited.
+
 ## `identity_passcodecredential`
 
 | Field | Meaning | Security/immutability rule |
@@ -30,3 +53,9 @@ events. Reason codes are allow-listed; the first five known-principal failures
 are recorded before the durable lock, subsequent blocked events use bounded
 windowed idempotency keys, and fully unknown principals create no durable
 unbounded audit rows.
+
+Task67A adds `adult_age_attestation_accepted` and
+`adult_signup_rejected_age_attestation_missing`, with the allow-listed reason
+codes `adult_attested` and `age_attestation_required`. The subject and tenant
+identifiers are opaque UUIDs; the immutable audit schema has no arbitrary
+metadata or raw-payload field.

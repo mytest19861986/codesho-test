@@ -1,8 +1,22 @@
 # Codesho Project State
 
-Updated: 2026-07-26 (Task63D platform-operator/admin closeout)
+Updated: 2026-07-26 (Task67A adult signup internal implementation)
 
 ## Current Status
+
+Task67A is active from independent BASE_SHA
+`5ef6323a42739613b05eab1fcbb07e009a87e859` on branch
+`codex/task67a-adult-signup-internal`. Employer authority is limited to
+development and internal synthetic-data testing. Local implementation and
+checks are complete; real PostgreSQL CI and the required external
+security/privacy/database review remain pending.
+
+The foundation records only an explicit adult self-attestation for an opaque
+synthetic UUID. It is disabled by default, rejected by production settings,
+rate-limited through HMAC-anonymous Redis keys, tenant-scoped, immutable, and
+bound atomically to allow-listed security audit evidence. It creates no user,
+credential, membership, session, frontend signup route, Guardian/Recovery
+relationship, or real-user capability.
 
 `codesho-test/main` is at merged commit
 `49acc1818b6afb1d78e5e8155d0dd9b90fbbf784`. PR #3 is merged and closed; its
@@ -92,17 +106,24 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
 
 ## Blockers
 
+- Task67A cannot advance to Ready for Review or Merge without successful real
+  PostgreSQL CI and sequential external security/privacy/database review.
+- Draft publication is currently blocked because the GitHub publish workflow
+  requires `gh`, which is not installed in this execution environment. No
+  commit, push, PR, or CI run was created.
+- Real users remain blocked by `LEGAL_PENDING`.
 - No active blocker remains for the Platform Operator/Admin closeout.
 - Historical local-environment limitations in earlier checkpoints are retained
   in their original records and do not represent an unresolved Task63D gate.
 
 ## Next Steps
 
-1. Obtain a separate authorized Task and independent BASE_SHA before any new
-   implementation.
-2. Recovery, Guardian, Notification, Signup, OAuth and Onboarding require
+1. Publish the scoped Task67A checkpoint to a Draft PR and run repository CI.
+2. Complete sequential external review and disposition findings; do not mark
+   Ready for Review or Merge without separate authority.
+3. Recovery, Guardian, Notification, user creation, OAuth and Onboarding require
    separate authorized Tasks.
-3. Do not activate Production or real Alpha, deploy, provision policy, or
+4. Do not activate Production or real Alpha, deploy, provision policy, or
    promote to protected `codesho` without explicit employer approval.
 
 ## Open Decisions / Risks

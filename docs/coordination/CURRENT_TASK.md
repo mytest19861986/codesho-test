@@ -1,26 +1,88 @@
-# Current Task: SPRINT1-PLATFORM-OPERATOR-ADMIN-CLOSEOUT-DOCS-63D
+# Current Task: SPRINT1-ADULT-SIGNUP-IMPLEMENT-67A
 
 - Owner: Codex
-- Status: complete; documentation-only closeout.
-- BASE_SHA: `49acc1818b6afb1d78e5e8155d0dd9b90fbbf784`.
-- Target: `codesho-test/main`.
-- PR #3: merged and closed at the BASE_SHA.
-- Merge parents: `98c8132312d67094fbc316dea68feb454c4ffe68` and
-  `75c3dcd7382d354fec10315daad9d30ef466c982`.
-- Task62V evidence: Ruff, mypy, module boundaries, Django checks, migration
-  drift, empty-PostgreSQL migration, focused Admin/Policy/Audit/trigger tests
-  (`43 passed`), full backend suite (`192 passed`), OpenAPI validation,
-  `git diff --check`, and remote backend/frontend/smoke_restore checks passed.
-- Final Platform Operator/Admin status: default-deny, no superuser bypass,
-  immutable policy rows and PostgreSQL trigger enforcement, exact denied
-  mutation audit, fail-closed audit errors, and non-disclosing tenant admin
-  paths verified.
-- Sprint 1 capabilities and historical evidence remain in
-  `PROJECT_STATE.md`; prior facts are preserved without reopening old tasks.
-- No active implementation task exists after this checkpoint.
-- Restrictions: no Production or real Alpha activation, deployment, policy
-  provisioning, or promotion to protected `codesho`.
-- Recovery, Guardian, Notification, Signup, OAuth and Onboarding require
-  separate authorized Tasks.
-- No code, migration, OpenAPI, workflow, Compose, frontend, deployment, or
-  production-configuration change is part of this checkpoint.
+- Status: local implementation complete; publication is blocked because the
+  required GitHub CLI is unavailable. PostgreSQL CI and required external
+  review remain pending. Development/internal synthetic-data authority only.
+- BASE_SHA: `5ef6323a42739613b05eab1fcbb07e009a87e859`.
+- Target repository: `mytest19861986/codesho-test`.
+- Branch: `codex/task67a-adult-signup-internal`.
+- Employer authorization date: `2026-07-26`.
+
+## Goal
+
+Implement a fail-closed adult age-attestation foundation for a future signup
+flow. The endpoint may record only a self-attested `18+` status and minimal
+immutable evidence for a synthetic opaque subject. It does not create a user,
+credential, membership, session, Guardian relationship, or public signup flow.
+
+## Exact allow-list
+
+```text
+.env.example
+backend/config/adult_signup.py
+backend/config/settings/base.py
+backend/config/settings/local.py
+backend/config/settings/production.py
+backend/config/urls.py
+backend/modules/identity/models.py
+backend/modules/identity/migrations/0008_adult_age_attestation.py
+backend/modules/platform_event/models.py
+backend/modules/platform_event/security_audit.py
+backend/modules/platform_event/migrations/0010_adult_signup_events.py
+backend/tests/test_adult_signup.py
+docs/coordination/CODEX_TO_COMMANDER.md
+docs/coordination/CURRENT_TASK.md
+docs/coordination/PROJECT_STATE.md
+docs/data-dictionary.md
+docs/decisions/2026-07-26-adult-signup-internal.md
+docs/openapi.yaml
+docs/reviews/s1-067a-adult-signup-review-summary.md
+```
+
+No frontend, workflow, Docker/Compose, Nginx, deployment, protected-repository,
+Guardian/Recovery, birth-date, identity-document, or real-user file is in scope.
+
+## Acceptance criteria
+
+1. The feature defaults to disabled and production settings reject activation.
+2. Only `internal_test` mode with the exact server policy version can persist
+   an attestation.
+3. The request requires explicit boolean `true`; false or missing values fail
+   closed and never create an attestation.
+4. Only synthetic opaque UUIDs are accepted as subjects. No date of birth,
+   numeric age, identity document, national identifier, raw IP, or free text is
+   accepted or stored.
+5. Valid requests are subject to fail-closed HMAC-anonymous Redis limits by
+   synthetic subject and client IP; raw signals are never Redis keys.
+6. Accepted attestations and the supported rejection are recorded in the
+   immutable security audit ledger with allow-listed metadata.
+7. Attestation persistence and accepted audit append are atomic and
+   idempotent for tenant, subject, and policy version.
+8. Attestation rows are append-only in application code and PostgreSQL; the
+   runtime role has no update, delete, or truncate privilege on the table.
+9. The API and OpenAPI contract expose no account-creation claim.
+10. Focused tests cover disabled mode, exact request shape, missing/false
+   attestation, policy mismatch, tampering fields, idempotency, audit failure,
+   rate limiting/backend failure, tenant separation, immutability, and
+   prohibited data-field absence.
+11. Repository-defined backend CI checks and `git diff --check` pass.
+
+## Review and release gates
+
+```text
+Security/privacy/database review: REQUIRED BEFORE MERGE
+Repository CI: REQUIRED BEFORE MERGE
+Real-user Legal approval: REQUIRED / BLOCKING
+Ready for Review: NOT AUTHORIZED BY THIS TASK
+Merge: NOT AUTHORIZED
+Deployment: NOT AUTHORIZED
+Protected codesho promotion: NOT AUTHORIZED
+```
+
+## Stop conditions
+
+Stop for new authority if implementation requires real user data, birth date,
+identity evidence, Guardian/Minor/Recovery, account creation, frontend/public
+activation, external provider access, a file outside the allow-list, Merge, or
+Deployment.

@@ -15,6 +15,62 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ["email"]
 
 
+class AdultAgeAttestation(models.Model):
+    """Immutable, minimal evidence for an internal synthetic adult subject."""
+
+    class Status(models.TextChoices):
+        ADULT_ATTESTED = "adult_attested", "Adult attested"
+
+    class Source(models.TextChoices):
+        INTERNAL_TEST_API = "internal_test_api", "Internal test API"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant_id = models.UUIDField(editable=False)
+    subject_id = models.UUIDField(editable=False)
+    status = models.CharField(
+        max_length=32,
+        choices=Status,
+        default=Status.ADULT_ATTESTED,
+        editable=False,
+    )
+    policy_version = models.CharField(max_length=64, editable=False)
+    source = models.CharField(
+        max_length=32,
+        choices=Source,
+        default=Source.INTERNAL_TEST_API,
+        editable=False,
+    )
+    audit_event_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    attested_at = models.DateTimeField(auto_now_add=True, editable=False)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant_id", "subject_id", "policy_version"],
+                name="unique_adult_attestation_per_policy",
+            ),
+            models.CheckConstraint(
+                condition=Q(status="adult_attested"),
+                name="adult_attestation_status_valid",
+            ),
+            models.CheckConstraint(
+                condition=Q(source="internal_test_api"),
+                name="adult_attestation_source_valid",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"AdultAgeAttestation({self.id})"
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if not self._state.adding:
+            raise ValidationError("adult age attestations are immutable")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: object, **kwargs: object) -> tuple[int, dict[str, int]]:
+        raise ValidationError("adult age attestations are append-only")
+
+
 class PasscodeCredential(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="passcode_credential")
     encoded_hash = models.CharField(max_length=256)
