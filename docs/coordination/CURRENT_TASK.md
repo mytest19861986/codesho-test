@@ -1,13 +1,26 @@
-# Current Task: SPRINT1-PLATFORM-OPERATOR-ADMIN-DOCS-RECONCILE-58R
+# Current Task: SPRINT1-PLATFORM-OPERATOR-ADMIN-CLOSEOUT-DOCS-63D
+
 - Owner: Codex
-- Status: active; documentation PR reconciliation; no implementation authorization.
-- BASE_SHA: `e5325f2dc138607683b8cec29116ff5cc1820fbc`.
-- Publication commit: `36cb6129852db9580a06a5dc0184b9494f60f6a1`.
-- Scope: reconcile Draft PR #2 with current `main` without changing the accepted design.
-- Allowed manual resolution file: `docs/coordination/CURRENT_TASK.md`.
-- Required invariant: `docs/security/platform-operator-admin-design.md` remains byte-identical.
-- Next action: push the reconciliation merge, observe available CI, and report evidence for final merge disposition.
-- Restrictions: no implementation, migration, API/OpenAPI, deployment, policy provisioning or protected-branch promotion.
-- Gates preserved: Production TLS/`__Host-` proof, legal retention/privacy,
-Production cleanup scheduling, real Alpha activation, deferred
-Signup/Recovery/Guardian/OAuth/Onboarding, and protected `codesho` promotion.
+- Status: complete; documentation-only closeout.
+- BASE_SHA: `49acc1818b6afb1d78e5e8155d0dd9b90fbbf784`.
+- Target: `codesho-test/main`.
+- PR #3: merged and closed at the BASE_SHA.
+- Merge parents: `98c8132312d67094fbc316dea68feb454c4ffe68` and
+  `75c3dcd7382d354fec10315daad9d30ef466c982`.
+- Task62V evidence: Ruff, mypy, module boundaries, Django checks, migration
+  drift, empty-PostgreSQL migration, focused Admin/Policy/Audit/trigger tests
+  (`43 passed`), full backend suite (`192 passed`), OpenAPI validation,
+  `git diff --check`, and remote backend/frontend/smoke_restore checks passed.
+- Final Platform Operator/Admin status: default-deny, no superuser bypass,
+  immutable policy rows and PostgreSQL trigger enforcement, exact denied
+  mutation audit, fail-closed audit errors, and non-disclosing tenant admin
+  paths verified.
+- Sprint 1 capabilities and historical evidence remain in
+  `PROJECT_STATE.md`; prior facts are preserved without reopening old tasks.
+- No active implementation task exists after this checkpoint.
+- Restrictions: no Production or real Alpha activation, deployment, policy
+  provisioning, or promotion to protected `codesho`.
+- Recovery, Guardian, Notification, Signup, OAuth and Onboarding require
+  separate authorized Tasks.
+- No code, migration, OpenAPI, workflow, Compose, frontend, deployment, or
+  production-configuration change is part of this checkpoint.
