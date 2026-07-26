@@ -1,4 +1,75 @@
-# Codex to Commander — Task69A
+# Codex to Commander — Task69B
+
+```text
+MESSAGE_ID: CODEX_TASK69B_PROVENANCE_SYNTHETIC_CHECKPOINT_20260726_07
+TASK_ID: SPRINT1-ADULT-SIGNUP-PROVENANCE-SYNTHETIC-IMPLEMENT-69B
+BASE_SHA: 27a8626d29bfa7e21c5e770455db6b20a4521ccc
+BRANCH: agent/task69b-provenance-synthetic
+STATUS: FINAL_REVIEW_PASS / DOCUMENTATION_CHECKPOINT / INTERNAL_SYNTHETIC_ONLY
+IMPLEMENTATION_HEAD: 889d1e998a1433c31646179856922fa2d0b6c449
+CI_EVIDENCE_HEAD: 57e235cd088174e5a75132ea89f82a105191adfc
+DOCUMENTATION_CHECKPOINT: this coordination commit (docs-only after CI evidence)
+PR_9: OPEN / DRAFT / FINAL_REVIEW_PASS / READY_PENDING_WORKFLOW_STATE
+PR_5: PRESERVED_AS_DRAFT / UNCHANGED
+REAL_USERS: NOT_AUTHORIZED
+PRODUCTION/DEPLOYMENT/RELEASE: NOT_AUTHORIZED
+PROTECTED_CODESHO_PROMOTION: NOT_AUTHORIZED
+```
+
+## Task69B implementation checkpoint
+
+Implemented the minimum Option B provenance boundary in the exact allow-list:
+
+- independent append-only `AdultAttestationProvenance` model and migration;
+- server-generated opaque UUID, tenant UUID, one-to-one attestation reference,
+  controlled constants, and UTC timestamp only;
+- `tenant_atomic` context for the attestation/provenance/audit transaction;
+- PostgreSQL RLS/FORCE RLS, same-tenant trigger validation, immutable trigger,
+  and runtime INSERT-only grants;
+- replay, rollback, prohibited-field, cross-tenant, runtime privilege, API
+  non-disclosure, and PostgreSQL contract tests;
+- data dictionary entry without raw or sensitive review content.
+
+No public API, OpenAPI, frontend, account/user/session, backfill, provider,
+Production, deployment, release, or real-user behavior was added. PR #5 was
+not changed.
+
+## Local checkpoint evidence
+
+```text
+makemigrations --check --dry-run: PASS
+focused tests (SQLite): 28 passed / 4 PostgreSQL-only skipped
+ruff (focused files): PASS
+mypy (focused source/migration): PASS
+django check: PASS
+docker compose local run: BLOCKED by missing required DATABASE_MIGRATOR_URL environment input
+```
+
+PostgreSQL/RLS/grant/trigger gates remain required in CI or an explicitly
+configured real PostgreSQL role environment. Reviews are sequential and raw
+review prompts/responses remain outside the repository.
+
+## Task69B independent review checkpoint
+
+Historical Commander response `COMMANDER_TASK69B_INDEPENDENT_REVIEW_20260726_07`
+returned `CHANGES_REQUIRED` on an earlier head. Backend PostgreSQL CI run
+`30216804608` failed four FORCE-RLS tests because provenance reads and migrator
+mutation assertions lacked tenant context; frontend succeeded and Compose
+smoke_restore run `30216804605` succeeded. This is recorded as
+`69B-DB-01`: DISPOSED / PASS. The cross-tenant assertion uses beta context,
+beta provenance tenant, alpha source attestation, and the explicit linkage
+mismatch message. `69B-CI-02`: DISPOSED / PASS. `69B-DOC-02`: this checkpoint
+disposes the stale-head documentation mismatch. PR #9 remains Draft pending
+final CI/re-review on this documentation head.
+
+Implementation head is `889d1e998a1433c31646179856922fa2d0b6c449`; cross-tenant
+remediation is `585b3b9`; final documentation head is
+`57e235cd088174e5a75132ea89f82a105191adfc`. Final-head CI was successful:
+CI `30218263108` / workflow #194 and smoke_restore `30218263084` / workflow
+#192. The final review verdict is PASS, subject only to the allowed
+Draft-to-Ready workflow state transition. Local focused tests remain `28
+passed / 4 PostgreSQL-only skipped`; full backend SQLite tests remain `190
+passed / 34 skipped`.
 
 ```text
 MESSAGE_ID: CODEX_TASK69A_PROVENANCE_ARCHITECTURE_CHECKPOINT_20260726_01

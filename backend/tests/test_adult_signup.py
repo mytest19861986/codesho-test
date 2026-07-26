@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from importlib import import_module
 from unittest.mock import patch
 from uuid import uuid4
@@ -13,13 +14,14 @@ from psycopg import connect
 from psycopg.errors import InsufficientPrivilege, RaiseException
 
 from config.adult_signup import AdultSignupRateDecision, check_adult_signup_rate
-from modules.identity.models import AdultAgeAttestation
+from modules.identity.models import AdultAgeAttestation, AdultAttestationProvenance
 from modules.platform_event.security_audit import (
     AppendAuditResult,
     SecurityAuditError,
     SecurityEventType,
     append_security_event,
 )
+from modules.platform_tenant.context import tenant_atomic
 from modules.platform_tenant.models import Tenant
 
 PATH = "/api/v1/auth/signup/adult-attestation/"
@@ -114,12 +116,20 @@ def test_explicit_adult_attestation_creates_minimal_immutable_evidence(adult_sig
         "source",
         "status",
     }
+    assert "provenance" not in response.json()
     attestation = AdultAgeAttestation.objects.get()
+    provenance = provenance_for_attestation(adult_signup.id, attestation)
     assert attestation.tenant_id == adult_signup.id
     assert attestation.subject_id == subject_id
     assert attestation.status == AdultAgeAttestation.Status.ADULT_ATTESTED
     assert attestation.source == AdultAgeAttestation.Source.INTERNAL_TEST_API
     assert attestation.policy_version == POLICY_VERSION
+    assert provenance.tenant_id == adult_signup.id
+    assert provenance.attestation_id == attestation.id
+    assert provenance.collection_context == (
+        AdultAttestationProvenance.CollectionContext.INTERNAL_SYNTHETIC_HARNESS
+    )
+    assert provenance.receipt_kind == AdultAttestationProvenance.ReceiptKind.SELF_ATTESTATION
     event = append.call_args.args[0]
     assert event.event_id == attestation.audit_event_id
     assert event.event_type is SecurityEventType.ADULT_AGE_ATTESTATION_ACCEPTED
@@ -141,6 +151,7 @@ def test_false_attestation_is_audited_and_rejected(adult_signup):
     assert response.status_code == 403
     assert response.json() == {"code": "adult_attestation_required"}
     assert AdultAgeAttestation.objects.count() == 0
+    assert provenance_count(adult_signup.id) == 0
     event = append.call_args.args[0]
     assert (
         event.event_type
@@ -199,6 +210,7 @@ def test_retry_is_idempotent_for_tenant_subject_and_policy(adult_signup):
     assert second.status_code == 200
     assert first.json()["attestationId"] == second.json()["attestationId"]
     assert AdultAgeAttestation.objects.count() == 1
+    assert provenance_count(adult_signup.id) == 1
     assert append.call_count == 2
     assert append.call_args_list[0].args[0].event_id == append.call_args_list[1].args[0].event_id
     assert (
@@ -207,10 +219,32 @@ def test_retry_is_idempotent_for_tenant_subject_and_policy(adult_signup):
     )
 
 
+@pytest.mark.django_db(transaction=True)
+def test_postgres_concurrent_replay_creates_one_provenance(adult_signup):
+    require_postgres()
+    subject_id = uuid4()
+
+    def submit(_: int):
+        client, headers = csrf_client()
+        with patch(
+            "config.adult_signup.append_security_event",
+            return_value=AppendAuditResult(event_id=uuid4(), created=True),
+        ):
+            return post(client, headers, payload(subject_id))
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        responses = list(executor.map(submit, (1, 2)))
+
+    assert sorted(response.status_code for response in responses) == [200, 201]
+    assert AdultAgeAttestation.objects.filter(subject_id=subject_id).count() == 1
+    assert provenance_count(adult_signup.id) == 1
+
+
 @pytest.mark.django_db
 def test_same_subject_is_isolated_by_tenant(adult_signup):
     subject_id = uuid4()
     Tenant.objects.create(slug="beta", name="Beta")
+    beta = Tenant.objects.get(slug="beta")
     first_client, first_headers = csrf_client()
     second_client, second_headers = csrf_client("beta.localhost")
     with patch(
@@ -227,6 +261,8 @@ def test_same_subject_is_isolated_by_tenant(adult_signup):
     assert first.status_code == 201
     assert second.status_code == 201
     assert AdultAgeAttestation.objects.filter(subject_id=subject_id).count() == 2
+    assert provenance_count_for_tenant(adult_signup.id) == 1
+    assert provenance_count_for_tenant(beta.id) == 1
 
 
 @pytest.mark.django_db
@@ -240,6 +276,7 @@ def test_audit_failure_rolls_back_acceptance(adult_signup):
     assert response.status_code == 503
     assert response.json() == {"code": "temporarily_unavailable"}
     assert AdultAgeAttestation.objects.count() == 0
+    assert provenance_count(adult_signup.id) == 0
 
 
 @pytest.mark.django_db
@@ -324,15 +361,24 @@ def test_rate_limit_fails_closed_when_hmac_key_is_invalid(settings):
 
 @pytest.mark.django_db
 def test_application_model_rejects_update_and_delete(adult_signup):
-    attestation = AdultAgeAttestation.objects.create(
-        tenant_id=adult_signup.id,
-        subject_id=uuid4(),
-        policy_version=POLICY_VERSION,
-    )
+    with tenant_atomic(adult_signup.id):
+        attestation = AdultAgeAttestation.objects.create(
+            tenant_id=adult_signup.id,
+            subject_id=uuid4(),
+            policy_version=POLICY_VERSION,
+        )
+        provenance = AdultAttestationProvenance.objects.create(
+            tenant_id=adult_signup.id,
+            attestation=attestation,
+        )
     with pytest.raises(ValidationError, match="immutable"):
         attestation.save()
     with pytest.raises(ValidationError, match="append-only"):
         attestation.delete()
+    with pytest.raises(ValidationError, match="immutable"):
+        provenance.save()
+    with pytest.raises(ValidationError, match="append-only"):
+        provenance.delete()
 
 
 def test_model_has_no_prohibited_age_or_identity_fields():
@@ -357,6 +403,35 @@ def test_model_has_no_prohibited_age_or_identity_fields():
             "guardian_id",
             "ip_address",
             "payload",
+        }
+    )
+
+
+def test_provenance_model_has_only_restricted_fields():
+    field_names = {field.name for field in AdultAttestationProvenance._meta.get_fields()}
+    assert field_names == {
+        "id",
+        "tenant_id",
+        "attestation",
+        "collection_context",
+        "receipt_kind",
+        "recorded_at",
+    }
+    assert field_names.isdisjoint(
+        {
+            "subject_id",
+            "name",
+            "phone",
+            "birth_date",
+            "age",
+            "ip_address",
+            "device_signal",
+            "operator_identity",
+            "document",
+            "digest",
+            "cookie",
+            "payload",
+            "metadata",
         }
     )
 
@@ -405,6 +480,21 @@ def require_postgres():
         pytest.skip("requires PostgreSQL")
 
 
+def provenance_count(tenant_id):
+    with tenant_atomic(tenant_id):
+        return AdultAttestationProvenance.objects.count()
+
+
+def provenance_count_for_tenant(tenant_id):
+    with tenant_atomic(tenant_id):
+        return AdultAttestationProvenance.objects.filter(tenant_id=tenant_id).count()
+
+
+def provenance_for_attestation(tenant_id, attestation):
+    with tenant_atomic(tenant_id):
+        return AdultAttestationProvenance.objects.get(attestation=attestation)
+
+
 @pytest.mark.django_db(transaction=True)
 def test_postgres_trigger_and_runtime_privileges_are_append_only(adult_signup):
     require_postgres()
@@ -413,23 +503,69 @@ def test_postgres_trigger_and_runtime_privileges_are_append_only(adult_signup):
     if not migrator_url or not runtime_url:
         pytest.skip("database role URLs are not configured")
 
-    attestation = AdultAgeAttestation.objects.create(
-        tenant_id=adult_signup.id,
-        subject_id=uuid4(),
-        policy_version=POLICY_VERSION,
+    with tenant_atomic(adult_signup.id):
+        attestation = AdultAgeAttestation.objects.create(
+            tenant_id=adult_signup.id,
+            subject_id=uuid4(),
+            policy_version=POLICY_VERSION,
+        )
+        provenance = AdultAttestationProvenance.objects.create(
+            tenant_id=adult_signup.id,
+            attestation=attestation,
+        )
+    def assert_migrator_rejects(statement, params):
+        with connect(migrator_url) as migrator, migrator.cursor() as cursor:
+            cursor.execute(
+                "SELECT set_config('app.tenant_id', %s, true)",
+                [str(adult_signup.id)],
+            )
+            with pytest.raises(RaiseException):
+                cursor.execute(statement, params)
+            migrator.rollback()
+
+    assert_migrator_rejects(
+        "UPDATE codesho.identity_adultageattestation "
+        "SET policy_version = 'tampered' WHERE id = %s",
+        (str(attestation.id),),
     )
+    assert_migrator_rejects(
+        "DELETE FROM codesho.identity_adultageattestation WHERE id = %s",
+        (str(attestation.id),),
+    )
+    assert_migrator_rejects(
+        "UPDATE codesho.identity_adultattestationprovenance "
+        "SET tenant_id = %s WHERE id = %s",
+        (str(adult_signup.id), str(provenance.id)),
+    )
+    assert_migrator_rejects(
+        "DELETE FROM codesho.identity_adultattestationprovenance WHERE id = %s",
+        (str(provenance.id),),
+    )
+
     with connect(migrator_url, autocommit=True) as migrator, migrator.cursor() as cursor:
         with pytest.raises(RaiseException):
             cursor.execute(
-                "UPDATE codesho.identity_adultageattestation "
-                "SET policy_version = 'tampered' WHERE id = %s",
-                (str(attestation.id),),
+                "INSERT INTO codesho.identity_adultattestationprovenance "
+                "(id, tenant_id, attestation_id, collection_context, receipt_kind, recorded_at) "
+                "VALUES (%s, %s, %s, 'internal_synthetic_harness', "
+                "'self_attestation', CURRENT_TIMESTAMP)",
+                (str(uuid4()), str(adult_signup.id), str(attestation.id)),
             )
-        with pytest.raises(RaiseException):
-            cursor.execute(
-                "DELETE FROM codesho.identity_adultageattestation WHERE id = %s",
-                (str(attestation.id),),
-            )
+        cursor.execute(
+            """
+            SELECT has_table_privilege('codesho_runtime',
+                'codesho.identity_adultattestationprovenance', 'INSERT'),
+                has_table_privilege('codesho_runtime',
+                'codesho.identity_adultattestationprovenance', 'SELECT'),
+                has_table_privilege('codesho_runtime',
+                'codesho.identity_adultattestationprovenance', 'UPDATE'),
+                has_table_privilege('codesho_runtime',
+                'codesho.identity_adultattestationprovenance', 'DELETE'),
+                has_table_privilege('codesho_runtime',
+                'codesho.identity_adultattestationprovenance', 'TRUNCATE')
+            """
+        )
+        assert cursor.fetchone() == (True, False, False, False, False)
 
     for statement in (
         "UPDATE codesho.identity_adultageattestation SET policy_version = 'tampered'",
@@ -442,6 +578,77 @@ def test_postgres_trigger_and_runtime_privileges_are_append_only(adult_signup):
             pytest.raises((InsufficientPrivilege, RaiseException, DatabaseError)),
         ):
             cursor.execute(statement)
+
+    for statement in (
+        "SELECT 1 FROM codesho.identity_adultattestationprovenance",
+        "UPDATE codesho.identity_adultattestationprovenance SET receipt_kind = 'x'",
+        "DELETE FROM codesho.identity_adultattestationprovenance",
+        "TRUNCATE codesho.identity_adultattestationprovenance",
+    ):
+        with (
+            connect(runtime_url, autocommit=True) as runtime,
+            runtime.cursor() as cursor,
+            pytest.raises((InsufficientPrivilege, RaiseException, DatabaseError)),
+        ):
+            cursor.execute(statement)
+
+    with tenant_atomic(adult_signup.id):
+        runtime_attestation = AdultAgeAttestation.objects.create(
+            tenant_id=adult_signup.id,
+            subject_id=uuid4(),
+            policy_version=POLICY_VERSION,
+        )
+    with connect(runtime_url) as runtime, runtime.cursor() as cursor:
+        cursor.execute(
+            "SELECT set_config('app.tenant_id', %s, true)",
+            [str(adult_signup.id)],
+        )
+        cursor.execute(
+            """
+            INSERT INTO codesho.identity_adultattestationprovenance
+                (id, tenant_id, attestation_id, collection_context, receipt_kind, recorded_at)
+            VALUES (%s, %s, %s, 'internal_synthetic_harness', 'self_attestation', CURRENT_TIMESTAMP)
+            """,
+            (str(uuid4()), str(adult_signup.id), str(runtime_attestation.id)),
+        )
+        runtime.rollback()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_postgres_provenance_rejects_cross_tenant_linkage(adult_signup):
+    require_postgres()
+    migrator_url = os.environ.get("DATABASE_MIGRATOR_TEST_URL")
+    if not migrator_url:
+        pytest.skip("migrator role URL is not configured")
+
+    Tenant.objects.create(slug="beta", name="Beta")
+    beta = Tenant.objects.get(slug="beta")
+    with tenant_atomic(adult_signup.id):
+        attestation = AdultAgeAttestation.objects.create(
+            tenant_id=adult_signup.id,
+            subject_id=uuid4(),
+            policy_version=POLICY_VERSION,
+        )
+
+    with connect(migrator_url) as migrator, migrator.cursor() as cursor:
+        cursor.execute("SELECT set_config('app.tenant_id', %s, true)", [str(beta.id)])
+        try:
+            cursor.execute(
+                """
+                INSERT INTO codesho.identity_adultattestationprovenance
+                    (id, tenant_id, attestation_id, collection_context, receipt_kind, recorded_at)
+                VALUES (
+                    %s, %s, %s, 'internal_synthetic_harness',
+                    'self_attestation', CURRENT_TIMESTAMP
+                )
+                """,
+                (str(uuid4()), str(beta.id), str(attestation.id)),
+            )
+        except RaiseException as exc:
+            assert "attestation and provenance tenant mismatch" in str(exc)
+            migrator.rollback()
+        else:
+            pytest.fail("cross-tenant provenance linkage was accepted")
 
 
 @pytest.mark.django_db(transaction=True)
@@ -456,6 +663,7 @@ def test_postgres_endpoint_commits_attestation_and_audit_atomically(adult_signup
         response = post(client, headers, payload(subject_id))
     assert response.status_code == 201
     attestation = AdultAgeAttestation.objects.get(subject_id=subject_id)
+    assert provenance_for_attestation(adult_signup.id, attestation).tenant_id == adult_signup.id
     # The immutable audit relation is in a dedicated PostgreSQL schema. Django
     # quotes a dotted db_table name as one identifier, so use a schema-qualified
     # cursor query here rather than an ORM read of that state-only model.

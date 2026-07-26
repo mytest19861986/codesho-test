@@ -71,6 +71,65 @@ class AdultAgeAttestation(models.Model):
         raise ValidationError("adult age attestations are append-only")
 
 
+class AdultAttestationProvenance(models.Model):
+    """Restricted collection receipt for one internal synthetic attestation."""
+
+    class CollectionContext(models.TextChoices):
+        INTERNAL_SYNTHETIC_HARNESS = (
+            "internal_synthetic_harness",
+            "Internal synthetic harness",
+        )
+
+    class ReceiptKind(models.TextChoices):
+        SELF_ATTESTATION = "self_attestation", "Self attestation"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant_id = models.UUIDField(editable=False)
+    attestation = models.OneToOneField(
+        AdultAgeAttestation,
+        db_column="attestation_id",
+        on_delete=models.PROTECT,
+        related_name="+",
+        editable=False,
+    )
+    collection_context = models.CharField(
+        max_length=64,
+        choices=CollectionContext,
+        default=CollectionContext.INTERNAL_SYNTHETIC_HARNESS,
+        editable=False,
+    )
+    receipt_kind = models.CharField(
+        max_length=32,
+        choices=ReceiptKind,
+        default=ReceiptKind.SELF_ATTESTATION,
+        editable=False,
+    )
+    recorded_at = models.DateTimeField(auto_now_add=True, editable=False)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(collection_context="internal_synthetic_harness"),
+                name="adult_provenance_context_valid",
+            ),
+            models.CheckConstraint(
+                condition=Q(receipt_kind="self_attestation"),
+                name="adult_provenance_receipt_valid",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"AdultAttestationProvenance({self.id})"
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if not self._state.adding:
+            raise ValidationError("adult attestation provenance is immutable")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: object, **kwargs: object) -> tuple[int, dict[str, int]]:
+        raise ValidationError("adult attestation provenance is append-only")
+
+
 class PasscodeCredential(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="passcode_credential")
     encoded_hash = models.CharField(max_length=256)
