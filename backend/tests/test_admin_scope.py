@@ -1,3 +1,4 @@
+import uuid
 from unittest.mock import patch
 
 import pytest
@@ -5,7 +6,7 @@ from django.contrib.admin.sites import AdminSite
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.contrib.sessions.backends.db import SessionStore
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import DatabaseError, connection
+from django.db import DatabaseError, connection, transaction
 from django.utils import timezone
 
 from config.platform_admin import (
@@ -457,7 +458,7 @@ class TestPlatformOperatorPolicyImmutability:
             policy.delete()
 
     @pytest.mark.skipif(connection.vendor != "postgresql", reason="requires PostgreSQL trigger")
-    def test_postgresql_rejects_raw_sql_delete_reactivation_and_broadening(
+    def test_postgresql_rejects_raw_sql_immutable_policy_mutations(
         self, operator_user, superuser
     ):
         policy = PlatformOperatorPolicy.objects.create(
@@ -469,15 +470,20 @@ class TestPlatformOperatorPolicyImmutability:
             created_by_user=superuser,
         )
         with connection.cursor() as cursor:
-            with pytest.raises(DatabaseError):
+            with pytest.raises(DatabaseError), transaction.atomic():
                 cursor.execute(
                     "DELETE FROM codesho.identity_platformoperatorpolicy WHERE id = %s", [policy.id]
                 )
-            with pytest.raises(DatabaseError):
+            with pytest.raises(DatabaseError), transaction.atomic():
                 cursor.execute(
                     "UPDATE codesho.identity_platformoperatorpolicy "
                     "SET action = 'view' WHERE id = %s",
                     [policy.id],
+                )
+            with pytest.raises(DatabaseError), transaction.atomic():
+                cursor.execute(
+                    "UPDATE codesho.identity_platformoperatorpolicy SET id = %s WHERE id = %s",
+                    [uuid.uuid4(), policy.id],
                 )
             cursor.execute(
                 """
@@ -487,7 +493,7 @@ class TestPlatformOperatorPolicyImmutability:
                 """,
                 [superuser.id, policy.id],
             )
-            with pytest.raises(DatabaseError):
+            with pytest.raises(DatabaseError), transaction.atomic():
                 cursor.execute(
                     "UPDATE codesho.identity_platformoperatorpolicy "
                     "SET active = TRUE WHERE id = %s",

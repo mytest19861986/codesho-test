@@ -229,6 +229,7 @@ class PlatformOperatorPolicy(models.Model):
             "action",
             "scope_kind",
             "active",
+            "created_at",
             "created_by_user_id",
             "revoked_at",
             "revoked_by_user_id",
@@ -243,6 +244,7 @@ class PlatformOperatorPolicy(models.Model):
             or previous["model_label"] != self.model_label
             or previous["action"] != self.action
             or previous["scope_kind"] != self.scope_kind
+            or previous["created_at"] != self.created_at
             or previous["created_by_user_id"] != self.created_by_user_id
         ):
             raise ValidationError("operator policy grants are immutable")

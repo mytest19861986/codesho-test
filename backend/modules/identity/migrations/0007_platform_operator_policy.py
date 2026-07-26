@@ -24,7 +24,8 @@ def create_platform_operator_policy_immutability(apps, schema_editor):
                 RAISE EXCEPTION 'revoked platform operator policies are immutable';
             END IF;
 
-            IF NEW.operator_user_id IS DISTINCT FROM OLD.operator_user_id
+            IF NEW.id IS DISTINCT FROM OLD.id
+               OR NEW.operator_user_id IS DISTINCT FROM OLD.operator_user_id
                OR NEW.model_label IS DISTINCT FROM OLD.model_label
                OR NEW.action IS DISTINCT FROM OLD.action
                OR NEW.scope_kind IS DISTINCT FROM OLD.scope_kind
