@@ -50,15 +50,18 @@ database/RLS/provider-neutral architecture review. The first review returned
 explicit authorization-disabled fail-closed invariant) and `71A-DOC-01`
 (historical Task69B gates and Draft PR state were unclear). This revision
 addresses both findings within the exact five-file allow-list. Raw prompts and
-responses remain outside the repository; the final verdict must be
-re-established on the new head.
+responses remain outside the repository. Re-review V2 disposed `71A-SEC-01`
+and `71A-DOC-01` as PASS, but found blocking `71A-DOC-02`: the Commander
+checkpoint still named the prior V1 head. This remediation updates that
+checkpoint to the live PR #11 head; the final verdict remains pending until
+the new head is independently re-reviewed.
 
 ## Verification evidence
 
 ```text
 ALLOW-LIST: EXACTLY 5 FILES REQUIRED
 CODE/MIGRATION/API/CONFIG CHANGE: FORBIDDEN
-GIT DIFF --CHECK: PENDING FINAL CHECKPOINT
+GIT DIFF --CHECK: REQUIRED AND MUST BE RECORDED ON FINAL HEAD
 CI backend/frontend/smoke_restore: REQUIRED
 ```
 
