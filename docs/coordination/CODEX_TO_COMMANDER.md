@@ -1,28 +1,34 @@
 # Codex to Commander — Task71A
 
-## Current Task71A checkpoint
+## Current Task71B checkpoint
 
 ```text
-TASK_ID: SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-ARCHITECTURE-71A
-STATUS: ARCHITECTURE_AND_PRIVACY_GATE / IN_PROGRESS / SYNTHETIC_ONLY
-BASE_SHA: bdc2839bb03e829064066496739d47c7cbb05c07
-BRANCH: agent/task71a-synthetic-account-bootstrap-architecture
-WORKTREE: H:\codesho\codesho\worktrees\codesho-task71a
+TASK_ID: SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-IMPLEMENT-71B
+STATUS: IMPLEMENTATION / IN_PROGRESS / INTERNAL_SYNTHETIC_ONLY
+BASE_SHA: 5149bb1c7bf1ca6cf590bfafc3833876de11ec0a
+BRANCH: agent/task71b-synthetic-account-bootstrap
+WORKTREE: H:\codesho\codesho\worktrees\codesho-task71b
+ALLOW_LIST: EXACTLY 14 PATHS
 PR_9: CLOSED / MERGED / HISTORICAL
 PR_10: CLOSED / MERGED / HISTORICAL
-PR_11: OPEN / DRAFT / LIVE_HEAD: PR_METADATA (do not duplicate a mutable SHA)
+PR_11: CLOSED / MERGED / HISTORICAL
 PR_5: OPEN / DRAFT / UNCHANGED / HEAD ee708a59fda89f08b824b079ebece2eed3b5515b
-REAL_USERS/PUBLIC_API/BACKFILL/PROVIDER: NOT_AUTHORIZED
+READY/MERGE/DIRECT_MAIN_PUSH: NOT_AUTHORIZED
+PUBLIC_API/OPENAPI/FRONTEND/CONFIGURATION: NOT_AUTHORIZED
+REAL_USERS/BACKFILL/PROVIDER: NOT_AUTHORIZED
 PRODUCTION/DEPLOYMENT/RELEASE: NOT_AUTHORIZED
 PROTECTED_CODESHO_PROMOTION: NOT_AUTHORIZED
 LEGAL_RETENTION/DELETION/HOLD: LEGAL_PENDING
 ```
 
-Task71A is documentation-only. The five-file allow-list is exact; no source,
-model, migration, API, OpenAPI, frontend, configuration, test, account,
-membership, credential, or runtime behavior may change. The current User
-username/email requirement is an architectural option and Task71B precondition,
-not a reason to alter code here.
+Task71B is implementation-only within the exact 14-file allow-list. It defines
+no public endpoint, signup flow, credential enrollment, authentication, role
+activation, real-user or Production capability. Synthetic rows contain no
+invented contact value. Required final gates include exact-file/diff review,
+focused and full backend tests, empty-database migrations, OpenAPI/frontend
+non-change, sequential provider-neutral reviews, and backend/frontend/
+Compose/smoke_restore CI. Draft PR only; Ready and merge require later
+explicit authorization.
 
 ---
 

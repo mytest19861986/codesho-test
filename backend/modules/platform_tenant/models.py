@@ -2,6 +2,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
 
 
 class Tenant(models.Model):
@@ -34,13 +35,23 @@ class TenantMembership(models.Model):
         on_delete=models.CASCADE,
         related_name="tenant_memberships",
     )
-    role = models.CharField(max_length=16, choices=Role)
+    role = models.CharField(max_length=16, choices=Role, null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    is_synthetic_bootstrap = models.BooleanField(default=False, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["tenant", "user"], name="unique_tenant_membership")
+            models.UniqueConstraint(fields=["tenant", "user"], name="unique_tenant_membership"),
+            models.CheckConstraint(
+                condition=Q(is_active=False, is_synthetic_bootstrap=True, role__isnull=True)
+                | Q(is_synthetic_bootstrap=False),
+                name="synthetic_membership_dormant_fields_consistent",
+            ),
+            models.CheckConstraint(
+                condition=Q(is_active=False) | Q(role__isnull=False),
+                name="active_membership_requires_role",
+            ),
         ]
         indexes = [models.Index(fields=["tenant", "user", "is_active"])]
 

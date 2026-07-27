@@ -1,29 +1,23 @@
 # Codesho Project State
 
-Updated: 2026-07-27 (Task71A synthetic account bootstrap architecture)
+Updated: 2026-07-27 (Task71B synthetic account bootstrap implementation)
 
 ## Current Status
 
-Task71A is `ARCHITECTURE_AND_PRIVACY_GATE / COMPLETE / SYNTHETIC_ONLY` on
-base `bdc2839bb03e829064066496739d47c7cbb05c07`, branch
-`agent/task71a-synthetic-account-bootstrap-architecture`, with an exact
-five-file documentation allow-list. It defines no implementation or runtime
-behavior. Task69B is `COMPLETE / MERGED / VERIFIED`. PR #9 is `CLOSED / MERGED` at
-`5be173afb03197cbc2e293e2ff28e1f9156a47ad`, with parents
-`27a8626d29bfa7e21c5e770455db6b20a4521ccc` and
-`0aea2e0a1dbba925343a854de35683b84d83a748`. Its source branch remains preserved.
-CI evidence is green (backend PostgreSQL 224 passed, frontend success,
-smoke_restore success); exact scope and review gates passed. PR #5 remains
-`OPEN / DRAFT / UNCHANGED` at head `ee708a59fda89f08b824b079ebece2eed3b5515b`.
-Task71A Draft PR #11 is `OPEN / DRAFT` at the Task71A head. Independent
-architecture review is `PASS`; final-head backend/frontend/smoke_restore CI is
-`SUCCESS` (runs 30242024960 and 30242024950), and Ready remains unauthorized.
-Draft PR creation and closeout are complete. No Production,
+Task71B is `IMPLEMENTATION / IN_PROGRESS / INTERNAL_SYNTHETIC_ONLY` on exact
+base `5149bb1c7bf1ca6cf590bfafc3833876de11ec0a`, branch
+`agent/task71b-synthetic-account-bootstrap`, with an exact 14-file allow-list.
+It creates only inactive, roleless synthetic memberships and dormant users with
+unusable passwords; no public or Production capability is enabled. Task71A is
+`COMPLETE / MERGED / VERIFIED` at `5149bb1c7bf1ca6cf590bfafc3833876de11ec0a`.
+PR #5 remains `OPEN / DRAFT / UNCHANGED` at head
+`ee708a59fda89f08b824b079ebece2eed3b5515b`. Task71B local acceptance, reviews,
+Draft PR, and CI are pending. No Production,
 deployment, release, real-user, public API, backfill, provider, or protected
 `codesho` promotion is authorized. Legal decisions remain `LEGAL_PENDING`.
 
-Task69B/Task70A wording below is historical only. The project will return to
-`WAITING_FOR_NEXT_SEPARATE_AUTHORIZATION` after Task71A closeout.
+Task69B/Task70A/Task71A wording below is historical only. The project will
+return to `WAITING_FOR_NEXT_SEPARATE_AUTHORIZATION` after Task71B closeout.
 
 Task67A/67B and the Task68A documentation closeout are merged. PR #7 is
 CLOSED / MERGED at `fc2aa2f4d7261dc7bb597886dbe782163313eceb`. Its parents
