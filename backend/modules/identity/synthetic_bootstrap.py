@@ -8,19 +8,14 @@ bounded security-audit event.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from uuid import UUID, uuid4
 
+from django.apps import apps
 from django.conf import settings
-from django.db import DatabaseError, IntegrityError, connection
-
-from modules.platform_event.security_audit import (
-    SecurityAuditError,
-    append_security_event,
-    synthetic_account_bootstrapped,
-)
-from modules.platform_tenant.context import tenant_atomic
-from modules.platform_tenant.models import TenantMembership
+from django.db import DatabaseError, IntegrityError, connection, transaction
 
 from .models import (
     AdultAgeAttestation,
@@ -42,6 +37,10 @@ class SyntheticBootstrapConflict(SyntheticBootstrapError):
     """Raised for changed replays, duplicate attestations, or invalid linkage."""
 
 
+class SyntheticBootstrapAuditError(SyntheticBootstrapError):
+    """Raised when the bounded audit append cannot be completed."""
+
+
 @dataclass(frozen=True, slots=True)
 class SyntheticBootstrapResult:
     request_id: UUID
@@ -49,6 +48,48 @@ class SyntheticBootstrapResult:
     membership_id: UUID
     audit_event_id: UUID
     replayed: bool
+
+
+@contextmanager
+def _tenant_atomic(tenant_id: UUID) -> Iterator[None]:
+    """Set the transaction-local tenant context without crossing module boundaries."""
+
+    with transaction.atomic():
+        if connection.vendor == "postgresql":
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT set_config('app.tenant_id', %s, true)", [str(tenant_id)])
+        yield
+
+
+def append_security_event(
+    *, event_id: UUID, tenant_id: UUID, user_id: UUID, idempotency_key: str
+) -> bool:
+    """Append the approved bounded event through the existing audit DB function."""
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT audit.append_identity_security_event(
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                )
+                """,
+                (
+                    event_id,
+                    "synthetic_account_bootstrapped",
+                    "success",
+                    "synthetic_bootstrap_created",
+                    user_id,
+                    None,
+                    tenant_id,
+                    None,
+                    uuid4(),
+                    idempotency_key,
+                ),
+            )
+            return bool(cursor.fetchone()[0])
+    except DatabaseError as exc:
+        raise SyntheticBootstrapAuditError("synthetic bootstrap audit append failed") from exc
 
 
 def _require_uuid(value: UUID, name: str) -> UUID:
@@ -75,7 +116,7 @@ def bootstrap_synthetic_account(
     idempotency_key = _require_uuid(idempotency_key, "idempotency_key")
 
     try:
-        with tenant_atomic(tenant_id):
+        with _tenant_atomic(tenant_id):
             existing = (
                 SyntheticBootstrapRequest.objects.select_related("user", "membership")
                 .filter(tenant_id=tenant_id, idempotency_key=idempotency_key)
@@ -137,7 +178,8 @@ def bootstrap_synthetic_account(
             user.set_unusable_password()
             user.save(force_insert=True)
 
-            membership = TenantMembership.objects.create(
+            tenant_membership_model = apps.get_model("platform_tenant", "TenantMembership")
+            membership = tenant_membership_model.objects.create(
                 tenant_id=tenant_id,
                 user_id=user.id,
                 role=None,
@@ -146,16 +188,13 @@ def bootstrap_synthetic_account(
             )
 
             audit_event_id = uuid4()
-            audit_result = append_security_event(
-                synthetic_account_bootstrapped(
-                    audit_event_id,
-                    uuid4(),
-                    tenant_id,
-                    user.id,
-                    f"synthetic-bootstrap:{tenant_id}:{idempotency_key}",
-                )
+            audit_created = append_security_event(
+                event_id=audit_event_id,
+                tenant_id=tenant_id,
+                user_id=user.id,
+                idempotency_key=f"synthetic-bootstrap:{tenant_id}:{idempotency_key}",
             )
-            if not audit_result.created:
+            if not audit_created:
                 raise SyntheticBootstrapConflict("synthetic bootstrap audit key already exists")
 
             request = SyntheticBootstrapRequest.objects.create(
@@ -179,5 +218,5 @@ def bootstrap_synthetic_account(
         raise SyntheticBootstrapConflict("synthetic bootstrap uniqueness conflict") from exc
     except DatabaseError as exc:
         raise SyntheticBootstrapConflict("synthetic bootstrap database contract rejected") from exc
-    except SecurityAuditError:
+    except SyntheticBootstrapAuditError:
         raise

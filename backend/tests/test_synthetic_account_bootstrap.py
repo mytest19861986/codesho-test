@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
+from threading import Barrier, Thread
 from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
-from django.db import IntegrityError, connection, transaction
+from django.db import IntegrityError, close_old_connections, connection, transaction
+from psycopg import connect
+from psycopg.errors import InsufficientPrivilege, RaiseException
 
 from modules.identity.models import (
     AdultAgeAttestation,
@@ -74,6 +78,8 @@ def test_same_tenant_bootstrap_is_dormant_and_opaque(bootstrap_inputs):
     assert user.synthetic_handle is not None
     assert user.username is None
     assert user.email is None
+    assert user.first_name == ""
+    assert user.last_name == ""
     assert user.is_active is False
     assert user.has_usable_password() is False
     assert membership.is_active is False
@@ -193,6 +199,18 @@ def test_database_constraints_reject_prohibited_identity_and_active_roleless_mem
             password="!",
         )
 
+    with transaction.atomic(), pytest.raises(IntegrityError):
+        User.objects.create(
+            identity_mode=User.IdentityMode.SYNTHETIC,
+            synthetic_handle=uuid4(),
+            username=None,
+            email=None,
+            first_name="Invented",
+            last_name="Name",
+            is_active=False,
+            password="!",
+        )
+
     user = User.objects.create_user(username="human", email="human@example.test")
     tenant = Tenant.objects.get(pk=bootstrap_inputs.tenant_id)
     with transaction.atomic(), pytest.raises(IntegrityError):
@@ -214,3 +232,114 @@ def test_rls_contract_is_present_on_postgresql():
             "FROM pg_class WHERE oid = 'codesho.identity_syntheticbootstraprequest'::regclass"
         )
         assert cursor.fetchone() == (True, True)
+
+
+@pytest.mark.django_db(transaction=True)
+def test_postgres_runtime_grants_and_dormancy_guards(bootstrap_inputs):
+    if connection.vendor != "postgresql":
+        pytest.skip("PostgreSQL-specific runtime contract")
+    runtime_url = os.environ.get("DATABASE_RUNTIME_TEST_URL")
+    migrator_url = os.environ.get("DATABASE_MIGRATOR_TEST_URL")
+    if not runtime_url or not migrator_url:
+        pytest.skip("database role URLs are not configured")
+
+    with patch(
+        "modules.identity.synthetic_bootstrap.append_security_event",
+        return_value=True,
+    ):
+        result = bootstrap_synthetic_account(**bootstrap_inputs.__dict__)
+
+    with connect(runtime_url, autocommit=True) as runtime, runtime.cursor() as cursor:
+        cursor.execute(
+            "SELECT set_config('app.tenant_id', %s, true)",
+            [str(bootstrap_inputs.tenant_id)],
+        )
+        cursor.execute(
+            "SELECT count(*) FROM codesho.identity_syntheticbootstraprequest "
+            "WHERE id = %s",
+            [str(result.request_id)],
+        )
+        assert cursor.fetchone()[0] == 1
+        cursor.execute(
+            "SELECT has_table_privilege(current_user, "
+            "'codesho.identity_syntheticbootstraprequest', 'SELECT'), "
+            "has_table_privilege(current_user, "
+            "'codesho.identity_syntheticbootstraprequest', 'INSERT'), "
+            "has_table_privilege(current_user, "
+            "'codesho.identity_syntheticbootstraprequest', 'UPDATE'), "
+            "has_table_privilege(current_user, "
+            "'codesho.identity_syntheticbootstraprequest', 'DELETE'), "
+            "has_table_privilege(current_user, "
+            "'codesho.identity_syntheticbootstraprequest', 'TRUNCATE')"
+        )
+        assert cursor.fetchone() == (True, True, False, False, False)
+        for statement in (
+            "UPDATE codesho.identity_syntheticbootstraprequest SET state = 'completed'",
+            "DELETE FROM codesho.identity_syntheticbootstraprequest",
+            "TRUNCATE codesho.identity_syntheticbootstraprequest",
+        ):
+            with pytest.raises((InsufficientPrivilege, RaiseException)):
+                cursor.execute(statement)
+
+    with connect(migrator_url, autocommit=True) as migrator, migrator.cursor() as cursor:
+        with pytest.raises(RaiseException):
+            cursor.execute(
+                "UPDATE codesho.identity_user SET password = 'x' WHERE id = %s",
+                [str(result.user_id)],
+            )
+        with pytest.raises(RaiseException):
+            cursor.execute(
+                "UPDATE codesho.platform_tenant_tenantmembership "
+                "SET is_active = true WHERE id = %s",
+                [str(result.membership_id)],
+            )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_postgres_real_audit_and_all_or_nothing_bootstrap(bootstrap_inputs):
+    if connection.vendor != "postgresql":
+        pytest.skip("PostgreSQL-specific audit integration")
+    result = bootstrap_synthetic_account(**bootstrap_inputs.__dict__)
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT event_type, reason_code FROM audit.identity_security_event "
+            "WHERE event_id = %s",
+            [str(result.audit_event_id)],
+        )
+        assert cursor.fetchone() == (
+            "synthetic_account_bootstrapped",
+            "synthetic_bootstrap_created",
+        )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_postgres_concurrent_first_requests_create_one_account(bootstrap_inputs):
+    if connection.vendor != "postgresql":
+        pytest.skip("PostgreSQL-specific concurrency contract")
+    barrier = Barrier(2)
+    results = []
+    errors = []
+
+    def run_request() -> None:
+        close_old_connections()
+        try:
+            barrier.wait(timeout=10)
+            result = bootstrap_synthetic_account(**bootstrap_inputs.__dict__)
+            results.append(result)
+        except BaseException as exc:  # pragma: no cover - asserted by parent
+            errors.append(exc)
+        finally:
+            close_old_connections()
+
+    first = Thread(target=run_request)
+    second = Thread(target=run_request)
+    first.start()
+    second.start()
+    first.join(timeout=20)
+    second.join(timeout=20)
+    assert not first.is_alive() and not second.is_alive()
+    assert errors == []
+    assert len(results) == 2
+    assert sorted(result.replayed for result in results) == [False, True]
+    assert SyntheticBootstrapRequest.objects.count() == 1
+    assert User.objects.filter(identity_mode=User.IdentityMode.SYNTHETIC).count() == 1

@@ -1,6 +1,6 @@
 # Task71B Synthetic Account Bootstrap Review Summary
 
-Status: `IN_PROGRESS / IMPLEMENTATION_GATES_PENDING / DRAFT_ONLY`
+Status: `IN_PROGRESS / REMEDIATION_REQUIRED / DRAFT_ONLY`
 
 Task: `SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-IMPLEMENT-71B`
 Repository: `mytest19861986/codesho-test`
@@ -64,3 +64,18 @@ LEGAL RETENTION / DELETION / ERASURE / HOLD: LEGAL_PENDING
 
 Raw review prompts, attachments, and responses remain outside the repository;
 only bounded findings, dispositions, and evidence belong here.
+
+## Independent review V1 disposition
+
+Review V1 returned `FAIL` with four blockers. Remediation is restricted to the
+same 14 paths and a new head/re-review is required:
+
+| Finding | Disposition |
+|---|---|
+| `71B-CI-01` module boundary imports | `REMEDIATED`: service now uses Django app registry, transaction-local tenant context, and the approved audit DB function without cross-module imports. |
+| `71B-SEC-01` unusable password and mutation | `REMEDIATED`: PostgreSQL accepts Django's `!%` unusable marker and a database trigger rejects synthetic password/identity/activation mutation. |
+| `71B-PRIV-01` synthetic names | `REMEDIATED`: model/migration constraints and trigger require empty `first_name`/`last_name`; focused test covers invented names. |
+| `71B-TEST-01` missing evidence | `REMEDIATED IN SCOPE`: focused tests now include PostgreSQL runtime grants, dormancy guards, real audit integration, and concurrent first requests; the required CI remains the authoritative evidence. |
+
+No finding authorizes Ready, merge, public API, real users, Production, or
+protected `codesho` promotion.

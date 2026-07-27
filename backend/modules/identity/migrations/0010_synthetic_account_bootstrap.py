@@ -66,7 +66,7 @@ BEGIN
         SELECT 1 FROM codesho.identity_user
         WHERE id = NEW.user_id AND identity_mode = 'synthetic'
           AND is_active = false AND username IS NULL AND email IS NULL
-          AND synthetic_handle IS NOT NULL AND password = '!'
+          AND synthetic_handle IS NOT NULL AND password LIKE '!%'
     ) THEN
         RAISE EXCEPTION 'synthetic bootstrap user is not dormant and opaque';
     END IF;
@@ -80,6 +80,35 @@ BEGIN
     RETURN NEW;
 END;
 $$;
+
+CREATE OR REPLACE FUNCTION codesho.enforce_synthetic_user_dormancy()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, codesho, pg_temp
+AS $$
+BEGIN
+    IF NEW.identity_mode = 'synthetic'
+       AND (NEW.is_active OR NEW.username IS NOT NULL OR NEW.email IS NOT NULL
+            OR NEW.first_name <> '' OR NEW.last_name <> ''
+            OR NEW.synthetic_handle IS NULL OR NEW.password NOT LIKE '!%') THEN
+        RAISE EXCEPTION 'synthetic user must remain inactive, opaque and unusable';
+    END IF;
+    IF TG_OP = 'UPDATE' AND OLD.identity_mode = 'synthetic'
+       AND (NEW.identity_mode IS DISTINCT FROM OLD.identity_mode
+            OR NEW.is_active OR NEW.username IS NOT NULL OR NEW.email IS NOT NULL
+            OR NEW.first_name <> '' OR NEW.last_name <> ''
+            OR NEW.synthetic_handle IS DISTINCT FROM OLD.synthetic_handle
+            OR NEW.password NOT LIKE '!%') THEN
+        RAISE EXCEPTION 'synthetic user dormancy is immutable';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER synthetic_user_dormancy_guard
+BEFORE INSERT OR UPDATE ON codesho.identity_user
+FOR EACH ROW EXECUTE FUNCTION codesho.enforce_synthetic_user_dormancy();
 
 CREATE TRIGGER synthetic_bootstrap_request_contract
 BEFORE INSERT OR UPDATE OR DELETE ON codesho.identity_syntheticbootstraprequest
@@ -174,6 +203,8 @@ class Migration(migrations.Migration):
                     email__isnull=True,
                     synthetic_handle__isnull=False,
                     is_active=False,
+                    first_name="",
+                    last_name="",
                 ),
                 name="user_identity_mode_fields_consistent",
             ),

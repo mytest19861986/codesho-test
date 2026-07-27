@@ -44,6 +44,8 @@ class User(AbstractUser):
                         email__isnull=True,
                         synthetic_handle__isnull=False,
                         is_active=False,
+                        first_name="",
+                        last_name="",
                     )
                 ),
                 name="user_identity_mode_fields_consistent",
