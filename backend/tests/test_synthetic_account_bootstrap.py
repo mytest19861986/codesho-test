@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import os
 from dataclasses import dataclass
 from threading import Barrier, Thread
@@ -7,7 +8,8 @@ from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
-from django.db import IntegrityError, close_old_connections, connection, transaction
+from django.db import DatabaseError, IntegrityError, close_old_connections, connection, transaction
+from django.db.migrations.exceptions import IrreversibleError
 from psycopg import connect
 from psycopg.errors import InsufficientPrivilege, RaiseException
 
@@ -250,6 +252,9 @@ def test_postgres_runtime_grants_and_dormancy_guards(bootstrap_inputs):
         result = bootstrap_synthetic_account(**bootstrap_inputs.__dict__)
 
     with connect(runtime_url, autocommit=True) as runtime, runtime.cursor() as cursor:
+        cursor.execute("RESET app.tenant_id")
+        cursor.execute("SELECT count(*) FROM codesho.identity_syntheticbootstraprequest")
+        assert cursor.fetchone()[0] == 0
         cursor.execute(
             "SELECT set_config('app.tenant_id', %s, true)",
             [str(bootstrap_inputs.tenant_id)],
@@ -281,6 +286,16 @@ def test_postgres_runtime_grants_and_dormancy_guards(bootstrap_inputs):
             with pytest.raises((InsufficientPrivilege, RaiseException)):
                 cursor.execute(statement)
 
+    other = Tenant.objects.create(slug=f"other-{uuid4().hex[:12]}", name="Other")
+    with connect(runtime_url, autocommit=True) as runtime, runtime.cursor() as cursor:
+        cursor.execute("SELECT set_config('app.tenant_id', %s, true)", [str(other.id)])
+        cursor.execute(
+            "SELECT count(*) FROM codesho.identity_syntheticbootstraprequest "
+            "WHERE id = %s",
+            [str(result.request_id)],
+        )
+        assert cursor.fetchone()[0] == 0
+
     with connect(migrator_url, autocommit=True) as migrator, migrator.cursor() as cursor:
         with pytest.raises(RaiseException):
             cursor.execute(
@@ -292,6 +307,40 @@ def test_postgres_runtime_grants_and_dormancy_guards(bootstrap_inputs):
                 "UPDATE codesho.platform_tenant_tenantmembership "
                 "SET is_active = true WHERE id = %s",
                 [str(result.membership_id)],
+            )
+        with pytest.raises(RaiseException):
+            cursor.execute(
+                "UPDATE codesho.platform_tenant_tenantmembership "
+                "SET tenant_id = %s WHERE id = %s",
+                [str(other.id), str(result.membership_id)],
+            )
+        for statement, value in (
+            ("first_name", "Invented"),
+            ("last_name", "Name"),
+            ("synthetic_handle", str(uuid4())),
+        ):
+            with pytest.raises(RaiseException):
+                cursor.execute(
+                    f"UPDATE codesho.identity_user SET {statement} = %s WHERE id = %s",
+                    [value, str(result.user_id)],
+                )
+
+        with pytest.raises(RaiseException):
+            cursor.execute(
+                "INSERT INTO codesho.identity_syntheticbootstraprequest "
+                "(id, tenant_id, attestation_id, provenance_id, idempotency_key, "
+                "user_id, membership_id, state, audit_event_id, created_at) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, 'completed', %s, CURRENT_TIMESTAMP)",
+                (
+                    str(uuid4()),
+                    str(other.id),
+                    str(bootstrap_inputs.attestation_id),
+                    str(bootstrap_inputs.provenance_id),
+                    str(uuid4()),
+                    str(result.user_id),
+                    str(result.membership_id),
+                    str(uuid4()),
+                ),
             )
 
 
@@ -343,3 +392,31 @@ def test_postgres_concurrent_first_requests_create_one_account(bootstrap_inputs)
     assert sorted(result.replayed for result in results) == [False, True]
     assert SyntheticBootstrapRequest.objects.count() == 1
     assert User.objects.filter(identity_mode=User.IdentityMode.SYNTHETIC).count() == 1
+
+
+@pytest.mark.django_db
+def test_migration_contract_is_forward_only_and_password_pattern_is_driver_safe():
+    migration = importlib.import_module(
+        "modules.identity.migrations.0010_synthetic_account_bootstrap"
+    )
+    assert "password LIKE '!%%'" in migration.BOOTSTRAP_CONTRACT_SQL
+    with pytest.raises(IrreversibleError, match="irreversible"):
+        migration.irreversible(None, None)
+
+
+@pytest.mark.django_db
+def test_late_request_failure_rolls_back_rows_and_audit_boundary(bootstrap_inputs):
+    with (
+        patch(
+            "modules.identity.synthetic_bootstrap.append_security_event",
+            return_value=True,
+        ),
+        patch(
+            "modules.identity.synthetic_bootstrap.SyntheticBootstrapRequest.objects.create",
+            side_effect=DatabaseError("request contract rejected"),
+        ),
+        pytest.raises(Exception, match="database contract rejected"),
+    ):
+        bootstrap_synthetic_account(**bootstrap_inputs.__dict__)
+    assert User.objects.filter(identity_mode=User.IdentityMode.SYNTHETIC).count() == 0
+    assert TenantMembership.objects.filter(is_synthetic_bootstrap=True).count() == 0

@@ -66,7 +66,7 @@ BEGIN
         SELECT 1 FROM codesho.identity_user
         WHERE id = NEW.user_id AND identity_mode = 'synthetic'
           AND is_active = false AND username IS NULL AND email IS NULL
-          AND synthetic_handle IS NOT NULL AND password LIKE '!%'
+          AND synthetic_handle IS NOT NULL AND password LIKE '!%%'
     ) THEN
         RAISE EXCEPTION 'synthetic bootstrap user is not dormant and opaque';
     END IF;
@@ -91,7 +91,7 @@ BEGIN
     IF NEW.identity_mode = 'synthetic'
        AND (NEW.is_active OR NEW.username IS NOT NULL OR NEW.email IS NOT NULL
             OR NEW.first_name <> '' OR NEW.last_name <> ''
-            OR NEW.synthetic_handle IS NULL OR NEW.password NOT LIKE '!%') THEN
+            OR NEW.synthetic_handle IS NULL OR NEW.password NOT LIKE '!%%') THEN
         RAISE EXCEPTION 'synthetic user must remain inactive, opaque and unusable';
     END IF;
     IF TG_OP = 'UPDATE' AND OLD.identity_mode = 'synthetic'
@@ -99,7 +99,7 @@ BEGIN
             OR NEW.is_active OR NEW.username IS NOT NULL OR NEW.email IS NOT NULL
             OR NEW.first_name <> '' OR NEW.last_name <> ''
             OR NEW.synthetic_handle IS DISTINCT FROM OLD.synthetic_handle
-            OR NEW.password NOT LIKE '!%') THEN
+            OR NEW.password NOT LIKE '!%%') THEN
         RAISE EXCEPTION 'synthetic user dormancy is immutable';
     END IF;
     RETURN NEW;

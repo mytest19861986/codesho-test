@@ -149,6 +149,26 @@ def bootstrap_synthetic_account(
             if attestation is None:
                 raise SyntheticBootstrapConflict("attestation is missing or cross-tenant")
 
+            locked_replay = (
+                SyntheticBootstrapRequest.objects.select_related("user", "membership")
+                .filter(tenant_id=tenant_id, idempotency_key=idempotency_key)
+                .first()
+            )
+            if locked_replay is not None:
+                if (
+                    locked_replay.attestation_id != attestation_id
+                    or locked_replay.provenance_id != provenance_id
+                    or locked_replay.state != SyntheticBootstrapRequest.State.COMPLETED
+                ):
+                    raise SyntheticBootstrapConflict("changed synthetic bootstrap replay")
+                return SyntheticBootstrapResult(
+                    request_id=locked_replay.id,
+                    user_id=locked_replay.user_id,
+                    membership_id=locked_replay.membership_id,
+                    audit_event_id=locked_replay.audit_event_id,
+                    replayed=True,
+                )
+
             if connection.vendor != "postgresql":
                 provenance = (
                     AdultAttestationProvenance.objects.select_for_update()

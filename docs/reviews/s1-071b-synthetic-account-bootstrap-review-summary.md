@@ -79,3 +79,17 @@ same 14 paths and a new head/re-review is required:
 
 No finding authorizes Ready, merge, public API, real users, Production, or
 protected `codesho` promotion.
+
+## Independent review V2 disposition
+
+Review V2 found three blockers, all addressed within the exact allow-list:
+
+| Finding | Disposition |
+|---|---|
+| `71B-V2-DB-01` psycopg percent escaping | `REMEDIATED`: PostgreSQL SQL uses `!%%`, which schema-editor execution renders as `!%`. |
+| `71B-V2-CONC-01` identical concurrent replay | `REMEDIATED`: the idempotency lookup is repeated after the attestation serialization lock and returns the terminal result. |
+| `71B-V2-TEST-01` PostgreSQL/RLS evidence | `REMEDIATED IN SCOPE`: focused tests now cover missing/cross-tenant RLS visibility, runtime grants, direct membership/user guards, cross-link rejection, real audit, concurrency, late rollback, and migration contract evidence. Final CI remains authoritative. |
+
+V3 independent review, final CI, and exact-file review remain pending. Ready,
+merge, direct `main` push, real users, Production, and protected `codesho`
+promotion remain unauthorized.

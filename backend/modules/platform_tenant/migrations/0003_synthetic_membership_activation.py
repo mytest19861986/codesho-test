@@ -30,7 +30,9 @@ BEGIN
     END IF;
     IF TG_OP = 'UPDATE' AND OLD.is_synthetic_bootstrap
        AND (NEW.is_active OR NEW.role IS DISTINCT FROM OLD.role
-            OR NEW.is_synthetic_bootstrap IS DISTINCT FROM OLD.is_synthetic_bootstrap) THEN
+            OR NEW.is_synthetic_bootstrap IS DISTINCT FROM OLD.is_synthetic_bootstrap
+            OR NEW.tenant_id IS DISTINCT FROM OLD.tenant_id
+            OR NEW.user_id IS DISTINCT FROM OLD.user_id) THEN
         RAISE EXCEPTION 'synthetic bootstrap membership activation is forbidden';
     END IF;
     IF TG_OP = 'UPDATE' AND NOT OLD.is_active AND NEW.is_active THEN
