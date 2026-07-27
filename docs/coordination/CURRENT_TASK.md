@@ -64,7 +64,7 @@ provenance or audit roll back the full acceptance. PostgreSQL RLS, same-tenant
 trigger validation, append-only trigger, and runtime INSERT-only grants are
 mandatory. No legacy backfill is allowed.
 
-## Acceptance criteria and gates
+## Historical Task69B implementation gates
 
 ```text
 MIGRATION DRIFT: NONE
@@ -83,12 +83,13 @@ LEGACY BACKFILL: NONE
 PRODUCTION INTERNAL MODE: REJECTED
 ```
 
-Required reviews are sequential: self-review, security, privacy, database/RLS,
-and provider-neutral review. All findings require disposition; raw prompts and
-responses stay outside the repository. Task70A changed exactly four
-allow-listed documentation files; CI passed backend, frontend, and
-smoke_restore on the merged Task69B head. The project is waiting for the next
-separate authorization; no Ready or merge transition remains for Task70A.
+The block above records completed Task69B implementation evidence only; it is
+not an active Task71A acceptance block and creates no Task71A implementation
+requirement. Task71A gates are: self-review, independent provider-neutral
+security/privacy/database/RLS review, internal consistency, exact five-file
+allow-list, `git diff --check`, and backend/frontend/smoke_restore CI on the
+Task71A head. PR #11 is OPEN / DRAFT; its creation is complete, while review,
+CI, and any Ready or merge transition remain pending and separately gated.
 
 ## Authority and exclusions
 

@@ -1,6 +1,6 @@
 # Task71A Synthetic Account Bootstrap Architecture Review Summary
 
-Status: `IN_PROGRESS / REVIEW_GATES_PENDING`
+Status: `IN_PROGRESS / REMEDIATION_REQUIRED / REVIEW_GATES_PENDING`
 
 Task: `SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-ARCHITECTURE-71A`
 Repository: `mytest19861986/codesho-test`
@@ -28,6 +28,8 @@ account, membership, credential, or runtime behavior is in scope.
       TenantMembership → Dormant/Initial Credential State is defined.
 - [x] Username/email alternatives are compared without inventing contact or
       identity data; Option B placeholder fields are rejected.
+- [x] Dormant User and membership are authorization-disabled and fail closed
+      until a separately authorized activation and credential task.
 - [x] Security, privacy, cost, time, and extensibility trade-offs are recorded.
 - [x] Atomicity, idempotency, replay, and concurrent duplicate handling are
       specified.
@@ -43,8 +45,13 @@ account, membership, credential, or runtime behavior is in scope.
 ## Review disposition
 
 Required independent reviews are sequential: security, privacy, and
-database/RLS/provider-neutral architecture review. Raw prompts and responses
-remain outside the repository. No independent verdict is asserted yet.
+database/RLS/provider-neutral architecture review. The first review returned
+`FAIL` with blocking findings `71A-SEC-01` (dormant lifecycle needed an
+explicit authorization-disabled fail-closed invariant) and `71A-DOC-01`
+(historical Task69B gates and Draft PR state were unclear). This revision
+addresses both findings within the exact five-file allow-list. Raw prompts and
+responses remain outside the repository; the final verdict must be
+re-established on the new head.
 
 ## Verification evidence
 

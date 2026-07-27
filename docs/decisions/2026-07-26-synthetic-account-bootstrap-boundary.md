@@ -31,7 +31,7 @@ SyntheticBootstrapRequest
 User (opaque synthetic account)
         |
         v
-TenantMembership (non-elevated role, pending explicit product approval)
+TenantMembership (pending/disabled, no authorization)
         |
         v
 Dormant / Initial Credential State (no secret material)
@@ -43,7 +43,12 @@ transactional boundary and must carry only opaque references and controlled
 state. The User is an account record, not a new subject. Membership is the
 tenant authorization edge. The dormant credential state means that no
 passcode, token, cookie, secret, or temporary credential exists until a
-separate approved credential task defines one.
+separate approved credential task defines one. Bootstrap must be fail-closed:
+the resulting User and membership cannot authenticate or authorize through any
+current or future path while dormant. Membership is pending/disabled, or
+equivalently protected by a database-enforced activation gate, until a
+separately authorized activation and credential task. Activation, role
+enablement, and credential enrollment are outside Task71A.
 
 The current `User` model requires Django's `username` and a unique `email`.
 That is an implementation constraint, not permission to synthesize a person's
@@ -132,6 +137,12 @@ limits migration risk without claiming Production or real-user readiness.
 - Account, membership, bootstrap state, and the bounded security-audit outcome
   commit together or roll back together. No signal or serializer owns this
   workflow; business logic must execute in one explicit service transaction.
+- A bootstrap result is authorization-disabled by construction. The User cannot
+  authenticate and the membership cannot authorize any request while dormant;
+  the pending/disabled state or database-enforced activation gate must fail
+  closed across every present and future authentication or authorization path.
+  Activation, role enablement, and credential enrollment require a separately
+  authorized task and are not implied by account creation.
 - Raw credentials are never generated or persisted here. Dormant means no
   credential material and no session/token/cookie issuance.
 - Provenance remains restricted and is never copied into ordinary audit
@@ -151,7 +162,7 @@ limits migration risk without claiming Production or real-user readiness.
 | Provenance | Existing restricted opaque receipt/reference and controlled context | Highly restricted / legal pending | Never ordinary audit |
 | Bootstrap request | Opaque request, tenant, attestation, state, idempotency reference, UTC timestamps | Restricted workflow metadata | No raw provenance |
 | User | Opaque account UUID and approved synthetic identity mode | Restricted account record | No invented contact data |
-| Membership | Opaque user/tenant UUIDs, approved non-elevated role, active state | Tenant authorization | Tenant-scoped only |
+| Membership | Opaque user/tenant UUIDs, pending/disabled role edge | Tenant authorization boundary | Tenant-scoped only; no authorization while dormant |
 | Credential state | Dormant/initial state only, no secret material | Restricted security state | No secret or token |
 | Security audit | Bounded event/reason code and opaque references | Restricted audit | Outcome only |
 
