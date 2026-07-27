@@ -365,6 +365,36 @@ def test_postgres_runtime_grants_and_dormancy_guards(bootstrap_inputs):
 
         with pytest.raises(RaiseException):
             cursor.execute(
+                "UPDATE codesho.identity_user SET identity_mode = 'human', "
+                "username = 'rewritten', email = 'rewritten@example.test', "
+                "synthetic_handle = NULL, is_active = true WHERE id = %s",
+                [str(result.user_id)],
+            )
+
+        human = User.objects.create_user(
+            username=f"transition-{uuid4().hex[:12]}",
+            email=f"transition-{uuid4().hex[:12]}@example.test",
+        )
+        with pytest.raises(RaiseException):
+            cursor.execute(
+                "UPDATE codesho.identity_user SET identity_mode = 'synthetic', "
+                "username = NULL, email = NULL, synthetic_handle = %s, "
+                "is_active = false, password = '!' WHERE id = %s",
+                (str(uuid4()), str(human.id)),
+            )
+
+        with pytest.raises(RaiseException):
+            cursor.execute(
+                "INSERT INTO codesho.identity_passcodecredential "
+                "(encoded_hash, pepper_id, must_change, credential_version, "
+                "created_at, changed_at, user_id) VALUES "
+                "('unused', 'test-v1', true, 1, CURRENT_TIMESTAMP, "
+                "CURRENT_TIMESTAMP, %s)",
+                [str(result.user_id)],
+            )
+
+        with pytest.raises(RaiseException):
+            cursor.execute(
                 "INSERT INTO codesho.identity_syntheticbootstraprequest "
                 "(id, tenant_id, attestation_id, provenance_id, idempotency_key, "
                 "user_id, membership_id, state, audit_event_id, created_at) "
