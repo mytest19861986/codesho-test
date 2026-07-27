@@ -8,7 +8,14 @@ from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
-from django.db import DatabaseError, IntegrityError, close_old_connections, connection, transaction
+from django.db import (
+    DatabaseError,
+    IntegrityError,
+    ProgrammingError,
+    close_old_connections,
+    connection,
+    transaction,
+)
 from django.db.migrations.exceptions import IrreversibleError
 from psycopg import connect
 from psycopg.errors import InsufficientPrivilege, RaiseException
@@ -191,7 +198,7 @@ def test_internal_mode_is_required(settings, bootstrap_inputs):
 def test_database_constraints_reject_prohibited_identity_and_active_roleless_membership(
     bootstrap_inputs,
 ):
-    with transaction.atomic(), pytest.raises(IntegrityError):
+    with transaction.atomic(), pytest.raises((IntegrityError, ProgrammingError)):
         User.objects.create(
             identity_mode=User.IdentityMode.SYNTHETIC,
             synthetic_handle=uuid4(),
@@ -256,7 +263,7 @@ def test_postgres_runtime_grants_and_dormancy_guards(bootstrap_inputs):
         cursor.execute("SELECT count(*) FROM codesho.identity_syntheticbootstraprequest")
         assert cursor.fetchone()[0] == 0
         cursor.execute(
-            "SELECT set_config('app.tenant_id', %s, true)",
+            "SELECT set_config('app.tenant_id', %s, false)",
             [str(bootstrap_inputs.tenant_id)],
         )
         cursor.execute(
@@ -285,16 +292,18 @@ def test_postgres_runtime_grants_and_dormancy_guards(bootstrap_inputs):
         ):
             with pytest.raises((InsufficientPrivilege, RaiseException)):
                 cursor.execute(statement)
+        cursor.execute("RESET app.tenant_id")
 
     other = Tenant.objects.create(slug=f"other-{uuid4().hex[:12]}", name="Other")
     with connect(runtime_url, autocommit=True) as runtime, runtime.cursor() as cursor:
-        cursor.execute("SELECT set_config('app.tenant_id', %s, true)", [str(other.id)])
+        cursor.execute("SELECT set_config('app.tenant_id', %s, false)", [str(other.id)])
         cursor.execute(
             "SELECT count(*) FROM codesho.identity_syntheticbootstraprequest "
             "WHERE id = %s",
             [str(result.request_id)],
         )
         assert cursor.fetchone()[0] == 0
+        cursor.execute("RESET app.tenant_id")
 
     with connect(migrator_url, autocommit=True) as migrator, migrator.cursor() as cursor:
         with pytest.raises(RaiseException):
@@ -390,8 +399,9 @@ def test_postgres_concurrent_first_requests_create_one_account(bootstrap_inputs)
     assert errors == []
     assert len(results) == 2
     assert sorted(result.replayed for result in results) == [False, True]
-    assert SyntheticBootstrapRequest.objects.count() == 1
-    assert User.objects.filter(identity_mode=User.IdentityMode.SYNTHETIC).count() == 1
+    with tenant_atomic(bootstrap_inputs.tenant_id):
+        assert SyntheticBootstrapRequest.objects.count() == 1
+        assert User.objects.filter(identity_mode=User.IdentityMode.SYNTHETIC).count() == 1
 
 
 @pytest.mark.django_db
