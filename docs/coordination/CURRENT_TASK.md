@@ -1,7 +1,7 @@
 # Current Task: SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-ARCHITECTURE-71A
 
 - Owner: Codex
-- Status: ARCHITECTURE_AND_PRIVACY_GATE / IN_PROGRESS / SYNTHETIC_ONLY.
+- Status: ARCHITECTURE_AND_PRIVACY_GATE / COMPLETE / SYNTHETIC_ONLY.
 - BASE_SHA: `bdc2839bb03e829064066496739d47c7cbb05c07`.
 - Target repository: `mytest19861986/codesho-test`.
 - Branch: `agent/task71a-synthetic-account-bootstrap-architecture`.
@@ -88,8 +88,9 @@ not an active Task71A acceptance block and creates no Task71A implementation
 requirement. Task71A gates are: self-review, independent provider-neutral
 security/privacy/database/RLS review, internal consistency, exact five-file
 allow-list, `git diff --check`, and backend/frontend/smoke_restore CI on the
-Task71A head. PR #11 is OPEN / DRAFT; its creation is complete, while review,
-CI, and any Ready or merge transition remain pending and separately gated.
+Task71A head. PR #11 is OPEN / DRAFT; creation, independent review, and CI
+closeout are complete. Ready and merge remain separately gated and are not
+authorized.
 
 ## Authority and exclusions
 

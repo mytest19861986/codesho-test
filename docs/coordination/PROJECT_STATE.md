@@ -4,7 +4,7 @@ Updated: 2026-07-27 (Task71A synthetic account bootstrap architecture)
 
 ## Current Status
 
-Task71A is `ARCHITECTURE_AND_PRIVACY_GATE / IN_PROGRESS / SYNTHETIC_ONLY` on
+Task71A is `ARCHITECTURE_AND_PRIVACY_GATE / COMPLETE / SYNTHETIC_ONLY` on
 base `bdc2839bb03e829064066496739d47c7cbb05c07`, branch
 `agent/task71a-synthetic-account-bootstrap-architecture`, with an exact
 five-file documentation allow-list. It defines no implementation or runtime
@@ -16,9 +16,9 @@ CI evidence is green (backend PostgreSQL 224 passed, frontend success,
 smoke_restore success); exact scope and review gates passed. PR #5 remains
 `OPEN / DRAFT / UNCHANGED` at head `ee708a59fda89f08b824b079ebece2eed3b5515b`.
 Task71A Draft PR #11 is `OPEN / DRAFT` at the Task71A head. Independent
-architecture review is `PASS`; final-head CI is pending after this closeout
-recording commit, and Ready remains unauthorized. Draft PR creation is
-complete. No Production,
+architecture review is `PASS`; final-head backend/frontend/smoke_restore CI is
+`SUCCESS` (runs 30242024960 and 30242024950), and Ready remains unauthorized.
+Draft PR creation and closeout are complete. No Production,
 deployment, release, real-user, public API, backfill, provider, or protected
 `codesho` promotion is authorized. Legal decisions remain `LEGAL_PENDING`.
 
