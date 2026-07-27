@@ -1,22 +1,26 @@
 # Codesho Project State
 
-Updated: 2026-07-26 (Task70A Task69B post-merge closeout)
+Updated: 2026-07-27 (Task71A synthetic account bootstrap architecture)
 
 ## Current Status
 
-Task69B is `COMPLETE / MERGED / VERIFIED`. PR #9 is `CLOSED / MERGED` at
+Task71A is `ARCHITECTURE_AND_PRIVACY_GATE / IN_PROGRESS / SYNTHETIC_ONLY` on
+base `bdc2839bb03e829064066496739d47c7cbb05c07`, branch
+`agent/task71a-synthetic-account-bootstrap-architecture`, with an exact
+five-file documentation allow-list. It defines no implementation or runtime
+behavior. Task69B is `COMPLETE / MERGED / VERIFIED`. PR #9 is `CLOSED / MERGED` at
 `5be173afb03197cbc2e293e2ff28e1f9156a47ad`, with parents
 `27a8626d29bfa7e21c5e770455db6b20a4521ccc` and
 `0aea2e0a1dbba925343a854de35683b84d83a748`. Its source branch remains preserved.
 CI evidence is green (backend PostgreSQL 224 passed, frontend success,
 smoke_restore success); exact scope and review gates passed. PR #5 remains
 `OPEN / DRAFT / UNCHANGED` at head `ee708a59fda89f08b824b079ebece2eed3b5515b`.
-The project is `WAITING_FOR_NEXT_SEPARATE_AUTHORIZATION`. No Production,
+Task71A review, CI, and Draft PR gates are pending. No Production,
 deployment, release, real-user, public API, backfill, provider, or protected
 `codesho` promotion is authorized. Legal decisions remain `LEGAL_PENDING`.
 
-Any later Draft, Ready-pending, review-pending, CI-pending, or merge-pending
-Task69B wording in this file is historical only.
+Task69B/Task70A wording below is historical only. The project will return to
+`WAITING_FOR_NEXT_SEPARATE_AUTHORIZATION` after Task71A closeout.
 
 Task67A/67B and the Task68A documentation closeout are merged. PR #7 is
 CLOSED / MERGED at `fc2aa2f4d7261dc7bb597886dbe782163313eceb`. Its parents
@@ -143,7 +147,16 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
 - Historical local-environment limitations in earlier checkpoints are retained
   in their original records and do not represent an unresolved Task63D gate.
 
-## Next Steps
+## Task71A next steps
+
+1. Complete self-review, provider-neutral independent architecture review,
+   exact-file review, and backend/frontend/smoke_restore CI for the Draft PR.
+2. Record only review findings and dispositions in the Task71A review summary;
+   keep raw prompts and responses outside the repository.
+3. Request separate authority before marking ready or merging to
+   `codesho-test/main`; never promote to protected `codesho`.
+
+## Historical Next Steps
 
 1. Wait for the next separate authorized Task; Task69B review, CI, Ready, and
    merge work are complete.

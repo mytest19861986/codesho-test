@@ -1,28 +1,40 @@
-# Current Task: SPRINT1-TASK69B-POST-MERGE-CLOSEOUT-70A
+# Current Task: SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-ARCHITECTURE-71A
 
 - Owner: Codex
-- Status: COMPLETE / MERGED / VERIFIED; waiting for next separate authorization.
-- BASE_SHA: `5be173afb03197cbc2e293e2ff28e1f9156a47ad`.
+- Status: ARCHITECTURE_AND_PRIVACY_GATE / IN_PROGRESS / SYNTHETIC_ONLY.
+- BASE_SHA: `bdc2839bb03e829064066496739d47c7cbb05c07`.
 - Target repository: `mytest19861986/codesho-test`.
-- Branch: `agent/task70a-task69b-post-merge-closeout`.
-- Worktree: new clean isolated worktree; old dirty checkout and source branch preserved.
+- Branch: `agent/task71a-synthetic-account-bootstrap-architecture`.
+- Worktree: new clean isolated worktree; old dirty checkout and prior branches preserved.
 - Employer standing authorization date: `2026-07-26`.
 
 ## Goal
 
-Record and verify the successful Task69B merge. This closeout changes no code,
-migration, API, configuration, product capability, or user behavior.
+Define the future Synthetic Account Bootstrap boundary from an adult attestation
+to an opaque synthetic account, membership, and dormant credential state. This
+Task changes no code, migration, API, configuration, product capability, or
+user behavior.
 
 ## Exact allow-list
 
 ```text
+docs/decisions/2026-07-26-synthetic-account-bootstrap-boundary.md
 docs/coordination/CODEX_TO_COMMANDER.md
 docs/coordination/CURRENT_TASK.md
 docs/coordination/PROJECT_STATE.md
-docs/reviews/s1-069b-provenance-implementation-review-summary.md
+docs/reviews/s1-071a-synthetic-account-bootstrap-architecture-review-summary.md
 ```
 
-## Task70A closeout evidence
+## Task71A authority and gates
+
+Commit and push of this documentation-only branch and creation of a Draft PR
+are authorized. Ready-for-review marking, merge to `codesho-test/main`, and
+any implementation or production action are not authorized by this assignment.
+Independent provider-neutral security, privacy, database, and RLS review,
+internal consistency review, exact-file review, and the three required CI
+checks remain gates before requesting further authority.
+
+## Historical Task70A closeout evidence
 
 ```text
 PR #9: CLOSED / MERGED
