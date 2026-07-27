@@ -1,6 +1,6 @@
 # Task71B Synthetic Account Bootstrap Review Summary
 
-Status: `IN_PROGRESS / V4_REMEDIATION / DRAFT_ONLY`
+Status: `IN_PROGRESS / FINAL_REVIEW_PENDING / DRAFT_ONLY`
 
 Task: `SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-IMPLEMENT-71B`
 Repository: `mytest19861986/codesho-test`
@@ -119,3 +119,13 @@ V4 returned two blockers on `2b3d9ebfb3ad7ec8d29f98d178ab541fb678f9d3`:
 |---|---|
 | `71B-V4-TEST-01` direct PostgreSQL guard evidence | `IN_REMEDIATION`: add migrator/direct-SQL negative assertions for both identity-mode transition directions and synthetic credential insertion. |
 | `71B-V4-DOC-02` stale current-head checkpoint | `IN_REMEDIATION`: update coordination current-head and CI fields to the exact reviewed head before requesting V5. |
+
+## Independent review V5 disposition
+
+V5 found one documentation self-reference issue: a hardcoded SHA in a
+coordination commit becomes stale as soon as that commit is created. The
+coordination checkpoint now uses the authoritative PR head (`git rev-parse
+HEAD`) and explicitly treats PR checks attached to that head as authoritative.
+This is `REMEDIATED`; final CI on this checkpoint and an independent final
+review remain required. The exact commit SHA is recorded in the handoff and
+Git history rather than duplicated as a self-referential field.
