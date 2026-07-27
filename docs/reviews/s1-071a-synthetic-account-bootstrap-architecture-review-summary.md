@@ -53,15 +53,16 @@ addresses both findings within the exact five-file allow-list. Raw prompts and
 responses remain outside the repository. Re-review V2 disposed `71A-SEC-01`
 and `71A-DOC-01` as PASS, but found blocking `71A-DOC-02`: the Commander
 checkpoint still named the prior V1 head. This remediation updates that
-checkpoint to the live PR #11 head; the final verdict remains pending until
-the new head is independently re-reviewed.
+checkpoint to resolve the live PR #11 head from PR metadata rather than embed
+a self-staling SHA; the final verdict remains pending until the new head is
+independently re-reviewed.
 
 ## Verification evidence
 
 ```text
 ALLOW-LIST: EXACTLY 5 FILES REQUIRED
 CODE/MIGRATION/API/CONFIG CHANGE: FORBIDDEN
-GIT DIFF --CHECK: REQUIRED AND MUST BE RECORDED ON FINAL HEAD
+GIT DIFF --CHECK: PASS (final remediation checkpoint before commit)
 CI backend/frontend/smoke_restore: REQUIRED
 ```
 
