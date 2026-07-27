@@ -1,4 +1,32 @@
-# Codex to Commander — Task70A
+# Codex to Commander — Task71A
+
+## Current Task71A checkpoint
+
+```text
+TASK_ID: SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-ARCHITECTURE-71A
+STATUS: ARCHITECTURE_AND_PRIVACY_GATE / IN_PROGRESS / SYNTHETIC_ONLY
+BASE_SHA: bdc2839bb03e829064066496739d47c7cbb05c07
+BRANCH: agent/task71a-synthetic-account-bootstrap-architecture
+WORKTREE: H:\codesho\codesho\worktrees\codesho-task71a
+PR_9: CLOSED / MERGED / HISTORICAL
+PR_10: CLOSED / MERGED / HISTORICAL
+PR_11: OPEN / DRAFT / LIVE_HEAD: PR_METADATA (do not duplicate a mutable SHA)
+PR_5: OPEN / DRAFT / UNCHANGED / HEAD ee708a59fda89f08b824b079ebece2eed3b5515b
+REAL_USERS/PUBLIC_API/BACKFILL/PROVIDER: NOT_AUTHORIZED
+PRODUCTION/DEPLOYMENT/RELEASE: NOT_AUTHORIZED
+PROTECTED_CODESHO_PROMOTION: NOT_AUTHORIZED
+LEGAL_RETENTION/DELETION/HOLD: LEGAL_PENDING
+```
+
+Task71A is documentation-only. The five-file allow-list is exact; no source,
+model, migration, API, OpenAPI, frontend, configuration, test, account,
+membership, credential, or runtime behavior may change. The current User
+username/email requirement is an architectural option and Task71B precondition,
+not a reason to alter code here.
+
+---
+
+# Historical Codex to Commander — Task70A
 
 ## Current closeout: Task69B
 
