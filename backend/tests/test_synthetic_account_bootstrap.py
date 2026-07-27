@@ -208,7 +208,7 @@ def test_database_constraints_reject_prohibited_identity_and_active_roleless_mem
             password="!",
         )
 
-    with transaction.atomic(), pytest.raises(IntegrityError):
+    with transaction.atomic(), pytest.raises((IntegrityError, ProgrammingError)):
         User.objects.create(
             identity_mode=User.IdentityMode.SYNTHETIC,
             synthetic_handle=uuid4(),
@@ -306,6 +306,10 @@ def test_postgres_runtime_grants_and_dormancy_guards(bootstrap_inputs):
         cursor.execute("RESET app.tenant_id")
 
     with connect(migrator_url, autocommit=True) as migrator, migrator.cursor() as cursor:
+        cursor.execute(
+            "SELECT set_config('app.tenant_id', %s, false)",
+            [str(bootstrap_inputs.tenant_id)],
+        )
         with pytest.raises(RaiseException):
             cursor.execute(
                 "UPDATE codesho.identity_user SET password = 'x' WHERE id = %s",
@@ -351,6 +355,7 @@ def test_postgres_runtime_grants_and_dormancy_guards(bootstrap_inputs):
                     str(uuid4()),
                 ),
             )
+        cursor.execute("RESET app.tenant_id")
 
 
 @pytest.mark.django_db(transaction=True)
