@@ -1,6 +1,6 @@
 # Task71B Synthetic Account Bootstrap Review Summary
 
-Status: `IN_PROGRESS / V4_REVIEW_PENDING / DRAFT_ONLY`
+Status: `IN_PROGRESS / V4_REMEDIATION / DRAFT_ONLY`
 
 Task: `SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-IMPLEMENT-71B`
 Repository: `mytest19861986/codesho-test`
@@ -110,3 +110,12 @@ Remediation commit: `4da41b7c05c12ccbd1c8b8d94360fe0b7d79f8b5`.
 CI `30255137479` and Compose `30255137504` both SUCCESS. Local full suite:
 `199 passed, 39 skipped`, coverage `86.60%`. Independent V4 review remains
 required; PR #12 remains Draft and no Ready/merge action is authorized.
+
+## Independent review V4 disposition
+
+V4 returned two blockers on `2b3d9ebfb3ad7ec8d29f98d178ab541fb678f9d3`:
+
+| Finding | Disposition |
+|---|---|
+| `71B-V4-TEST-01` direct PostgreSQL guard evidence | `IN_REMEDIATION`: add migrator/direct-SQL negative assertions for both identity-mode transition directions and synthetic credential insertion. |
+| `71B-V4-DOC-02` stale current-head checkpoint | `IN_REMEDIATION`: update coordination current-head and CI fields to the exact reviewed head before requesting V5. |
