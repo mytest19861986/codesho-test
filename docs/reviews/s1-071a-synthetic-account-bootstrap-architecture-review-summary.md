@@ -1,6 +1,6 @@
 # Task71A Synthetic Account Bootstrap Architecture Review Summary
 
-Status: `IN_PROGRESS / REMEDIATION_REQUIRED / REVIEW_GATES_PENDING`
+Status: `COMPLETE / ARCHITECTURE_REVIEW_PASS / READY_NOT_AUTHORIZED`
 
 Task: `SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-ARCHITECTURE-71A`
 Repository: `mytest19861986/codesho-test`
@@ -56,6 +56,12 @@ checkpoint still named the prior V1 head. This remediation updates that
 checkpoint to resolve the live PR #11 head from PR metadata rather than embed
 a self-staling SHA; the final verdict remains pending until the new head is
 independently re-reviewed.
+
+Final independent review V4 returned `PASS` on live reviewed head
+`8e70105bce1eab5b41a1bc7a81825a896364f0e1`. Findings `71A-SEC-01`,
+`71A-DOC-01`, and `71A-DOC-02` are disposed `PASS`; open blocking findings:
+none. This verdict authorizes neither Ready, merge, implementation, real
+users, Production, deployment, release, nor protected `codesho` promotion.
 
 ## Verification evidence
 

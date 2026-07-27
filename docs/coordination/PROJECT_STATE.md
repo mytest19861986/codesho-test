@@ -15,8 +15,10 @@ behavior. Task69B is `COMPLETE / MERGED / VERIFIED`. PR #9 is `CLOSED / MERGED` 
 CI evidence is green (backend PostgreSQL 224 passed, frontend success,
 smoke_restore success); exact scope and review gates passed. PR #5 remains
 `OPEN / DRAFT / UNCHANGED` at head `ee708a59fda89f08b824b079ebece2eed3b5515b`.
-Task71A Draft PR #11 is `OPEN / DRAFT` at the Task71A head. Independent review,
-CI, and Ready gates are pending; Draft PR creation is complete. No Production,
+Task71A Draft PR #11 is `OPEN / DRAFT` at the Task71A head. Independent
+architecture review is `PASS`; final-head CI is pending after this closeout
+recording commit, and Ready remains unauthorized. Draft PR creation is
+complete. No Production,
 deployment, release, real-user, public API, backfill, provider, or protected
 `codesho` promotion is authorized. Legal decisions remain `LEGAL_PENDING`.
 
