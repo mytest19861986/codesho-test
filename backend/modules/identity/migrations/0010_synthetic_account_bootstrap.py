@@ -102,6 +102,9 @@ BEGIN
             OR NEW.password NOT LIKE '!%%') THEN
         RAISE EXCEPTION 'synthetic user dormancy is immutable';
     END IF;
+    IF TG_OP = 'UPDATE' AND OLD.identity_mode IS DISTINCT FROM NEW.identity_mode THEN
+        RAISE EXCEPTION 'identity mode transitions are forbidden';
+    END IF;
     RETURN NEW;
 END;
 $$;
@@ -109,6 +112,27 @@ $$;
 CREATE TRIGGER synthetic_user_dormancy_guard
 BEFORE INSERT OR UPDATE ON codesho.identity_user
 FOR EACH ROW EXECUTE FUNCTION codesho.enforce_synthetic_user_dormancy();
+
+CREATE OR REPLACE FUNCTION codesho.reject_synthetic_user_credential()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, codesho, pg_temp
+AS $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM codesho.identity_user
+        WHERE id = NEW.user_id AND identity_mode = 'synthetic'
+    ) THEN
+        RAISE EXCEPTION 'synthetic users cannot receive credentials';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER synthetic_user_credential_guard
+BEFORE INSERT OR UPDATE ON codesho.identity_passcodecredential
+FOR EACH ROW EXECUTE FUNCTION codesho.reject_synthetic_user_credential();
 
 CREATE TRIGGER synthetic_bootstrap_request_contract
 BEFORE INSERT OR UPDATE OR DELETE ON codesho.identity_syntheticbootstraprequest

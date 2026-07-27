@@ -8,6 +8,7 @@ from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
+from django.core.exceptions import ValidationError
 from django.db import (
     DatabaseError,
     IntegrityError,
@@ -230,6 +231,30 @@ def test_database_constraints_reject_prohibited_identity_and_active_roleless_mem
             is_active=True,
         )
 
+    synthetic = User.objects.create(
+        identity_mode=User.IdentityMode.SYNTHETIC,
+        synthetic_handle=uuid4(),
+        username=None,
+        email=None,
+        is_active=False,
+        password="!",
+    )
+    with pytest.raises((IntegrityError, ProgrammingError, ValidationError)):
+        PasscodeCredential.objects.create(
+            user=synthetic,
+            encoded_hash="unused",
+            pepper_id="test-v1",
+        )
+
+    human = User.objects.create_user(username="transition", email="transition@example.test")
+    human.identity_mode = User.IdentityMode.SYNTHETIC
+    human.username = None
+    human.email = None
+    human.synthetic_handle = uuid4()
+    human.is_active = False
+    with pytest.raises(ValidationError):
+        human.save()
+
 
 @pytest.mark.django_db
 def test_rls_contract_is_present_on_postgresql():
@@ -373,6 +398,26 @@ def test_postgres_real_audit_and_all_or_nothing_bootstrap(bootstrap_inputs):
             "synthetic_account_bootstrapped",
             "synthetic_bootstrap_created",
         )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_postgres_real_audit_rolls_back_after_late_request_failure(bootstrap_inputs):
+    if connection.vendor != "postgresql":
+        pytest.skip("PostgreSQL-specific audit rollback integration")
+    idempotency_key = str(bootstrap_inputs.idempotency_key)
+    with patch(
+        "modules.identity.synthetic_bootstrap.SyntheticBootstrapRequest.objects.create",
+        side_effect=DatabaseError("request contract rejected"),
+    ), pytest.raises(SyntheticBootstrapConflict):
+        bootstrap_synthetic_account(**bootstrap_inputs.__dict__)
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT count(*) FROM audit.identity_security_event "
+            "WHERE idempotency_key = %s",
+            [f"synthetic-bootstrap:{bootstrap_inputs.tenant_id}:{idempotency_key}"],
+        )
+        assert cursor.fetchone()[0] == 0
 
 
 @pytest.mark.django_db(transaction=True)

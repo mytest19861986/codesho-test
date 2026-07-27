@@ -52,6 +52,13 @@ class User(AbstractUser):
             )
         ]
 
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if not self._state.adding:
+            previous = type(self).objects.filter(pk=self.pk).values("identity_mode").first()
+            if previous is not None and previous["identity_mode"] != self.identity_mode:
+                raise ValidationError("identity mode is immutable")
+        super().save(*args, **kwargs)
+
 
 class AdultAgeAttestation(models.Model):
     """Immutable, minimal evidence for an internal synthetic adult subject."""
@@ -253,6 +260,11 @@ class PasscodeCredential(models.Model):
 
     def __str__(self) -> str:
         return f"Passcode credential for user {self.user_id}"
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if User.objects.filter(pk=self.user_id, identity_mode=User.IdentityMode.SYNTHETIC).exists():
+            raise ValidationError("synthetic users cannot receive credentials")
+        super().save(*args, **kwargs)
 
 
 class PasscodeChangeChallenge(models.Model):

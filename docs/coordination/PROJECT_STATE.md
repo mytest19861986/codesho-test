@@ -1,18 +1,19 @@
 # Codesho Project State
 
-Updated: 2026-07-27 (Task71B synthetic account bootstrap implementation)
+Updated: 2026-07-27 (Task71B V3 remediation)
 
 ## Current Status
 
-Task71B is `IMPLEMENTATION / IN_PROGRESS / INTERNAL_SYNTHETIC_ONLY` on exact
+Task71B is `IMPLEMENTATION / V3_REMEDIATION / INTERNAL_SYNTHETIC_ONLY` on exact
 base `5149bb1c7bf1ca6cf590bfafc3833876de11ec0a`, branch
 `agent/task71b-synthetic-account-bootstrap`, with an exact 14-file allow-list.
 It creates only inactive, roleless synthetic memberships and dormant users with
 unusable passwords; no public or Production capability is enabled. Task71A is
 `COMPLETE / MERGED / VERIFIED` at `5149bb1c7bf1ca6cf590bfafc3833876de11ec0a`.
 PR #5 remains `OPEN / DRAFT / UNCHANGED` at head
-`ee708a59fda89f08b824b079ebece2eed3b5515b`. Task71B local acceptance, reviews,
-Draft PR, and CI are pending. No Production,
+`ee708a59fda89f08b824b079ebece2eed3b5515b`. Task71B CI and Compose are green
+at `fc338caa1b3590a20363f61a208ea04009f51a38`; independent V3 returned three
+blockers, now under remediation. No Production,
 deployment, release, real-user, public API, backfill, provider, or protected
 `codesho` promotion is authorized. Legal decisions remain `LEGAL_PENDING`.
 
@@ -144,7 +145,7 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
 - Historical local-environment limitations in earlier checkpoints are retained
   in their original records and do not represent an unresolved Task63D gate.
 
-## Task71A next steps
+## Historical Task71A next steps
 
 1. Complete self-review, provider-neutral independent architecture review,
    exact-file review, and backend/frontend/smoke_restore CI for the Draft PR.
