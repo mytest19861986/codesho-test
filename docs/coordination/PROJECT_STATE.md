@@ -1,10 +1,10 @@
 # Codesho Project State
 
-Updated: 2026-07-27 (Task71B V3 remediation)
+Updated: 2026-07-27 (Task71B V4 review pending)
 
 ## Current Status
 
-Task71B is `IMPLEMENTATION / V3_REMEDIATION / INTERNAL_SYNTHETIC_ONLY` on exact
+Task71B is `IMPLEMENTATION / V4_REVIEW_PENDING / INTERNAL_SYNTHETIC_ONLY` on exact
 base `5149bb1c7bf1ca6cf590bfafc3833876de11ec0a`, branch
 `agent/task71b-synthetic-account-bootstrap`, with an exact 14-file allow-list.
 It creates only inactive, roleless synthetic memberships and dormant users with
@@ -12,8 +12,8 @@ unusable passwords; no public or Production capability is enabled. Task71A is
 `COMPLETE / MERGED / VERIFIED` at `5149bb1c7bf1ca6cf590bfafc3833876de11ec0a`.
 PR #5 remains `OPEN / DRAFT / UNCHANGED` at head
 `ee708a59fda89f08b824b079ebece2eed3b5515b`. Task71B CI and Compose are green
-at `fc338caa1b3590a20363f61a208ea04009f51a38`; independent V3 returned three
-blockers, now under remediation. No Production,
+at `4da41b7c05c12ccbd1c8b8d94360fe0b7d79f8b5`; V3 blockers were remediated
+within the allow-list and V4 review is pending. No Production,
 deployment, release, real-user, public API, backfill, provider, or protected
 `codesho` promotion is authorized. Legal decisions remain `LEGAL_PENDING`.
 

@@ -1,6 +1,6 @@
 # Task71B Synthetic Account Bootstrap Review Summary
 
-Status: `IN_PROGRESS / V3_REMEDIATION / DRAFT_ONLY`
+Status: `IN_PROGRESS / V4_REVIEW_PENDING / DRAFT_ONLY`
 
 Task: `SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-IMPLEMENT-71B`
 Repository: `mytest19861986/codesho-test`
@@ -90,7 +90,7 @@ Review V2 found three blockers, all addressed within the exact allow-list:
 | `71B-V2-CONC-01` identical concurrent replay | `REMEDIATED`: the idempotency lookup is repeated after the attestation serialization lock and returns the terminal result. |
 | `71B-V2-TEST-01` PostgreSQL/RLS evidence | `REMEDIATED IN SCOPE`: focused tests now cover missing/cross-tenant RLS visibility, runtime grants, direct membership/user guards, cross-link rejection, real audit, concurrency, late rollback, and migration contract evidence. Final CI remains authoritative. |
 
- V3 independent review, final CI, and exact-file review remain pending. Ready,
+V3 independent review, final CI, and exact-file review remain pending. Ready,
 merge, direct `main` push, real users, Production, and protected `codesho`
 promotion remain unauthorized.
 
@@ -102,6 +102,11 @@ non-amended commit, full CI/Compose gates, and V4 review:
 
 | Finding | Disposition |
 |---|---|
-| `71B-V3-SEC-01` synthetic origin and credential immutability | `IN_REMEDIATION`: reject human/synthetic mode transitions and synthetic credential creation at model and PostgreSQL trigger boundaries, with negative tests. |
-| `71B-V3-TEST-02` real audit rollback evidence | `IN_REMEDIATION`: add PostgreSQL test that uses the real audit append and forces a late request failure, proving the audit row is absent after rollback. |
-| `71B-V3-DOC-03` coordination inconsistency | `IN_REMEDIATION`: align current-head, CI, review, and historical Task71A markers. |
+| `71B-V3-SEC-01` synthetic origin and credential immutability | `REMEDIATED`: model and PostgreSQL trigger boundaries reject human/synthetic mode transitions and synthetic credential creation; negative tests cover both paths. |
+| `71B-V3-TEST-02` real audit rollback evidence | `REMEDIATED`: PostgreSQL integration now uses the real audit append, forces a late request failure, and proves the audit row is absent after rollback. |
+| `71B-V3-DOC-03` coordination inconsistency | `REMEDIATED`: current-head, CI, review, and historical Task71A markers are aligned. |
+
+Remediation commit: `4da41b7c05c12ccbd1c8b8d94360fe0b7d79f8b5`.
+CI `30255137479` and Compose `30255137504` both SUCCESS. Local full suite:
+`199 passed, 39 skipped`, coverage `86.60%`. Independent V4 review remains
+required; PR #12 remains Draft and no Ready/merge action is authorized.
