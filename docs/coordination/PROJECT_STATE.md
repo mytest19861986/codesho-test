@@ -1,21 +1,29 @@
 # Codesho Project State
 
-Updated: 2026-07-27 (Task71B final review closeout)
+Updated: 2026-08-05 (Task71B Commander remediation checkpoint)
 
 ## Current Status
 
-Task71B is `COMPLETE / DRAFT_HANDOFF / INTERNAL_SYNTHETIC_ONLY` on exact
+Task71B is `CI_REMEDIATION / LOCAL_CHECKS_PASS / MERGE_BLOCKED` on exact
 base `5149bb1c7bf1ca6cf590bfafc3833876de11ec0a`, branch
-`agent/task71b-synthetic-account-bootstrap`, with an exact 14-file allow-list.
+`codex/task71b-review-remediation`, with the original exact 14-file allow-list.
 It creates only inactive, roleless synthetic memberships and dormant users with
 unusable passwords; no public or Production capability is enabled. Task71A is
 `COMPLETE / MERGED / VERIFIED` at `5149bb1c7bf1ca6cf590bfafc3833876de11ec0a`.
 PR #5 remains `OPEN / DRAFT / UNCHANGED` at head
-`ee708a59fda89f08b824b079ebece2eed3b5515b`. Task71B CI and Compose are green
-at the authoritative PR head returned by `git rev-parse HEAD`; V4/V5 blockers
-are remediated and V6 is PASS with zero blocking findings. No Production,
-deployment, release, real-user, public API, backfill, provider, or protected
-`codesho` promotion is authorized. Legal decisions remain `LEGAL_PENDING`.
+`ee708a59fda89f08b824b079ebece2eed3b5515b`. The historical Task71B V6 and CI
+checkpoint was superseded by a Commander `FAIL / MERGE_BLOCKED` re-review.
+The remediation validates exact audit evidence, preserves human membership
+lifecycle, hardens synthetic privilege flags, adds real provenance rollback
+tests, and makes reverse migrations conditional on absence of protected data.
+Backend CI run `31014336650` failed on remote head
+`9c5d6ee79268424099c1f5ff16df6d029b94f27d`. Its bounded local correction now
+passes available gates. The second Commander re-review added real PostgreSQL
+successful/blocked reverse-path catalog assertions and documented the FORCE-RLS
+baseline owned by `platform_tenant.0002_membership_rls`; PostgreSQL CI and
+separate push authority remain required. No Production, deployment, release,
+real-user, public API, backfill, provider, or protected `codesho` promotion is
+authorized. Legal decisions remain `LEGAL_PENDING`.
 
 Task69B/Task70A/Task71A wording below is historical only. The project will
 return to `WAITING_FOR_NEXT_SEPARATE_AUTHORIZATION` after Task71B closeout.

@@ -63,9 +63,27 @@ BEGIN
         RAISE EXCEPTION 'synthetic bootstrap tenant linkage is invalid';
     END IF;
     IF NOT EXISTS (
+        SELECT 1
+        FROM audit.identity_security_event
+        WHERE event_id = NEW.audit_event_id
+          AND event_type = 'synthetic_account_bootstrapped'
+          AND outcome = 'success'
+          AND reason_code = 'synthetic_bootstrap_created'
+          AND tenant_id = NEW.tenant_id
+          AND subject_user_id = NEW.user_id
+          AND actor_user_id IS NULL
+          AND credential_version IS NULL
+          AND idempotency_key = (
+              'synthetic-bootstrap:' || NEW.tenant_id::text || ':' || NEW.idempotency_key::text
+          )
+    ) THEN
+        RAISE EXCEPTION 'synthetic bootstrap audit evidence is missing or invalid';
+    END IF;
+    IF NOT EXISTS (
         SELECT 1 FROM codesho.identity_user
         WHERE id = NEW.user_id AND identity_mode = 'synthetic'
           AND is_active = false AND username IS NULL AND email IS NULL
+          AND is_staff = false AND is_superuser = false
           AND synthetic_handle IS NOT NULL AND password LIKE '!%%'
     ) THEN
         RAISE EXCEPTION 'synthetic bootstrap user is not dormant and opaque';
@@ -88,8 +106,15 @@ SECURITY DEFINER
 SET search_path = pg_catalog, codesho, pg_temp
 AS $$
 BEGIN
+    IF TG_OP = 'DELETE' THEN
+        IF OLD.identity_mode = 'synthetic' THEN
+            RAISE EXCEPTION 'synthetic user deletion is forbidden';
+        END IF;
+        RETURN OLD;
+    END IF;
     IF NEW.identity_mode = 'synthetic'
        AND (NEW.is_active OR NEW.username IS NOT NULL OR NEW.email IS NOT NULL
+            OR NEW.is_staff OR NEW.is_superuser
             OR NEW.first_name <> '' OR NEW.last_name <> ''
             OR NEW.synthetic_handle IS NULL OR NEW.password NOT LIKE '!%%') THEN
         RAISE EXCEPTION 'synthetic user must remain inactive, opaque and unusable';
@@ -97,6 +122,7 @@ BEGIN
     IF TG_OP = 'UPDATE' AND OLD.identity_mode = 'synthetic'
        AND (NEW.identity_mode IS DISTINCT FROM OLD.identity_mode
             OR NEW.is_active OR NEW.username IS NOT NULL OR NEW.email IS NOT NULL
+            OR NEW.is_staff OR NEW.is_superuser
             OR NEW.first_name <> '' OR NEW.last_name <> ''
             OR NEW.synthetic_handle IS DISTINCT FROM OLD.synthetic_handle
             OR NEW.password NOT LIKE '!%%') THEN
@@ -110,7 +136,7 @@ END;
 $$;
 
 CREATE TRIGGER synthetic_user_dormancy_guard
-BEFORE INSERT OR UPDATE ON codesho.identity_user
+BEFORE INSERT OR UPDATE OR DELETE ON codesho.identity_user
 FOR EACH ROW EXECUTE FUNCTION codesho.enforce_synthetic_user_dormancy();
 
 CREATE OR REPLACE FUNCTION codesho.reject_synthetic_user_credential()
@@ -144,14 +170,58 @@ REVOKE UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER
 ON TABLE codesho.identity_syntheticbootstraprequest FROM codesho_runtime;
 """
 
+REVERSE_BOOTSTRAP_CONTRACT_SQL = """
+ALTER TABLE codesho.identity_syntheticbootstraprequest NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE codesho.platform_tenant_tenantmembership NO FORCE ROW LEVEL SECURITY;
+
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM codesho.identity_syntheticbootstraprequest)
+       OR EXISTS (SELECT 1 FROM codesho.identity_user WHERE identity_mode = 'synthetic')
+       OR EXISTS (
+           SELECT 1 FROM codesho.platform_tenant_tenantmembership
+           WHERE is_synthetic_bootstrap
+       ) THEN
+        RAISE EXCEPTION
+            'synthetic bootstrap migration cannot be reversed while synthetic data exists';
+    END IF;
+END;
+$$;
+
+-- platform_tenant.0002_membership_rls is still applied while identity.0010 is
+-- reversed and owns the membership table's ENABLE + FORCE RLS contract. The
+-- temporary owner-visible guard above must restore that exact module baseline.
+ALTER TABLE codesho.platform_tenant_tenantmembership FORCE ROW LEVEL SECURITY;
+
+DROP TRIGGER IF EXISTS synthetic_bootstrap_request_contract
+ON codesho.identity_syntheticbootstraprequest;
+DROP FUNCTION IF EXISTS codesho.enforce_synthetic_bootstrap_request_contract();
+DROP POLICY IF EXISTS synthetic_bootstrap_request_tenant_isolation
+ON codesho.identity_syntheticbootstraprequest;
+ALTER TABLE codesho.identity_syntheticbootstraprequest DISABLE ROW LEVEL SECURITY;
+
+DROP TRIGGER IF EXISTS synthetic_user_credential_guard
+ON codesho.identity_passcodecredential;
+DROP FUNCTION IF EXISTS codesho.reject_synthetic_user_credential();
+DROP TRIGGER IF EXISTS synthetic_user_dormancy_guard ON codesho.identity_user;
+DROP FUNCTION IF EXISTS codesho.enforce_synthetic_user_dormancy();
+"""
+
 
 def install_contract(apps, schema_editor):  # type: ignore[no-untyped-def]
     if schema_editor.connection.vendor == "postgresql":
         schema_editor.execute(BOOTSTRAP_CONTRACT_SQL)
 
 
-def irreversible(apps, schema_editor):  # type: ignore[no-untyped-def]
-    raise IrreversibleError("synthetic bootstrap contract is irreversible")
+def remove_contract(apps, schema_editor):  # type: ignore[no-untyped-def]
+    if schema_editor.connection.vendor != "postgresql":
+        return
+    try:
+        schema_editor.execute(REVERSE_BOOTSTRAP_CONTRACT_SQL)
+    except Exception as exc:
+        raise IrreversibleError(
+            "synthetic bootstrap contract cannot be reversed while protected data exists"
+        ) from exc
 
 
 class Migration(migrations.Migration):
@@ -227,6 +297,8 @@ class Migration(migrations.Migration):
                     email__isnull=True,
                     synthetic_handle__isnull=False,
                     is_active=False,
+                    is_staff=False,
+                    is_superuser=False,
                     first_name="",
                     last_name="",
                 ),
@@ -294,5 +366,5 @@ class Migration(migrations.Migration):
                 name="synthetic_request_terminal_state_valid",
             ),
         ),
-        migrations.RunPython(install_contract, reverse_code=irreversible),
+        migrations.RunPython(install_contract, reverse_code=remove_contract),
     ]

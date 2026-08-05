@@ -1,6 +1,6 @@
 # Task71B Synthetic Account Bootstrap Review Summary
 
-Status: `COMPLETE / FINAL_REVIEW_PASS / DRAFT_ONLY`
+Status: `CI_REMEDIATION / LOCAL_CHECKS_PASS / MERGE_BLOCKED`
 
 Task: `SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-IMPLEMENT-71B`
 Repository: `mytest19861986/codesho-test`
@@ -140,3 +140,63 @@ the Draft-only boundary. CI `30256726798` and Compose
 `30256726683` were SUCCESS. The PR remains OPEN / DRAFT; Ready, merge,
 deployment, release, real users, and protected-repository promotion remain
 unauthorized. Legal retention/deletion/erasure/hold remains `LEGAL_PENDING`.
+
+## Commander re-review remediation
+
+The historical V6 verdict was superseded by a Commander `FAIL / MERGE_BLOCKED`
+decision. Remediation is limited to the existing 14-file allow-list and remains
+unpushed and unmerged.
+
+| Finding | Disposition |
+|---|---|
+| Request/audit binding was incomplete | `REMEDIATED`: the PostgreSQL request trigger now requires the exact event ID, event type, outcome, reason, tenant, subject User, null actor/credential, and derived idempotency key. Seven direct-SQL mismatch cases are covered. |
+| Membership guard blocked human lifecycle | `REMEDIATED`: DELETE is handled before NEW access; synthetic update/delete remains forbidden, while human activation/deactivation/delete follows baseline UPDATE/DELETE privileges. Runtime TRUNCATE remains revoked. |
+| Synthetic administrative flags were not constrained | `REMEDIATED`: model constraint, migration state, service defaults, PostgreSQL insert/update/delete trigger, ORM negatives, and direct-SQL negatives require `is_staff=false` and `is_superuser=false`. |
+| Provenance rollback evidence was incomplete | `REMEDIATED IN TEST SCOPE`: PostgreSQL tests use valid attestations and cover missing, cross-tenant, and wrong-attestation provenance, proving User/membership/request/audit rollback. |
+| Reverse contract was unconditionally irreversible | `REMEDIATED`: identity, membership, and audit allow-list reverse paths are allowed only when no protected synthetic data/evidence or incompatible nullable-role membership exists; otherwise they raise `IrreversibleError` fail-closed. Empty and populated PostgreSQL paths have dedicated tests. |
+| Generated OpenAPI baseline drift | `OUT_OF_SCOPE`: Task71B changes no OpenAPI, URL, auth-view, or frontend path. |
+
+Local remediation evidence: Ruff PASS; MyPy 47 files PASS; module boundaries
+PASS; Django check PASS; migration drift NONE; empty SQLite migration PASS;
+focused `9 passed / 15 PostgreSQL-only skipped`; full backend `199 passed / 49
+skipped`; coverage `85.55%` against the 80% gate. PostgreSQL/Compose CI remains
+mandatory before any Ready or merge action.
+
+## Commander remediation re-review verdict
+
+Commander re-review returned `PASS` with `OPEN_BLOCKERS: 0`. The exact scoped
+remediation may be committed once without amend and pushed only to
+`codesho-test` branch `codex/task71b-review-remediation`. Branch CI remains a
+gate. Ready, merge, direct main push, protected `codesho` promotion, deployment,
+release, real users, and Production remain unauthorized.
+
+## PostgreSQL CI remediation after run 31014336650
+
+Backend CI on remote head `9c5d6ee79268424099c1f5ff16df6d029b94f27d`
+reported 12 failures. Three valid-path tests mocked a successful append without
+creating the audit row required by PostgreSQL; PostgreSQL now uses the real
+audit function while SQLite retains the bounded mock. Seven negative ORM tests
+expected raw psycopg `RaiseException`; they now assert Django's `DatabaseError`
+wrapper and exact trigger reason.
+
+The original empty reverse probe incorrectly assumed the shared test audit
+table had no prior immutable evidence. The second Commander re-review rejected
+the intermediate recording-schema-editor replacement: the probe now runs first
+in this module, executes all three real PostgreSQL reverse paths inside one
+atomic transaction, asserts the empty precondition with FORCE RLS temporarily
+removed, verifies trigger/policy/function/constraint and RLS state after the
+reverse, and raises a marker exception to prove the complete catalog baseline
+is restored by rollback.
+
+Populated reverse tests assert each exact `IrreversibleError`, the wrapped
+database guard reason where applicable, and identical catalog state before and
+after rejection. FORCE RLS is removed only for the owner-visible compatibility
+guard. It is restored to the contract owned by the still-applied dependency
+`platform_tenant.0002_membership_rls` before Task71B objects are removed; both
+migrations document that ownership explicitly.
+
+Corrective local evidence after the second re-review patch: focused `9 passed /
+15 PostgreSQL-only skipped`; full backend `199 passed / 49 skipped`; coverage
+`85.55%`; Ruff, MyPy, module boundaries, Django check, migration drift, and
+empty SQLite migration all PASS. Real PostgreSQL CI remains mandatory. No
+corrective commit, push, or merge is authorized by this checkpoint.

@@ -24,6 +24,12 @@ SECURITY DEFINER
 SET search_path = pg_catalog, codesho, pg_temp
 AS $$
 BEGIN
+    IF TG_OP = 'DELETE' THEN
+        IF OLD.is_synthetic_bootstrap THEN
+            RAISE EXCEPTION 'synthetic bootstrap membership is immutable';
+        END IF;
+        RETURN OLD;
+    END IF;
     IF NEW.is_synthetic_bootstrap
        AND (NEW.is_active OR NEW.role IS NOT NULL) THEN
         RAISE EXCEPTION 'synthetic bootstrap membership must remain inactive and roleless';
@@ -35,15 +41,6 @@ BEGIN
             OR NEW.user_id IS DISTINCT FROM OLD.user_id) THEN
         RAISE EXCEPTION 'synthetic bootstrap membership activation is forbidden';
     END IF;
-    IF TG_OP = 'UPDATE' AND NOT OLD.is_active AND NEW.is_active THEN
-        RAISE EXCEPTION 'membership activation is not authorized';
-    END IF;
-    IF TG_OP = 'DELETE' AND OLD.is_synthetic_bootstrap THEN
-        RAISE EXCEPTION 'synthetic bootstrap membership is immutable';
-    END IF;
-    IF TG_OP = 'DELETE' THEN
-        RETURN OLD;
-    END IF;
     RETURN NEW;
 END;
 $$;
@@ -52,8 +49,34 @@ CREATE TRIGGER synthetic_membership_dormancy_guard
 BEFORE INSERT OR UPDATE OR DELETE ON codesho.platform_tenant_tenantmembership
 FOR EACH ROW EXECUTE FUNCTION codesho.enforce_synthetic_membership_dormancy();
 
-REVOKE UPDATE, DELETE, TRUNCATE ON TABLE codesho.platform_tenant_tenantmembership
+REVOKE TRUNCATE ON TABLE codesho.platform_tenant_tenantmembership
 FROM codesho_runtime;
+"""
+
+REVERSE_MEMBERSHIP_CONTRACT_SQL = """
+ALTER TABLE codesho.platform_tenant_tenantmembership NO FORCE ROW LEVEL SECURITY;
+
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM codesho.platform_tenant_tenantmembership
+        WHERE is_synthetic_bootstrap OR role IS NULL
+    ) THEN
+        RAISE EXCEPTION
+            'synthetic membership migration cannot be reversed while incompatible data exists';
+    END IF;
+END;
+$$;
+
+-- Dependency platform_tenant.0002_membership_rls remains applied while 0003 is
+-- reversed and owns the table's ENABLE + FORCE RLS contract. Restore it after
+-- the temporary owner-visible compatibility guard before removing 0003 objects.
+ALTER TABLE codesho.platform_tenant_tenantmembership FORCE ROW LEVEL SECURITY;
+
+DROP TRIGGER IF EXISTS synthetic_membership_dormancy_guard
+ON codesho.platform_tenant_tenantmembership;
+DROP FUNCTION IF EXISTS codesho.enforce_synthetic_membership_dormancy();
+GRANT TRUNCATE ON TABLE codesho.platform_tenant_tenantmembership TO codesho_runtime;
 """
 
 
@@ -62,8 +85,15 @@ def install_contract(apps, schema_editor):  # type: ignore[no-untyped-def]
         schema_editor.execute(MEMBERSHIP_CONTRACT_SQL)
 
 
-def irreversible(apps, schema_editor):  # type: ignore[no-untyped-def]
-    raise IrreversibleError("synthetic membership activation contract is irreversible")
+def remove_contract(apps, schema_editor):  # type: ignore[no-untyped-def]
+    if schema_editor.connection.vendor != "postgresql":
+        return
+    try:
+        schema_editor.execute(REVERSE_MEMBERSHIP_CONTRACT_SQL)
+    except Exception as exc:
+        raise IrreversibleError(
+            "synthetic membership contract cannot be reversed while protected data exists"
+        ) from exc
 
 
 class Migration(migrations.Migration):
@@ -109,5 +139,5 @@ class Migration(migrations.Migration):
                 name="active_membership_requires_role",
             ),
         ),
-        migrations.RunPython(install_contract, reverse_code=irreversible),
+        migrations.RunPython(install_contract, reverse_code=remove_contract),
     ]
