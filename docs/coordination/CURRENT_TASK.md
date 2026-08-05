@@ -1,76 +1,35 @@
-# Current Task: SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-IMPLEMENT-71B
+# Current Task: SPRINT1-TASK71B-POST-MERGE-CLOSEOUT-71C
 
 - Owner: Codex
-- Status: CI_REMEDIATION / LOCAL_CHECKS_PASS / MERGE_BLOCKED.
-- BASE_SHA: `5149bb1c7bf1ca6cf590bfafc3833876de11ec0a`.
-- Target repository: `mytest19861986/codesho-test`.
-- Branch: `codex/task71b-review-remediation`.
-- Worktree: `/tmp/codesho-task71b-remediation.bgcbqx`.
-- Employer standing authorization date: `2026-07-26`.
+- Status: AUTHORIZED / DOCS-ONLY / POST-MERGE-CLOSEOUT.
+- BASE_BRANCH: `origin/main`.
+- BASE_SHA: `f08ddd9e56ea2c7f503fbe4e5287f4665840ec2b`.
+- Branch: `codex/task71c-post-merge-closeout`.
+- Scope: only the four Task71C coordination/review documents.
 
-## Goal
+## Task71B final disposition
 
-Implement the approved internal synthetic-only foundation from an adult
-attestation to an opaque User, inactive roleless membership, and dormant
-no-credential state. No public endpoint, signup flow, authentication, role
-activation, real-user or Production capability is authorized.
+PR #12 is `CLOSED / MERGED` by Squash into `codesho-test/main` at
+`f08ddd9e56ea2c7f503fbe4e5287f4665840ec2b`. The former candidate
+`297a4daaa50fd34d05c7de29eac2608a64b162f8` is superseded. Post-merge CI run
+`31042633399` and Compose smoke/restore run `31042633952` are `SUCCESS`.
+Independent review is `PASS` with zero open blockers.
 
-## Exact allow-list
+No Production, Alpha, real-user activation, deployment, or promotion to the
+protected `codesho` repository occurred or is authorized.
 
-```text
-backend/modules/identity/models.py
-backend/modules/identity/migrations/0010_synthetic_account_bootstrap.py
-backend/modules/identity/synthetic_bootstrap.py
-backend/modules/platform_tenant/models.py
-backend/modules/platform_tenant/migrations/0003_synthetic_membership_activation.py
-backend/modules/platform_event/models.py
-backend/modules/platform_event/security_audit.py
-backend/modules/platform_event/migrations/0011_synthetic_bootstrap_events.py
-backend/tests/test_synthetic_account_bootstrap.py
-docs/data-dictionary.md
-docs/coordination/CODEX_TO_COMMANDER.md
-docs/coordination/CURRENT_TASK.md
-docs/coordination/PROJECT_STATE.md
-docs/reviews/s1-071b-synthetic-account-bootstrap-review-summary.md
-```
+## Current next state
 
-## Task71B authority and gates
+`AWAITING_COMMANDER_NEXT_TASK`. No implementation, migration, API, frontend,
+infrastructure, dependency, merge, direct-main push, or prior-branch deletion
+is authorized by this closeout task. Legal retention/deletion/erasure/hold
+decisions remain `LEGAL_PENDING`.
 
-Small scoped commits, push of the authorized branch, Draft PR creation, and
-in-allow-list review remediation are authorized. Ready, merge, direct main
-push, source deletion, public API/OpenAPI, frontend, credentials, login,
-membership activation, real users, Production, deployment, release, and
-protected `codesho` promotion are not authorized. The final Draft PR must pass
-the exact 14-file check, all local acceptance checks, sequential reviews, and
-backend/frontend/Compose/smoke_restore CI.
+## Historical Task71B record
 
-Commander re-review returned `PASS` with zero open blockers. One non-amended
-commit and push to this `codesho-test` branch are authorized. Ready, merge,
-direct main push, and protected `codesho` promotion remain unauthorized.
-
-Backend CI run `31014336650` failed on remote head
-`9c5d6ee79268424099c1f5ff16df6d029b94f27d`. The bounded local correction is
-complete. Commander second re-review required real PostgreSQL reverse-path and
-catalog-preservation evidence; that local test patch is complete, with real
-PostgreSQL CI still mandatory. A new commit or push is not authorized by the
-current assignment.
-
-## Task71B acceptance checkpoint
-
-```text
-EXACT_BASE_SHA: REQUIRED
-ISOLATED_CLEAN_WORKTREE: REQUIRED
-EXACT_14_FILE_ALLOW_LIST: REQUIRED
-OPENAPI_NON_CHANGE: REQUIRED
-FRONTEND_TREE_NON_CHANGE: REQUIRED
-READY/MERGE: NOT_AUTHORIZED
-REAL_USERS/PRODUCTION: NOT_AUTHORIZED
-LEGAL_RETENTION/DELETION/ERASURE/HOLD: LEGAL_PENDING
-```
-
-The architecture review and Task71A merge are historical inputs to this
-implementation. No Task71B user activation, credential enrollment, public API,
-or Production claim is implied.
+The Task71B implementation and remediation details below are preserved as
+historical evidence. References to Draft, Ready, unmerged, or merge-blocked
+states describe pre-merge checkpoints only and are not the current status.
 
 ---
 

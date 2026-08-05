@@ -1,11 +1,24 @@
 # Task71B Synthetic Account Bootstrap Review Summary
 
-Status: `CI_REMEDIATION / LOCAL_CHECKS_PASS / MERGE_BLOCKED`
+Status: `COMPLETE / MERGED / VERIFIED`
 
 Task: `SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-IMPLEMENT-71B`
 Repository: `mytest19861986/codesho-test`
 Base: `5149bb1c7bf1ca6cf590bfafc3833876de11ec0a`
 Branch: `agent/task71b-synthetic-account-bootstrap`
+
+## Final disposition
+
+PR #12 was Squash-merged into `codesho-test/main` at
+`f08ddd9e56ea2c7f503fbe4e5287f4665840ec2b`. Post-merge CI run
+`31042633399` and Compose smoke/restore run `31042633952` completed with
+`SUCCESS`. The independent review final verdict is `PASS` with
+`OPEN_BLOCKING_FINDINGS: 0`.
+
+The pre-merge Draft, Ready, unmerged, and merge-blocked references below are
+preserved as historical review/remediation evidence only. This merge did not
+authorize or enable Production, Alpha, real-user activation, deployment,
+public API expansion, or promotion to protected `codesho`.
 
 ## Exact scope
 
@@ -108,8 +121,9 @@ non-amended commit, full CI/Compose gates, and V4 review:
 
 Remediation commit: `4da41b7c05c12ccbd1c8b8d94360fe0b7d79f8b5`.
 CI `30255137479` and Compose `30255137504` both SUCCESS. Local full suite:
-`199 passed, 39 skipped`, coverage `86.60%`. Independent V4 review remains
-required; PR #12 remains Draft and no Ready/merge action is authorized.
+`199 passed, 39 skipped`, coverage `86.60%`. At this pre-merge checkpoint,
+Independent V4 review remained required and PR #12 was Draft; no Ready/merge
+action was then authorized.
 
 ## Independent review V4 disposition
 
