@@ -1,61 +1,56 @@
-# Codex to Commander — Task72B legal/policy packet (in progress)
+# Codex to Commander — Task72B legal/policy gate
 
 ```text
 TASK_ID: SPRINT1-REAL-USER-ONBOARDING-LEGAL-AND-BOUNDARY-DECISION-72B
 BASE_SHA: 0472239d06194875d1cdb6f6929dd8eaad8bc0d9
 BRANCH: codex/task72b-real-user-legal-policy-packet
-STATUS: DOCS_ONLY / CLAUDE_PASS / COMMIT_PUSH_DRAFT_PR_AUTHORIZED
+STATUS: COMPLETE / DOCS-ONLY / OPTION-A / CLAUDE_PASS
+ALLOW_LIST: EXACTLY_FIVE_FILES
+OPTION_A: SELECTED
+OPTION_B: DEFERRED_PENDING_ALL_P0_AND_NEW_AUTHORITY
+OPTION_C: REJECTED
+REAL_USER_OR_PII: PROHIBITED
+IMPLEMENTATION: NONE
+MERGE_OR_DIRECT_MAIN: NOT_AUTHORIZED
+PRODUCTION_ALPHA_CODESHO_PROMOTION: NONE
+CLAUDE_PROMPT_ID: CLAUDE_TASK72B_LEGAL_POLICY_PACKET_REVIEW_01_V2
+CLAUDE_VERDICT: PASS
+CLAUDE_OPEN_BLOCKERS: 0
+FINAL_MARKER: CLAUDE_TASK72B_REVIEW_COMPLETED
+VALIDATION: EXACT_ALLOW_LIST_PASS / DIFF_CHECK_PASS / PATH_SANITY_PASS
 ```
 
-## Change summary
+The packet records P0/P1 owners, evidence, fail-closed effects,
+persona/consent/data/lifecycle matrices, conceptual gates,
+tenant/Guardian/Recovery/enumeration threats, provider/residency/operations,
+and Option B Go/No-Go. All unresolved items are `PENDING_COUNSEL` or
+`PENDING_EMPLOYER`; no legal conclusion or retention duration was invented.
 
-The Task72B packet records Option A as the approved sequence, Option B as
-deferred, and Option C as rejected. It supplies an explicit legal/policy
-decision register, Adult/Minor/Guardian matrix, data/purpose/access and
-record-lifecycle matrices, conceptual fail-closed gate order, P0/P1 questions,
-and an Option B go/no-go checklist. No implementation or real-user capability
-is added.
+Claude V1 found one P0 ordering ambiguity and two P1 auditability/status
+issues. The two primary docs were remediated within scope. Sequential V2 then
+returned `PASS`, `OPEN_BLOCKERS: 0`, `P0: NONE`, `P1: NONE`, and confirmed the
+packet is sufficient to govern a later separately authorized Option B. Raw
+review remains outside the repository.
 
-## Unresolved decisions and evidence
+Remaining legal/product decisions by owner:
 
-| Owner | Decision / evidence required | Blocker effect |
-| --- | --- | --- |
-| `PENDING_COUNSEL` | jurisdiction, controller, lawful basis, notice/consent/withdrawal, age/guardian, aging-out, retention/deletion/erasure/hold, provider/privacy assessment | blocks any real-user/PII/onboarding action |
-| `PENDING_EMPLOYER` | product personas/journey, operational controller/access ownership, activation rule and acceptable provider posture | blocks product scope and activation |
+- `PENDING_COUNSEL`: jurisdiction applicability, lawful basis, Controller
+  validation, notice/consent/withdrawal, Minor/Guardian/aging-out, every
+  record's retention/deletion/erasure/DSR/legal hold, DPIA/no-DPIA,
+  provider/residency/DPA and applicable incident/breach duties.
+- `PENDING_EMPLOYER`: launch jurisdictions/personas/PRD, Controller and
+  operational owners, tenant authority, identifiers/verification, Recovery,
+  activation, providers and operational RACI.
 
-## Claude verdict and next review
+Required evidence and each blocking effect are recorded in the primary
+decision tables. Until those owners approve them, Option B remains deferred,
+Option C rejected, and all real-user/PII/implementation paths fail closed.
 
-Claude verdict for `CLAUDE_TASK72A_REAL_USER_ONBOARDING_BOUNDARY_REVIEW_01_V1`:
-Option A approved, Option B deferred, Option C rejected. P0 concerns are
-lawful basis/jurisdiction/controller/consent, minor/guardian rules and
-lifecycle; P1 concerns include tenant isolation, minimization, activation,
-recovery/ATO, abuse, provenance access and provider/residency.
-
-Sequential Claude review `CLAUDE_TASK72B_REAL_USER_LEGAL_POLICY_PACKET_REVIEW_01_V1`
-returned `PASS`, `REQUIRED_CHANGES: None`, and
-`FINAL_MARKER: CLAUDE_TASK72B_REVIEW_COMPLETED`. The raw response remains
-outside the repository. The browser attachment control did not expose an
-upload method; the request transparently supplied the complete Task72B deltas
-for the exact five named files and excluded unchanged historical sections.
-
-## Validation / git status
-
-Completed: exact allow-list inspection, internal-link/path inspection,
-`git diff --check`, self-review, and Claude PASS review. This repository has
-no dedicated Markdown/documentation script in its declared frontend/backend
-checks. Commander accepted the checkpoint and authorized commit, branch push,
-and a Draft PR; no merge is authorized.
-
-## Remaining risk
-
-No technical document can close the legal/product gates. Real user, PII,
-credential, session, active membership, public signup, recovery, guardian,
-activation, Alpha, Production and protected-repository promotion remain
-fail-closed.
+Commit/push/Draft-PR are authorized after final checks; merge remains forbidden.
 
 ---
 
-# Historical Codex to Commander — Task71C closeout
+# Historical Task71C closeout
 
 ```text
 TASK_ID: SPRINT1-TASK71B-POST-MERGE-CLOSEOUT-71C

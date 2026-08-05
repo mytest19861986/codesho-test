@@ -1,147 +1,50 @@
 # Current Task: SPRINT1-REAL-USER-ONBOARDING-LEGAL-AND-BOUNDARY-DECISION-72B
 
-```text
-STATUS: AUTHORIZED / DOCS_ONLY / LEGAL_POLICY_GATE
-BASE_SHA: 0472239d06194875d1cdb6f6929dd8eaad8bc0d9
-BRANCH: codex/task72b-real-user-legal-policy-packet
-DECISION: OPTION_A_APPROVED / OPTION_B_DEFERRED / OPTION_C_REJECTED
-```
+- Owner: Codex, directed by Commander AI.
+- Status: `COMPLETE / DOCS-ONLY / OPTION-A / CLAUDE-PASS`.
+- Base branch: `origin/main`.
+- Base SHA: `0472239d06194875d1cdb6f6929dd8eaad8bc0d9`.
+- Branch: `codex/task72b-real-user-legal-policy-packet`.
 
-## Scope and allow-list
+## Goal
 
-Only these files may change: this file,
-`docs/decisions/2026-08-05-real-user-onboarding-legal-boundary.md`,
-`docs/security/REAL_USER_ONBOARDING_PREIMPLEMENTATION_GATE.md`,
-`docs/coordination/PROJECT_STATE.md`, and
-`docs/coordination/CODEX_TO_COMMANDER.md`.
+Create the legal/policy packet and preimplementation gate for future real-user
+onboarding. Task72A selected Option A; Option B is deferred until all P0 gates
+close and receives separate authority; Option C is rejected.
 
-The task records unresolved legal/policy decisions without guessing their
-outcomes. It creates no code, schema, migration, API/OpenAPI, UI, real-user,
-real-data, credential, session, membership, activation, provider, Alpha or
-Production behavior.
+## Exact allow-list
 
-## Acceptance criteria
+1. `docs/decisions/2026-08-05-real-user-onboarding-legal-boundary.md`
+2. `docs/security/REAL_USER_ONBOARDING_PREIMPLEMENTATION_GATE.md`
+3. `docs/coordination/CURRENT_TASK.md`
+4. `docs/coordination/PROJECT_STATE.md`
+5. `docs/coordination/CODEX_TO_COMMANDER.md`
 
-- Exact five-file diff; `git diff --check` and repository documentation checks pass.
-- Decision and security-gate documents contain P0/P1, Adult/Minor/Guardian,
-  data/purpose/access, lifecycle, tenant/recovery/activation boundaries and
-  Option B go/no-go checks.
-- Every unresolved item identifies `PENDING_COUNSEL` or `PENDING_EMPLOYER`,
-  required evidence and blocker effect.
-- Sequential Claude review `CLAUDE_TASK72B_REAL_USER_LEGAL_POLICY_PACKET_REVIEW_01_V1`
-  is `PASS`; its final marker is `CLAUDE_TASK72B_REVIEW_COMPLETED` and it
-  reported no required changes or open P0/P1.
+No other file may change.
 
-## Git authority
+## Acceptance
 
-Commander accepted the checkpoint and Claude PASS. Commit and push to this
-task branch and creation of a Draft PR are authorized. Direct-main push,
-merge, Alpha/Production action, and protected `codesho` promotion remain
-prohibited.
+- P0/P1 decisions have owners, evidence and blocking effects;
+- Adult/Minor/Guardian, consent, data-flow/classification/purpose/access and
+  record-lifecycle matrices are auditable;
+- tenant, activation, Guardian, Recovery, enumeration and replay fail closed;
+- provider/residency/DPA/incident ownership and Option B Go/No-Go are explicit;
+- unresolved decisions remain `PENDING_COUNSEL` or `PENDING_EMPLOYER`;
+- both primary docs trace the five Task72A-reviewed authorities;
+- exact allow-list, path sanity and `git diff --check` pass;
+- sequential Claude review of only the two primary docs passed under
+  `CLAUDE_TASK72B_LEGAL_POLICY_PACKET_REVIEW_01_V2` with zero open blockers.
 
----
-
-# Historical Task: SPRINT1-TASK71B-POST-MERGE-CLOSEOUT-71C
-
-- Owner: Codex
-- Status: AUTHORIZED / DOCS-ONLY / POST-MERGE-CLOSEOUT.
-- BASE_BRANCH: `origin/main`.
-- BASE_SHA: `f08ddd9e56ea2c7f503fbe4e5287f4665840ec2b`.
-- Branch: `codex/task71c-post-merge-closeout`.
-- Scope: only the four Task71C coordination/review documents.
-
-## Task71B final disposition
-
-PR #12 is `CLOSED / MERGED` by Squash into `codesho-test/main` at
-`f08ddd9e56ea2c7f503fbe4e5287f4665840ec2b`. The former candidate
-`297a4daaa50fd34d05c7de29eac2608a64b162f8` is superseded. Post-merge CI run
-`31042633399` and Compose smoke/restore run `31042633952` are `SUCCESS`.
-Independent review is `PASS` with zero open blockers.
-
-No Production, Alpha, real-user activation, deployment, or promotion to the
-protected `codesho` repository occurred or is authorized.
-
-## Current next state
-
-`AWAITING_COMMANDER_NEXT_TASK`. No implementation, migration, API, frontend,
-infrastructure, dependency, merge, direct-main push, or prior-branch deletion
-is authorized by this closeout task. Legal retention/deletion/erasure/hold
-decisions remain `LEGAL_PENDING`.
-
-## Historical Task71B record
-
-The Task71B implementation and remediation details below are preserved as
-historical evidence. References to Draft, Ready, unmerged, or merge-blocked
-states describe pre-merge checkpoints only and are not the current status.
-
----
-
-## Historical Task71A authority and gates
-
-## Historical Task70A closeout evidence
-
-```text
-PR #9: CLOSED / MERGED
-MERGE_COMMIT: 5be173afb03197cbc2e293e2ff28e1f9156a47ad
-MERGE_PARENTS: 27a8626d29bfa7e21c5e770455db6b20a4521ccc,
-               0aea2e0a1dbba925343a854de35683b84d83a748
-SOURCE_BRANCH: PRESERVED
-PR #5: OPEN / DRAFT / UNCHANGED / HEAD ee708a59fda89f08b824b079ebece2eed3b5515b
-NEXT_STATE: WAITING_FOR_NEXT_SEPARATE_AUTHORIZATION
-```
-
-No Production, deployment, release, real-user, public API, backfill, provider,
-or protected `codesho` promotion is authorized. Legal retention/deletion/hold
-decisions remain `LEGAL_PENDING`.
-
-## Historical Task69B contract
-
-The independent append-only provenance table contains only a server UUIDv4,
-opaque tenant UUID, unique opaque attestation reference, constants
-`internal_synthetic_harness` and `self_attestation`, and a server UTC
-timestamp. It contains no subject, PII, raw signal, operator identity,
-document, digest, cookie, payload, free text, or metadata map.
-
-It is created only for a newly created attestation in the same
-`tenant_atomic` transaction. Replay creates no new provenance; failures of
-provenance or audit roll back the full acceptance. PostgreSQL RLS, same-tenant
-trigger validation, append-only trigger, and runtime INSERT-only grants are
-mandatory. No legacy backfill is allowed.
-
-## Historical Task69B implementation gates
-
-```text
-MIGRATION DRIFT: NONE
-EMPTY POSTGRESQL MIGRATION: REQUIRED
-MODEL/MIGRATION CONSISTENCY: REQUIRED
-ATTESTATION + PROVENANCE + AUDIT ATOMICITY: REQUIRED
-IDEMPOTENT REPLAY: REQUIRED
-CONCURRENT DUPLICATE SAFETY: REQUIRED
-CROSS-TENANT LINKAGE: REJECTED
-RLS FAIL-CLOSED: REQUIRED
-RUNTIME SELECT/UPDATE/DELETE/TRUNCATE: REJECTED
-DATABASE UPDATE/DELETE: REJECTED
-PROVENANCE IN API/AUDIT/LOG: NONE
-PROHIBITED OR FREE-TEXT FIELDS: NONE
-LEGACY BACKFILL: NONE
-PRODUCTION INTERNAL MODE: REJECTED
-```
-
-The block above records completed Task69B implementation evidence only; it is
-not an active Task71A acceptance block and creates no Task71A implementation
-requirement. Task71A gates are: self-review, independent provider-neutral
-security/privacy/database/RLS review, internal consistency, exact five-file
-allow-list, `git diff --check`, and backend/frontend/smoke_restore CI on the
-Task71A head. PR #11 is OPEN / DRAFT; creation, independent review, and CI
-closeout are complete. Ready and merge remain separately gated and are not
-authorized.
+`FINAL_MARKER: CLAUDE_TASK72B_REVIEW_COMPLETED`
 
 ## Authority and exclusions
 
-Commit, push, Draft PR, and in-scope documentation remediation are authorized.
-`READY TRANSITION: NOT YET AUTHORIZED`; `MERGE: NOT AUTHORIZED`. Direct push to `main`, force-push,
-rebase, source-branch deletion, PR #5 mutation/merge, backfill, public API,
-frontend, account/user/membership/session creation, external providers, real
-data, deployment, release, Alpha/Production, and protected `codesho`
-promotion are forbidden. Legal retention/deletion/hold policies remain
-`LEGAL_PENDING` and unchanged.
+In-scope remediation, commit, push to this branch and Draft PR are authorized
+only after Claude PASS and green checks. Direct-main push, merge, force-push
+and branch deletion are forbidden.
+
+No model, schema, migration, API/OpenAPI, UI, code/state-machine implementation,
+PII/real data, account, credential, session, active membership, role, public
+endpoint, email/SMS/OAuth/provider integration, Guardian/Recovery
+implementation, deployment, Alpha, Production or protected `codesho`
+promotion is authorized.
