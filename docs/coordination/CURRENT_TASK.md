@@ -1,38 +1,80 @@
-# Current Task: SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-ARCHITECTURE-71A
+# Current Task: SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-IMPLEMENT-71B
 
 - Owner: Codex
-- Status: ARCHITECTURE_AND_PRIVACY_GATE / COMPLETE / SYNTHETIC_ONLY.
-- BASE_SHA: `bdc2839bb03e829064066496739d47c7cbb05c07`.
+- Status: CI_REMEDIATION / LOCAL_CHECKS_PASS / MERGE_BLOCKED.
+- BASE_SHA: `5149bb1c7bf1ca6cf590bfafc3833876de11ec0a`.
 - Target repository: `mytest19861986/codesho-test`.
-- Branch: `agent/task71a-synthetic-account-bootstrap-architecture`.
-- Worktree: new clean isolated worktree; old dirty checkout and prior branches preserved.
+- Branch: `codex/task71b-review-remediation`.
+- Worktree: `/tmp/codesho-task71b-remediation.bgcbqx`.
 - Employer standing authorization date: `2026-07-26`.
 
 ## Goal
 
-Define the future Synthetic Account Bootstrap boundary from an adult attestation
-to an opaque synthetic account, membership, and dormant credential state. This
-Task changes no code, migration, API, configuration, product capability, or
-user behavior.
+Implement the approved internal synthetic-only foundation from an adult
+attestation to an opaque User, inactive roleless membership, and dormant
+no-credential state. No public endpoint, signup flow, authentication, role
+activation, real-user or Production capability is authorized.
 
 ## Exact allow-list
 
 ```text
-docs/decisions/2026-07-26-synthetic-account-bootstrap-boundary.md
+backend/modules/identity/models.py
+backend/modules/identity/migrations/0010_synthetic_account_bootstrap.py
+backend/modules/identity/synthetic_bootstrap.py
+backend/modules/platform_tenant/models.py
+backend/modules/platform_tenant/migrations/0003_synthetic_membership_activation.py
+backend/modules/platform_event/models.py
+backend/modules/platform_event/security_audit.py
+backend/modules/platform_event/migrations/0011_synthetic_bootstrap_events.py
+backend/tests/test_synthetic_account_bootstrap.py
+docs/data-dictionary.md
 docs/coordination/CODEX_TO_COMMANDER.md
 docs/coordination/CURRENT_TASK.md
 docs/coordination/PROJECT_STATE.md
-docs/reviews/s1-071a-synthetic-account-bootstrap-architecture-review-summary.md
+docs/reviews/s1-071b-synthetic-account-bootstrap-review-summary.md
 ```
 
-## Task71A authority and gates
+## Task71B authority and gates
 
-Commit and push of this documentation-only branch and creation of a Draft PR
-are authorized. Ready-for-review marking, merge to `codesho-test/main`, and
-any implementation or production action are not authorized by this assignment.
-Independent provider-neutral security, privacy, database, and RLS review,
-internal consistency review, exact-file review, and the three required CI
-checks remain gates before requesting further authority.
+Small scoped commits, push of the authorized branch, Draft PR creation, and
+in-allow-list review remediation are authorized. Ready, merge, direct main
+push, source deletion, public API/OpenAPI, frontend, credentials, login,
+membership activation, real users, Production, deployment, release, and
+protected `codesho` promotion are not authorized. The final Draft PR must pass
+the exact 14-file check, all local acceptance checks, sequential reviews, and
+backend/frontend/Compose/smoke_restore CI.
+
+Commander re-review returned `PASS` with zero open blockers. One non-amended
+commit and push to this `codesho-test` branch are authorized. Ready, merge,
+direct main push, and protected `codesho` promotion remain unauthorized.
+
+Backend CI run `31014336650` failed on remote head
+`9c5d6ee79268424099c1f5ff16df6d029b94f27d`. The bounded local correction is
+complete. Commander second re-review required real PostgreSQL reverse-path and
+catalog-preservation evidence; that local test patch is complete, with real
+PostgreSQL CI still mandatory. A new commit or push is not authorized by the
+current assignment.
+
+## Task71B acceptance checkpoint
+
+```text
+EXACT_BASE_SHA: REQUIRED
+ISOLATED_CLEAN_WORKTREE: REQUIRED
+EXACT_14_FILE_ALLOW_LIST: REQUIRED
+OPENAPI_NON_CHANGE: REQUIRED
+FRONTEND_TREE_NON_CHANGE: REQUIRED
+READY/MERGE: NOT_AUTHORIZED
+REAL_USERS/PRODUCTION: NOT_AUTHORIZED
+LEGAL_RETENTION/DELETION/ERASURE/HOLD: LEGAL_PENDING
+```
+
+The architecture review and Task71A merge are historical inputs to this
+implementation. No Task71B user activation, credential enrollment, public API,
+or Production claim is implied.
+
+---
+
+## Historical Task71A authority and gates
 
 ## Historical Task70A closeout evidence
 

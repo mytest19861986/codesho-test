@@ -1,29 +1,32 @@
 # Codesho Project State
 
-Updated: 2026-07-27 (Task71A synthetic account bootstrap architecture)
+Updated: 2026-08-05 (Task71B Commander remediation checkpoint)
 
 ## Current Status
 
-Task71A is `ARCHITECTURE_AND_PRIVACY_GATE / COMPLETE / SYNTHETIC_ONLY` on
-base `bdc2839bb03e829064066496739d47c7cbb05c07`, branch
-`agent/task71a-synthetic-account-bootstrap-architecture`, with an exact
-five-file documentation allow-list. It defines no implementation or runtime
-behavior. Task69B is `COMPLETE / MERGED / VERIFIED`. PR #9 is `CLOSED / MERGED` at
-`5be173afb03197cbc2e293e2ff28e1f9156a47ad`, with parents
-`27a8626d29bfa7e21c5e770455db6b20a4521ccc` and
-`0aea2e0a1dbba925343a854de35683b84d83a748`. Its source branch remains preserved.
-CI evidence is green (backend PostgreSQL 224 passed, frontend success,
-smoke_restore success); exact scope and review gates passed. PR #5 remains
-`OPEN / DRAFT / UNCHANGED` at head `ee708a59fda89f08b824b079ebece2eed3b5515b`.
-Task71A Draft PR #11 is `OPEN / DRAFT` at the Task71A head. Independent
-architecture review is `PASS`; final-head backend/frontend/smoke_restore CI is
-`SUCCESS` (runs 30242024960 and 30242024950), and Ready remains unauthorized.
-Draft PR creation and closeout are complete. No Production,
-deployment, release, real-user, public API, backfill, provider, or protected
-`codesho` promotion is authorized. Legal decisions remain `LEGAL_PENDING`.
+Task71B is `CI_REMEDIATION / LOCAL_CHECKS_PASS / MERGE_BLOCKED` on exact
+base `5149bb1c7bf1ca6cf590bfafc3833876de11ec0a`, branch
+`codex/task71b-review-remediation`, with the original exact 14-file allow-list.
+It creates only inactive, roleless synthetic memberships and dormant users with
+unusable passwords; no public or Production capability is enabled. Task71A is
+`COMPLETE / MERGED / VERIFIED` at `5149bb1c7bf1ca6cf590bfafc3833876de11ec0a`.
+PR #5 remains `OPEN / DRAFT / UNCHANGED` at head
+`ee708a59fda89f08b824b079ebece2eed3b5515b`. The historical Task71B V6 and CI
+checkpoint was superseded by a Commander `FAIL / MERGE_BLOCKED` re-review.
+The remediation validates exact audit evidence, preserves human membership
+lifecycle, hardens synthetic privilege flags, adds real provenance rollback
+tests, and makes reverse migrations conditional on absence of protected data.
+Backend CI run `31014336650` failed on remote head
+`9c5d6ee79268424099c1f5ff16df6d029b94f27d`. Its bounded local correction now
+passes available gates. The second Commander re-review added real PostgreSQL
+successful/blocked reverse-path catalog assertions and documented the FORCE-RLS
+baseline owned by `platform_tenant.0002_membership_rls`; PostgreSQL CI and
+separate push authority remain required. No Production, deployment, release,
+real-user, public API, backfill, provider, or protected `codesho` promotion is
+authorized. Legal decisions remain `LEGAL_PENDING`.
 
-Task69B/Task70A wording below is historical only. The project will return to
-`WAITING_FOR_NEXT_SEPARATE_AUTHORIZATION` after Task71A closeout.
+Task69B/Task70A/Task71A wording below is historical only. The project will
+return to `WAITING_FOR_NEXT_SEPARATE_AUTHORIZATION` after Task71B closeout.
 
 Task67A/67B and the Task68A documentation closeout are merged. PR #7 is
 CLOSED / MERGED at `fc2aa2f4d7261dc7bb597886dbe782163313eceb`. Its parents
@@ -150,7 +153,7 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
 - Historical local-environment limitations in earlier checkpoints are retained
   in their original records and do not represent an unresolved Task63D gate.
 
-## Task71A next steps
+## Historical Task71A next steps
 
 1. Complete self-review, provider-neutral independent architecture review,
    exact-file review, and backend/frontend/smoke_restore CI for the Draft PR.

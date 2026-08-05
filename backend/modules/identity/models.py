@@ -8,11 +8,58 @@ from django.db.models import Q
 
 
 class User(AbstractUser):
+    class IdentityMode(models.TextChoices):
+        HUMAN = "human", "Human"
+        SYNTHETIC = "synthetic", "Synthetic"
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    email = models.EmailField(unique=True)
+    username = models.CharField(  # type: ignore[assignment]
+        max_length=150, unique=True, null=True, blank=True
+    )
+    email = models.EmailField(unique=True, null=True, blank=True)  # type: ignore[assignment]
+    identity_mode = models.CharField(
+        max_length=16,
+        choices=IdentityMode,
+        default=IdentityMode.HUMAN,
+        editable=False,
+    )
+    synthetic_handle = models.UUIDField(null=True, unique=True, editable=False)
     session_auth_epoch = models.PositiveBigIntegerField(default=1)
 
     REQUIRED_FIELDS = ["email"]
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    Q(
+                        identity_mode="human",
+                        username__isnull=False,
+                        email__isnull=False,
+                        synthetic_handle__isnull=True,
+                    )
+                    | Q(
+                        identity_mode="synthetic",
+                        username__isnull=True,
+                        email__isnull=True,
+                        synthetic_handle__isnull=False,
+                        is_active=False,
+                        is_staff=False,
+                        is_superuser=False,
+                        first_name="",
+                        last_name="",
+                    )
+                ),
+                name="user_identity_mode_fields_consistent",
+            )
+        ]
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if not self._state.adding:
+            previous = type(self).objects.filter(pk=self.pk).values("identity_mode").first()
+            if previous is not None and previous["identity_mode"] != self.identity_mode:
+                raise ValidationError("identity mode is immutable")
+        super().save(*args, **kwargs)
 
 
 class AdultAgeAttestation(models.Model):
@@ -130,6 +177,76 @@ class AdultAttestationProvenance(models.Model):
         raise ValidationError("adult attestation provenance is append-only")
 
 
+class SyntheticBootstrapRequest(models.Model):
+    """Immutable terminal request linking one attestation to one dormant account."""
+
+    class State(models.TextChoices):
+        COMPLETED = "completed", "Completed"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant_id = models.UUIDField(editable=False)
+    attestation = models.ForeignKey(
+        AdultAgeAttestation,
+        on_delete=models.PROTECT,
+        related_name="+",
+        editable=False,
+    )
+    provenance = models.ForeignKey(
+        AdultAttestationProvenance,
+        on_delete=models.PROTECT,
+        related_name="+",
+        editable=False,
+    )
+    idempotency_key = models.UUIDField(editable=False)
+    user = models.ForeignKey(
+        "identity.User",
+        on_delete=models.PROTECT,
+        related_name="synthetic_bootstrap_requests",
+        editable=False,
+    )
+    membership = models.ForeignKey(
+        "platform_tenant.TenantMembership",
+        on_delete=models.PROTECT,
+        related_name="synthetic_bootstrap_requests",
+        editable=False,
+    )
+    state = models.CharField(
+        max_length=16,
+        choices=State,
+        default=State.COMPLETED,
+        editable=False,
+    )
+    audit_event_id = models.UUIDField(unique=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant_id", "attestation"],
+                name="unique_synthetic_request_tenant_attestation",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant_id", "idempotency_key"],
+                name="unique_synthetic_request_tenant_idempotency",
+            ),
+            models.CheckConstraint(
+                condition=Q(state="completed"),
+                name="synthetic_request_terminal_state_valid",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"SyntheticBootstrapRequest({self.id})"
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if not self._state.adding:
+            raise ValidationError("synthetic bootstrap requests are immutable")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: object, **kwargs: object) -> tuple[int, dict[str, int]]:
+        raise ValidationError("synthetic bootstrap requests are append-only")
+
+
 class PasscodeCredential(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="passcode_credential")
     encoded_hash = models.CharField(max_length=256)
@@ -145,6 +262,11 @@ class PasscodeCredential(models.Model):
 
     def __str__(self) -> str:
         return f"Passcode credential for user {self.user_id}"
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if User.objects.filter(pk=self.user_id, identity_mode=User.IdentityMode.SYNTHETIC).exists():
+            raise ValidationError("synthetic users cannot receive credentials")
+        super().save(*args, **kwargs)
 
 
 class PasscodeChangeChallenge(models.Model):

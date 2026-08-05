@@ -51,6 +51,7 @@ SECURITY_EVENT_TYPES = (
     "admin_policy_evaluated",
     "adult_age_attestation_accepted",
     "adult_signup_rejected_age_attestation_missing",
+    "synthetic_account_bootstrapped",
 )
 SECURITY_EVENT_OUTCOMES = ("success", "failure", "blocked", "detected")
 SECURITY_EVENT_REASON_CODES = (
@@ -82,6 +83,7 @@ SECURITY_EVENT_REASON_CODES = (
     "admin_policy_evaluated",
     "adult_attested",
     "age_attestation_required",
+    "synthetic_bootstrap_created",
 )
 
 

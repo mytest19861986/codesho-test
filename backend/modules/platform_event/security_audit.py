@@ -37,6 +37,7 @@ class SecurityEventType(StrEnum):
     ADULT_SIGNUP_REJECTED_AGE_ATTESTATION_MISSING = (
         "adult_signup_rejected_age_attestation_missing"
     )
+    SYNTHETIC_ACCOUNT_BOOTSTRAPPED = "synthetic_account_bootstrapped"
 
 
 class SecurityEventOutcome(StrEnum):
@@ -77,6 +78,7 @@ class ReasonCode(StrEnum):
     ADMIN_POLICY_EVALUATED = "admin_policy_evaluated"
     ADULT_ATTESTED = "adult_attested"
     AGE_ATTESTATION_REQUIRED = "age_attestation_required"
+    SYNTHETIC_BOOTSTRAP_CREATED = "synthetic_bootstrap_created"
 
 
 @dataclass(frozen=True, slots=True)
@@ -324,6 +326,25 @@ def adult_signup_rejected_age_attestation_missing(
         reason_code=ReasonCode.AGE_ATTESTATION_REQUIRED,
         correlation_id=correlation_id,
         subject_user_id=subject_id,
+        tenant_id=tenant_id,
+        idempotency_key=idempotency_key,
+    )
+
+
+def synthetic_account_bootstrapped(
+    event_id: UUID,
+    correlation_id: UUID,
+    tenant_id: UUID,
+    subject_user_id: UUID,
+    idempotency_key: str,
+) -> SecurityAuditEvent:
+    return SecurityAuditEvent(
+        event_id=event_id,
+        event_type=SecurityEventType.SYNTHETIC_ACCOUNT_BOOTSTRAPPED,
+        outcome=SecurityEventOutcome.SUCCESS,
+        reason_code=ReasonCode.SYNTHETIC_BOOTSTRAP_CREATED,
+        correlation_id=correlation_id,
+        subject_user_id=subject_user_id,
         tenant_id=tenant_id,
         idempotency_key=idempotency_key,
     )

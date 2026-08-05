@@ -81,3 +81,43 @@ Task67A adds `adult_age_attestation_accepted` and
 codes `adult_attested` and `age_attestation_required`. The subject and tenant
 identifiers are opaque UUIDs; the immutable audit schema has no arbitrary
 metadata or raw-payload field.
+
+## Synthetic account bootstrap additions (Task71B)
+
+### `identity_user` synthetic identity fields
+
+| Field | Meaning | Security/immutability rule |
+|---|---|---|
+| `identity_mode` | Explicit `human` or `synthetic` mode | Database constraint requires human identity fields or the synthetic contract, never a mixture. |
+| `synthetic_handle` | Server-generated opaque UUID handle | Required only for synthetic users; never a name, email, phone, or contact value. |
+| `username` / `email` | Human-only identity fields | Synthetic rows must store both as NULL; existing human constraints remain valid. |
+| `is_active` / `password` | Authentication gate and Django password marker | Synthetic rows are inactive and have an unusable password; no credential/session/token/cookie is created. |
+| `is_staff` / `is_superuser` | Django administrative privilege flags | Both are always false for synthetic rows; model constraints and PostgreSQL triggers reject privilege escalation. |
+
+### `identity_syntheticbootstraprequest`
+
+Immutable terminal workflow record. It stores only opaque tenant, attestation,
+provenance, idempotency, User, membership, request, and audit UUID references.
+Tenant/idempotency and tenant/attestation uniqueness prevent duplicate accounts;
+same-input replay returns the existing result, while changed input fails closed.
+RLS is forced, tenant context is mandatory, and runtime UPDATE/DELETE/TRUNCATE
+are denied. The database contract requires same-tenant provenance, dormant
+synthetic User, and inactive roleless membership linkage.
+It also requires one exact immutable audit row whose event ID, type, outcome,
+reason, tenant, subject User, and derived idempotency key match the request.
+
+### `platform_tenant_tenantmembership` synthetic fields
+
+`is_synthetic_bootstrap=true` marks the internal bootstrap edge. Such a row is
+always inactive and roleless; database constraints and triggers reject activation
+or role assignment. Runtime truncation remains denied. Human membership update,
+activation, deactivation, and deletion retain the baseline table privileges and
+are not blocked by the synthetic-only trigger.
+
+### `synthetic_account_bootstrapped` audit event
+
+The only new audit event is an immutable bounded success event with opaque tenant
+and User references, a correlation UUID, and reason code
+`synthetic_bootstrap_created`. No provenance, raw payload, identity/contact data,
+or arbitrary metadata is recorded. Retention, deletion, erasure, and legal hold
+remain `LEGAL_PENDING`.

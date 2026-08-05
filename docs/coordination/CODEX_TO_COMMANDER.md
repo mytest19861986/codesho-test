@@ -1,28 +1,64 @@
-# Codex to Commander — Task71A
+# Codex to Commander — Task71B
 
-## Current Task71A checkpoint
+## Current Task71B checkpoint
 
 ```text
-TASK_ID: SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-ARCHITECTURE-71A
-STATUS: ARCHITECTURE_AND_PRIVACY_GATE / IN_PROGRESS / SYNTHETIC_ONLY
-BASE_SHA: bdc2839bb03e829064066496739d47c7cbb05c07
-BRANCH: agent/task71a-synthetic-account-bootstrap-architecture
-WORKTREE: H:\codesho\codesho\worktrees\codesho-task71a
+TASK_ID: SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-IMPLEMENT-71B
+STATUS: CI_REMEDIATION / LOCAL_CHECKS_PASS / MERGE_BLOCKED
+BASE_SHA: 5149bb1c7bf1ca6cf590bfafc3833876de11ec0a
+BRANCH: codex/task71b-review-remediation
+WORKTREE: /tmp/codesho-task71b-remediation.bgcbqx
+ALLOW_LIST: EXACTLY 14 PATHS
 PR_9: CLOSED / MERGED / HISTORICAL
 PR_10: CLOSED / MERGED / HISTORICAL
-PR_11: OPEN / DRAFT / LIVE_HEAD: PR_METADATA (do not duplicate a mutable SHA)
+PR_11: CLOSED / MERGED / HISTORICAL
 PR_5: OPEN / DRAFT / UNCHANGED / HEAD ee708a59fda89f08b824b079ebece2eed3b5515b
-REAL_USERS/PUBLIC_API/BACKFILL/PROVIDER: NOT_AUTHORIZED
+READY/MERGE/DIRECT_MAIN_PUSH: NOT_AUTHORIZED
+PUBLIC_API/OPENAPI/FRONTEND/CONFIGURATION: NOT_AUTHORIZED
+REAL_USERS/BACKFILL/PROVIDER: NOT_AUTHORIZED
 PRODUCTION/DEPLOYMENT/RELEASE: NOT_AUTHORIZED
 PROTECTED_CODESHO_PROMOTION: NOT_AUTHORIZED
 LEGAL_RETENTION/DELETION/HOLD: LEGAL_PENDING
+CURRENT_HEAD: AUTHORITATIVE PR HEAD (verify with `git rev-parse HEAD`; no stale SHA)
+CI: AUTHORITATIVE CHECKS ATTACHED TO CURRENT PR HEAD
+HISTORICAL_INDEPENDENT_REVIEW_V6: SUPERSEDED
+HISTORICAL_COMMANDER_REVIEW: FAIL / MERGE_BLOCKED / REMEDIATED
+HISTORICAL_COMMANDER_REREVIEW: PASS / SUPERSEDED_BY_CI
+SECOND_COMMANDER_REREVIEW: LOCAL_REMEDIATION_COMPLETE / PG_CI_REQUIRED
+FAILED_CI: 31014336650 / REMOTE_HEAD 9c5d6ee79268424099c1f5ff16df6d029b94f27d
+REMEDIATION: LOCAL_CHECKS_PASS / REREVIEW_AND_REPUSH_REQUIRED
+FINAL_DISPOSITION: UNPUSHED_FIX / UNMERGED / READY_MERGE_NOT_AUTHORIZED
 ```
 
-Task71A is documentation-only. The five-file allow-list is exact; no source,
-model, migration, API, OpenAPI, frontend, configuration, test, account,
-membership, credential, or runtime behavior may change. The current User
-username/email requirement is an architectural option and Task71B precondition,
-not a reason to alter code here.
+Task71B is implementation-only within the exact 14-file allow-list. It defines
+no public endpoint, signup flow, credential enrollment, authentication, role
+activation, real-user or Production capability. Synthetic rows contain no
+invented contact value. Required final gates include exact-file/diff review,
+focused and full backend tests, empty-database migrations, OpenAPI/frontend
+non-change, sequential provider-neutral reviews, and backend/frontend/
+Compose/smoke_restore CI. Draft PR only; Ready and merge require later
+explicit authorization.
+
+The remediation branch remains inside the exact allow-list. It adds a strict
+database audit-to-request binding, synthetic-only user/membership guards that
+do not block human membership lifecycle, non-privileged synthetic User
+constraints, PostgreSQL provenance rollback/direct-SQL tests, and conditional
+reverse contracts that reject reversal when protected data or evidence exists.
+Local focused tests pass with PostgreSQL-only cases skipped; full backend and
+coverage, Ruff, MyPy, Django check, module boundaries, migration drift, and an
+empty SQLite migration pass. Commander authorized one non-amended commit and
+push to this remediation branch only; merge remains forbidden pending CI gate.
+
+The pushed checkpoint exposed PostgreSQL-only test/rollback defects, not a
+reason to weaken the production contract. The local correction uses real audit
+rows for PostgreSQL valid paths, asserts Django's wrapped trigger error, and
+makes reverse checks see across FORCE RLS without leaving it disabled. The
+second re-review further requires and now has a real empty PostgreSQL reverse
+probe with catalog assertions and rollback, plus exact populated failure/cause
+and catalog-preservation assertions. The FORCE baseline is explicitly owned by
+the still-applied `platform_tenant.0002_membership_rls` dependency. Full local
+suite is `199 passed / 49 skipped` at `85.55%` coverage. Real PostgreSQL CI is
+still required; no corrective commit, push, or merge is authorized yet.
 
 ---
 
