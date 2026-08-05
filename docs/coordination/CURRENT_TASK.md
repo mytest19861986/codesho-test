@@ -1,4 +1,47 @@
-# Current Task: SPRINT1-TASK71B-POST-MERGE-CLOSEOUT-71C
+# Current Task: SPRINT1-REAL-USER-ONBOARDING-LEGAL-AND-BOUNDARY-DECISION-72B
+
+```text
+STATUS: AUTHORIZED / DOCS_ONLY / LEGAL_POLICY_GATE
+BASE_SHA: 0472239d06194875d1cdb6f6929dd8eaad8bc0d9
+BRANCH: codex/task72b-real-user-legal-policy-packet
+DECISION: OPTION_A_APPROVED / OPTION_B_DEFERRED / OPTION_C_REJECTED
+```
+
+## Scope and allow-list
+
+Only these files may change: this file,
+`docs/decisions/2026-08-05-real-user-onboarding-legal-boundary.md`,
+`docs/security/REAL_USER_ONBOARDING_PREIMPLEMENTATION_GATE.md`,
+`docs/coordination/PROJECT_STATE.md`, and
+`docs/coordination/CODEX_TO_COMMANDER.md`.
+
+The task records unresolved legal/policy decisions without guessing their
+outcomes. It creates no code, schema, migration, API/OpenAPI, UI, real-user,
+real-data, credential, session, membership, activation, provider, Alpha or
+Production behavior.
+
+## Acceptance criteria
+
+- Exact five-file diff; `git diff --check` and repository documentation checks pass.
+- Decision and security-gate documents contain P0/P1, Adult/Minor/Guardian,
+  data/purpose/access, lifecycle, tenant/recovery/activation boundaries and
+  Option B go/no-go checks.
+- Every unresolved item identifies `PENDING_COUNSEL` or `PENDING_EMPLOYER`,
+  required evidence and blocker effect.
+- Sequential Claude review `CLAUDE_TASK72B_REAL_USER_LEGAL_POLICY_PACKET_REVIEW_01_V1`
+  is `PASS`; its final marker is `CLAUDE_TASK72B_REVIEW_COMPLETED` and it
+  reported no required changes or open P0/P1.
+
+## Git authority
+
+Commander accepted the checkpoint and Claude PASS. Commit and push to this
+task branch and creation of a Draft PR are authorized. Direct-main push,
+merge, Alpha/Production action, and protected `codesho` promotion remain
+prohibited.
+
+---
+
+# Historical Task: SPRINT1-TASK71B-POST-MERGE-CLOSEOUT-71C
 
 - Owner: Codex
 - Status: AUTHORIZED / DOCS-ONLY / POST-MERGE-CLOSEOUT.

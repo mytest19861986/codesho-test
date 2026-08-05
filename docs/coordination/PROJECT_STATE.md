@@ -1,5 +1,25 @@
 # Codesho Project State
 
+## Current authoritative task (2026-08-05)
+
+`SPRINT1-REAL-USER-ONBOARDING-LEGAL-AND-BOUNDARY-DECISION-72B` is an
+authorized docs-only legal/policy gate based on
+`0472239d06194875d1cdb6f6929dd8eaad8bc0d9`. Task71B and Task71C are closed;
+the latter's post-merge CI and Compose checks succeeded. No Alpha, Production,
+or protected `codesho` promotion occurred.
+
+Real-user onboarding remains `LEGAL_PENDING`. Option A (legal/policy packet)
+is approved; Option B is deferred; Option C is rejected. The current task does
+not resolve legal questions or authorize real-user data, public signup,
+credentials, sessions, active memberships, recovery, guardian functionality,
+providers, code, migrations, schemas, APIs, or UI.
+
+Unresolved decisions must remain attributed to `PENDING_COUNSEL` or
+`PENDING_EMPLOYER` with evidence and blocker effect in the Task72B decision
+and Commander handoff.
+
+---
+
 Updated: 2026-08-05 (Task71B post-merge closeout)
 
 ## Current Status

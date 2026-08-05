@@ -1,4 +1,61 @@
-# Codex to Commander — Task71C closeout
+# Codex to Commander — Task72B legal/policy packet (in progress)
+
+```text
+TASK_ID: SPRINT1-REAL-USER-ONBOARDING-LEGAL-AND-BOUNDARY-DECISION-72B
+BASE_SHA: 0472239d06194875d1cdb6f6929dd8eaad8bc0d9
+BRANCH: codex/task72b-real-user-legal-policy-packet
+STATUS: DOCS_ONLY / CLAUDE_PASS / COMMIT_PUSH_DRAFT_PR_AUTHORIZED
+```
+
+## Change summary
+
+The Task72B packet records Option A as the approved sequence, Option B as
+deferred, and Option C as rejected. It supplies an explicit legal/policy
+decision register, Adult/Minor/Guardian matrix, data/purpose/access and
+record-lifecycle matrices, conceptual fail-closed gate order, P0/P1 questions,
+and an Option B go/no-go checklist. No implementation or real-user capability
+is added.
+
+## Unresolved decisions and evidence
+
+| Owner | Decision / evidence required | Blocker effect |
+| --- | --- | --- |
+| `PENDING_COUNSEL` | jurisdiction, controller, lawful basis, notice/consent/withdrawal, age/guardian, aging-out, retention/deletion/erasure/hold, provider/privacy assessment | blocks any real-user/PII/onboarding action |
+| `PENDING_EMPLOYER` | product personas/journey, operational controller/access ownership, activation rule and acceptable provider posture | blocks product scope and activation |
+
+## Claude verdict and next review
+
+Claude verdict for `CLAUDE_TASK72A_REAL_USER_ONBOARDING_BOUNDARY_REVIEW_01_V1`:
+Option A approved, Option B deferred, Option C rejected. P0 concerns are
+lawful basis/jurisdiction/controller/consent, minor/guardian rules and
+lifecycle; P1 concerns include tenant isolation, minimization, activation,
+recovery/ATO, abuse, provenance access and provider/residency.
+
+Sequential Claude review `CLAUDE_TASK72B_REAL_USER_LEGAL_POLICY_PACKET_REVIEW_01_V1`
+returned `PASS`, `REQUIRED_CHANGES: None`, and
+`FINAL_MARKER: CLAUDE_TASK72B_REVIEW_COMPLETED`. The raw response remains
+outside the repository. The browser attachment control did not expose an
+upload method; the request transparently supplied the complete Task72B deltas
+for the exact five named files and excluded unchanged historical sections.
+
+## Validation / git status
+
+Completed: exact allow-list inspection, internal-link/path inspection,
+`git diff --check`, self-review, and Claude PASS review. This repository has
+no dedicated Markdown/documentation script in its declared frontend/backend
+checks. Commander accepted the checkpoint and authorized commit, branch push,
+and a Draft PR; no merge is authorized.
+
+## Remaining risk
+
+No technical document can close the legal/product gates. Real user, PII,
+credential, session, active membership, public signup, recovery, guardian,
+activation, Alpha, Production and protected-repository promotion remain
+fail-closed.
+
+---
+
+# Historical Codex to Commander — Task71C closeout
 
 ```text
 TASK_ID: SPRINT1-TASK71B-POST-MERGE-CLOSEOUT-71C
