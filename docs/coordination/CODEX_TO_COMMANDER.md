@@ -1,43 +1,24 @@
-# Codex to Commander — Task71B
-
-## Current Task71B checkpoint
+# Codex to Commander — Task71C closeout
 
 ```text
-TASK_ID: SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-IMPLEMENT-71B
-STATUS: CI_REMEDIATION / LOCAL_CHECKS_PASS / MERGE_BLOCKED
-BASE_SHA: 5149bb1c7bf1ca6cf590bfafc3833876de11ec0a
-BRANCH: codex/task71b-review-remediation
-WORKTREE: /tmp/codesho-task71b-remediation.bgcbqx
-ALLOW_LIST: EXACTLY 14 PATHS
-PR_9: CLOSED / MERGED / HISTORICAL
-PR_10: CLOSED / MERGED / HISTORICAL
-PR_11: CLOSED / MERGED / HISTORICAL
-PR_5: OPEN / DRAFT / UNCHANGED / HEAD ee708a59fda89f08b824b079ebece2eed3b5515b
-READY/MERGE/DIRECT_MAIN_PUSH: NOT_AUTHORIZED
-PUBLIC_API/OPENAPI/FRONTEND/CONFIGURATION: NOT_AUTHORIZED
-REAL_USERS/BACKFILL/PROVIDER: NOT_AUTHORIZED
-PRODUCTION/DEPLOYMENT/RELEASE: NOT_AUTHORIZED
-PROTECTED_CODESHO_PROMOTION: NOT_AUTHORIZED
+TASK_ID: SPRINT1-TASK71B-POST-MERGE-CLOSEOUT-71C
+STATUS: AUTHORIZED / DOCS-ONLY / POST-MERGE-CLOSEOUT
+BASE_SHA: f08ddd9e56ea2c7f503fbe4e5287f4665840ec2b
+BRANCH: codex/task71c-post-merge-closeout
+PR_12: CLOSED / MERGED / SQUASH
+MERGE_SHA: f08ddd9e56ea2c7f503fbe4e5287f4665840ec2b
+POST_MERGE_CI: 31042633399 / SUCCESS
+POST_MERGE_COMPOSE: 31042633952 / SUCCESS
+INDEPENDENT_REVIEW: PASS / OPEN_BLOCKERS 0
+CURRENT_STATE: AWAITING_COMMANDER_NEXT_TASK
+PRODUCTION/ALPHA/REAL_USER/PROTECTED_CODESHO: UNCHANGED / NOT_AUTHORIZED
 LEGAL_RETENTION/DELETION/HOLD: LEGAL_PENDING
-CURRENT_HEAD: AUTHORITATIVE PR HEAD (verify with `git rev-parse HEAD`; no stale SHA)
-CI: AUTHORITATIVE CHECKS ATTACHED TO CURRENT PR HEAD
-HISTORICAL_INDEPENDENT_REVIEW_V6: SUPERSEDED
-HISTORICAL_COMMANDER_REVIEW: FAIL / MERGE_BLOCKED / REMEDIATED
-HISTORICAL_COMMANDER_REREVIEW: PASS / SUPERSEDED_BY_CI
-SECOND_COMMANDER_REREVIEW: LOCAL_REMEDIATION_COMPLETE / PG_CI_REQUIRED
-FAILED_CI: 31014336650 / REMOTE_HEAD 9c5d6ee79268424099c1f5ff16df6d029b94f27d
-REMEDIATION: LOCAL_CHECKS_PASS / REREVIEW_AND_REPUSH_REQUIRED
-FINAL_DISPOSITION: UNPUSHED_FIX / UNMERGED / READY_MERGE_NOT_AUTHORIZED
 ```
 
-Task71B is implementation-only within the exact 14-file allow-list. It defines
-no public endpoint, signup flow, credential enrollment, authentication, role
-activation, real-user or Production capability. Synthetic rows contain no
-invented contact value. Required final gates include exact-file/diff review,
-focused and full backend tests, empty-database migrations, OpenAPI/frontend
-non-change, sequential provider-neutral reviews, and backend/frontend/
-Compose/smoke_restore CI. Draft PR only; Ready and merge require later
-explicit authorization.
+Task71B is complete. This closeout changes documentation only and preserves
+the historical review, remediation, and pre-merge evidence below. Statements
+below that describe Task71B as Draft, Ready, unmerged, merge-blocked, or
+unpushable are historical and superseded by the final disposition above.
 
 The remediation branch remains inside the exact allow-list. It adds a strict
 database audit-to-request binding, synthetic-only user/membership guards that

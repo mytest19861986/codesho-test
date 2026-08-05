@@ -1,32 +1,23 @@
 # Codesho Project State
 
-Updated: 2026-08-05 (Task71B Commander remediation checkpoint)
+Updated: 2026-08-05 (Task71B post-merge closeout)
 
 ## Current Status
 
-Task71B is `CI_REMEDIATION / LOCAL_CHECKS_PASS / MERGE_BLOCKED` on exact
-base `5149bb1c7bf1ca6cf590bfafc3833876de11ec0a`, branch
-`codex/task71b-review-remediation`, with the original exact 14-file allow-list.
-It creates only inactive, roleless synthetic memberships and dormant users with
-unusable passwords; no public or Production capability is enabled. Task71A is
-`COMPLETE / MERGED / VERIFIED` at `5149bb1c7bf1ca6cf590bfafc3833876de11ec0a`.
-PR #5 remains `OPEN / DRAFT / UNCHANGED` at head
-`ee708a59fda89f08b824b079ebece2eed3b5515b`. The historical Task71B V6 and CI
-checkpoint was superseded by a Commander `FAIL / MERGE_BLOCKED` re-review.
-The remediation validates exact audit evidence, preserves human membership
-lifecycle, hardens synthetic privilege flags, adds real provenance rollback
-tests, and makes reverse migrations conditional on absence of protected data.
-Backend CI run `31014336650` failed on remote head
-`9c5d6ee79268424099c1f5ff16df6d029b94f27d`. Its bounded local correction now
-passes available gates. The second Commander re-review added real PostgreSQL
-successful/blocked reverse-path catalog assertions and documented the FORCE-RLS
-baseline owned by `platform_tenant.0002_membership_rls`; PostgreSQL CI and
-separate push authority remain required. No Production, deployment, release,
-real-user, public API, backfill, provider, or protected `codesho` promotion is
-authorized. Legal decisions remain `LEGAL_PENDING`.
+Task71B Synthetic Account Bootstrap is `COMPLETE / MERGED / VERIFIED`. PR #12
+was Squash-merged into `codesho-test/main` at
+`f08ddd9e56ea2c7f503fbe4e5287f4665840ec2b`; post-merge CI `31042633399` and
+Compose smoke/restore `31042633952` are `SUCCESS`. The independent review
+verdict is `PASS` with zero open blockers.
 
-Task69B/Task70A/Task71A wording below is historical only. The project will
-return to `WAITING_FOR_NEXT_SEPARATE_AUTHORIZATION` after Task71B closeout.
+The merged foundation creates only opaque, inactive, roleless synthetic
+memberships and dormant no-credential users; it adds no public or Production
+capability. Production, Alpha, real-user activation, deployment, release,
+public API expansion, backfill, providers, and protected `codesho` promotion
+remain unauthorized. Legal decisions remain `LEGAL_PENDING`.
+
+The project is now `AWAITING_COMMANDER_NEXT_TASK`. Task69B/Task70A/Task71A and
+pre-merge Task71B wording below is historical evidence only.
 
 Task67A/67B and the Task68A documentation closeout are merged. PR #7 is
 CLOSED / MERGED at `fc2aa2f4d7261dc7bb597886dbe782163313eceb`. Its parents
