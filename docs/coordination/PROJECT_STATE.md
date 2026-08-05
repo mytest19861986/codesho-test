@@ -1,8 +1,24 @@
 # Codesho Project State
 
-Updated: 2026-08-05 (Task71B post-merge closeout)
+Updated: 2026-08-05 (Task72B legal/policy gate)
 
 ## Current Status
+
+Task72B is `COMPLETE / DOCS-ONLY / OPTION-A / CLAUDE-PASS`. It records the real-user
+onboarding legal/policy boundary without implementation. Lawful-basis,
+Controller, jurisdiction, notice/consent, Adult/Minor/Guardian, lifecycle,
+tenant-authority, Recovery, activation, provider/residency and operational
+decisions remain `PENDING_COUNSEL` or `PENDING_EMPLOYER`. Option B is deferred;
+Option C is rejected. Real-user collection, PII, accounts, credentials,
+sessions, active memberships, public endpoints, providers, Alpha, Production
+and protected-repository promotion fail closed.
+
+The authoritative base is `0472239d06194875d1cdb6f6929dd8eaad8bc0d9`;
+branch is `codex/task72b-real-user-legal-policy-packet`. Only the five files in
+`CURRENT_TASK.md` may change. Documentation checks passed. Sequential Claude
+review `CLAUDE_TASK72B_LEGAL_POLICY_PACKET_REVIEW_01_V2` passed with zero P0,
+zero P1 and zero open blockers. `FINAL_MARKER:
+CLAUDE_TASK72B_REVIEW_COMPLETED`. Merge/direct-main remain forbidden.
 
 Task71B Synthetic Account Bootstrap is `COMPLETE / MERGED / VERIFIED`. PR #12
 was Squash-merged into `codesho-test/main` at
@@ -16,8 +32,8 @@ capability. Production, Alpha, real-user activation, deployment, release,
 public API expansion, backfill, providers, and protected `codesho` promotion
 remain unauthorized. Legal decisions remain `LEGAL_PENDING`.
 
-The project is now `AWAITING_COMMANDER_NEXT_TASK`. Task69B/Task70A/Task71A and
-pre-merge Task71B wording below is historical evidence only.
+Task69B/Task70A/Task71A and pre-merge Task71B wording below is historical
+evidence only.
 
 Task67A/67B and the Task68A documentation closeout are merged. PR #7 is
 CLOSED / MERGED at `fc2aa2f4d7261dc7bb597886dbe782163313eceb`. Its parents

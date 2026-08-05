@@ -1,4 +1,56 @@
-# Codex to Commander — Task71C closeout
+# Codex to Commander — Task72B legal/policy gate
+
+```text
+TASK_ID: SPRINT1-REAL-USER-ONBOARDING-LEGAL-AND-BOUNDARY-DECISION-72B
+BASE_SHA: 0472239d06194875d1cdb6f6929dd8eaad8bc0d9
+BRANCH: codex/task72b-real-user-legal-policy-packet
+STATUS: COMPLETE / DOCS-ONLY / OPTION-A / CLAUDE_PASS
+ALLOW_LIST: EXACTLY_FIVE_FILES
+OPTION_A: SELECTED
+OPTION_B: DEFERRED_PENDING_ALL_P0_AND_NEW_AUTHORITY
+OPTION_C: REJECTED
+REAL_USER_OR_PII: PROHIBITED
+IMPLEMENTATION: NONE
+MERGE_OR_DIRECT_MAIN: NOT_AUTHORIZED
+PRODUCTION_ALPHA_CODESHO_PROMOTION: NONE
+CLAUDE_PROMPT_ID: CLAUDE_TASK72B_LEGAL_POLICY_PACKET_REVIEW_01_V2
+CLAUDE_VERDICT: PASS
+CLAUDE_OPEN_BLOCKERS: 0
+FINAL_MARKER: CLAUDE_TASK72B_REVIEW_COMPLETED
+VALIDATION: EXACT_ALLOW_LIST_PASS / DIFF_CHECK_PASS / PATH_SANITY_PASS
+```
+
+The packet records P0/P1 owners, evidence, fail-closed effects,
+persona/consent/data/lifecycle matrices, conceptual gates,
+tenant/Guardian/Recovery/enumeration threats, provider/residency/operations,
+and Option B Go/No-Go. All unresolved items are `PENDING_COUNSEL` or
+`PENDING_EMPLOYER`; no legal conclusion or retention duration was invented.
+
+Claude V1 found one P0 ordering ambiguity and two P1 auditability/status
+issues. The two primary docs were remediated within scope. Sequential V2 then
+returned `PASS`, `OPEN_BLOCKERS: 0`, `P0: NONE`, `P1: NONE`, and confirmed the
+packet is sufficient to govern a later separately authorized Option B. Raw
+review remains outside the repository.
+
+Remaining legal/product decisions by owner:
+
+- `PENDING_COUNSEL`: jurisdiction applicability, lawful basis, Controller
+  validation, notice/consent/withdrawal, Minor/Guardian/aging-out, every
+  record's retention/deletion/erasure/DSR/legal hold, DPIA/no-DPIA,
+  provider/residency/DPA and applicable incident/breach duties.
+- `PENDING_EMPLOYER`: launch jurisdictions/personas/PRD, Controller and
+  operational owners, tenant authority, identifiers/verification, Recovery,
+  activation, providers and operational RACI.
+
+Required evidence and each blocking effect are recorded in the primary
+decision tables. Until those owners approve them, Option B remains deferred,
+Option C rejected, and all real-user/PII/implementation paths fail closed.
+
+Commit/push/Draft-PR are authorized after final checks; merge remains forbidden.
+
+---
+
+# Historical Task71C closeout
 
 ```text
 TASK_ID: SPRINT1-TASK71B-POST-MERGE-CLOSEOUT-71C
