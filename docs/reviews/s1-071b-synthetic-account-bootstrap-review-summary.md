@@ -1,6 +1,6 @@
 # Task71B Synthetic Account Bootstrap Review Summary
 
-Status: `COMPLETE / FINAL_REVIEW_PASS / DRAFT_ONLY`
+Status: `COMMANDER_REREVIEW_PASS / OPEN_BLOCKERS_0 / MERGE_BLOCKED`
 
 Task: `SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-IMPLEMENT-71B`
 Repository: `mytest19861986/codesho-test`
@@ -140,3 +140,32 @@ the Draft-only boundary. CI `30256726798` and Compose
 `30256726683` were SUCCESS. The PR remains OPEN / DRAFT; Ready, merge,
 deployment, release, real users, and protected-repository promotion remain
 unauthorized. Legal retention/deletion/erasure/hold remains `LEGAL_PENDING`.
+
+## Commander re-review remediation
+
+The historical V6 verdict was superseded by a Commander `FAIL / MERGE_BLOCKED`
+decision. Remediation is limited to the existing 14-file allow-list and remains
+unpushed and unmerged.
+
+| Finding | Disposition |
+|---|---|
+| Request/audit binding was incomplete | `REMEDIATED`: the PostgreSQL request trigger now requires the exact event ID, event type, outcome, reason, tenant, subject User, null actor/credential, and derived idempotency key. Seven direct-SQL mismatch cases are covered. |
+| Membership guard blocked human lifecycle | `REMEDIATED`: DELETE is handled before NEW access; synthetic update/delete remains forbidden, while human activation/deactivation/delete follows baseline UPDATE/DELETE privileges. Runtime TRUNCATE remains revoked. |
+| Synthetic administrative flags were not constrained | `REMEDIATED`: model constraint, migration state, service defaults, PostgreSQL insert/update/delete trigger, ORM negatives, and direct-SQL negatives require `is_staff=false` and `is_superuser=false`. |
+| Provenance rollback evidence was incomplete | `REMEDIATED IN TEST SCOPE`: PostgreSQL tests use valid attestations and cover missing, cross-tenant, and wrong-attestation provenance, proving User/membership/request/audit rollback. |
+| Reverse contract was unconditionally irreversible | `REMEDIATED`: identity, membership, and audit allow-list reverse paths are allowed only when no protected synthetic data/evidence or incompatible nullable-role membership exists; otherwise they raise `IrreversibleError` fail-closed. Empty and populated PostgreSQL paths have dedicated tests. |
+| Generated OpenAPI baseline drift | `OUT_OF_SCOPE`: Task71B changes no OpenAPI, URL, auth-view, or frontend path. |
+
+Local remediation evidence: Ruff PASS; MyPy 47 files PASS; module boundaries
+PASS; Django check PASS; migration drift NONE; empty SQLite migration PASS;
+focused `9 passed / 15 PostgreSQL-only skipped`; full backend `199 passed / 49
+skipped`; coverage `85.55%` against the 80% gate. PostgreSQL/Compose CI remains
+mandatory before any Ready or merge action.
+
+## Commander remediation re-review verdict
+
+Commander re-review returned `PASS` with `OPEN_BLOCKERS: 0`. The exact scoped
+remediation may be committed once without amend and pushed only to
+`codesho-test` branch `codex/task71b-review-remediation`. Branch CI remains a
+gate. Ready, merge, direct main push, protected `codesho` promotion, deployment,
+release, real users, and Production remain unauthorized.

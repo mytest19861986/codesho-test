@@ -4,10 +4,10 @@
 
 ```text
 TASK_ID: SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-IMPLEMENT-71B
-STATUS: COMPLETE / DRAFT_HANDOFF / INTERNAL_SYNTHETIC_ONLY
+STATUS: COMMANDER_REREVIEW_PASS / COMMIT_PUSH_AUTHORIZED / MERGE_BLOCKED
 BASE_SHA: 5149bb1c7bf1ca6cf590bfafc3833876de11ec0a
-BRANCH: agent/task71b-synthetic-account-bootstrap
-WORKTREE: H:\codesho\codesho\worktrees\codesho-task71b
+BRANCH: codex/task71b-review-remediation
+WORKTREE: /tmp/codesho-task71b-remediation.bgcbqx
 ALLOW_LIST: EXACTLY 14 PATHS
 PR_9: CLOSED / MERGED / HISTORICAL
 PR_10: CLOSED / MERGED / HISTORICAL
@@ -21,8 +21,11 @@ PROTECTED_CODESHO_PROMOTION: NOT_AUTHORIZED
 LEGAL_RETENTION/DELETION/HOLD: LEGAL_PENDING
 CURRENT_HEAD: AUTHORITATIVE PR HEAD (verify with `git rev-parse HEAD`; no stale SHA)
 CI: AUTHORITATIVE CHECKS ATTACHED TO CURRENT PR HEAD
-INDEPENDENT_REVIEW_V6: PASS / OPEN_BLOCKING_FINDINGS 0
-FINAL_DISPOSITION: DRAFT_ONLY / READY_MERGE_NOT_AUTHORIZED
+HISTORICAL_INDEPENDENT_REVIEW_V6: SUPERSEDED
+HISTORICAL_COMMANDER_REVIEW: FAIL / MERGE_BLOCKED / REMEDIATED
+COMMANDER_REREVIEW: PASS / OPEN_BLOCKERS 0
+REMEDIATION: LOCAL_CHECKS_PASS / BRANCH_CI_REQUIRED
+FINAL_DISPOSITION: COMMIT_PUSH_AUTHORIZED / UNMERGED / READY_MERGE_NOT_AUTHORIZED
 ```
 
 Task71B is implementation-only within the exact 14-file allow-list. It defines
@@ -33,6 +36,16 @@ focused and full backend tests, empty-database migrations, OpenAPI/frontend
 non-change, sequential provider-neutral reviews, and backend/frontend/
 Compose/smoke_restore CI. Draft PR only; Ready and merge require later
 explicit authorization.
+
+The remediation branch remains inside the exact allow-list. It adds a strict
+database audit-to-request binding, synthetic-only user/membership guards that
+do not block human membership lifecycle, non-privileged synthetic User
+constraints, PostgreSQL provenance rollback/direct-SQL tests, and conditional
+reverse contracts that reject reversal when protected data or evidence exists.
+Local focused tests pass with PostgreSQL-only cases skipped; full backend and
+coverage, Ruff, MyPy, Django check, module boundaries, migration drift, and an
+empty SQLite migration pass. Commander authorized one non-amended commit and
+push to this remediation branch only; merge remains forbidden pending CI gate.
 
 ---
 

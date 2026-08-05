@@ -1,11 +1,11 @@
 # Current Task: SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-IMPLEMENT-71B
 
 - Owner: Codex
-- Status: IMPLEMENTATION / IN_PROGRESS / INTERNAL_SYNTHETIC_ONLY.
+- Status: COMMANDER_REREVIEW_PASS / COMMIT_PUSH_AUTHORIZED / MERGE_BLOCKED.
 - BASE_SHA: `5149bb1c7bf1ca6cf590bfafc3833876de11ec0a`.
 - Target repository: `mytest19861986/codesho-test`.
-- Branch: `agent/task71b-synthetic-account-bootstrap`.
-- Worktree: `H:\codesho\codesho\worktrees\codesho-task71b`.
+- Branch: `codex/task71b-review-remediation`.
+- Worktree: `/tmp/codesho-task71b-remediation.bgcbqx`.
 - Employer standing authorization date: `2026-07-26`.
 
 ## Goal
@@ -43,6 +43,10 @@ membership activation, real users, Production, deployment, release, and
 protected `codesho` promotion are not authorized. The final Draft PR must pass
 the exact 14-file check, all local acceptance checks, sequential reviews, and
 backend/frontend/Compose/smoke_restore CI.
+
+Commander re-review returned `PASS` with zero open blockers. One non-amended
+commit and push to this `codesho-test` branch are authorized. Ready, merge,
+direct main push, and protected `codesho` promotion remain unauthorized.
 
 ## Task71B acceptance checkpoint
 

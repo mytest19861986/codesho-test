@@ -61,6 +61,9 @@ SECURITY_EVENT_REASON_CODES = (
     "synthetic_bootstrap_created",
 )
 
+PREVIOUS_SECURITY_EVENT_TYPES = SECURITY_EVENT_TYPES[:-1]
+PREVIOUS_SECURITY_EVENT_REASON_CODES = SECURITY_EVENT_REASON_CODES[:-1]
+
 
 def _values(values):
     return ", ".join(repr(value) for value in values)
@@ -89,10 +92,45 @@ def extend_allow_lists(apps, schema_editor):
     )
 
 
-def irreversible(apps, schema_editor):
+def restore_allow_lists(apps, schema_editor):
+    if schema_editor.connection.vendor != "postgresql":
+        return
     from django.db.migrations.exceptions import IrreversibleError
 
-    raise IrreversibleError("immutable audit allow-list must move forward")
+    try:
+        with schema_editor.connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT 1 FROM audit.identity_security_event "
+                "WHERE event_type = %s OR reason_code = %s LIMIT 1",
+                ["synthetic_account_bootstrapped", "synthetic_bootstrap_created"],
+            )
+            if cursor.fetchone() is not None:
+                raise IrreversibleError(
+                    "synthetic audit allow-list cannot be reversed while evidence exists"
+                )
+        schema_editor.execute(
+            "ALTER TABLE audit.identity_security_event DROP CONSTRAINT "
+            "identity_security_event_type_valid"
+        )
+        schema_editor.execute(
+            "ALTER TABLE audit.identity_security_event ADD CONSTRAINT "
+            "identity_security_event_type_valid "
+            f"CHECK (event_type IN ({_values(PREVIOUS_SECURITY_EVENT_TYPES)}))"
+        )
+        schema_editor.execute(
+            "ALTER TABLE audit.identity_security_event DROP CONSTRAINT "
+            "identity_security_event_reason_code_valid"
+        )
+        schema_editor.execute(
+            "ALTER TABLE audit.identity_security_event ADD CONSTRAINT "
+            "identity_security_event_reason_code_valid "
+            f"CHECK (reason_code IS NULL OR reason_code IN "
+            f"({_values(PREVIOUS_SECURITY_EVENT_REASON_CODES)}))"
+        )
+    except IrreversibleError:
+        raise
+    except Exception as exc:
+        raise IrreversibleError("synthetic audit allow-list reverse failed closed") from exc
 
 
 class Migration(migrations.Migration):
@@ -101,7 +139,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.SeparateDatabaseAndState(
             database_operations=[
-                migrations.RunPython(extend_allow_lists, reverse_code=irreversible)
+                migrations.RunPython(extend_allow_lists, reverse_code=restore_allow_lists)
             ],
             state_operations=[
                 migrations.RemoveConstraint(

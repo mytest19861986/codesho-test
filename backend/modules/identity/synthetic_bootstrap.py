@@ -194,6 +194,8 @@ def bootstrap_synthetic_account(
                 username=None,
                 email=None,
                 is_active=False,
+                is_staff=False,
+                is_superuser=False,
             )
             user.set_unusable_password()
             user.save(force_insert=True)

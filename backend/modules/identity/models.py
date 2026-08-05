@@ -44,6 +44,8 @@ class User(AbstractUser):
                         email__isnull=True,
                         synthetic_handle__isnull=False,
                         is_active=False,
+                        is_staff=False,
+                        is_superuser=False,
                         first_name="",
                         last_name="",
                     )

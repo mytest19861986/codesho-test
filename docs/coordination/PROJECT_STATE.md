@@ -1,19 +1,24 @@
 # Codesho Project State
 
-Updated: 2026-07-27 (Task71B final review closeout)
+Updated: 2026-08-05 (Task71B Commander remediation checkpoint)
 
 ## Current Status
 
-Task71B is `COMPLETE / DRAFT_HANDOFF / INTERNAL_SYNTHETIC_ONLY` on exact
+Task71B is `COMMANDER_REREVIEW_PASS / COMMIT_PUSH_AUTHORIZED / MERGE_BLOCKED` on exact
 base `5149bb1c7bf1ca6cf590bfafc3833876de11ec0a`, branch
-`agent/task71b-synthetic-account-bootstrap`, with an exact 14-file allow-list.
+`codex/task71b-review-remediation`, with the original exact 14-file allow-list.
 It creates only inactive, roleless synthetic memberships and dormant users with
 unusable passwords; no public or Production capability is enabled. Task71A is
 `COMPLETE / MERGED / VERIFIED` at `5149bb1c7bf1ca6cf590bfafc3833876de11ec0a`.
 PR #5 remains `OPEN / DRAFT / UNCHANGED` at head
-`ee708a59fda89f08b824b079ebece2eed3b5515b`. Task71B CI and Compose are green
-at the authoritative PR head returned by `git rev-parse HEAD`; V4/V5 blockers
-are remediated and V6 is PASS with zero blocking findings. No Production,
+`ee708a59fda89f08b824b079ebece2eed3b5515b`. The historical Task71B V6 and CI
+checkpoint was superseded by a Commander `FAIL / MERGE_BLOCKED` re-review.
+The remediation validates exact audit evidence, preserves human membership
+lifecycle, hardens synthetic privilege flags, adds real provenance rollback
+tests, and makes reverse migrations conditional on absence of protected data.
+Local SQLite/full-suite gates pass; PostgreSQL/CI remains required. Commander
+re-review returned PASS with zero open blockers and authorized one commit/push
+to the remediation branch only. No Production,
 deployment, release, real-user, public API, backfill, provider, or protected
 `codesho` promotion is authorized. Legal decisions remain `LEGAL_PENDING`.
 
