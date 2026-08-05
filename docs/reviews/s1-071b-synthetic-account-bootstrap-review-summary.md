@@ -1,6 +1,6 @@
 # Task71B Synthetic Account Bootstrap Review Summary
 
-Status: `COMMANDER_REREVIEW_PASS / OPEN_BLOCKERS_0 / MERGE_BLOCKED`
+Status: `CI_REMEDIATION / LOCAL_CHECKS_PASS / MERGE_BLOCKED`
 
 Task: `SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-IMPLEMENT-71B`
 Repository: `mytest19861986/codesho-test`
@@ -169,3 +169,34 @@ remediation may be committed once without amend and pushed only to
 `codesho-test` branch `codex/task71b-review-remediation`. Branch CI remains a
 gate. Ready, merge, direct main push, protected `codesho` promotion, deployment,
 release, real users, and Production remain unauthorized.
+
+## PostgreSQL CI remediation after run 31014336650
+
+Backend CI on remote head `9c5d6ee79268424099c1f5ff16df6d029b94f27d`
+reported 12 failures. Three valid-path tests mocked a successful append without
+creating the audit row required by PostgreSQL; PostgreSQL now uses the real
+audit function while SQLite retains the bounded mock. Seven negative ORM tests
+expected raw psycopg `RaiseException`; they now assert Django's `DatabaseError`
+wrapper and exact trigger reason.
+
+The original empty reverse probe incorrectly assumed the shared test audit
+table had no prior immutable evidence. The second Commander re-review rejected
+the intermediate recording-schema-editor replacement: the probe now runs first
+in this module, executes all three real PostgreSQL reverse paths inside one
+atomic transaction, asserts the empty precondition with FORCE RLS temporarily
+removed, verifies trigger/policy/function/constraint and RLS state after the
+reverse, and raises a marker exception to prove the complete catalog baseline
+is restored by rollback.
+
+Populated reverse tests assert each exact `IrreversibleError`, the wrapped
+database guard reason where applicable, and identical catalog state before and
+after rejection. FORCE RLS is removed only for the owner-visible compatibility
+guard. It is restored to the contract owned by the still-applied dependency
+`platform_tenant.0002_membership_rls` before Task71B objects are removed; both
+migrations document that ownership explicitly.
+
+Corrective local evidence after the second re-review patch: focused `9 passed /
+15 PostgreSQL-only skipped`; full backend `199 passed / 49 skipped`; coverage
+`85.55%`; Ruff, MyPy, module boundaries, Django check, migration drift, and
+empty SQLite migration all PASS. Real PostgreSQL CI remains mandatory. No
+corrective commit, push, or merge is authorized by this checkpoint.

@@ -1,7 +1,7 @@
 # Current Task: SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-IMPLEMENT-71B
 
 - Owner: Codex
-- Status: COMMANDER_REREVIEW_PASS / COMMIT_PUSH_AUTHORIZED / MERGE_BLOCKED.
+- Status: CI_REMEDIATION / LOCAL_CHECKS_PASS / MERGE_BLOCKED.
 - BASE_SHA: `5149bb1c7bf1ca6cf590bfafc3833876de11ec0a`.
 - Target repository: `mytest19861986/codesho-test`.
 - Branch: `codex/task71b-review-remediation`.
@@ -47,6 +47,13 @@ backend/frontend/Compose/smoke_restore CI.
 Commander re-review returned `PASS` with zero open blockers. One non-amended
 commit and push to this `codesho-test` branch are authorized. Ready, merge,
 direct main push, and protected `codesho` promotion remain unauthorized.
+
+Backend CI run `31014336650` failed on remote head
+`9c5d6ee79268424099c1f5ff16df6d029b94f27d`. The bounded local correction is
+complete. Commander second re-review required real PostgreSQL reverse-path and
+catalog-preservation evidence; that local test patch is complete, with real
+PostgreSQL CI still mandatory. A new commit or push is not authorized by the
+current assignment.
 
 ## Task71B acceptance checkpoint
 

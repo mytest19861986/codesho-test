@@ -171,6 +171,9 @@ ON TABLE codesho.identity_syntheticbootstraprequest FROM codesho_runtime;
 """
 
 REVERSE_BOOTSTRAP_CONTRACT_SQL = """
+ALTER TABLE codesho.identity_syntheticbootstraprequest NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE codesho.platform_tenant_tenantmembership NO FORCE ROW LEVEL SECURITY;
+
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM codesho.identity_syntheticbootstraprequest)
@@ -184,6 +187,11 @@ BEGIN
     END IF;
 END;
 $$;
+
+-- platform_tenant.0002_membership_rls is still applied while identity.0010 is
+-- reversed and owns the membership table's ENABLE + FORCE RLS contract. The
+-- temporary owner-visible guard above must restore that exact module baseline.
+ALTER TABLE codesho.platform_tenant_tenantmembership FORCE ROW LEVEL SECURITY;
 
 DROP TRIGGER IF EXISTS synthetic_bootstrap_request_contract
 ON codesho.identity_syntheticbootstraprequest;

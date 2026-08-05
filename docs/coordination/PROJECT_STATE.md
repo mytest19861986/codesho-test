@@ -4,7 +4,7 @@ Updated: 2026-08-05 (Task71B Commander remediation checkpoint)
 
 ## Current Status
 
-Task71B is `COMMANDER_REREVIEW_PASS / COMMIT_PUSH_AUTHORIZED / MERGE_BLOCKED` on exact
+Task71B is `CI_REMEDIATION / LOCAL_CHECKS_PASS / MERGE_BLOCKED` on exact
 base `5149bb1c7bf1ca6cf590bfafc3833876de11ec0a`, branch
 `codex/task71b-review-remediation`, with the original exact 14-file allow-list.
 It creates only inactive, roleless synthetic memberships and dormant users with
@@ -16,11 +16,14 @@ checkpoint was superseded by a Commander `FAIL / MERGE_BLOCKED` re-review.
 The remediation validates exact audit evidence, preserves human membership
 lifecycle, hardens synthetic privilege flags, adds real provenance rollback
 tests, and makes reverse migrations conditional on absence of protected data.
-Local SQLite/full-suite gates pass; PostgreSQL/CI remains required. Commander
-re-review returned PASS with zero open blockers and authorized one commit/push
-to the remediation branch only. No Production,
-deployment, release, real-user, public API, backfill, provider, or protected
-`codesho` promotion is authorized. Legal decisions remain `LEGAL_PENDING`.
+Backend CI run `31014336650` failed on remote head
+`9c5d6ee79268424099c1f5ff16df6d029b94f27d`. Its bounded local correction now
+passes available gates. The second Commander re-review added real PostgreSQL
+successful/blocked reverse-path catalog assertions and documented the FORCE-RLS
+baseline owned by `platform_tenant.0002_membership_rls`; PostgreSQL CI and
+separate push authority remain required. No Production, deployment, release,
+real-user, public API, backfill, provider, or protected `codesho` promotion is
+authorized. Legal decisions remain `LEGAL_PENDING`.
 
 Task69B/Task70A/Task71A wording below is historical only. The project will
 return to `WAITING_FOR_NEXT_SEPARATE_AUTHORIZATION` after Task71B closeout.

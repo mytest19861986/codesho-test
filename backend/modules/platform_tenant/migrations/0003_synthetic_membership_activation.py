@@ -54,6 +54,8 @@ FROM codesho_runtime;
 """
 
 REVERSE_MEMBERSHIP_CONTRACT_SQL = """
+ALTER TABLE codesho.platform_tenant_tenantmembership NO FORCE ROW LEVEL SECURITY;
+
 DO $$
 BEGIN
     IF EXISTS (
@@ -65,6 +67,11 @@ BEGIN
     END IF;
 END;
 $$;
+
+-- Dependency platform_tenant.0002_membership_rls remains applied while 0003 is
+-- reversed and owns the table's ENABLE + FORCE RLS contract. Restore it after
+-- the temporary owner-visible compatibility guard before removing 0003 objects.
+ALTER TABLE codesho.platform_tenant_tenantmembership FORCE ROW LEVEL SECURITY;
 
 DROP TRIGGER IF EXISTS synthetic_membership_dormancy_guard
 ON codesho.platform_tenant_tenantmembership;

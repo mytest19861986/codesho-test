@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import importlib
 import os
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from threading import Barrier, Thread
 from types import SimpleNamespace
@@ -34,7 +36,7 @@ from modules.identity.synthetic_bootstrap import (
     SyntheticBootstrapNotAuthorized,
     bootstrap_synthetic_account,
 )
-from modules.platform_event.security_audit import AppendAuditResult, SecurityAuditError
+from modules.platform_event.security_audit import SecurityAuditError
 from modules.platform_tenant.context import tenant_atomic
 from modules.platform_tenant.models import Tenant, TenantMembership
 
@@ -45,6 +47,160 @@ class BootstrapInputs:
     attestation_id: UUID
     provenance_id: UUID
     idempotency_key: UUID
+
+
+def _postgres_reverse_catalog_state() -> dict[str, object]:
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT relrowsecurity, relforcerowsecurity FROM pg_class "
+            "WHERE oid = 'codesho.identity_syntheticbootstraprequest'::regclass"
+        )
+        request_rls = cursor.fetchone()
+        cursor.execute(
+            "SELECT relrowsecurity, relforcerowsecurity FROM pg_class "
+            "WHERE oid = 'codesho.platform_tenant_tenantmembership'::regclass"
+        )
+        membership_rls = cursor.fetchone()
+        cursor.execute(
+            "SELECT "
+            "to_regprocedure('codesho.enforce_synthetic_bootstrap_request_contract()') "
+            "IS NOT NULL, "
+            "to_regprocedure('codesho.enforce_synthetic_user_dormancy()') IS NOT NULL, "
+            "to_regprocedure('codesho.reject_synthetic_user_credential()') IS NOT NULL, "
+            "to_regprocedure('codesho.enforce_synthetic_membership_dormancy()') IS NOT NULL"
+        )
+        functions = cursor.fetchone()
+        cursor.execute(
+            "SELECT tgname FROM pg_trigger WHERE NOT tgisinternal AND tgname = ANY(%s) "
+            "ORDER BY tgname",
+            [
+                [
+                    "synthetic_bootstrap_request_contract",
+                    "synthetic_membership_dormancy_guard",
+                    "synthetic_user_credential_guard",
+                    "synthetic_user_dormancy_guard",
+                ]
+            ],
+        )
+        triggers = tuple(row[0] for row in cursor.fetchall())
+        cursor.execute(
+            "SELECT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'codesho' "
+            "AND tablename = 'identity_syntheticbootstraprequest' "
+            "AND policyname = 'synthetic_bootstrap_request_tenant_isolation')"
+        )
+        request_policy = cursor.fetchone()[0]
+        cursor.execute(
+            "SELECT conname, pg_get_constraintdef(oid) FROM pg_constraint "
+            "WHERE conrelid = 'audit.identity_security_event'::regclass "
+            "AND conname = ANY(%s) ORDER BY conname",
+            [
+                [
+                    "identity_security_event_reason_code_valid",
+                    "identity_security_event_type_valid",
+                ]
+            ],
+        )
+        audit_constraints = tuple(cursor.fetchall())
+    return {
+        "request_rls": request_rls,
+        "membership_rls": membership_rls,
+        "functions": functions,
+        "triggers": triggers,
+        "request_policy": request_policy,
+        "audit_constraints": audit_constraints,
+    }
+
+
+class _ReverseProbeRollback(Exception):
+    pass
+
+
+@pytest.mark.django_db
+def test_000_postgres_empty_reverse_contracts_execute_real_sql_and_roll_back():
+    """Exercise every successful reverse path before this module creates synthetic evidence."""
+
+    if connection.vendor != "postgresql":
+        pytest.skip("PostgreSQL-specific successful reverse contract")
+
+    identity_migration = importlib.import_module(
+        "modules.identity.migrations.0010_synthetic_account_bootstrap"
+    )
+    membership_migration = importlib.import_module(
+        "modules.platform_tenant.migrations.0003_synthetic_membership_activation"
+    )
+    audit_migration = importlib.import_module(
+        "modules.platform_event.migrations.0011_synthetic_bootstrap_events"
+    )
+    baseline = _postgres_reverse_catalog_state()
+    assert baseline["request_rls"] == (True, True)
+    assert baseline["membership_rls"] == (True, True)
+    assert baseline["functions"] == (True, True, True, True)
+    assert baseline["request_policy"] is True
+    assert len(baseline["triggers"]) == 4
+    assert all(
+        "synthetic_" in definition
+        for _, definition in baseline["audit_constraints"]  # type: ignore[union-attr]
+    )
+
+    try:
+        with transaction.atomic(), connection.schema_editor() as schema_editor:
+            # FORCE RLS deliberately hides rows from the owning migrator. Temporarily
+            # restore owner visibility so the empty-path precondition is explicit.
+            schema_editor.execute(
+                "ALTER TABLE codesho.identity_syntheticbootstraprequest "
+                "NO FORCE ROW LEVEL SECURITY"
+            )
+            schema_editor.execute(
+                "ALTER TABLE codesho.platform_tenant_tenantmembership "
+                "NO FORCE ROW LEVEL SECURITY"
+            )
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT "
+                    "(SELECT count(*) FROM codesho.identity_syntheticbootstraprequest), "
+                    "(SELECT count(*) FROM codesho.identity_user "
+                    " WHERE identity_mode = 'synthetic'), "
+                    "(SELECT count(*) FROM codesho.platform_tenant_tenantmembership "
+                    " WHERE is_synthetic_bootstrap OR role IS NULL), "
+                    "(SELECT count(*) FROM audit.identity_security_event "
+                    " WHERE event_type = 'synthetic_account_bootstrapped' "
+                    " OR reason_code = 'synthetic_bootstrap_created')"
+                )
+                incompatible_rows = cursor.fetchone()
+            schema_editor.execute(
+                "ALTER TABLE codesho.identity_syntheticbootstraprequest "
+                "FORCE ROW LEVEL SECURITY"
+            )
+            schema_editor.execute(
+                "ALTER TABLE codesho.platform_tenant_tenantmembership "
+                "FORCE ROW LEVEL SECURITY"
+            )
+            assert incompatible_rows == (0, 0, 0, 0), (
+                "successful reverse probe requires a database with no synthetic "
+                f"bootstrap evidence; found {incompatible_rows}"
+            )
+
+            identity_migration.remove_contract(None, schema_editor)
+            membership_migration.remove_contract(None, schema_editor)
+            audit_migration.restore_allow_lists(None, schema_editor)
+
+            reversed_state = _postgres_reverse_catalog_state()
+            assert reversed_state["request_rls"] == (False, False)
+            # platform_tenant.0002 remains applied and owns this FORCE-RLS baseline.
+            assert reversed_state["membership_rls"] == (True, True)
+            assert reversed_state["functions"] == (False, False, False, False)
+            assert reversed_state["triggers"] == ()
+            assert reversed_state["request_policy"] is False
+            assert all(
+                "synthetic_" not in definition
+                for _, definition in reversed_state["audit_constraints"]  # type: ignore[union-attr]
+            )
+            raise _ReverseProbeRollback("roll back successful reverse probe")
+    except _ReverseProbeRollback as exc:
+        assert str(exc) == "roll back successful reverse probe"
+
+    assert _postgres_reverse_catalog_state() == baseline
+    assert baseline["membership_rls"] == (True, True)
 
 
 @pytest.fixture
@@ -65,16 +221,20 @@ def bootstrap_inputs(settings, db) -> BootstrapInputs:
     return BootstrapInputs(tenant.id, attestation.id, provenance.id, uuid4())
 
 
-def append_success(*args, **kwargs) -> AppendAuditResult:
-    return AppendAuditResult(event_id=kwargs.get("event_id"), created=True)
+@contextmanager
+def real_postgres_or_mock_sqlite_audit() -> Iterator[None]:
+    """Use the immutable audit integration wherever PostgreSQL can enforce it."""
+
+    if connection.vendor == "postgresql":
+        yield
+        return
+    with patch("modules.identity.synthetic_bootstrap.append_security_event", return_value=True):
+        yield
 
 
 @pytest.mark.django_db
 def test_same_tenant_bootstrap_is_dormant_and_opaque(bootstrap_inputs):
-    with patch(
-        "modules.identity.synthetic_bootstrap.append_security_event",
-        return_value=AppendAuditResult(event_id=uuid4(), created=True),
-    ):
+    with real_postgres_or_mock_sqlite_audit():
         result = bootstrap_synthetic_account(
             tenant_id=bootstrap_inputs.tenant_id,
             attestation_id=bootstrap_inputs.attestation_id,
@@ -104,10 +264,7 @@ def test_same_tenant_bootstrap_is_dormant_and_opaque(bootstrap_inputs):
 
 @pytest.mark.django_db
 def test_identical_replay_returns_same_terminal_result(bootstrap_inputs):
-    with patch(
-        "modules.identity.synthetic_bootstrap.append_security_event",
-        return_value=AppendAuditResult(event_id=uuid4(), created=True),
-    ):
+    with real_postgres_or_mock_sqlite_audit():
         first = bootstrap_synthetic_account(**bootstrap_inputs.__dict__)
         second = bootstrap_synthetic_account(**bootstrap_inputs.__dict__)
 
@@ -125,10 +282,7 @@ def test_identical_replay_returns_same_terminal_result(bootstrap_inputs):
 
 @pytest.mark.django_db
 def test_changed_replay_and_duplicate_attestation_fail_closed(bootstrap_inputs):
-    with patch(
-        "modules.identity.synthetic_bootstrap.append_security_event",
-        return_value=AppendAuditResult(event_id=uuid4(), created=True),
-    ):
+    with real_postgres_or_mock_sqlite_audit():
         bootstrap_synthetic_account(**bootstrap_inputs.__dict__)
         with pytest.raises(SyntheticBootstrapConflict):
             bootstrap_synthetic_account(
@@ -550,7 +704,9 @@ def test_postgres_request_trigger_requires_exact_audit_evidence(bootstrap_inputs
             )
             assert cursor.fetchone()[0] is True
 
-        with transaction.atomic(), pytest.raises(RaiseException):
+        with transaction.atomic(), pytest.raises(
+            DatabaseError, match="synthetic bootstrap audit evidence is missing or invalid"
+        ):
             SyntheticBootstrapRequest.objects.create(
                 tenant_id=bootstrap_inputs.tenant_id,
                 attestation_id=bootstrap_inputs.attestation_id,
@@ -708,56 +864,53 @@ def test_migration_reverse_contracts_are_conditional_and_driver_safe():
 
 
 @pytest.mark.django_db(transaction=True)
-def test_postgres_conditional_reverse_contracts_compile_without_synthetic_data():
-    if connection.vendor != "postgresql":
-        pytest.skip("PostgreSQL-specific conditional reverse contract")
-    identity_migration = importlib.import_module(
-        "modules.identity.migrations.0010_synthetic_account_bootstrap"
-    )
-    membership_migration = importlib.import_module(
-        "modules.platform_tenant.migrations.0003_synthetic_membership_activation"
-    )
-    audit_migration = importlib.import_module(
-        "modules.platform_event.migrations.0011_synthetic_bootstrap_events"
-    )
-    with (
-        pytest.raises(RuntimeError, match="rollback reverse contract probe"),
-        transaction.atomic(),
-        connection.schema_editor() as schema_editor,
-    ):
-        audit_migration.restore_allow_lists(None, schema_editor)
-        identity_migration.remove_contract(None, schema_editor)
-        membership_migration.remove_contract(None, schema_editor)
-        raise RuntimeError("rollback reverse contract probe")
-
-
-@pytest.mark.django_db(transaction=True)
 def test_postgres_reverse_contracts_reject_existing_synthetic_evidence(bootstrap_inputs):
     if connection.vendor != "postgresql":
         pytest.skip("PostgreSQL-specific conditional reverse contract")
     bootstrap_synthetic_account(**bootstrap_inputs.__dict__)
+    baseline = _postgres_reverse_catalog_state()
     migration_functions = (
         (
             "modules.identity.migrations.0010_synthetic_account_bootstrap",
             "remove_contract",
+            "synthetic bootstrap contract cannot be reversed while protected data exists",
+            "synthetic bootstrap migration cannot be reversed while synthetic data exists",
+            True,
         ),
         (
             "modules.platform_tenant.migrations.0003_synthetic_membership_activation",
             "remove_contract",
+            "synthetic membership contract cannot be reversed while protected data exists",
+            "synthetic membership migration cannot be reversed while incompatible data exists",
+            True,
         ),
         (
             "modules.platform_event.migrations.0011_synthetic_bootstrap_events",
             "restore_allow_lists",
+            "synthetic audit allow-list cannot be reversed while evidence exists",
+            "synthetic audit allow-list cannot be reversed while evidence exists",
+            False,
         ),
     )
-    for module_name, function_name in migration_functions:
+    for module_name, function_name, error_message, guard_message, has_database_cause in (
+        migration_functions
+    ):
         migration = importlib.import_module(module_name)
         with (
+            pytest.raises(IrreversibleError, match=f"^{error_message}$") as exc_info,
             transaction.atomic(),
-            pytest.raises(IrreversibleError),
             connection.schema_editor() as schema_editor,
         ):
             getattr(migration, function_name)(None, schema_editor)
+        if has_database_cause:
+            assert isinstance(exc_info.value.__cause__, DatabaseError)
+            assert guard_message in str(exc_info.value.__cause__)
+        else:
+            assert exc_info.value.__cause__ is None
+            assert guard_message == str(exc_info.value)
+        assert _postgres_reverse_catalog_state() == baseline
+        assert baseline["request_rls"] == (True, True)
+        assert baseline["membership_rls"] == (True, True)
 
 
 @pytest.mark.django_db

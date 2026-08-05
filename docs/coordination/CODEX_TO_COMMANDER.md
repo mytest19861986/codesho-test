@@ -4,7 +4,7 @@
 
 ```text
 TASK_ID: SPRINT1-SYNTHETIC-ACCOUNT-BOOTSTRAP-IMPLEMENT-71B
-STATUS: COMMANDER_REREVIEW_PASS / COMMIT_PUSH_AUTHORIZED / MERGE_BLOCKED
+STATUS: CI_REMEDIATION / LOCAL_CHECKS_PASS / MERGE_BLOCKED
 BASE_SHA: 5149bb1c7bf1ca6cf590bfafc3833876de11ec0a
 BRANCH: codex/task71b-review-remediation
 WORKTREE: /tmp/codesho-task71b-remediation.bgcbqx
@@ -23,9 +23,11 @@ CURRENT_HEAD: AUTHORITATIVE PR HEAD (verify with `git rev-parse HEAD`; no stale 
 CI: AUTHORITATIVE CHECKS ATTACHED TO CURRENT PR HEAD
 HISTORICAL_INDEPENDENT_REVIEW_V6: SUPERSEDED
 HISTORICAL_COMMANDER_REVIEW: FAIL / MERGE_BLOCKED / REMEDIATED
-COMMANDER_REREVIEW: PASS / OPEN_BLOCKERS 0
-REMEDIATION: LOCAL_CHECKS_PASS / BRANCH_CI_REQUIRED
-FINAL_DISPOSITION: COMMIT_PUSH_AUTHORIZED / UNMERGED / READY_MERGE_NOT_AUTHORIZED
+HISTORICAL_COMMANDER_REREVIEW: PASS / SUPERSEDED_BY_CI
+SECOND_COMMANDER_REREVIEW: LOCAL_REMEDIATION_COMPLETE / PG_CI_REQUIRED
+FAILED_CI: 31014336650 / REMOTE_HEAD 9c5d6ee79268424099c1f5ff16df6d029b94f27d
+REMEDIATION: LOCAL_CHECKS_PASS / REREVIEW_AND_REPUSH_REQUIRED
+FINAL_DISPOSITION: UNPUSHED_FIX / UNMERGED / READY_MERGE_NOT_AUTHORIZED
 ```
 
 Task71B is implementation-only within the exact 14-file allow-list. It defines
@@ -46,6 +48,17 @@ Local focused tests pass with PostgreSQL-only cases skipped; full backend and
 coverage, Ruff, MyPy, Django check, module boundaries, migration drift, and an
 empty SQLite migration pass. Commander authorized one non-amended commit and
 push to this remediation branch only; merge remains forbidden pending CI gate.
+
+The pushed checkpoint exposed PostgreSQL-only test/rollback defects, not a
+reason to weaken the production contract. The local correction uses real audit
+rows for PostgreSQL valid paths, asserts Django's wrapped trigger error, and
+makes reverse checks see across FORCE RLS without leaving it disabled. The
+second re-review further requires and now has a real empty PostgreSQL reverse
+probe with catalog assertions and rollback, plus exact populated failure/cause
+and catalog-preservation assertions. The FORCE baseline is explicitly owned by
+the still-applied `platform_tenant.0002_membership_rls` dependency. Full local
+suite is `199 passed / 49 skipped` at `85.55%` coverage. Real PostgreSQL CI is
+still required; no corrective commit, push, or merge is authorized yet.
 
 ---
 
