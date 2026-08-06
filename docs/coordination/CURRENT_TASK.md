@@ -1,7 +1,7 @@
 # Current Task: SPRINT1-OPENAPI-CONTRACT-DRIFT-REMEDIATION-73B
 
 - Owner: Codex, directed by Commander AI.
-- Status: `IMPLEMENTED / LOCAL_GATES_PASS / CI_COMPOSE_PASS / CLAUDE_REMOTE_EVIDENCE_PENDING`.
+- Status: `COMPLETE / LOCAL_GATES_PASS / CI_COMPOSE_PASS / CLAUDE_PASS`.
 - Base branch: `codesho-test/main`.
 - Base SHA: `dca0800fd74fb3e852aacb9122e6c533538d2629`.
 - Branch: `codex/task73b-openapi-contract-drift`.
@@ -39,13 +39,18 @@ No other file may change.
   schema validation and `git diff --check` pass.
 - Claude implementation Review 02 passed with zero open blockers. Review 03's
   only P1 (real Compose execution) is resolved by successful remote execution;
-  final Claude acknowledgement remains pending.
+  final evidence-closure Review 04 passed with zero open blockers.
 
 ## Remote evidence
 
 - Commit: `264d85d06fc7c48c4eb2a721e69f53b58a57f7c5`.
 - CI: `31078717976` — SUCCESS (backend and frontend).
 - Compose smoke and restore: `31078717914` — SUCCESS.
+- Documentation checkpoint CI: `31078984692` — SUCCESS.
+- Documentation checkpoint Compose smoke and restore: `31078984491` — SUCCESS.
+- Final Claude evidence-closure review:
+  `CLAUDE_TASK73B_CI_COMPOSE_EVIDENCE_CLOSURE_REVIEW_04_V1` — PASS / 0 open
+  blockers.
 - Draft PR: `https://github.com/mytest19861986/codesho-test/pull/16` (Draft;
   Ready, merge and protected-repository promotion remain forbidden).
 
