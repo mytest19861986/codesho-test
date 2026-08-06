@@ -29,9 +29,14 @@ jobs:
         run: docker compose up --build --detach --wait --wait-timeout 180
       - name: Verify Nginx routes and service dependencies
         run: |
-          for path in / /health/live/ /health/ready/ /api/schema/ /api/schema/swagger-ui/; do
+          for path in / /health/live/ /health/ready/; do
             curl --fail --show-error --silent --retry 60 --retry-delay 2 --retry-all-errors \
               "http://127.0.0.1:${NGINX_HOST_PORT}${path}" > /dev/null
+          done
+          for path in /api/schema/ /api/schema/swagger-ui/; do
+            status="$(curl --show-error --silent --output /dev/null --write-out '%{http_code}' \
+              "http://127.0.0.1:${NGINX_HOST_PORT}${path}")"
+            test "$status" = "403"
           done
           docker compose exec --no-TTY postgres sh -ec \
             'PGPASSWORD="$POSTGRES_PASSWORD" psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -c "SELECT 1;"'

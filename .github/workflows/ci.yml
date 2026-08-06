@@ -72,7 +72,7 @@ jobs:
       - run: DATABASE_URL="$DATABASE_MIGRATOR_TEST_URL" python manage.py migrate --noinput
       - name: Verify canonical OpenAPI contract
         run: |
-          DATABASE_URL="$DATABASE_RUNTIME_URL" python manage.py spectacular --urlconf config.openapi_urls --file openapi.yaml --validate
+          DATABASE_URL="$DATABASE_RUNTIME_URL" python manage.py spectacular --urlconf config.openapi_urls --file openapi.yaml --validate --fail-on-warn
           diff -u ../docs/openapi.yaml openapi.yaml
       - name: Run backend tests with failure annotation
         run: |
