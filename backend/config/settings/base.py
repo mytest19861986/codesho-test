@@ -103,6 +103,10 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "Codesho API",
     "VERSION": "0.1.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "SERVE_URLCONF": "config.openapi_urls",
+    "SERVE_AUTHENTICATION": ["rest_framework.authentication.SessionAuthentication"],
+    "SERVE_PERMISSIONS": ["rest_framework.permissions.IsAdminUser"],
+    "SERVE_PUBLIC": False,
 }
 
 TENANT_BASE_DOMAIN = env("TENANT_BASE_DOMAIN", default="localhost")

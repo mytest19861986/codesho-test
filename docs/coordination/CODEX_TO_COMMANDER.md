@@ -1,5 +1,33 @@
 # Codex to Commander — Task72B legal/policy gate
 
+## Task73B OpenAPI contract remediation
+
+```text
+MESSAGE_ID: CODEX_TASK73B_LOCAL_GATE_CHECKPOINT_20260806_V1
+TASK_ID: SPRINT1-OPENAPI-CONTRACT-DRIFT-REMEDIATION-73B
+BASE_SHA: dca0800fd74fb3e852aacb9122e6c533538d2629
+BRANCH: codex/task73b-openapi-contract-drift
+STATUS: IMPLEMENTED / LOCAL_GATES_PASS / CLAUDE_PASS / CI_PENDING
+ALLOW_LIST: EXACTLY_NINE_FILES
+CLAUDE_IMPLEMENTATION: PASS / OPEN_BLOCKERS 0
+CLAUDE_PROMPT_ID: CLAUDE_TASK73B_OPENAPI_CONTRACT_IMPLEMENTATION_REVIEW_02_V1
+LOCAL_GATES: ruff PASS; mypy PASS; Django check PASS; makemigrations check PASS;
+focused OpenAPI 10 passed; full backend 209 passed, 49 PostgreSQL-only skips;
+schema validation PASS; canonical byte diff PASS; git diff check PASS
+RUNTIME_AUTH_CSRF_SESSION_COOKIE: UNCHANGED
+DIRECT_MAIN_READY_MERGE_PRODUCTION_ALPHA_CODESHO: NOT_AUTHORIZED
+NEXT: final self-review, commit, normal branch push, Draft PR, CI/Compose monitoring
+```
+
+The canonical schema uses only `config.openapi_urls`; its six declarations are
+unreachable at runtime and fail closed with `Http404`. The live schema and
+Swagger endpoints use `SessionAuthentication` and `IsAdminUser` through
+drf-spectacular settings. Tests prove route/method/callback parity,
+deterministic generated output and unapproved-path exclusion. No secret or
+sensitive user value was emitted.
+
+---
+
 ```text
 TASK_ID: SPRINT1-REAL-USER-ONBOARDING-LEGAL-AND-BOUNDARY-DECISION-72B
 BASE_SHA: 0472239d06194875d1cdb6f6929dd8eaad8bc0d9
