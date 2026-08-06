@@ -93,6 +93,8 @@ class SchemaOnlyAPIView(APIView):  # type: ignore[misc]
 
 class CsrfSchemaView(SchemaOnlyAPIView):
     @extend_schema(
+        operation_id="api_v1_auth_csrf_retrieve",
+        tags=["api"],
         summary="Establish CSRF and device cookies for a tenant host",
         description="Creates the CSRF token and device-cookie boundary for a tenant host.",
         responses={204: OpenApiResponse(description="CSRF and device cookies established.")},
@@ -103,6 +105,8 @@ class CsrfSchemaView(SchemaOnlyAPIView):
 
 class AdultAttestationSchemaView(SchemaOnlyAPIView):
     @extend_schema(
+        operation_id="api_v1_auth_signup_adult_attestation_create",
+        tags=["api"],
         summary="Record an internal synthetic adult age attestation",
         description=(
             "Internal-only synthetic attestation; no account, credential, membership, or session "
@@ -123,6 +127,8 @@ class AdultAttestationSchemaView(SchemaOnlyAPIView):
 
 class PasscodeLoginSchemaView(SchemaOnlyAPIView):
     @extend_schema(
+        operation_id="api_v1_auth_passcode_login_create",
+        tags=["api"],
         summary="Authenticate a tenant member with a passcode",
         description="Creates a tenant session only after successful runtime authentication.",
         parameters=[CSRF_HEADER],
@@ -139,6 +145,8 @@ class PasscodeLoginSchemaView(SchemaOnlyAPIView):
 
 class PasscodeChangeCompletionSchemaView(SchemaOnlyAPIView):
     @extend_schema(
+        operation_id="api_v1_auth_passcode_change_complete_create",
+        tags=["api"],
         summary="Complete a forced passcode change without creating a session",
         description="Consumes a valid challenge and requires a fresh login after completion.",
         parameters=[
@@ -163,6 +171,8 @@ class PasscodeChangeCompletionSchemaView(SchemaOnlyAPIView):
 
 class SessionSchemaView(SchemaOnlyAPIView):
     @extend_schema(
+        operation_id="api_v1_auth_session_retrieve",
+        tags=["api"],
         summary="Return the authenticated user and current tenant membership",
         description="Returns the current tenant-scoped session state.",
         responses={200: SessionStateSerializer, 401: ERROR_RESPONSES[401]},
@@ -173,6 +183,8 @@ class SessionSchemaView(SchemaOnlyAPIView):
 
 class LogoutSchemaView(SchemaOnlyAPIView):
     @extend_schema(
+        operation_id="api_v1_auth_logout_create",
+        tags=["api"],
         summary="Flush the authenticated tenant session",
         description="Flushes the tenant-scoped session and records the runtime audit event.",
         parameters=[CSRF_HEADER],
