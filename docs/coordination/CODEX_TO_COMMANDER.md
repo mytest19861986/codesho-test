@@ -1,5 +1,42 @@
 # Codex to Commander — Task72B legal/policy gate
 
+## Task73B OpenAPI contract remediation
+
+```text
+MESSAGE_ID: CODEX_TASK73B_LOCAL_GATE_CHECKPOINT_20260806_V1
+TASK_ID: SPRINT1-OPENAPI-CONTRACT-DRIFT-REMEDIATION-73B
+BASE_SHA: dca0800fd74fb3e852aacb9122e6c533538d2629
+BRANCH: codex/task73b-openapi-contract-drift
+STATUS: COMPLETE / LOCAL_GATES_PASS / CI_COMPOSE_PASS / CLAUDE_PASS
+ALLOW_LIST: EXACTLY_TEN_FILES (Commander approved .github/workflows/compose-smoke.yml)
+CLAUDE_IMPLEMENTATION: PASS / OPEN_BLOCKERS 0
+CLAUDE_PROMPT_ID: CLAUDE_TASK73B_OPENAPI_CONTRACT_IMPLEMENTATION_REVIEW_02_V1
+CLAUDE_EVIDENCE_CLOSURE_PROMPT_ID: CLAUDE_TASK73B_CI_COMPOSE_EVIDENCE_CLOSURE_REVIEW_04_V1
+CLAUDE_EVIDENCE_CLOSURE: PASS / OPEN_BLOCKERS 0
+REMOTE_CI_DOCUMENTATION_CHECKPOINT: 31078984692 SUCCESS
+REMOTE_COMPOSE_DOCUMENTATION_CHECKPOINT: 31078984491 SUCCESS
+LOCAL_GATES: ruff PASS; mypy PASS; Django check PASS; makemigrations check PASS;
+focused OpenAPI 10 passed; full backend 209 passed, 49 PostgreSQL-only skips;
+schema validation PASS; canonical byte diff PASS; git diff check PASS
+RUNTIME_AUTH_CSRF_SESSION_COOKIE: UNCHANGED
+DIRECT_MAIN_READY_MERGE_PRODUCTION_ALPHA_CODESHO: NOT_AUTHORIZED
+IMPLEMENTATION_HEAD: 264d85d06fc7c48c4eb2a721e69f53b58a57f7c5
+PR_16: DRAFT / https://github.com/mytest19861986/codesho-test/pull/16
+CI_31078717976: SUCCESS (backend/frontend)
+COMPOSE_31078717914: SUCCESS (smoke_restore)
+CLAUDE_REVIEW_03: CHANGES_REQUIRED only for remote Compose evidence; resolved by COMPOSE_31078717914, Claude acknowledgement pending
+NEXT: retain Draft, await sequential Claude acknowledgement, then final closeout review
+```
+
+The canonical schema uses only `config.openapi_urls`; its six declarations are
+unreachable at runtime and fail closed with `Http404`. The live schema and
+Swagger endpoints use `SessionAuthentication` and `IsAdminUser` through
+drf-spectacular settings. Tests prove route/method/callback parity,
+deterministic generated output and unapproved-path exclusion. No secret or
+sensitive user value was emitted.
+
+---
+
 ```text
 TASK_ID: SPRINT1-REAL-USER-ONBOARDING-LEGAL-AND-BOUNDARY-DECISION-72B
 BASE_SHA: 0472239d06194875d1cdb6f6929dd8eaad8bc0d9

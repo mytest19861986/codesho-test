@@ -1,8 +1,23 @@
 # Codesho Project State
 
-Updated: 2026-08-05 (Task72B legal/policy gate)
+Updated: 2026-08-06 (Task73B OpenAPI contract remediation)
 
 ## Current Status
+
+Task73B is `COMPLETE / LOCAL_GATES_PASS / CI_COMPOSE_PASS / CLAUDE_PASS` on
+`codex/task73b-openapi-contract-drift` from
+`dca0800fd74fb3e852aacb9122e6c533538d2629`. It adds an isolated schema-only
+projection for exactly six approved operations, canonical byte-for-byte OpenAPI
+verification, route/method/callback parity tests, and fail-closed staff-only
+schema/Swagger access. Runtime URLs, auth, CSRF, sessions, cookies, tenant
+middleware, business logic and public API behavior are unchanged. Claude
+implementation Review 02 passed with zero open blockers. CI `31078717976`
+(backend/frontend) and Compose smoke/restore `31078717914` are SUCCESS for
+`264d85d06fc7c48c4eb2a721e69f53b58a57f7c5`; documentation checkpoint CI
+`31078984692` and Compose `31078984491` are also SUCCESS. Review 03's Compose-only
+P1 is closed by final Claude evidence-closure Review 04 (PASS / zero open blockers).
+PR #16 remains Draft. Direct-main, Ready,
+merge, release, Alpha and protected promotion remain forbidden.
 
 Task72B is `COMPLETE / DOCS-ONLY / OPTION-A / CLAUDE-PASS`. It records the real-user
 onboarding legal/policy boundary without implementation. Lawful-basis,

@@ -1,47 +1,65 @@
-# Current Task: SPRINT1-REAL-USER-ONBOARDING-LEGAL-AND-BOUNDARY-DECISION-72B
+# Current Task: SPRINT1-OPENAPI-CONTRACT-DRIFT-REMEDIATION-73B
 
 - Owner: Codex, directed by Commander AI.
-- Status: `COMPLETE / DOCS-ONLY / OPTION-A / CLAUDE-PASS`.
-- Base branch: `origin/main`.
-- Base SHA: `0472239d06194875d1cdb6f6929dd8eaad8bc0d9`.
-- Branch: `codex/task72b-real-user-legal-policy-packet`.
+- Status: `COMPLETE / LOCAL_GATES_PASS / CI_COMPOSE_PASS / CLAUDE_PASS`.
+- Base branch: `codesho-test/main`.
+- Base SHA: `dca0800fd74fb3e852aacb9122e6c533538d2629`.
+- Branch: `codex/task73b-openapi-contract-drift`.
 
 ## Goal
 
-Create the legal/policy packet and preimplementation gate for future real-user
-onboarding. Task72A selected Option A; Option B is deferred until all P0 gates
-close and receives separate authority; Option C is rejected.
+Eliminate OpenAPI contract drift through an isolated `drf-spectacular`
+projection while preserving runtime URLs, auth, sessions, CSRF, cookies,
+tenant middleware and business logic.
 
 ## Exact allow-list
 
-1. `docs/decisions/2026-08-05-real-user-onboarding-legal-boundary.md`
-2. `docs/security/REAL_USER_ONBOARDING_PREIMPLEMENTATION_GATE.md`
-3. `docs/coordination/CURRENT_TASK.md`
-4. `docs/coordination/PROJECT_STATE.md`
-5. `docs/coordination/CODEX_TO_COMMANDER.md`
+1. `backend/config/openapi_schema.py`
+2. `backend/config/openapi_urls.py`
+3. `backend/config/settings/base.py`
+4. `backend/tests/test_openapi_contract.py`
+5. `docs/openapi.yaml`
+6. `.github/workflows/ci.yml`
+7. `docs/coordination/CURRENT_TASK.md`
+8. `docs/coordination/PROJECT_STATE.md`
+9. `docs/coordination/CODEX_TO_COMMANDER.md`
+10. `.github/workflows/compose-smoke.yml` (Commander-approved CI remediation)
 
 No other file may change.
 
 ## Acceptance
 
-- P0/P1 decisions have owners, evidence and blocking effects;
-- Adult/Minor/Guardian, consent, data-flow/classification/purpose/access and
-  record-lifecycle matrices are auditable;
-- tenant, activation, Guardian, Recovery, enumeration and replay fail closed;
-- provider/residency/DPA/incident ownership and Option B Go/No-Go are explicit;
-- unresolved decisions remain `PENDING_COUNSEL` or `PENDING_EMPLOYER`;
-- both primary docs trace the five Task72A-reviewed authorities;
-- exact allow-list, path sanity and `git diff --check` pass;
-- sequential Claude review of only the two primary docs passed under
-  `CLAUDE_TASK72B_LEGAL_POLICY_PACKET_REVIEW_01_V2` with zero open blockers.
+- Generated schema is deterministic and exposes exactly six approved operations.
+- Generated schema is byte-equal to `docs/openapi.yaml`; schema and Swagger
+  are fail-closed for anonymous and non-staff users.
+- Runtime/projection path names, callback identities and HTTP methods are
+  parity-tested; unapproved endpoints are absent.
+- Runtime CSRF, session, cookie, status and Retry-After behavior is unchanged.
+- Ruff, MyPy, Django check, migration check, focused/full backend tests,
+  schema validation and `git diff --check` pass.
+- Claude implementation Review 02 passed with zero open blockers. Review 03's
+  only P1 (real Compose execution) is resolved by successful remote execution;
+  final evidence-closure Review 04 passed with zero open blockers.
 
-`FINAL_MARKER: CLAUDE_TASK72B_REVIEW_COMPLETED`
+## Remote evidence
+
+- Commit: `264d85d06fc7c48c4eb2a721e69f53b58a57f7c5`.
+- CI: `31078717976` — SUCCESS (backend and frontend).
+- Compose smoke and restore: `31078717914` — SUCCESS.
+- Documentation checkpoint CI: `31078984692` — SUCCESS.
+- Documentation checkpoint Compose smoke and restore: `31078984491` — SUCCESS.
+- Final Claude evidence-closure review:
+  `CLAUDE_TASK73B_CI_COMPOSE_EVIDENCE_CLOSURE_REVIEW_04_V1` — PASS / 0 open
+  blockers.
+- Draft PR: `https://github.com/mytest19861986/codesho-test/pull/16` (Draft;
+  Ready, merge and protected-repository promotion remain forbidden).
+
+`FINAL_MARKER: CLAUDE_TASK73B_OPENAPI_CONTRACT_IMPLEMENTATION_REVIEW_02_V1`
 
 ## Authority and exclusions
 
-In-scope remediation, commit, push to this branch and Draft PR are authorized
-only after Claude PASS and green checks. Direct-main push, merge, force-push
-and branch deletion are forbidden.
+Commit, normal branch push and Draft PR are authorized after final gates.
+Direct-main, Ready, merge, force-push and branch deletion are forbidden.
 
 No model, schema, migration, API/OpenAPI, UI, code/state-machine implementation,
 PII/real data, account, credential, session, active membership, role, public
