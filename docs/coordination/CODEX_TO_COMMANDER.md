@@ -7,8 +7,8 @@ MESSAGE_ID: CODEX_TASK73B_LOCAL_GATE_CHECKPOINT_20260806_V1
 TASK_ID: SPRINT1-OPENAPI-CONTRACT-DRIFT-REMEDIATION-73B
 BASE_SHA: dca0800fd74fb3e852aacb9122e6c533538d2629
 BRANCH: codex/task73b-openapi-contract-drift
-STATUS: IMPLEMENTED / LOCAL_GATES_PASS / CLAUDE_PASS / CI_PENDING
-ALLOW_LIST: EXACTLY_NINE_FILES
+STATUS: IMPLEMENTED / LOCAL_GATES_PASS / CI_COMPOSE_PASS / CLAUDE_REMOTE_EVIDENCE_PENDING
+ALLOW_LIST: EXACTLY_TEN_FILES (Commander approved .github/workflows/compose-smoke.yml)
 CLAUDE_IMPLEMENTATION: PASS / OPEN_BLOCKERS 0
 CLAUDE_PROMPT_ID: CLAUDE_TASK73B_OPENAPI_CONTRACT_IMPLEMENTATION_REVIEW_02_V1
 LOCAL_GATES: ruff PASS; mypy PASS; Django check PASS; makemigrations check PASS;
@@ -16,7 +16,12 @@ focused OpenAPI 10 passed; full backend 209 passed, 49 PostgreSQL-only skips;
 schema validation PASS; canonical byte diff PASS; git diff check PASS
 RUNTIME_AUTH_CSRF_SESSION_COOKIE: UNCHANGED
 DIRECT_MAIN_READY_MERGE_PRODUCTION_ALPHA_CODESHO: NOT_AUTHORIZED
-NEXT: final self-review, commit, normal branch push, Draft PR, CI/Compose monitoring
+IMPLEMENTATION_HEAD: 264d85d06fc7c48c4eb2a721e69f53b58a57f7c5
+PR_16: DRAFT / https://github.com/mytest19861986/codesho-test/pull/16
+CI_31078717976: SUCCESS (backend/frontend)
+COMPOSE_31078717914: SUCCESS (smoke_restore)
+CLAUDE_REVIEW_03: CHANGES_REQUIRED only for remote Compose evidence; resolved by COMPOSE_31078717914, Claude acknowledgement pending
+NEXT: retain Draft, await sequential Claude acknowledgement, then final closeout review
 ```
 
 The canonical schema uses only `config.openapi_urls`; its six declarations are
