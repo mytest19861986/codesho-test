@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "codesho-backend"
 version = "0.1.0"
-requires-python = ">=3.12,<3.14"
+requires-python = ">=3.12,<3.13"
 dependencies = [
   "Django>=5.2,<5.3",
   "djangorestframework>=3.16,<3.17",
@@ -27,6 +27,14 @@ dev = [
   "ruff>=0.11,<0.13",
   "mypy>=1.15,<2",
   "django-stubs[compatible-mypy]>=5.2,<5.3",
+]
+lock = [
+  "pip==26.2.1",
+  "setuptools==83.0.0",
+  "wheel==0.47.0",
+  "build==1.5.0",
+  "pip-tools==7.6.0",
+  "pip-audit==2.10.1",
 ]
 
 [tool.setuptools.packages.find]
