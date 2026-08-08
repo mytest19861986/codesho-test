@@ -533,6 +533,19 @@ PROTECTED_CODESHO_PROMOTION: NOT_AUTHORIZED
 - FINAL_RECOMMENDATION: clear to proceed past the Claude technical gate;
   Ready/Merge remains a separate Commander decision.
 
+## COMMANDER_TASK76A_TECHNICAL_ACCEPTANCE_20260808
+
+- TASK: `SPRINT1-IDENTITY-PASSCODE-CHANGE-CLEANUP-HARDENING-76A`
+- STATUS: `TECHNICALLY ACCEPTED / COMPLETE`
+- Commander confirmed AC assessment accepted, Claude `PASS / 0` blockers,
+  remote CI/Compose green, and the local OpenAPI LF/CRLF mismatch outside
+  Task76A scope.
+- No further Task76A coding or testing is authorized unless a real regression
+  is discovered.
+- Next gate: Ready then Merge, each requiring separate employer authorization.
+  No Ready, Merge, Production release, or protected-repository promotion was
+  performed.
+
 ## TASK76A_CHECKPOINT_20260808
 
 - Task: `SPRINT1-IDENTITY-PASSCODE-CHANGE-CLEANUP-HARDENING-76A`
