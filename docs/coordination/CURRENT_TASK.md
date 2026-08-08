@@ -1,7 +1,7 @@
 # Current Task: SPRINT1-IDENTITY-PASSCODE-CHANGE-CLEANUP-HARDENING-76A
 
 - Owner: Codex, directed by Commander AI.
-- Status: `IN_PROGRESS / LOCAL_PYTHON_ENV_UNAVAILABLE`
+- Status: `IMPLEMENTED / FOCUSED_GATES_PASS / FULL_SUITE_ONE_UNRELATED_FAILURE`
 - Base SHA: `cb967c26e0faf9a5868e9adc74d59a09c6a42b99`.
 - Branch: `codex/task76a-passcode-change-cleanup-hardening`.
 - Scope: tenant-scoped passcode-change challenge cleanup hardening only; no
@@ -10,8 +10,14 @@
   and validated as bounded configuration at settings load. Existing cleanup
   orchestration and tenant task code were preserved because inspection found
   no confirmed defect in those paths.
-- Local blocker: the available Python has no Django installed, so pytest
-  collection cannot start. No local test PASS is claimed.
+- Verification: focused cleanup tests pass (`7 passed`); related tests pass
+  (`22 passed`); Ruff, Django check, migration check, compileall, and
+  `git diff --check` pass. Full backend suite is `213 passed, 49 skipped, 1
+  failed`: the unrelated OpenAPI canonical-byte test detects generated LF
+  versus committed CRLF in `docs/openapi.yaml`, outside this task allow-list.
+- Review blocker: required Claude prompt
+  `CLAUDE_TASK76A_PASSCODE_CHANGE_CLEANUP_IMPLEMENTATION_REVIEW_01_V1` remains
+  pending because Claude mediation is unavailable in this session.
 
 - Owner: Codex, directed by Commander AI.
 - Status: `COMPLETE / LOCAL_GATES_PASS / CI_COMPOSE_PASS / CLAUDE_PASS`.

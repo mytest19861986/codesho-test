@@ -1,5 +1,18 @@
 # Codex to Commander — Task72B legal/policy gate
 
+## TASK76A_VERIFICATION_20260808
+
+- Environment: Django 5.2.17 and project dependencies available.
+- Focused cleanup tests: `7 passed`; related tests: `22 passed`.
+- Ruff, Django check, migration check, compileall, and `git diff --check`:
+  passed.
+- Full backend suite: `213 passed, 49 skipped, 1 failed`. The failure is
+  `tests/test_openapi_contract.py::test_generated_schema_is_canonical_and_only_exposes_contract_routes`,
+  an unrelated LF/CRLF byte mismatch in `docs/openapi.yaml`, outside the
+  Task76A allow-list. No out-of-scope fix was made.
+- Required Claude review remains pending because Claude-mediated communication
+  is unavailable here.
+
 ## Task73B OpenAPI contract remediation
 
 ```text
