@@ -5,8 +5,11 @@ from uuid import UUID
 from celery import shared_task
 
 from config.cleanup_claims import begin_claim, complete_claim, fail_claim
-from config.passcode_change_cleanup import BaseTenantTask, cleanup_current_tenant
-from modules.platform_tenant.context import tenant_atomic
+from config.passcode_change_cleanup import (
+    BaseTenantTask,
+    cleanup_current_tenant,
+    tenant_atomic,
+)
 
 
 class CleanupClaimTenantTask(BaseTenantTask):
