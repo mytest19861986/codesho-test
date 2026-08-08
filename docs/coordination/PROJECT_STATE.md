@@ -12,7 +12,9 @@ execution were not rewritten. Focused cleanup tests pass (`7 passed`), related
 tests pass (`22 passed`), and Ruff/Django/migration/compileall/diff checks pass.
 The full backend suite reports `213 passed, 49 skipped, 1 failed`; the sole
 failure is the unrelated OpenAPI canonical-byte test due to generated LF versus
-committed CRLF in `docs/openapi.yaml`, outside the Task76A allow-list. Claude
+committed CRLF in `docs/openapi.yaml`, outside the Task76A allow-list. The
+full-suite revalidation was run from the official `backend` cwd, confirming
+the prior root-cwd compose-path failure was environmental. Claude
 final implementation review is required but no Claude-mediated tool is
 available in this session; this remains an explicit review blocker.
 

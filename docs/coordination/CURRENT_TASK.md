@@ -10,11 +10,12 @@
   and validated as bounded configuration at settings load. Existing cleanup
   orchestration and tenant task code were preserved because inspection found
   no confirmed defect in those paths.
-- Verification: focused cleanup tests pass (`7 passed`); related tests pass
-  (`22 passed`); Ruff, Django check, migration check, compileall, and
-  `git diff --check` pass. Full backend suite is `213 passed, 49 skipped, 1
-  failed`: the unrelated OpenAPI canonical-byte test detects generated LF
-  versus committed CRLF in `docs/openapi.yaml`, outside this task allow-list.
+- Verification: focused cleanup tests pass (`7 passed`); related completion/E2E
+  tests pass (`7 passed, 3 PostgreSQL-only skipped`); backend-cwd full suite is
+  `213 passed, 49 skipped, 1 failed`. The sole failure is the unrelated
+  OpenAPI canonical-byte test detecting generated LF versus committed CRLF in
+  `docs/openapi.yaml`, outside the task allow-list. The root-cwd compose-path
+  failure disappears when rerun from the official `backend` cwd.
 - Review blocker: required Claude prompt
   `CLAUDE_TASK76A_PASSCODE_CHANGE_CLEANUP_IMPLEMENTATION_REVIEW_01_V1` remains
   pending because Claude mediation is unavailable in this session.
