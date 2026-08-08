@@ -600,3 +600,17 @@ ALLOW_LIST_COLLISIONS: NONE observed.
 BLOCKERS: NONE at inspection; Qwen challenge recommended and Claude mandatory.
 UNAUTHORIZED_ACTIONS: scheduler implementation, Python/settings/Celery changes,
 migration, workflow/Compose change, merge, deployment, Production, or promotion.
+
+## TASK77A_QWEN_DISPOSITION_20260808
+
+PROMPT_ID: QWEN_TASK77A_CLEANUP_SCHEDULING_ARCH_CHALLENGE_01_V1
+VERDICT: CHANGES_REQUIRED
+OPEN_BLOCKERS: 7
+P0: 0
+P1: 7
+DISPOSITION: accepted and remediated as documentation-only clarifications in
+the exact allow-list. Tenant-scoped claim transition invariants, authority/RLS
+matrix, lease lifecycle, transactional Outbox, bounded fairness/backpressure,
+fail-closed operations, and governance boundaries are now explicit.
+HEAD_AFTER_DISPOSITION: pending commit/push
+NEXT_GATE: CLAUDE_TASK77A_CLEANUP_SCHEDULING_ARCHITECTURE_REVIEW_01_V1

@@ -100,6 +100,13 @@ claim recoverable after lease expiry. A successful publish carries only the
 opaque, approved tenant UUID and a claim identifier; the worker revalidates
 tenant existence, enabled state, claim ownership, and freshness before running.
 
+Normative invariant: claim acquisition, lease renewal, execution, completion,
+failure, and reclaim must each be filtered by the same explicit non-null
+`tenant_id`. A claim and a worker batch may represent one tenant only;
+multi-tenant cleanup batches are prohibited. `BaseTenantTask` validation and
+`tenant_atomic` before tenant queries are mandatory and cannot be replaced by
+ambient or default context.
+
 ## Tenant Discovery Contract
 
 Only the approved control-plane/database component may discover eligibility.
@@ -203,6 +210,16 @@ subject to FORCE RLS and receives tenant context through `tenant_atomic` before
 tenant queries. No scheduler design may require workers to bypass RLS. Any
 migrator-only DDL role remains separate and is not used by scheduler or worker.
 
+| Logical role | Authority | RLS/context rule | Prohibited authority |
+|---|---|---|---|
+| Scheduler/claimer | discover eligibility and claim due work | projection access only | execute cleanup or bypass RLS |
+| Runtime worker | execute one claimed tenant unit | runtime role, FORCE RLS, explicit `tenant_atomic` | enumerate tenants or use privileged bypass |
+| PostgreSQL | authoritative state, locks, and time | database predicates and RLS authoritative | worker-clock ownership |
+| Migrator | approved DDL/migration only | separate deployment role | scheduler or cleanup execution |
+
+Any broader discovery role or grant requires separate approval and review. It
+must never change runtime cleanup isolation.
+
 ## Security Considerations
 
 The broker is untrusted delivery infrastructure. Claim ownership, eligibility,
@@ -210,6 +227,35 @@ tenant state, and time are revalidated in PostgreSQL. Payload minimization,
 bounded fan-out, explicit authorization, fail-closed errors, and immutable
 security audit boundaries limit blast radius. No secrets or raw provider data
 are introduced.
+
+### Lease, publication, and operational invariants
+
+Database time is authoritative for lease start, expiry, and renewal. A lease
+has explicit expiry, a bounded maximum extension, and an opaque owner token.
+Renewal is allowed only for the current owner while work is active; reclaim is
+allowed only after database-observed expiry. Repeated failures enter bounded
+quarantine/dead handling rather than an infinite reclaim loop. Workers fail
+closed whenever lease authority is unavailable or ownership is uncertain.
+Redelivery is expected and cleanup remains idempotent.
+
+Claim completion and side-effect intent commit atomically. Publication after
+commit is at-least-once through a transactional Outbox or equivalent durable
+mechanism; consumers are idempotent and no external side effect occurs before
+database commit. A claim is not complete merely because a message was sent.
+
+Task77B must define hard limits for claims per cycle, global concurrent claims,
+per-tenant in-flight claims, per-tenant cleanup batch size, and retry attempts.
+Fair due ordering with a stable tenant tie-breaker prevents starvation. Queue
+pressure, database load, or worker saturation stops/reduces claiming instead
+of causing unlimited polling or enqueueing. Minimum metrics include claim
+acquired, succeeded, failed, expired, reclaimed, and age, plus backlog, retry,
+and dead/quarantined work.
+
+The database is the sole ownership authority. Database outage, uncertain lease
+state, or split brain stops claiming and makes workers fail closed. The kill
+switch disables new claims without cancelling active work or disabling an
+authorized explicit-tenant manual fallback. Manual fallback is authenticated,
+authorized, audited, and never global.
 
 ## Rejected Alternatives
 
@@ -230,6 +276,12 @@ eviction and non-authoritative clocks security-critical.
 - **Task77D — Operational evidence/deployment-readiness validation:** validate
   metrics, audit volume, alerts, rollback/kill-switch operations, restore,
   and deployment evidence without enabling Production or real users.
+
+Task77A is an architecture constraint package and acceptance baseline only. It
+does not approve claim tables, indexes, schema changes, migrations, runtime
+role changes, Python workers, scheduler code, Celery Beat, deployment, merge,
+or Production activation. Each implementation requires a separate
+Commander-approved task with its own allow-list, tests, and security review.
 
 ## Explicit Non-Goals
 

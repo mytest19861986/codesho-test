@@ -272,3 +272,18 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
 - VERDICT: `NOT RECEIVED`; no PASS or CHANGES_REQUIRED claim is made.
 - NEXT GATE: recover the real Qwen response, disposition findings if any, then
   run the sequential mandatory Claude review.
+
+## TASK77A_QWEN_DISPOSITION_20260808
+
+- PROMPT_ID: `QWEN_TASK77A_CLEANUP_SCHEDULING_ARCH_CHALLENGE_01_V1`
+- VERDICT: `CHANGES_REQUIRED`
+- OPEN_BLOCKERS: `7`; P0: `0`; P1: `7`
+- DISPOSITION: accepted and remediated in the decision document and review
+  summary, all within the exact five-file allow-list. Clarifications cover
+  normative one-tenant claim transitions, role/RLS authority, lease lifecycle,
+  Outbox publication, capacity/fairness/backpressure, fail-closed operations,
+  and Task77A governance boundaries.
+- NO_RUNTIME_CHANGE: Python, schema, migration, settings, Celery, worker, and
+  scheduler files remain unchanged.
+- NEXT_GATE: mandatory sequential Claude review with
+  `CLAUDE_TASK77A_CLEANUP_SCHEDULING_ARCHITECTURE_REVIEW_01_V1`.
