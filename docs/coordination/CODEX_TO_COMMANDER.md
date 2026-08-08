@@ -497,6 +497,19 @@ PROTECTED_CODESHO_PROMOTION: NOT_AUTHORIZED
 - No new code change was needed or authorized. Local evidence and the out-of-scope OpenAPI canonical-byte failure remain unchanged.
 - Ready transition, merge, direct-main push, release, and protected `codesho` promotion remain unperformed.
 
+## CODEX_TASK76A_CI_CLOSURE_20260808_05
+
+- MESSAGE_ID: `CODEX_TASK76A_CI_CLOSURE_20260808_05`
+- Commit: `c04d350`.
+- Remote CI: backend `SUCCESS`, frontend `SUCCESS`.
+- Remote Compose smoke/restore: `SUCCESS`.
+- CI run: `31264221532`; Compose run: `31264221516`.
+- PR #22 remains Draft with no review recorded. Ready transition, merge,
+  direct-main push, release, and protected-repository promotion remain
+  unauthorized/unperformed.
+- Local out-of-scope OpenAPI LF/CRLF mismatch remains documented; no unrelated
+  files or pre-existing untracked paths were changed.
+
 ## TASK76A_CHECKPOINT_20260808
 
 - Task: `SPRINT1-IDENTITY-PASSCODE-CHANGE-CLEANUP-HARDENING-76A`
