@@ -22,6 +22,7 @@ RUN addgroup --system codesho && adduser --system --ingroup codesho codesho \
     && python -m venv /venv
 COPY --from=build /build/requirements/runtime.txt /tmp/runtime.txt
 COPY --from=build /wheels /tmp/wheels
+COPY --chown=codesho:codesho manage.py /app/manage.py
 RUN /venv/bin/python -m pip install --require-hashes --no-deps -r /tmp/runtime.txt \
     && /venv/bin/python -m pip install --no-deps /tmp/wheels/*.whl \
     && /venv/bin/python -m pip check \
