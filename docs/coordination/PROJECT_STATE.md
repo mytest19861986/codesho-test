@@ -1,5 +1,24 @@
 # Codesho Project State
 
+## Task76A checkpoint (2026-08-08)
+
+Task76A implementation is complete on `codex/task76a-passcode-change-cleanup-hardening`
+from `cb967c26e0faf9a5868e9adc74d59a09c6a42b99`. Inspection preserved all
+pre-existing untracked paths. The minimal implementation hardens the cleanup
+batch and terminal-retention settings at import time and documents the
+passcode-change settings in `.env.example`; existing tenant-scoped atomic
+cleanup, bounded deletion, audit ordering, and explicit `BaseTenantTask`
+execution were not rewritten. Focused cleanup tests pass (`7 passed`), related
+tests pass (`22 passed`), and Ruff/Django/migration/compileall/diff checks pass.
+The full backend suite reports `213 passed, 49 skipped, 1 failed`; the sole
+failure is the unrelated OpenAPI canonical-byte test due to generated LF versus
+committed CRLF in `docs/openapi.yaml`, outside the Task76A allow-list. The
+full-suite revalidation was run from the official `backend` cwd, confirming
+the prior root-cwd compose-path failure was environmental. Claude implementation
+review `CLAUDE_TASK76A_PASSCODE_CHANGE_CLEANUP_IMPLEMENTATION_REVIEW_01_V1`
+returned `PASS` with zero open/P0/P1 blockers; only a non-blocking auditability
+note about the pre-existing PostgreSQL cleanup function was raised.
+
 Updated: 2026-08-06 (Task73B OpenAPI contract remediation)
 
 ## Current Status
