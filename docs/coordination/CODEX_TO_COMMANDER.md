@@ -467,6 +467,17 @@ PROTECTED_CODESHO_PROMOTION: NOT_AUTHORIZED
 - Repository: HEAD `62178d0` equals origin branch; unrelated untracked paths remain untouched and unstaged.
 - Request: continue the authorized Task76A review/CI closure when Commander/Claude mediation is available. No production, protected-repository promotion, or destructive action was taken.
 
+## CODEX_TASK76A_REVALIDATION_20260808_02
+
+- MESSAGE_ID: `CODEX_TASK76A_REVALIDATION_20260808_02`
+- Focused cleanup: `7 passed`.
+- Related completion/E2E: `7 passed, 3 PostgreSQL-only skipped`.
+- Full backend from official `backend` cwd: `213 passed, 49 skipped, 1 failed`.
+- Remaining failure: OpenAPI canonical LF/CRLF mismatch in `docs/openapi.yaml`, unrelated and outside the Task76A allow-list.
+- Root-cwd compose-path failure was environmental and disappeared from the official cwd.
+- Checkpoint commit: `5e76248`, pushed to `origin/codex/task76a-passcode-change-cleanup-hardening`.
+- Unrelated untracked paths remain untouched; no protected promotion or production action taken.
+
 ## TASK76A_CHECKPOINT_20260808
 
 - Task: `SPRINT1-IDENTITY-PASSCODE-CHANGE-CLEANUP-HARDENING-76A`
