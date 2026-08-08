@@ -22,6 +22,9 @@
 - Remote CI for commit `8710d96`: backend SUCCESS, frontend SUCCESS, and
   smoke_restore SUCCESS (workflow run `31263338566` / compose run
   `31263338543`).
+- Documentation checkpoint commit `6eb7a30` also passed remote CI: backend and
+  frontend SUCCESS in run `31263485129`; smoke_restore SUCCESS in run
+  `31263485122`.
 
 - Owner: Codex, directed by Commander AI.
 - Status: `COMPLETE / LOCAL_GATES_PASS / CI_COMPOSE_PASS / CLAUDE_PASS`.

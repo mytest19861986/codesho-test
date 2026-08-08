@@ -16,6 +16,9 @@
   It remains Draft; Ready, merge, release and promotion were not performed.
 - Remote CI for `8710d96` is green: backend SUCCESS and frontend SUCCESS in
   run `31263338566`; smoke_restore SUCCESS in run `31263338543`.
+- Follow-up documentation checkpoint `6eb7a30` is also green: backend and
+  frontend SUCCESS in run `31263485129`; smoke_restore SUCCESS in run
+  `31263485122`.
 
 ## Task73B OpenAPI contract remediation
 
