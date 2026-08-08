@@ -19,6 +19,9 @@
   `CLAUDE_TASK76A_PASSCODE_CHANGE_CLEANUP_IMPLEMENTATION_REVIEW_01_V1` remains
   pending because Claude mediation is unavailable in this session.
 - Draft PR: `https://github.com/mytest19861986/codesho-test/pull/22`.
+- Remote CI for commit `8710d96`: backend SUCCESS, frontend SUCCESS, and
+  smoke_restore SUCCESS (workflow run `31263338566` / compose run
+  `31263338543`).
 
 - Owner: Codex, directed by Commander AI.
 - Status: `COMPLETE / LOCAL_GATES_PASS / CI_COMPOSE_PASS / CLAUDE_PASS`.
