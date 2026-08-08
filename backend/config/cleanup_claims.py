@@ -208,7 +208,7 @@ def reclaim_expired_claim(*, claim_id: UUID, tenant_id: UUID) -> ClaimLease | No
                 CleanupWorkClaim.State.RUNNING,
                 CleanupWorkClaim.State.RETRYABLE,
             ],
-            lease_expires_at__lt=now,
+            lease_expires_at__lte=now,
             retry_count__lt=settings.CODESHO_CLEANUP_MAX_RETRIES,
         ).first()
         if claim is None:
