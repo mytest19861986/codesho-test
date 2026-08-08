@@ -1,5 +1,22 @@
 # Current Task: SPRINT1-IDENTITY-PASSCODE-CHANGE-CLEANUP-HARDENING-76A
 
+## Active Task77A handoff — 2026-08-08
+
+- Task: `SPRINT1-SECURITY-CLEANUP-SCHEDULING-ARCHITECTURE-77A`
+- Status: `INSPECTION COMPLETE / DOCS-ONLY IMPLEMENTATION IN PROGRESS`
+- Base SHA: `cb967c26e0faf9a5868e9adc74d59a09c6a42b99`
+- Branch: `codex/task77a-cleanup-scheduling-architecture`
+- Exact write allow-list: the Task77A decision document, this file,
+  `docs/coordination/PROJECT_STATE.md`,
+  `docs/coordination/CODEX_TO_COMMANDER.md`, and the Task77A review summary.
+- No Python, settings, Celery, migration, workflow, Compose, scheduler, or
+  worker implementation changes are authorized.
+- Inspection found the current cleanup task already uses explicit tenant UUID
+  validation, `BaseTenantTask`, `tenant_atomic`, bounded work, database time,
+  row locking, and no registered periodic schedule.
+- Recommended architecture: bounded database-authoritative work claims with
+  short leases, followed by one explicit tenant task per claim.
+
 - Owner: Codex, directed by Commander AI.
 - Status: `IMPLEMENTED / FOCUSED_GATES_PASS / REMOTE_GATES_PASS / CLAUDE_PASS`
 - Base SHA: `cb967c26e0faf9a5868e9adc74d59a09c6a42b99`.

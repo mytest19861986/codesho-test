@@ -223,3 +223,26 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
   production.
 - Local Compose verification remains unavailable, though the CI/staging gate
   is green.
+## TASK77A_INSPECTION_CHECKPOINT_20260808
+
+- TASK_ID: `SPRINT1-SECURITY-CLEANUP-SCHEDULING-ARCHITECTURE-77A`
+- BASE_SHA: `cb967c26e0faf9a5868e9adc74d59a09c6a42b99`
+- BRANCH: `codex/task77a-cleanup-scheduling-architecture`
+- STATUS: `INSPECTION COMPLETE / DOCS-ONLY / CLAUDE GATE REQUIRED`
+- CURRENT_EXECUTION_MODEL: explicit `tenant_id` -> `BaseTenantTask` ->
+  `tenant_atomic` -> bounded tenant cleanup; no periodic schedule.
+- CURRENT_RLS_CONSTRAINTS: runtime worker remains FORCE-RLS-compatible and
+  fail-closed; tenant context is established before tenant queries.
+- CURRENT_CELERY_CONSTRAINTS: JSON task payloads, no Beat schedule, no global
+  cleanup task, and tenant-aware work must inherit `BaseTenantTask`.
+- CURRENT_IDEMPOTENCY_MECHANISMS: deterministic per-challenge audit/event
+  identifiers, row locking with `skip_locked`, atomic cleanup/audit updates,
+  and bounded batches.
+- THREAT_SUMMARY: duplicate schedulers/delivery, stale or disabled tenants,
+  retry storms, unbounded fan-out, lease expiry, cross-tenant access, and
+  scheduler privilege escalation must fail closed.
+- PROPOSED_RECOMMENDATION: database-authoritative bounded work claims with
+  short leases, explicit ownership, and one tenant task per claim.
+- CHANGED_TRACKED_FILES: Task77A exact allow-list only.
+- UNAUTHORIZED_ACTIONS: no scheduler implementation, migration, production,
+  merge, Ready transition, or protected-repository promotion.

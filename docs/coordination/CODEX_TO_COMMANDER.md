@@ -565,3 +565,38 @@ PROTECTED_CODESHO_PROMOTION: NOT_AUTHORIZED
   with `PASS / 0` blockers; the full disposition is recorded above.
 - Unauthorized actions not taken: migration, beat schedule, global cleanup,
   direct-main push, force push, Ready/merge/release/promotion.
+## TASK77A_INSPECTION_REPORT_20260808
+
+TASK_ID: SPRINT1-SECURITY-CLEANUP-SCHEDULING-ARCHITECTURE-77A
+BASE_SHA: cb967c26e0faf9a5868e9adc74d59a09c6a42b99
+BRANCH: codex/task77a-cleanup-scheduling-architecture
+WORKTREE_PATH: G:\project\codesho\codesho\codesho
+PREEXISTING_GIT_STATUS: existing employer-owned untracked paths preserved and unstaged
+PRESERVED_UNTRACKED_PATHS: artifacts/; backend/modules/identity/management/;
+backend/tests/test_celery_entrypoint.py; backend/tests/test_seed_login_fixture.py;
+backend/tests/test_wsgi_entrypoint.py; docs/coordination/PROVIDER_WAIT_REFRESH_PROTOCOL.md
+
+CURRENT_EXECUTION_MODEL: explicit tenant_id -> BaseTenantTask -> tenant_atomic ->
+bounded cleanup; no periodic schedule or global cleanup task.
+TENANT_DISCOVERY_OPTIONS: A central enumeration/dispatch; B approved external
+control-plane triggers; C database-authoritative bounded claims; D Redis-only
+coordination. C is recommended.
+CURRENT_RLS_CONSTRAINTS: runtime workers remain FORCE-RLS-compatible and fail
+closed; discovery must use a separately authorized control-plane projection role.
+CURRENT_CELERY_CONSTRAINTS: JSON payloads, no Beat schedule, no global cleanup,
+and tenant-aware tasks inherit BaseTenantTask.
+CURRENT_IDEMPOTENCY_MECHANISMS: deterministic audit IDs, atomic audit/cleanup,
+skip_locked row locking, and bounded batch size.
+THREAT_SUMMARY: duplicate delivery, stale/deleted tenants, retry storms,
+unbounded fan-out, lease/clock errors, cross-tenant access, and secret leakage.
+OPTION_MATRIX_PRELIMINARY: A simple but weak claim/backpressure boundary; B
+strong separation but external-feed complexity; C strongest shared-clock,
+claim, fairness, and recovery properties; D rejected because Redis is not the
+durable security source of truth.
+PROPOSED_RECOMMENDATION: C — database-authoritative bounded work claims with
+short leases, explicit ownership, and one tenant task per claim.
+PROPOSED_FILES_TO_CHANGE: exact Task77A five-file allow-list only.
+ALLOW_LIST_COLLISIONS: NONE observed.
+BLOCKERS: NONE at inspection; Qwen challenge recommended and Claude mandatory.
+UNAUTHORIZED_ACTIONS: scheduler implementation, Python/settings/Celery changes,
+migration, workflow/Compose change, merge, deployment, Production, or promotion.
