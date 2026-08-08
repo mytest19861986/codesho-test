@@ -246,3 +246,16 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
 - CHANGED_TRACKED_FILES: Task77A exact allow-list only.
 - UNAUTHORIZED_ACTIONS: no scheduler implementation, migration, production,
   merge, Ready transition, or protected-repository promotion.
+
+## TASK77A_REVIEW_TRANSPORT_BLOCKER_20260808
+
+- QWEN_PROMPT_ID: `QWEN_TASK77A_CLEANUP_SCHEDULING_ARCH_CHALLENGE_01_V1`
+- CLAUDE_PROMPT_ID: `CLAUDE_TASK77A_CLEANUP_SCHEDULING_ARCHITECTURE_REVIEW_01_V1`
+- ATTEMPT: Commander bridge attempted `chrome.user.openTabs()` for the exact
+  Qwen conversation URL `https://chatgpt.com/c/6a758cbd-6c88-83eb-b124-068222291391`.
+- ERROR: browser transport returned an environment failure before the tab
+  listing completed; a second attempt also timed out and reset the browser
+  kernel. No review response was received.
+- DISPOSITION: no Qwen or Claude verdict is claimed; no code or architecture
+  change was made in response to an unverified review. Resume with Qwen first,
+  then Claude sequentially, when the authenticated browser transport returns.

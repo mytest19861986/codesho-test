@@ -11,6 +11,14 @@
 - Claude gate: pending — use prompt
   `CLAUDE_TASK77A_CLEANUP_SCHEDULING_ARCHITECTURE_REVIEW_01_V1`.
 
+## Transport checkpoint
+
+The Commander bridge attempted the exact Qwen conversation URL, but
+`chrome.user.openTabs()` failed with an environment browser-transport error and
+a subsequent snapshot attempt timed out/reset the browser kernel. No Qwen or
+Claude response was obtained, and no verdict is recorded. The required order
+remains Qwen challenge, disposition if needed, then sequential Claude review.
+
 ## Review disposition
 
 This file is an auditable review handoff, not a claim of PASS. The decision
