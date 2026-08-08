@@ -19,6 +19,12 @@ a subsequent snapshot attempt timed out/reset the browser kernel. No Qwen or
 Claude response was obtained, and no verdict is recorded. The required order
 remains Qwen challenge, disposition if needed, then sequential Claude review.
 
+The prompt was later submitted successfully to the authenticated Qwen
+conversation at `https://chat.qwen.ai/c/abb20f82-6c44-4cf4-a854-f5e3f8831edb`
+using the exact prompt ID above. Qwen was observed evaluating it during several
+30-second polls, but the tab left the shared session before the final response
+could be retrieved. Verdict remains `NOT RECEIVED`; Claude is not started.
+
 ## Review disposition
 
 This file is an auditable review handoff, not a claim of PASS. The decision

@@ -259,3 +259,16 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
 - DISPOSITION: no Qwen or Claude verdict is claimed; no code or architecture
   change was made in response to an unverified review. Resume with Qwen first,
   then Claude sequentially, when the authenticated browser transport returns.
+
+## TASK77A_QWEN_SUBMISSION_CHECKPOINT_20260808
+
+- QWEN_URL: `https://chat.qwen.ai/c/abb20f82-6c44-4cf4-a854-f5e3f8831edb`
+- PROMPT_ID: `QWEN_TASK77A_CLEANUP_SCHEDULING_ARCH_CHALLENGE_01_V1`
+- SUBMISSION: prompt was sent successfully to the authenticated Qwen
+  conversation at the exact URL above.
+- POLLING: multiple 30-second checks observed Qwen evaluating the prompt; the
+  tab subsequently left the shared session before a final response could be
+  retrieved.
+- VERDICT: `NOT RECEIVED`; no PASS or CHANGES_REQUIRED claim is made.
+- NEXT GATE: recover the real Qwen response, disposition findings if any, then
+  run the sequential mandatory Claude review.
