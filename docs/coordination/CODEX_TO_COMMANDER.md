@@ -668,3 +668,14 @@ LOCAL: claim `8 passed, 2 skipped`; combined claim + passcode cleanup `15
 passed, 2 skipped`; Ruff/MyPy/boundaries/check/migration/diff all PASS.
 REMAINING: actual PostgreSQL/CI evidence for RLS, grants, FORCE RLS,
 SKIP_LOCKED, concurrency/reclaim races and catalog checks; Claude must wait.
+
+## TASK77B_CI_FIX_CHECKPOINT_20260808
+
+HEAD: `8f30046`; direct test mutations for expiry and retry eligibility are
+now enclosed by `tenant_atomic`, preserving PostgreSQL FORCE RLS semantics.
+LOCAL: combined claim + passcode cleanup `15 passed, 2 skipped`; Ruff, MyPy,
+and `git diff --check` PASS.
+REMOTE: pushed to `codesho-test`; exact-head CI run `31269534514` and Compose
+run `31269534527` were observed in progress, with frontend already PASS.
+Commander was notified through the configured channel. Await final backend,
+Compose, PostgreSQL evidence, Qwen closure, and sequential Claude gate.
