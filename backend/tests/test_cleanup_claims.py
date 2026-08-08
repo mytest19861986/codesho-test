@@ -132,9 +132,10 @@ def test_expired_reclaim_fences_old_owner(settings, tenant):
         tenant_id=tenant.id, next_eligible_at=timezone.now() - timedelta(minutes=1)
     )
     old_lease = acquire_cleanup_claims(tenant_id=tenant.id, limit=1)[0]
-    CleanupWorkClaim.objects.filter(pk=claim.id).update(
-        lease_expires_at=timezone.now() - timedelta(minutes=1)
-    )
+    with tenant_atomic(tenant.id):
+        CleanupWorkClaim.objects.filter(pk=claim.id).update(
+            lease_expires_at=timezone.now() - timedelta(minutes=1)
+        )
 
     new_lease = reclaim_expired_claim(claim_id=claim.id, tenant_id=tenant.id)
 
@@ -205,9 +206,10 @@ def test_retry_limit_one_then_dead(settings, tenant):
         generation=first.fencing_generation,
         failure_code="cleanup_error",
     ) == CleanupWorkClaim.State.RETRYABLE
-    CleanupWorkClaim.objects.filter(pk=claim.id).update(
-        next_eligible_at=timezone.now() - timedelta(minutes=1)
-    )
+    with tenant_atomic(tenant.id):
+        CleanupWorkClaim.objects.filter(pk=claim.id).update(
+            next_eligible_at=timezone.now() - timedelta(minutes=1)
+        )
     second = acquire_cleanup_claims(tenant_id=tenant.id, limit=1)[0]
     assert fail_claim(
         claim_id=claim.id,
