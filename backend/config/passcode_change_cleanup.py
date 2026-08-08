@@ -27,6 +27,7 @@ __all__ = [
     "CleanupResult",
     "cleanup_current_tenant",
     "cleanup_passcode_change_challenges",
+    "tenant_atomic",
 ]
 
 

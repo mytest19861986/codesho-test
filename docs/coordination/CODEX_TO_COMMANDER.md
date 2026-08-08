@@ -631,3 +631,53 @@ NON_BLOCKING: stale CURRENT_TASK title; future implementation must record claim
 table DDL provenance. No Ready/Merge/Release/Deploy/Promote authority granted.
 NEXT_ACTION: checkpoint, commit, push codesho-test, and await a separate
 Commander-approved implementation task.
+
+## TASK77B_IMPLEMENTATION_CHECKPOINT_20260808
+
+MESSAGE_ID: `CODEX_TASK77B_IMPLEMENTATION_CHECKPOINT_20260808_01`
+TASK_ID: `SPRINT1-SECURITY-CLEANUP-CLAIM-LEASE-FOUNDATION-77B`
+BASE_SHA: `c07c938`
+BRANCH: `codex/task77b-cleanup-claim-lease-foundation`
+PR_BASE: `codex/task77a-cleanup-scheduling-architecture`
+STATUS: `LOCAL_FOCUSED_GATES_PASS / POSTGRESQL_AND_REVIEWS_PENDING`
+BOUNDARY_DISPOSITION: `TASK77B_BOUNDARY_DISPOSITION_01`; claim model remains in
+identity and orchestration is in `config.cleanup_claims`.
+LOCAL_GATES: module boundaries, Ruff, MyPy, Django check and migration check
+PASS; focused claim + passcode cleanup tests `11 passed`.
+COMPLETED_NEXT: expired reclaim fencing and controlled retry/DEAD transition;
+focused claim tests now `6 passed`.
+REMAINING: PostgreSQL concurrency/RLS/catalog evidence, Qwen challenge,
+sequential Claude gate, CI and stacked Draft PR.
+UNAUTHORIZED: Ready, Merge, main push, force push, Production, deployment,
+release, and protected `codesho` promotion.
+
+STACKED_DRAFT_PR: `#23`
+PR_URL: `https://github.com/mytest19861986/codesho-test/pull/23`
+PR_BASE: `codex/task77a-cleanup-scheduling-architecture`
+PR_HEAD: `codex/task77b-cleanup-claim-lease-foundation`
+PR_STATUS: `DRAFT`; checks not yet available at checkpoint time.
+
+## TASK77B_QWEN_CHALLENGE_DISPOSITION_20260808
+
+PROMPT_ID: `QWEN_TASK77B_CLEANUP_CLAIM_LEASE_IMPLEMENTATION_CHALLENGE_01_V1`
+VERDICT: `CHANGES_REQUIRED`; OPEN_BLOCKERS `7`; P0 `0`; P1 `7`; P2 `3`.
+DISPOSITION: accepted as evidence/remediation requirements. Added rollback,
+retry/DEAD boundary, PostgreSQL-only RLS/privilege, and concurrent-claimer
+contracts; unified lease validity (`> DB now`) and reclaim (`<= DB now`).
+LOCAL: claim `8 passed, 2 skipped`; combined claim + passcode cleanup `15
+passed, 2 skipped`; Ruff/MyPy/boundaries/check/migration/diff all PASS.
+REMAINING: actual PostgreSQL/CI evidence for RLS, grants, FORCE RLS,
+SKIP_LOCKED, concurrency/reclaim races and catalog checks; Claude must wait.
+
+## TASK77B_CI_FIX_CHECKPOINT_20260808
+
+HEAD: `8f30046`; direct test mutations for expiry and retry eligibility are
+now enclosed by `tenant_atomic`, preserving PostgreSQL FORCE RLS semantics.
+LOCAL: combined claim + passcode cleanup `15 passed, 2 skipped`; Ruff, MyPy,
+and `git diff --check` PASS.
+REMOTE: pushed to `codesho-test`; exact-head CI run `31269534514` completed
+SUCCESS (backend 1m29s, frontend 36s), and Compose run `31269534527` completed
+SUCCESS (smoke_restore 1m52s). Compose artifact digest:
+`sha256:6fb2c65b1cfb2b588b7b683ccbed16e35428b46480e7dfd41cc2f0868998aafe`.
+Only Node 20 deprecation warnings were reported. Await Commander/Qwen
+evidence closure and the sequential Claude gate.

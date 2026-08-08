@@ -217,6 +217,16 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
 
 ## Open Decisions / Risks
 
+## TASK77B_IMPLEMENTATION_CHECKPOINT_20260808
+
+Task77B is stacked on Task77A at `c07c938` in isolated worktree
+`G:\project\codesho\codesho\task77b-cleanup-claim-lease-foundation`.
+Persistence remains identity-owned while tenant/Outbox orchestration is in
+`config.cleanup_claims`, preserving the official module boundary. Local focused
+gates are green (`11 passed`, Ruff, MyPy, boundary, Django check, migration
+check). PostgreSQL RLS/locking/catalog evidence and required reviews remain
+open; no Ready, Merge, Production, release, deployment, or promotion is done.
+
 - Payment, SMS, video, object-storage and online-session providers remain
   deferred.
 - Legal retention/privacy/aging-out rules require counsel before paid
