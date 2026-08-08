@@ -651,6 +651,12 @@ sequential Claude gate, CI and stacked Draft PR.
 UNAUTHORIZED: Ready, Merge, main push, force push, Production, deployment,
 release, and protected `codesho` promotion.
 
+STACKED_DRAFT_PR: `#23`
+PR_URL: `https://github.com/mytest19861986/codesho-test/pull/23`
+PR_BASE: `codex/task77a-cleanup-scheduling-architecture`
+PR_HEAD: `codex/task77b-cleanup-claim-lease-foundation`
+PR_STATUS: `DRAFT`; checks not yet available at checkpoint time.
+
 ## TASK77B_QWEN_CHALLENGE_DISPOSITION_20260808
 
 PROMPT_ID: `QWEN_TASK77B_CLEANUP_CLAIM_LEASE_IMPLEMENTATION_CHALLENGE_01_V1`
