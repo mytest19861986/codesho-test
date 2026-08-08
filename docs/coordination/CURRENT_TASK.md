@@ -1,4 +1,17 @@
-# Current Task: SPRINT1-OPENAPI-CONTRACT-DRIFT-REMEDIATION-73B
+# Current Task: SPRINT1-IDENTITY-PASSCODE-CHANGE-CLEANUP-HARDENING-76A
+
+- Owner: Codex, directed by Commander AI.
+- Status: `IN_PROGRESS / LOCAL_PYTHON_ENV_UNAVAILABLE`
+- Base SHA: `cb967c26e0faf9a5868e9adc74d59a09c6a42b99`.
+- Branch: `codex/task76a-passcode-change-cleanup-hardening`.
+- Scope: tenant-scoped passcode-change challenge cleanup hardening only; no
+  migration, beat schedule, global fan-out, or protected-repository promotion.
+- Current checkpoint: cleanup settings are now represented in `.env.example`
+  and validated as bounded configuration at settings load. Existing cleanup
+  orchestration and tenant task code were preserved because inspection found
+  no confirmed defect in those paths.
+- Local blocker: the available Python has no Django installed, so pytest
+  collection cannot start. No local test PASS is claimed.
 
 - Owner: Codex, directed by Commander AI.
 - Status: `COMPLETE / LOCAL_GATES_PASS / CI_COMPOSE_PASS / CLAUDE_PASS`.

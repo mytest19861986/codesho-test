@@ -437,3 +437,22 @@ DEPLOYMENT: NOT_AUTHORIZED
 RELEASE: NOT_AUTHORIZED
 PROTECTED_CODESHO_PROMOTION: NOT_AUTHORIZED
 ```
+## TASK76A_CHECKPOINT_20260808
+
+- Task: `SPRINT1-IDENTITY-PASSCODE-CHANGE-CLEANUP-HARDENING-76A`
+- Base: `cb967c26e0faf9a5868e9adc74d59a09c6a42b99`
+- Branch: `codex/task76a-passcode-change-cleanup-hardening`
+- Changes: added cleanup-related completion/cleanup settings to
+  `.env.example`; added fail-fast bounds for cleanup batch size (1..500) and
+  positive terminal retention days in `backend/config/settings/base.py`.
+- Preserved: all pre-existing untracked paths; existing cleanup/task/test code
+  was not rewritten because inspection found it already tenant-scoped,
+  atomic, bounded, audit-ordered, and beat-free.
+- Verification: `compileall` and `git diff --check` pass. Focused pytest cannot
+  collect: `ModuleNotFoundError: No module named 'django'` from the available
+  Python 3.13.14 environment. No local PASS is claimed.
+- Review: required exact prompt
+  `CLAUDE_TASK76A_PASSCODE_CHANGE_CLEANUP_IMPLEMENTATION_REVIEW_01_V1` remains
+  pending; Claude mediation is unavailable in this session.
+- Unauthorized actions not taken: migration, beat schedule, global cleanup,
+  direct-main push, force push, Ready/merge/release/promotion.

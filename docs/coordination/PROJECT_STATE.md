@@ -1,5 +1,18 @@
 # Codesho Project State
 
+## Task76A checkpoint (2026-08-08)
+
+Task76A is in progress on `codex/task76a-passcode-change-cleanup-hardening`
+from `cb967c26e0faf9a5868e9adc74d59a09c6a42b99`. Inspection preserved all
+pre-existing untracked paths. The minimal implementation hardens the cleanup
+batch and terminal-retention settings at import time and documents the
+passcode-change settings in `.env.example`; existing tenant-scoped atomic
+cleanup, bounded deletion, audit ordering, and explicit `BaseTenantTask`
+execution were not rewritten. Focused pytest is currently blocked at import
+because the available Python environment has no Django installed. Claude final
+implementation review is required but no Claude-mediated tool is available in
+this session; this remains an explicit review blocker before completion.
+
 Updated: 2026-08-06 (Task73B OpenAPI contract remediation)
 
 ## Current Status
