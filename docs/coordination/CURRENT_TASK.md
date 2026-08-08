@@ -18,6 +18,7 @@
 - Review blocker: required Claude prompt
   `CLAUDE_TASK76A_PASSCODE_CHANGE_CLEANUP_IMPLEMENTATION_REVIEW_01_V1` remains
   pending because Claude mediation is unavailable in this session.
+- Draft PR: `https://github.com/mytest19861986/codesho-test/pull/22`.
 
 - Owner: Codex, directed by Commander AI.
 - Status: `COMPLETE / LOCAL_GATES_PASS / CI_COMPOSE_PASS / CLAUDE_PASS`.
