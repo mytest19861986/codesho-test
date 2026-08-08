@@ -457,6 +457,16 @@ DEPLOYMENT: NOT_AUTHORIZED
 RELEASE: NOT_AUTHORIZED
 PROTECTED_CODESHO_PROMOTION: NOT_AUTHORIZED
 ```
+## CODEX_CONTINUATION_REQUEST_20260808_01
+
+- MESSAGE_ID: `CODEX_CONTINUATION_REQUEST_TASK76A_20260808_01`
+- TASK_ID: `SPRINT1-IDENTITY-PASSCODE-CHANGE-CLEANUP-HARDENING-76A`
+- BRANCH: `codex/task76a-passcode-change-cleanup-hardening`
+- STATUS: `FOCUSED_GATES_REVALIDATED / AWAITING_CLAUDE_MEDIATION`
+- Evidence: `backend/tests/test_passcode_change_cleanup.py` -> `7 passed`; related completion/E2E tests -> `7 passed, 3 PostgreSQL-only skipped`; `git diff --check` -> PASS.
+- Repository: HEAD `62178d0` equals origin branch; unrelated untracked paths remain untouched and unstaged.
+- Request: continue the authorized Task76A review/CI closure when Commander/Claude mediation is available. No production, protected-repository promotion, or destructive action was taken.
+
 ## TASK76A_CHECKPOINT_20260808
 
 - Task: `SPRINT1-IDENTITY-PASSCODE-CHANGE-CLEANUP-HARDENING-76A`
