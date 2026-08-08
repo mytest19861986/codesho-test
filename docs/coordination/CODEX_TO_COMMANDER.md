@@ -631,3 +631,20 @@ NON_BLOCKING: stale CURRENT_TASK title; future implementation must record claim
 table DDL provenance. No Ready/Merge/Release/Deploy/Promote authority granted.
 NEXT_ACTION: checkpoint, commit, push codesho-test, and await a separate
 Commander-approved implementation task.
+
+## TASK77B_IMPLEMENTATION_CHECKPOINT_20260808
+
+MESSAGE_ID: `CODEX_TASK77B_IMPLEMENTATION_CHECKPOINT_20260808_01`
+TASK_ID: `SPRINT1-SECURITY-CLEANUP-CLAIM-LEASE-FOUNDATION-77B`
+BASE_SHA: `c07c938`
+BRANCH: `codex/task77b-cleanup-claim-lease-foundation`
+PR_BASE: `codex/task77a-cleanup-scheduling-architecture`
+STATUS: `LOCAL_FOCUSED_GATES_PASS / POSTGRESQL_AND_REVIEWS_PENDING`
+BOUNDARY_DISPOSITION: `TASK77B_BOUNDARY_DISPOSITION_01`; claim model remains in
+identity and orchestration is in `config.cleanup_claims`.
+LOCAL_GATES: module boundaries, Ruff, MyPy, Django check and migration check
+PASS; focused claim + passcode cleanup tests `11 passed`.
+REMAINING: reclaim/retry/dead paths, PostgreSQL concurrency/RLS/catalog
+evidence, Qwen challenge, sequential Claude gate, CI and stacked Draft PR.
+UNAUTHORIZED: Ready, Merge, main push, force push, Production, deployment,
+release, and protected `codesho` promotion.
