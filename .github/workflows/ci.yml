@@ -84,6 +84,11 @@ jobs:
             echo "::error title=backend pytest failure::$summary"
             exit "$status"
           fi
+      - name: Build and inspect backend runtime image
+        working-directory: .
+        run: |
+          docker build --tag codesho-backend-runtime-check:${{ github.sha }} backend
+          sh scripts/check-backend-runtime-image.sh codesho-backend-runtime-check:${{ github.sha }}
 
   frontend:
     runs-on: ubuntu-24.04
