@@ -1,5 +1,24 @@
 # Codesho Project State
 
+## Task76A checkpoint (2026-08-08)
+
+Task76A implementation is complete on `codex/task76a-passcode-change-cleanup-hardening`
+from `cb967c26e0faf9a5868e9adc74d59a09c6a42b99`. Inspection preserved all
+pre-existing untracked paths. The minimal implementation hardens the cleanup
+batch and terminal-retention settings at import time and documents the
+passcode-change settings in `.env.example`; existing tenant-scoped atomic
+cleanup, bounded deletion, audit ordering, and explicit `BaseTenantTask`
+execution were not rewritten. Focused cleanup tests pass (`7 passed`), related
+tests pass (`22 passed`), and Ruff/Django/migration/compileall/diff checks pass.
+The full backend suite reports `213 passed, 49 skipped, 1 failed`; the sole
+failure is the unrelated OpenAPI canonical-byte test due to generated LF versus
+committed CRLF in `docs/openapi.yaml`, outside the Task76A allow-list. The
+full-suite revalidation was run from the official `backend` cwd, confirming
+the prior root-cwd compose-path failure was environmental. Claude implementation
+review `CLAUDE_TASK76A_PASSCODE_CHANGE_CLEANUP_IMPLEMENTATION_REVIEW_01_V1`
+returned `PASS` with zero open/P0/P1 blockers; only a non-blocking auditability
+note about the pre-existing PostgreSQL cleanup function was raised.
+
 Updated: 2026-08-06 (Task73B OpenAPI contract remediation)
 
 ## Current Status
@@ -204,3 +223,76 @@ and Alpha-readiness gates remain unchanged; no new claim is made here.
   production.
 - Local Compose verification remains unavailable, though the CI/staging gate
   is green.
+## TASK77A_INSPECTION_CHECKPOINT_20260808
+
+- TASK_ID: `SPRINT1-SECURITY-CLEANUP-SCHEDULING-ARCHITECTURE-77A`
+- BASE_SHA: `cb967c26e0faf9a5868e9adc74d59a09c6a42b99`
+- BRANCH: `codex/task77a-cleanup-scheduling-architecture`
+- STATUS: `INSPECTION COMPLETE / DOCS-ONLY / CLAUDE GATE REQUIRED`
+- CURRENT_EXECUTION_MODEL: explicit `tenant_id` -> `BaseTenantTask` ->
+  `tenant_atomic` -> bounded tenant cleanup; no periodic schedule.
+- CURRENT_RLS_CONSTRAINTS: runtime worker remains FORCE-RLS-compatible and
+  fail-closed; tenant context is established before tenant queries.
+- CURRENT_CELERY_CONSTRAINTS: JSON task payloads, no Beat schedule, no global
+  cleanup task, and tenant-aware work must inherit `BaseTenantTask`.
+- CURRENT_IDEMPOTENCY_MECHANISMS: deterministic per-challenge audit/event
+  identifiers, row locking with `skip_locked`, atomic cleanup/audit updates,
+  and bounded batches.
+- THREAT_SUMMARY: duplicate schedulers/delivery, stale or disabled tenants,
+  retry storms, unbounded fan-out, lease expiry, cross-tenant access, and
+  scheduler privilege escalation must fail closed.
+- PROPOSED_RECOMMENDATION: database-authoritative bounded work claims with
+  short leases, explicit ownership, and one tenant task per claim.
+- CHANGED_TRACKED_FILES: Task77A exact allow-list only.
+- UNAUTHORIZED_ACTIONS: no scheduler implementation, migration, production,
+  merge, Ready transition, or protected-repository promotion.
+
+## TASK77A_REVIEW_TRANSPORT_BLOCKER_20260808
+
+- QWEN_PROMPT_ID: `QWEN_TASK77A_CLEANUP_SCHEDULING_ARCH_CHALLENGE_01_V1`
+- CLAUDE_PROMPT_ID: `CLAUDE_TASK77A_CLEANUP_SCHEDULING_ARCHITECTURE_REVIEW_01_V1`
+- ATTEMPT: Commander bridge attempted `chrome.user.openTabs()` for the exact
+  Qwen conversation URL `https://chatgpt.com/c/6a758cbd-6c88-83eb-b124-068222291391`.
+- ERROR: browser transport returned an environment failure before the tab
+  listing completed; a second attempt also timed out and reset the browser
+  kernel. No review response was received.
+- DISPOSITION: no Qwen or Claude verdict is claimed; no code or architecture
+  change was made in response to an unverified review. Resume with Qwen first,
+  then Claude sequentially, when the authenticated browser transport returns.
+
+## TASK77A_QWEN_SUBMISSION_CHECKPOINT_20260808
+
+- QWEN_URL: `https://chat.qwen.ai/c/abb20f82-6c44-4cf4-a854-f5e3f8831edb`
+- PROMPT_ID: `QWEN_TASK77A_CLEANUP_SCHEDULING_ARCH_CHALLENGE_01_V1`
+- SUBMISSION: prompt was sent successfully to the authenticated Qwen
+  conversation at the exact URL above.
+- POLLING: multiple 30-second checks observed Qwen evaluating the prompt; the
+  tab subsequently left the shared session before a final response could be
+  retrieved.
+- VERDICT: `NOT RECEIVED`; no PASS or CHANGES_REQUIRED claim is made.
+- NEXT GATE: recover the real Qwen response, disposition findings if any, then
+  run the sequential mandatory Claude review.
+
+## TASK77A_QWEN_DISPOSITION_20260808
+
+- PROMPT_ID: `QWEN_TASK77A_CLEANUP_SCHEDULING_ARCH_CHALLENGE_01_V1`
+- VERDICT: `CHANGES_REQUIRED`
+- OPEN_BLOCKERS: `7`; P0: `0`; P1: `7`
+- DISPOSITION: accepted and remediated in the decision document and review
+  summary, all within the exact five-file allow-list. Clarifications cover
+  normative one-tenant claim transitions, role/RLS authority, lease lifecycle,
+  Outbox publication, capacity/fairness/backpressure, fail-closed operations,
+  and Task77A governance boundaries.
+- NO_RUNTIME_CHANGE: Python, schema, migration, settings, Celery, worker, and
+  scheduler files remain unchanged.
+- NEXT_GATE: mandatory sequential Claude review with
+  `CLAUDE_TASK77A_CLEANUP_SCHEDULING_ARCHITECTURE_REVIEW_01_V1`.
+## TASK77A_CLAUDE_GATE_RESULT_20260808
+
+The existing authenticated Claude tab reviewed the supplied Task77A materials
+for commit `f0692d53cdeb1d65857d3efeb35a49dc709c4ab2` and returned
+`PASS / OPEN_BLOCKERS: 0 / P0: 0 / P1: 0`. The review confirmed the docs-only
+boundary, tenant-safe architecture, fail-closed rules, RLS/role separation,
+Qwen disposition, and governance boundary. The next step requires a separate
+Commander-approved implementation task; no implementation or release authority
+is implied.

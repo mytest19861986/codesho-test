@@ -1,5 +1,25 @@
 # Codex to Commander — Task72B legal/policy gate
 
+## TASK76A_VERIFICATION_20260808
+
+- Environment: Django 5.2.17 and project dependencies available.
+- Focused cleanup tests: `7 passed`; related tests: `22 passed`.
+- Ruff, Django check, migration check, compileall, and `git diff --check`:
+  passed.
+- Full backend suite: `213 passed, 49 skipped, 1 failed`. The failure is
+  `tests/test_openapi_contract.py::test_generated_schema_is_canonical_and_only_exposes_contract_routes`,
+  an unrelated LF/CRLF byte mismatch in `docs/openapi.yaml`, outside the
+  Task76A allow-list. No out-of-scope fix was made.
+- Required Claude review remains pending because Claude-mediated communication
+  is unavailable here.
+- Draft PR created: `https://github.com/mytest19861986/codesho-test/pull/22`.
+  It remains Draft; Ready, merge, release and promotion were not performed.
+- Remote CI for `8710d96` is green: backend SUCCESS and frontend SUCCESS in
+  run `31263338566`; smoke_restore SUCCESS in run `31263338543`.
+- Follow-up documentation checkpoint `6eb7a30` is also green: backend and
+  frontend SUCCESS in run `31263485129`; smoke_restore SUCCESS in run
+  `31263485122`.
+
 ## Task73B OpenAPI contract remediation
 
 ```text
@@ -437,3 +457,177 @@ DEPLOYMENT: NOT_AUTHORIZED
 RELEASE: NOT_AUTHORIZED
 PROTECTED_CODESHO_PROMOTION: NOT_AUTHORIZED
 ```
+## CODEX_CONTINUATION_REQUEST_20260808_01
+
+- MESSAGE_ID: `CODEX_CONTINUATION_REQUEST_TASK76A_20260808_01`
+- TASK_ID: `SPRINT1-IDENTITY-PASSCODE-CHANGE-CLEANUP-HARDENING-76A`
+- BRANCH: `codex/task76a-passcode-change-cleanup-hardening`
+- STATUS: `FOCUSED_GATES_REVALIDATED / AWAITING_CLAUDE_MEDIATION`
+- Evidence: `backend/tests/test_passcode_change_cleanup.py` -> `7 passed`; related completion/E2E tests -> `7 passed, 3 PostgreSQL-only skipped`; `git diff --check` -> PASS.
+- Repository: HEAD `62178d0` equals origin branch; unrelated untracked paths remain untouched and unstaged.
+- Request: continue the authorized Task76A review/CI closure when Commander/Claude mediation is available. No production, protected-repository promotion, or destructive action was taken.
+
+## CODEX_TASK76A_REVALIDATION_20260808_02
+
+- MESSAGE_ID: `CODEX_TASK76A_REVALIDATION_20260808_02`
+- Focused cleanup: `7 passed`.
+- Related completion/E2E: `7 passed, 3 PostgreSQL-only skipped`.
+- Full backend from official `backend` cwd: `213 passed, 49 skipped, 1 failed`.
+- Remaining failure: OpenAPI canonical LF/CRLF mismatch in `docs/openapi.yaml`, unrelated and outside the Task76A allow-list.
+- Root-cwd compose-path failure was environmental and disappeared from the official cwd.
+- Checkpoint commit: `5e76248`, pushed to `origin/codex/task76a-passcode-change-cleanup-hardening`.
+- Unrelated untracked paths remain untouched; no protected promotion or production action taken.
+
+## CODEX_TASK76A_COMMANDER_REPORT_20260808_03
+
+- MESSAGE_ID: `CODEX_TASK76A_COMMANDER_REPORT_20260808_03`
+- Task: `SPRINT1-IDENTITY-PASSCODE-CHANGE-CLEANUP-HARDENING-76A`
+- Branch HEAD: `d2aa527`, synchronized with origin.
+- Local evidence: focused cleanup `7 passed`; related completion/E2E `7 passed, 3 skipped`; full backend from `backend` cwd `213 passed, 49 skipped, 1 failed`.
+- Remaining local failure is the pre-existing OpenAPI canonical LF/CRLF mismatch in `docs/openapi.yaml`, outside the authorized Task76A allow-list.
+- PR #22 remains Draft; no reviewers are recorded. Latest GitHub CI run `31264146144` and Compose run `31264146184` are currently `In progress` for the documentation handoff commit.
+- No Ready transition, merge, direct-main push, protected promotion, release, or production action was performed.
+- Existing unrelated untracked paths remain untouched and unstaged.
+
+## CODEX_TASK76A_CI_STATUS_REFRESH_20260808_04
+
+- MESSAGE_ID: `CODEX_TASK76A_CI_STATUS_REFRESH_20260808_04`
+- PR #22 remains `Draft`; GitHub shows `No reviews`.
+- Latest CI run `31264146144` and Compose smoke/restore run `31264146184`, both for `d2aa527`, remain `In progress` on the latest refresh.
+- No new code change was needed or authorized. Local evidence and the out-of-scope OpenAPI canonical-byte failure remain unchanged.
+- Ready transition, merge, direct-main push, release, and protected `codesho` promotion remain unperformed.
+
+## CODEX_TASK76A_CI_CLOSURE_20260808_05
+
+- MESSAGE_ID: `CODEX_TASK76A_CI_CLOSURE_20260808_05`
+- Commit: `c04d350`.
+- Remote CI: backend `SUCCESS`, frontend `SUCCESS`.
+- Remote Compose smoke/restore: `SUCCESS`.
+- CI run: `31264221532`; Compose run: `31264221516`.
+- PR #22 remains Draft with no review recorded. Ready transition, merge,
+  direct-main push, release, and protected-repository promotion remain
+  unauthorized/unperformed.
+- Local out-of-scope OpenAPI LF/CRLF mismatch remains documented; no unrelated
+  files or pre-existing untracked paths were changed.
+
+## CLAUDE_TASK76A_PASSCODE_CHANGE_CLEANUP_IMPLEMENTATION_REVIEW_01_V1
+
+- PROMPT_ID: `CLAUDE_TASK76A_PASSCODE_CHANGE_CLEANUP_IMPLEMENTATION_REVIEW_01_V1`
+- REVIEW_CHANNEL: sequential authenticated Claude session. The primary local
+  Brave launcher first failed with the shared-profile lock error; the existing
+  authenticated Claude session was used without closing/replacing the shared
+  browser.
+- VERDICT: `PASS`
+- OPEN_BLOCKERS: `0`
+- P0_BLOCKERS: `0`
+- P1_BLOCKERS: `0`
+- FINDINGS: tenant isolation, transaction/audit atomicity, terminal retention,
+  database-time authority, bounded configuration, idempotency, PostgreSQL
+  concurrency, secret non-exposure, explicit BaseTenantTask enforcement,
+  absence of Beat/global fan-out, regression risk, and zero migration changes
+  were assessed as met. No blocking remediation was required.
+- NON_BLOCKING_NOTE: Claude requested an auditable one-line confirmation that
+  `codesho.delete_expired_passcode_change_challenges` comes from a prior
+  authorized migration. This was not treated as a blocker because Compose
+  success exercises the real PostgreSQL path.
+- FINAL_RECOMMENDATION: clear to proceed past the Claude technical gate;
+  Ready/Merge remains a separate Commander decision.
+
+## COMMANDER_TASK76A_TECHNICAL_ACCEPTANCE_20260808
+
+- TASK: `SPRINT1-IDENTITY-PASSCODE-CHANGE-CLEANUP-HARDENING-76A`
+- STATUS: `TECHNICALLY ACCEPTED / COMPLETE`
+- Commander confirmed AC assessment accepted, Claude `PASS / 0` blockers,
+  remote CI/Compose green, and the local OpenAPI LF/CRLF mismatch outside
+  Task76A scope.
+- No further Task76A coding or testing is authorized unless a real regression
+  is discovered.
+- Next gate: Ready then Merge, each requiring separate employer authorization.
+  No Ready, Merge, Production release, or protected-repository promotion was
+  performed.
+
+## TASK76A_CHECKPOINT_20260808
+
+- Task: `SPRINT1-IDENTITY-PASSCODE-CHANGE-CLEANUP-HARDENING-76A`
+- Base: `cb967c26e0faf9a5868e9adc74d59a09c6a42b99`
+- Branch: `codex/task76a-passcode-change-cleanup-hardening`
+- Changes: added cleanup-related completion/cleanup settings to
+  `.env.example`; added fail-fast bounds for cleanup batch size (1..500) and
+  positive terminal retention days in `backend/config/settings/base.py`.
+- Preserved: all pre-existing untracked paths; existing cleanup/task/test code
+  was not rewritten because inspection found it already tenant-scoped,
+  atomic, bounded, audit-ordered, and beat-free.
+- Verification: `compileall` and `git diff --check` pass. Focused pytest cannot
+  collect: `ModuleNotFoundError: No module named 'django'` from the available
+  Python 3.13.14 environment. No local PASS is claimed.
+- Review: required exact prompt
+  `CLAUDE_TASK76A_PASSCODE_CHANGE_CLEANUP_IMPLEMENTATION_REVIEW_01_V1` completed
+  with `PASS / 0` blockers; the full disposition is recorded above.
+- Unauthorized actions not taken: migration, beat schedule, global cleanup,
+  direct-main push, force push, Ready/merge/release/promotion.
+## TASK77A_INSPECTION_REPORT_20260808
+
+TASK_ID: SPRINT1-SECURITY-CLEANUP-SCHEDULING-ARCHITECTURE-77A
+BASE_SHA: cb967c26e0faf9a5868e9adc74d59a09c6a42b99
+BRANCH: codex/task77a-cleanup-scheduling-architecture
+WORKTREE_PATH: G:\project\codesho\codesho\codesho
+PREEXISTING_GIT_STATUS: existing employer-owned untracked paths preserved and unstaged
+PRESERVED_UNTRACKED_PATHS: artifacts/; backend/modules/identity/management/;
+backend/tests/test_celery_entrypoint.py; backend/tests/test_seed_login_fixture.py;
+backend/tests/test_wsgi_entrypoint.py; docs/coordination/PROVIDER_WAIT_REFRESH_PROTOCOL.md
+
+CURRENT_EXECUTION_MODEL: explicit tenant_id -> BaseTenantTask -> tenant_atomic ->
+bounded cleanup; no periodic schedule or global cleanup task.
+TENANT_DISCOVERY_OPTIONS: A central enumeration/dispatch; B approved external
+control-plane triggers; C database-authoritative bounded claims; D Redis-only
+coordination. C is recommended.
+CURRENT_RLS_CONSTRAINTS: runtime workers remain FORCE-RLS-compatible and fail
+closed; discovery must use a separately authorized control-plane projection role.
+CURRENT_CELERY_CONSTRAINTS: JSON payloads, no Beat schedule, no global cleanup,
+and tenant-aware tasks inherit BaseTenantTask.
+CURRENT_IDEMPOTENCY_MECHANISMS: deterministic audit IDs, atomic audit/cleanup,
+skip_locked row locking, and bounded batch size.
+THREAT_SUMMARY: duplicate delivery, stale/deleted tenants, retry storms,
+unbounded fan-out, lease/clock errors, cross-tenant access, and secret leakage.
+OPTION_MATRIX_PRELIMINARY: A simple but weak claim/backpressure boundary; B
+strong separation but external-feed complexity; C strongest shared-clock,
+claim, fairness, and recovery properties; D rejected because Redis is not the
+durable security source of truth.
+PROPOSED_RECOMMENDATION: C — database-authoritative bounded work claims with
+short leases, explicit ownership, and one tenant task per claim.
+PROPOSED_FILES_TO_CHANGE: exact Task77A five-file allow-list only.
+ALLOW_LIST_COLLISIONS: NONE observed.
+BLOCKERS: NONE at inspection; Qwen challenge recommended and Claude mandatory.
+UNAUTHORIZED_ACTIONS: scheduler implementation, Python/settings/Celery changes,
+migration, workflow/Compose change, merge, deployment, Production, or promotion.
+
+## TASK77A_QWEN_DISPOSITION_20260808
+
+PROMPT_ID: QWEN_TASK77A_CLEANUP_SCHEDULING_ARCH_CHALLENGE_01_V1
+VERDICT: CHANGES_REQUIRED
+OPEN_BLOCKERS: 7
+P0: 0
+P1: 7
+DISPOSITION: accepted and remediated as documentation-only clarifications in
+the exact allow-list. Tenant-scoped claim transition invariants, authority/RLS
+matrix, lease lifecycle, transactional Outbox, bounded fairness/backpressure,
+fail-closed operations, and governance boundaries are now explicit.
+HEAD_AFTER_DISPOSITION: pending commit/push
+NEXT_GATE: CLAUDE_TASK77A_CLEANUP_SCHEDULING_ARCHITECTURE_REVIEW_01_V1
+
+## TASK77A_CLAUDE_HARD_GATE_20260808
+
+PROMPT_ID: CLAUDE_TASK77A_CLEANUP_SCHEDULING_ARCHITECTURE_REVIEW_01_V1
+MATERIALS_FOLLOWUP: CLAUDE_TASK77A_CLEANUP_SCHEDULING_ARCHITECTURE_REVIEW_01_V1_MATERIALS_FOLLOWUP
+REVIEWED_SHA: f0692d53cdeb1d65857d3efeb35a49dc709c4ab2
+VERDICT: PASS
+OPEN_BLOCKERS: 0
+P0: 0
+P1: 0
+IMPLEMENTATION_READINESS: READY_FOR_SEPARATE_IMPLEMENTATION_TASK
+CLAUDE_NOTES: docs-only boundary, threat model, option comparison, fail-closed
+rules, RLS/role separation, Qwen disposition, and governance boundary passed.
+NON_BLOCKING: stale CURRENT_TASK title; future implementation must record claim
+table DDL provenance. No Ready/Merge/Release/Deploy/Promote authority granted.
+NEXT_ACTION: checkpoint, commit, push codesho-test, and await a separate
+Commander-approved implementation task.

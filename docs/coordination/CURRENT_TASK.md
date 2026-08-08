@@ -1,4 +1,49 @@
-# Current Task: SPRINT1-OPENAPI-CONTRACT-DRIFT-REMEDIATION-73B
+# Current Task: SPRINT1-SECURITY-CLEANUP-SCHEDULING-ARCHITECTURE-77A
+
+## Active Task77A handoff — 2026-08-08
+
+- Task: `SPRINT1-SECURITY-CLEANUP-SCHEDULING-ARCHITECTURE-77A`
+- Status: `INSPECTION COMPLETE / DOCS-ONLY IMPLEMENTATION IN PROGRESS`
+- Base SHA: `cb967c26e0faf9a5868e9adc74d59a09c6a42b99`
+- Branch: `codex/task77a-cleanup-scheduling-architecture`
+- Exact write allow-list: the Task77A decision document, this file,
+  `docs/coordination/PROJECT_STATE.md`,
+  `docs/coordination/CODEX_TO_COMMANDER.md`, and the Task77A review summary.
+- No Python, settings, Celery, migration, workflow, Compose, scheduler, or
+  worker implementation changes are authorized.
+- Inspection found the current cleanup task already uses explicit tenant UUID
+  validation, `BaseTenantTask`, `tenant_atomic`, bounded work, database time,
+  row locking, and no registered periodic schedule.
+- Recommended architecture: bounded database-authoritative work claims with
+  short leases, followed by one explicit tenant task per claim.
+
+- Owner: Codex, directed by Commander AI.
+- Status: `IMPLEMENTED / FOCUSED_GATES_PASS / REMOTE_GATES_PASS / CLAUDE_PASS`
+- Base SHA: `cb967c26e0faf9a5868e9adc74d59a09c6a42b99`.
+- Branch: `codex/task76a-passcode-change-cleanup-hardening`.
+- Scope: tenant-scoped passcode-change challenge cleanup hardening only; no
+  migration, beat schedule, global fan-out, or protected-repository promotion.
+- Current checkpoint: cleanup settings are now represented in `.env.example`
+  and validated as bounded configuration at settings load. Existing cleanup
+  orchestration and tenant task code were preserved because inspection found
+  no confirmed defect in those paths.
+- Verification: focused cleanup tests pass (`7 passed`); related completion/E2E
+  tests pass (`7 passed, 3 PostgreSQL-only skipped`); backend-cwd full suite is
+  `213 passed, 49 skipped, 1 failed`. The sole failure is the unrelated
+  OpenAPI canonical-byte test detecting generated LF versus committed CRLF in
+  `docs/openapi.yaml`, outside the task allow-list. The root-cwd compose-path
+  failure disappears when rerun from the official `backend` cwd.
+- Claude hard gate: `CLAUDE_TASK76A_PASSCODE_CHANGE_CLEANUP_IMPLEMENTATION_REVIEW_01_V1`
+  returned `PASS / OPEN_BLOCKERS 0 / P0 0 / P1 0`. One non-blocking note asks
+  for explicit audit wording that the PostgreSQL cleanup function comes from a
+  prior authorized migration; no code remediation was required.
+- Draft PR: `https://github.com/mytest19861986/codesho-test/pull/22`.
+- Remote CI for commit `8710d96`: backend SUCCESS, frontend SUCCESS, and
+  smoke_restore SUCCESS (workflow run `31263338566` / compose run
+  `31263338543`).
+- Documentation checkpoint commit `6eb7a30` also passed remote CI: backend and
+  frontend SUCCESS in run `31263485129`; smoke_restore SUCCESS in run
+  `31263485122`.
 
 - Owner: Codex, directed by Commander AI.
 - Status: `COMPLETE / LOCAL_GATES_PASS / CI_COMPOSE_PASS / CLAUDE_PASS`.
@@ -66,3 +111,10 @@ PII/real data, account, credential, session, active membership, role, public
 endpoint, email/SMS/OAuth/provider integration, Guardian/Recovery
 implementation, deployment, Alpha, Production or protected `codesho`
 promotion is authorized.
+
+## TASK77A_CLAUDE_GATE_RESULT_20260808
+
+Claude hard gate completed against `f0692d53cdeb1d65857d3efeb35a49dc709c4ab2`.
+Verdict: `PASS`; `OPEN_BLOCKERS: 0`; `P0: 0`; `P1: 0`. This closes the
+architecture-only review gate. It does not authorize implementation, merge,
+release, deployment, promotion, or protected-repository changes.
