@@ -115,6 +115,18 @@ promotion is authorized.
 ## TASK77A_CLAUDE_GATE_RESULT_20260808
 
 Claude hard gate completed against `f0692d53cdeb1d65857d3efeb35a49dc709c4ab2`.
+
+## TASK77B_BOUNDARY_DISPOSITION_01_20260808
+
+- TASK_ID: `SPRINT1-SECURITY-CLEANUP-CLAIM-LEASE-FOUNDATION-77B`
+- BASE_SHA: `c07c938`
+- BRANCH: `codex/task77b-cleanup-claim-lease-foundation`
+- Commander resolved the initial identity boundary failure by keeping the
+  claim model in identity and moving orchestration to `backend/config/cleanup_claims.py`.
+- No hidden imports or boundary-checker weakening were used. Boundary, Ruff,
+  MyPy, Django check, migration check, and focused tests (`11 passed`) pass.
+- PostgreSQL RLS/concurrency evidence and sequential Qwen then Claude reviews
+  remain required. No Ready, Merge, Production, or protected promotion.
 Verdict: `PASS`; `OPEN_BLOCKERS: 0`; `P0: 0`; `P1: 0`. This closes the
 architecture-only review gate. It does not authorize implementation, merge,
 release, deployment, promotion, or protected-repository changes.
