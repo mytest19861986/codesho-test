@@ -644,7 +644,9 @@ BOUNDARY_DISPOSITION: `TASK77B_BOUNDARY_DISPOSITION_01`; claim model remains in
 identity and orchestration is in `config.cleanup_claims`.
 LOCAL_GATES: module boundaries, Ruff, MyPy, Django check and migration check
 PASS; focused claim + passcode cleanup tests `11 passed`.
-REMAINING: reclaim/retry/dead paths, PostgreSQL concurrency/RLS/catalog
-evidence, Qwen challenge, sequential Claude gate, CI and stacked Draft PR.
+COMPLETED_NEXT: expired reclaim fencing and controlled retry/DEAD transition;
+focused claim tests now `6 passed`.
+REMAINING: PostgreSQL concurrency/RLS/catalog evidence, Qwen challenge,
+sequential Claude gate, CI and stacked Draft PR.
 UNAUTHORIZED: Ready, Merge, main push, force push, Production, deployment,
 release, and protected `codesho` promotion.

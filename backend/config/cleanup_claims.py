@@ -194,6 +194,103 @@ def complete_claim(*, claim_id: UUID, tenant_id: UUID, owner_token: UUID, genera
         return True
 
 
+def reclaim_expired_claim(*, claim_id: UUID, tenant_id: UUID) -> ClaimLease | None:
+    """Reclaim only an expired owned claim, fencing the previous worker."""
+    tenant_id = UUID(str(tenant_id))
+    with tenant_atomic(tenant_id), transaction.atomic():
+        now = _db_now()
+        claim = CleanupWorkClaim.objects.select_for_update().filter(
+            id=claim_id,
+            tenant_id=tenant_id,
+            state__in=[
+                CleanupWorkClaim.State.CLAIMED,
+                CleanupWorkClaim.State.DISPATCHED,
+                CleanupWorkClaim.State.RUNNING,
+                CleanupWorkClaim.State.RETRYABLE,
+            ],
+            lease_expires_at__lt=now,
+            retry_count__lt=settings.CODESHO_CLEANUP_MAX_RETRIES,
+        ).first()
+        if claim is None:
+            return None
+        owner = uuid.uuid4()
+        generation = claim.fencing_generation + 1
+        expiry = now + timedelta(seconds=settings.CODESHO_CLEANUP_LEASE_SECONDS)
+        claim.owner_token = owner
+        claim.fencing_generation = generation
+        claim.state = CleanupWorkClaim.State.DISPATCHED
+        claim.claimed_at = now
+        claim.lease_expires_at = expiry
+        claim.save(
+            update_fields=[
+                "owner_token", "fencing_generation", "state", "claimed_at",
+                "lease_expires_at", "updated_at",
+            ]
+        )
+        append_outbox_event(
+            topic=TOPIC,
+            aggregate_type="cleanup_claim",
+            aggregate_id=str(claim.id),
+            tenant_id=tenant_id,
+            payload={
+                "claim_id": str(claim.id),
+                "tenant_id": str(tenant_id),
+                "fencing_generation": generation,
+            },
+        )
+        return ClaimLease(claim.id, tenant_id, owner, generation, expiry)
+
+
+def fail_claim(
+    *, claim_id: UUID, tenant_id: UUID, owner_token: UUID, generation: int,
+    failure_code: str,
+) -> str | None:
+    """Record a controlled failure, retrying or quarantining it deterministically."""
+    if failure_code not in {"cleanup_error", "lease_lost", "claim_stale", "dispatch_invalid"}:
+        raise ValueError("failure_code is not controlled")
+    with tenant_atomic(UUID(str(tenant_id))), transaction.atomic():
+        now = _db_now()
+        try:
+            claim = _owned_claim(
+                claim_id=claim_id,
+                tenant_id=tenant_id,
+                owner_token=owner_token,
+                generation=generation,
+            )
+        except CleanupWorkClaim.DoesNotExist:
+            return None
+        if (
+            claim.state not in {
+                CleanupWorkClaim.State.CLAIMED,
+                CleanupWorkClaim.State.DISPATCHED,
+                CleanupWorkClaim.State.RUNNING,
+            }
+            or claim.lease_expires_at is None
+            or claim.lease_expires_at <= now
+        ):
+            return None
+        claim.retry_count += 1
+        claim.last_failure_code = failure_code
+        claim.owner_token = None
+        claim.lease_expires_at = None
+        if claim.retry_count > settings.CODESHO_CLEANUP_MAX_RETRIES:
+            claim.state = CleanupWorkClaim.State.DEAD
+            result = CleanupWorkClaim.State.DEAD
+        else:
+            claim.state = CleanupWorkClaim.State.RETRYABLE
+            claim.next_eligible_at = now + timedelta(
+                seconds=settings.CODESHO_CLEANUP_RETRY_DELAY_SECONDS
+            )
+            result = CleanupWorkClaim.State.RETRYABLE
+        claim.save(
+            update_fields=[
+                "retry_count", "last_failure_code", "owner_token", "lease_expires_at",
+                "state", "next_eligible_at", "updated_at",
+            ]
+        )
+        return result
+
+
 def create_pending_claim(
     *, tenant_id: UUID, next_eligible_at: datetime | None = None
 ) -> CleanupWorkClaim:
