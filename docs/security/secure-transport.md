@@ -1,10 +1,15 @@
 # Secure transport boundary
 
 Codesho terminates TLS at a trusted ingress or reverse proxy. The proxy owns
-certificates and must overwrite, rather than pass through, the effective
-`X-Forwarded-Proto` value. The bundled Nginx configuration does this with
-`proxy_set_header X-Forwarded-Proto $scheme`; the backend is not a public TLS
-listener.
+certificates. The bundled Nginx configuration accepts an incoming
+`X-Forwarded-Proto` value only from private/trusted ingress source ranges and
+overwrites the value before forwarding it. Untrusted sources fall back to
+Nginx's own scheme, so client-supplied protocol claims cannot enable HTTPS
+semantics. The backend is not a public TLS listener.
+
+Production ingress deployments must keep the ingress and this Nginx hop on a
+private network and align Django's `TRUSTED_PROXY_CIDRS` with the actual
+ingress peer range.
 
 `CODESHO_SECURE_TRANSPORT` is the explicit hardened-mode switch. It defaults to
 `false` for local HTTP Compose development. Production settings fail closed
