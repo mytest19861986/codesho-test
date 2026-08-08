@@ -1,7 +1,7 @@
 # Current Task: SPRINT1-IDENTITY-PASSCODE-CHANGE-CLEANUP-HARDENING-76A
 
 - Owner: Codex, directed by Commander AI.
-- Status: `IMPLEMENTED / FOCUSED_GATES_PASS / FULL_SUITE_ONE_UNRELATED_FAILURE`
+- Status: `IMPLEMENTED / FOCUSED_GATES_PASS / REMOTE_GATES_PASS / CLAUDE_PASS`
 - Base SHA: `cb967c26e0faf9a5868e9adc74d59a09c6a42b99`.
 - Branch: `codex/task76a-passcode-change-cleanup-hardening`.
 - Scope: tenant-scoped passcode-change challenge cleanup hardening only; no
@@ -16,9 +16,10 @@
   OpenAPI canonical-byte test detecting generated LF versus committed CRLF in
   `docs/openapi.yaml`, outside the task allow-list. The root-cwd compose-path
   failure disappears when rerun from the official `backend` cwd.
-- Review blocker: required Claude prompt
-  `CLAUDE_TASK76A_PASSCODE_CHANGE_CLEANUP_IMPLEMENTATION_REVIEW_01_V1` remains
-  pending because Claude mediation is unavailable in this session.
+- Claude hard gate: `CLAUDE_TASK76A_PASSCODE_CHANGE_CLEANUP_IMPLEMENTATION_REVIEW_01_V1`
+  returned `PASS / OPEN_BLOCKERS 0 / P0 0 / P1 0`. One non-blocking note asks
+  for explicit audit wording that the PostgreSQL cleanup function comes from a
+  prior authorized migration; no code remediation was required.
 - Draft PR: `https://github.com/mytest19861986/codesho-test/pull/22`.
 - Remote CI for commit `8710d96`: backend SUCCESS, frontend SUCCESS, and
   smoke_restore SUCCESS (workflow run `31263338566` / compose run
