@@ -63,7 +63,7 @@ jobs:
             --env DJANGO_SETTINGS_MODULE=config.settings.test \
             --env DJANGO_SECRET_KEY=compose-smoke-only \
             --env DATABASE_URL=postgresql://codesho_migrator:codesho-migrator-local@postgres:5432/codesho_smoke_tests \
-            python:3.12.13-slim-bookworm sh -ec "python -m pip install --require-hashes --only-binary=:all: --no-deps -r requirements/lock-tools.txt && python -m pip install --require-hashes --only-binary=:all: --no-deps -r requirements/dev.txt && python manage.py migrate --noinput"
+            python:3.12.13-slim-bookworm@sha256:6e13e65c55e33adf203d77ee371cf8bf5d81bd4902ef07565721f46bf44917af sh -ec "python -m pip install --require-hashes --only-binary=:all: --no-deps -r requirements/lock-tools.txt && python -m pip install --require-hashes --only-binary=:all: --no-deps -r requirements/dev.txt && python manage.py migrate --noinput"
           docker run --rm --network codesho-sz-smoke_default \
             --volume "$GITHUB_WORKSPACE/backend:/app" --workdir /app \
             --env DJANGO_SETTINGS_MODULE=config.settings.test \
@@ -73,7 +73,7 @@ jobs:
             --env DATABASE_TEST_NAME=codesho_smoke_tests \
             --env REDIS_URL=redis://redis:6379/0 \
             --env PASSCODE_SIGNAL_HMAC_KEY=c2lnbmFsLWhtYWMta2V5LXgteHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg= \
-            python:3.12.13-slim-bookworm sh -ec \
+            python:3.12.13-slim-bookworm@sha256:6e13e65c55e33adf203d77ee371cf8bf5d81bd4902ef07565721f46bf44917af sh -ec \
             "python -m pip install --require-hashes --only-binary=:all: --no-deps -r requirements/lock-tools.txt && python -m pip install --require-hashes --only-binary=:all: --no-deps -r requirements/dev.txt && pytest --reuse-db -q tests/test_tenant_context.py tests/test_middleware.py tests/test_tasks.py tests/test_passcode_abuse.py tests/test_request_signals.py"
       - name: Create, restore, and verify a PostgreSQL backup
         run: |
