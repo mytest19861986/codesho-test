@@ -489,6 +489,14 @@ PROTECTED_CODESHO_PROMOTION: NOT_AUTHORIZED
 - No Ready transition, merge, direct-main push, protected promotion, release, or production action was performed.
 - Existing unrelated untracked paths remain untouched and unstaged.
 
+## CODEX_TASK76A_CI_STATUS_REFRESH_20260808_04
+
+- MESSAGE_ID: `CODEX_TASK76A_CI_STATUS_REFRESH_20260808_04`
+- PR #22 remains `Draft`; GitHub shows `No reviews`.
+- Latest CI run `31264146144` and Compose smoke/restore run `31264146184`, both for `d2aa527`, remain `In progress` on the latest refresh.
+- No new code change was needed or authorized. Local evidence and the out-of-scope OpenAPI canonical-byte failure remain unchanged.
+- Ready transition, merge, direct-main push, release, and protected `codesho` promotion remain unperformed.
+
 ## TASK76A_CHECKPOINT_20260808
 
 - Task: `SPRINT1-IDENTITY-PASSCODE-CHANGE-CLEANUP-HARDENING-76A`
