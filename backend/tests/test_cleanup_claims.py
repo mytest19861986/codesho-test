@@ -19,6 +19,7 @@ from config.cleanup_claims import (
 )
 from modules.identity.models import CleanupWorkClaim
 from modules.platform_event.models import OutboxEvent
+from modules.platform_tenant.context import tenant_atomic
 from modules.platform_tenant.models import Tenant
 
 
@@ -49,9 +50,11 @@ def test_claiming_disabled_is_fail_closed(settings, tenant):
     settings.CODESHO_CLEANUP_CLAIMING_ENABLED = False
 
     assert acquire_cleanup_claims(tenant_id=tenant.id) == []
-    claim.refresh_from_db()
+    with tenant_atomic(tenant.id):
+        claim.refresh_from_db()
     assert claim.state == CleanupWorkClaim.State.PENDING
-    assert not OutboxEvent.objects.exists()
+    with tenant_atomic(tenant.id):
+        assert not OutboxEvent.objects.filter(tenant_id=tenant.id).exists()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -64,9 +67,13 @@ def test_acquisition_is_bounded_and_emits_minimal_outbox(settings, tenant):
     leases = acquire_cleanup_claims(tenant_id=tenant.id, limit=1)
 
     assert len(leases) == 1
-    claim.refresh_from_db()
+    with tenant_atomic(tenant.id):
+        claim.refresh_from_db()
     assert claim.state == CleanupWorkClaim.State.DISPATCHED
-    event = OutboxEvent.objects.get(topic="identity.cleanup.passcode_change.requested")
+    with tenant_atomic(tenant.id):
+        event = OutboxEvent.objects.get(
+            topic="identity.cleanup.passcode_change.requested", tenant_id=tenant.id
+        )
     assert set(event.payload) == {"claim_id", "tenant_id", "fencing_generation"}
     assert event.payload["claim_id"] == str(claim.id)
 
@@ -97,7 +104,8 @@ def test_valid_owner_can_run_and_complete_once(settings, tenant):
         owner_token=lease.owner_token,
         generation=lease.fencing_generation,
     )
-    claim.refresh_from_db()
+    with tenant_atomic(tenant.id):
+        claim.refresh_from_db()
     assert claim.state == CleanupWorkClaim.State.SUCCEEDED
 
 
@@ -157,7 +165,8 @@ def test_failure_retries_then_dead(settings, tenant):
         generation=lease.fencing_generation,
         failure_code="cleanup_error",
     ) == CleanupWorkClaim.State.DEAD
-    claim.refresh_from_db()
+    with tenant_atomic(tenant.id):
+        claim.refresh_from_db()
     assert claim.last_failure_code == "cleanup_error"
 
 
@@ -174,9 +183,11 @@ def test_outbox_failure_rolls_back_claim_transition(settings, tenant):
     ), pytest.raises(RuntimeError, match="simulated outbox failure"):
         acquire_cleanup_claims(tenant_id=tenant.id, limit=1)
 
-    claim.refresh_from_db()
+    with tenant_atomic(tenant.id):
+        claim.refresh_from_db()
     assert claim.state == CleanupWorkClaim.State.PENDING
-    assert not OutboxEvent.objects.exists()
+    with tenant_atomic(tenant.id):
+        assert not OutboxEvent.objects.filter(tenant_id=tenant.id).exists()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -264,5 +275,6 @@ def test_postgres_competing_claimers_do_not_double_own(settings, tenant):
     assert not first.is_alive() and not second.is_alive()
     assert all(not isinstance(result, BaseException) for result in results)
     assert sum(bool(result) for result in results) == 1
-    claim.refresh_from_db()
+    with tenant_atomic(tenant.id):
+        claim.refresh_from_db()
     assert claim.fencing_generation == 1
