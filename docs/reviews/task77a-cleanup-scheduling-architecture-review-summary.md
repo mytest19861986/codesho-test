@@ -8,8 +8,22 @@
 - Scope: architecture/documentation only; no scheduler implementation.
 - Qwen challenge: pending — use prompt
   `QWEN_TASK77A_CLEANUP_SCHEDULING_ARCH_CHALLENGE_01_V1`.
-- Claude gate: pending — use prompt
+- Claude gate: `PASS` — use prompt
   `CLAUDE_TASK77A_CLEANUP_SCHEDULING_ARCHITECTURE_REVIEW_01_V1`.
+
+## Claude gate: PASS
+
+- Prompt: `CLAUDE_TASK77A_CLEANUP_SCHEDULING_ARCHITECTURE_REVIEW_01_V1`
+- Materials follow-up: `CLAUDE_TASK77A_CLEANUP_SCHEDULING_ARCHITECTURE_REVIEW_01_V1_MATERIALS_FOLLOWUP`
+- Reviewed commit: `f0692d53cdeb1d65857d3efeb35a49dc709c4ab2`
+- Verdict: `PASS`; open blockers: `0`; P0: `0`; P1: `0`.
+- Claude confirmed the docs-only boundary, threat model, option comparison,
+  fail-closed behavior, RLS/role separation, Qwen disposition, and governance
+  separation from Task77B.
+- Non-blocking notes: stale Task77A title in `CURRENT_TASK.md`; future claim
+  table DDL must record prior migration provenance.
+- This review does not authorize Ready, merge, release, deployment, promotion,
+  or implementation of Task77B.
 
 ## Transport checkpoint
 
