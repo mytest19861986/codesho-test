@@ -18,6 +18,7 @@ from config.cleanup_claims import (
     reclaim_expired_claim,
 )
 from modules.identity.models import CleanupWorkClaim
+from modules.identity.tasks import run_cleanup_claim_task
 from modules.platform_event.models import OutboxEvent
 from modules.platform_tenant.context import tenant_atomic
 from modules.platform_tenant.models import Tenant
@@ -218,6 +219,57 @@ def test_retry_limit_one_then_dead(settings, tenant):
         generation=second.fencing_generation,
         failure_code="cleanup_error",
     ) == CleanupWorkClaim.State.DEAD
+
+
+@pytest.mark.django_db(transaction=True)
+def test_actual_cleanup_task_failure_retries_then_dead(settings, tenant):
+    settings.CODESHO_CLEANUP_CLAIMING_ENABLED = True
+    settings.CODESHO_CLEANUP_MAX_RETRIES = 1
+    claim = create_pending_claim(
+        tenant_id=tenant.id, next_eligible_at=timezone.now() - timedelta(minutes=1)
+    )
+    first = acquire_cleanup_claims(tenant_id=tenant.id, limit=1)[0]
+    task_kwargs = {
+        "tenant_id": str(tenant.id),
+        "claim_id": str(claim.id),
+        "fencing_generation": first.fencing_generation,
+        "owner_token": str(first.owner_token),
+    }
+
+    with patch(
+        "modules.identity.tasks.cleanup_current_tenant",
+        side_effect=RuntimeError("controlled cleanup failure"),
+    ), pytest.raises(RuntimeError, match="controlled cleanup failure"):
+        run_cleanup_claim_task.apply(kwargs=task_kwargs, throw=True)
+
+    with tenant_atomic(tenant.id):
+        claim.refresh_from_db()
+    assert claim.state == CleanupWorkClaim.State.RETRYABLE
+    assert claim.retry_count == 1
+    assert claim.owner_token is None
+    assert claim.lease_expires_at is None
+    assert claim.last_failure_code == "cleanup_error"
+    assert "controlled cleanup failure" not in str(claim.last_failure_code)
+
+    with tenant_atomic(tenant.id):
+        CleanupWorkClaim.objects.filter(pk=claim.id).update(
+            next_eligible_at=timezone.now() - timedelta(minutes=1)
+        )
+    second = acquire_cleanup_claims(tenant_id=tenant.id, limit=1)[0]
+    task_kwargs.update(
+        fencing_generation=second.fencing_generation,
+        owner_token=str(second.owner_token),
+    )
+    with patch(
+        "modules.identity.tasks.cleanup_current_tenant",
+        side_effect=RuntimeError("controlled cleanup failure"),
+    ), pytest.raises(RuntimeError, match="controlled cleanup failure"):
+        run_cleanup_claim_task.apply(kwargs=task_kwargs, throw=True)
+
+    with tenant_atomic(tenant.id):
+        claim.refresh_from_db()
+    assert claim.state == CleanupWorkClaim.State.DEAD
+    assert claim.retry_count == 2
 
 
 @pytest.mark.django_db(transaction=True)
