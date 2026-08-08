@@ -154,6 +154,109 @@ PR_5: OPEN / DRAFT / UNCHANGED / HEAD ee708a59fda89f08b824b079ebece2eed3b5515b
 PRODUCTION/DEPLOYMENT/RELEASE: NOT_AUTHORIZED
 REAL_USERS/PUBLIC_API/BACKFILL/PROVIDER: NOT_AUTHORIZED
 PROTECTED_CODESHO_PROMOTION: NOT_AUTHORIZED
+
+---
+
+# BLOCKER_CHECKPOINT_TASK74B_20260808_01
+
+- TASK_ID: `SPRINT1-BACKEND-PYTHON-HASHED-LOCKS-74B`
+- BASE_SHA: `f00a6cecc3fea5d186bb03d15b87d92e8d2b85eb`
+- WORKTREE: `G:\project\codesho\codesho\worktrees\task74b-backend-python-hashed-locks`
+- BRANCH: `codex/task74b-backend-python-hashed-locks`
+- STATUS: `BLOCKED_BEFORE_COMMIT_BY_REVIEW_AND_ENVIRONMENT`
+
+## Reconciliation
+
+- Root checkout: `G:\project\codesho\codesho\codesho`, branch `main`, HEAD
+  `98c8132312d67094fbc316dea68feb454c4ffe68`; existing unrelated untracked
+  files preserved untouched.
+- `origin/main` is `f00a6cecc3fea5d186bb03d15b87d92d8e2b85eb`.
+- Isolated Task74B worktree already existed at the exact BASE SHA.
+- No Task74B commit, remote branch push, or PR evidence exists.
+- Allow-list work was already present in the isolated worktree and was
+  preserved; no reset, clean, stash, overwrite, or deletion was performed.
+
+## Evidence
+
+- `git diff --check`: PASS.
+- YAML parse for both workflows: PASS.
+- `ruff check backend/pyproject.toml`: PASS.
+- Dry-run hash installs for runtime/dev/lock-tools using
+  `--require-hashes --only-binary=:all: --no-deps`: PASS.
+- Local regeneration command:
+  `bash scripts/update-backend-locks.sh --check` → FAIL, exact reason:
+  `Task74B lock generation requires CPython 3.12.13 on Linux/x86_64.`
+  Local Python is `3.13.14` on Windows AMD64; WSL has Python `3.12.3`, not
+  the required `3.12.13`. Docker is not installed (`docker` command not found).
+- Mandatory Claude implementation review
+  `CLAUDE_TASK74B_BACKEND_DEPENDENCY_LOCK_IMPLEMENTATION_REVIEW_02_V1` could
+  not be run because no callable Claude review channel is available in this
+  session; no fabricated verdict is recorded.
+
+## Decision required
+
+Please provide an authenticated callable Claude review path and a CI/host
+environment with CPython 3.12.13 Linux/x86_64 plus Docker, or authorize a
+bounded alternative. Until then, no commit, push, Draft PR, Ready transition,
+merge, release, deployment, or protected-repository promotion is performed.
+
+UNAUTHORIZED_ACTIONS: NONE
+VALUES_DISCLOSED: NO
+
+---
+
+# BLOCKER_CHECKPOINT_TASK74B_20260808_03
+
+- VALIDATION_COMMIT: `246f4cc`
+- PUSH_STATUS: `SUCCESS`
+- BRANCH: `codex/task74b-backend-python-hashed-locks`
+- STATUS: `BLOCKED_CI_TRIGGER_REQUIRES_AUTHORITY`
+
+GitHub shows no workflow run for the pushed validation branch: CI triggers
+only on `pull_request` or `main` push, while Compose has `workflow_dispatch`
+but no branch-push trigger. The current disposition prohibits creating a
+Draft PR, so remote CI/Compose evidence cannot be produced from the current
+authorized actions. Please authorize one bounded path: create one Draft PR,
+authorize workflow dispatch, or provide another exact CI trigger. Claude
+review remains unavailable and remains the final hard gate.
+
+UNAUTHORIZED_ACTIONS: NONE
+VALUES_DISCLOSED: NO
+
+---
+
+# COMMANDER_DISPOSITION_TASK74B_BASE_MISMATCH_RESOLVED_20260808_01
+
+- BLOCKER: `RESOLVED`
+- CORRECT_AUTHORITATIVE_BASE_SHA: `f00a6cecc3fea5d186bb03d15b87d92d8e2b85eb`
+- LIVE_ORIGIN_MAIN: `f00a6cecc3fea5d186bb03d15b87d92d8e2b85eb`
+- LOCAL_HEAD: `f00a6cecc3fea5d186bb03d15b87d92d8e2b85eb`
+
+Commander confirmed the earlier differing SHA was a transcription typo and is
+void. No reset, rebase, or recovery mutation was performed. Resume Task74B
+from the existing exact-base worktree. Validation commit is authorized with
+the exact temporary message `build: validate backend dependency locks`; Draft
+PR, Ready, Merge, Release, Alpha, Production, and direct-main actions remain
+unauthorized. Claude remains the final hard gate.
+
+---
+
+# BLOCKER_CHECKPOINT_TASK74B_20260808_02
+
+- TASK_ID: `SPRINT1-BACKEND-PYTHON-HASHED-LOCKS-74B`
+- COMMANDER_BASE_SHA: `f00a6cecc3fea5d186bb03d15b87d92e8d2b85eb`
+- OBSERVED_HEAD: `f00a6cecc3fea5d186bb03d15b87d92d8e2b85eb`
+- OBSERVED_ORIGIN_MAIN: `f00a6cecc3fea5d186bb03d15b87d92d8e2b85eb`
+- STATUS: `BLOCKED_BASE_MISMATCH_BEFORE_VALIDATION_COMMIT`
+
+The required exact-base assertion fails because the Commander-provided
+authoritative SHA differs from both local HEAD and local `origin/main`.
+No reset, rebase, force-push, commit, push, PR, or other recovery mutation
+was performed. Please confirm the exact intended BASE_SHA or refresh the
+local remote state before validation work continues.
+
+UNAUTHORIZED_ACTIONS: NONE
+VALUES_DISCLOSED: NO
 NEXT_STATE: WAITING_FOR_NEXT_SEPARATE_AUTHORIZATION
 LEGAL_RETENTION/DELETION/HOLD: LEGAL_PENDING
 ```
