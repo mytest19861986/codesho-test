@@ -33,3 +33,11 @@ after checkpoint push, using versioned GitHub links.
 - States: https://github.com/mytest19861986/codesho-test/blob/b3d818b/frontend/src/features/dashboard/DashboardState.tsx
 - Styles: https://github.com/mytest19861986/codesho-test/blob/b3d818b/frontend/src/features/dashboard/dashboard.module.css
 - Types, fixture, and test: https://github.com/mytest19861986/codesho-test/tree/b3d818b/frontend/src/features/dashboard
+
+## Task78A remote checkpoint
+
+- Final pushed HEAD: `a6222f0d733b6d0f66059ce0aa3a51aaf49682a0`.
+- Task78A CI run `31295660991`: SUCCESS.
+- Task78A Compose smoke and restore run `31295660995`: SUCCESS.
+- No Task78A PR was created yet; attachment-verified Gemini review remains
+  pending and is still a blocking gate.
