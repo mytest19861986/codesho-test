@@ -1,5 +1,20 @@
 # Codex to Commander — Task72B legal/policy gate
 
+## CODEX_TASK77C_IMPLEMENTATION_CHECKPOINT_20260809
+
+- TASK_ID: `SPRINT1-SECURITY-CLEANUP-CLAIM-LEASE-CLEAN-INTEGRATION-77C`
+- BASE_SHA: `39c35a50965184681599a0ade0dd65f34b7aa548`
+- BRANCH: `codex/task77c-cleanup-claim-lease-clean-integration`
+- STATUS: `LOCAL_GATES_PARTIAL`
+- FOCUSED: `9 passed, 3 skipped`; Ruff, MyPy, module boundaries, Django,
+  migration, compileall and diff checks pass.
+- FULL_BACKEND: `217 passed, 52 skipped, 1 failed`; only the pre-existing
+  `docs/openapi.yaml` canonical LF/CRLF mismatch failed, outside allow-list.
+- NEXT: exact diff review, commit/push, fresh CI/Compose, then mandatory
+  Claude hard gate on the final exact HEAD.
+- PROTECTED_BOUNDARY: no Release, Deployment, Production, or protected
+  `codesho` action occurred.
+
 ## TASK76A_VERIFICATION_20260808
 
 - Environment: Django 5.2.17 and project dependencies available.

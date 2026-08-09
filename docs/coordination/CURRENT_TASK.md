@@ -1,5 +1,23 @@
 # Current Task: SPRINT1-SECURITY-CLEANUP-SCHEDULING-ARCHITECTURE-77A
 
+## TASK77C_ACTIVE_CHECKPOINT_20260809
+
+- TASK_ID: `SPRINT1-SECURITY-CLEANUP-CLAIM-LEASE-CLEAN-INTEGRATION-77C`
+- BASE_SHA: `39c35a50965184681599a0ade0dd65f34b7aa548`
+- BRANCH: `codex/task77c-cleanup-claim-lease-clean-integration`
+- STATUS: `IMPLEMENTATION / LOCAL_GATES_PARTIAL`
+- SOURCE_REFERENCE: `47cb8acc9290bdff927b63679d0a07e85132f06f`
+- COMPLETED: clean worktree from exact base; claim persistence, DB-time lease
+  operations, fencing, transactional Outbox acquisition, durable retry/DEAD
+  task flow, RLS migration and focused assertions transferred.
+- LOCAL_EVIDENCE: focused `9 passed, 3 skipped`; Ruff/MyPy/boundaries/Django/
+  migration/compileall/diff checks pass. Full backend `217 passed, 52 skipped,
+  1 failed` only on the pre-existing out-of-scope OpenAPI LF/CRLF mismatch.
+- NEXT: inspect/freeze final diff, commit and push only this branch, run fresh
+  CI/Compose, then mandatory sequential Claude hard gate against exact HEAD.
+- EXCLUSIONS: no governance replacement, scheduler/Beat/cron, public API,
+  protected `codesho`, Release, Deployment, Production or Alpha action.
+
 ## Active Task77A handoff — 2026-08-08
 
 - Task: `SPRINT1-SECURITY-CLEANUP-SCHEDULING-ARCHITECTURE-77A`
