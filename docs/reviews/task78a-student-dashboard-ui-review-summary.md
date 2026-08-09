@@ -25,3 +25,11 @@ Chrome upload attempt failed with `fileChooser.setFiles failed: Not allowed`.
 That response is non-authoritative and was not used as a PASS/FAIL gate; no
 unverified finding was applied. Attachment-verified review remains pending
 after checkpoint push, using versioned GitHub links.
+
+## Versioned review links
+
+- Commit tree: https://github.com/mytest19861986/codesho-test/tree/b3d818b
+- Screen: https://github.com/mytest19861986/codesho-test/blob/b3d818b/frontend/src/features/dashboard/DashboardScreen.tsx
+- States: https://github.com/mytest19861986/codesho-test/blob/b3d818b/frontend/src/features/dashboard/DashboardState.tsx
+- Styles: https://github.com/mytest19861986/codesho-test/blob/b3d818b/frontend/src/features/dashboard/dashboard.module.css
+- Types, fixture, and test: https://github.com/mytest19861986/codesho-test/tree/b3d818b/frontend/src/features/dashboard
