@@ -1,5 +1,22 @@
 # Codesho Project State
 
+## Task79A architecture checkpoint — 2026-08-10
+
+- `SPRINT1-DOMAIN-LEARNING-READ-MODEL-ARCHITECTURE-79A` is architecture-only.
+- Exact base `cb0a09df5e566dd14be329d22333fd16c82d6378` matched `origin/main`.
+- Isolated branch/worktree: `codex/task79a-learning-read-model-architecture` /
+  `G:\project\codesho\codesho-task79a-learning-read-model-architecture`.
+- Self-review is complete with no runtime change. Decision and review summary:
+  `docs/decisions/2026-08-10-learning-domain-read-model-architecture-79a.md` and
+  `docs/reviews/task79a-learning-read-model-architecture-review.md`.
+- No Course/Lesson/Progress backend source of truth exists on the base;
+  dashboard academic fields remain unavailable. XP, rank, streak,
+  recommendations, at-risk, AI attention, and analytics are deferred.
+- Claude architecture gate passed with `P0=0`, `P1=0`, `OPEN_BLOCKERS=0`:
+  `CLAUDE_TASK79A_LEARNING_READ_MODEL_ARCHITECTURE_REVIEW_01_V1`.
+- Implementation remains forbidden until a separate Commander-authorized task;
+  three P2 successor notes are recorded in the review summary.
+
 ## TASK77C_CHECKPOINT_20260809
 
 Task77C clean integration is in progress on branch
