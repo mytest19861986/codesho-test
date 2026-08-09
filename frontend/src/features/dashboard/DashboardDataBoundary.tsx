@@ -9,10 +9,10 @@ import type { DashboardModel } from "./dashboard.types";
 
 function modelForSession(session: SessionContract): DashboardModel {
   return {
-    student: { displayName: session.user.username, greeting: "Dashboard connected", className: `Tenant: ${session.tenant.slug}` },
-    learning: { course: "Not connected", module: "Not connected", lesson: "Not connected", progress: 0, totalUnits: 0, completedUnits: 0 },
+    student: { displayName: session.user.username, greeting: "Dashboard connected", contextLabel: "Academic data unavailable" },
+    learning: { course: "Not connected", module: "Not connected", lesson: "Not connected", progress: null, totalUnits: null, completedUnits: null },
     nextSession: { title: "Not connected", date: "Not available", time: "Not available", type: "Read-only placeholder", status: "Unavailable" },
-    momentum: { xp: 0, rank: "Not connected", streak: 0 },
+    momentum: { xp: null, rank: "Not connected", streak: null },
     assignment: { title: "Not connected", dueLabel: "Not available", status: "Unavailable", actionLabel: "Unavailable" },
     recommendation: { title: "Not connected", reason: "Learning data will appear when the reviewed contract is available." },
     attention: ["Academic dashboard data is not connected yet."],

@@ -55,10 +55,17 @@ mutation was performed.
 
 ## Current handoff state
 
-Implementation HEAD is `74a23f8` on the pushed
+Implementation HEAD is now `346a306` on the pushed
 `codex/task78b-student-dashboard-data-contract` branch. Focused tests (7/7),
 ESLint, TypeScript, Next production build, and `git diff --check` are green.
 The required Claude verdict for
 `CLAUDE_TASK78B_AUTH_SESSION_DATA_BOUNDARY_HARD_GATE_01_V1` has not been
 received, and the shared Commander browser session is unavailable; therefore
 the branch remains unmerged and no protected action is authorized.
+
+The Commander precheck then identified three P1 blockers: tenant was shown as
+a class label, unavailable academic values were represented by zeroes, and
+parser behavior was only source-tested. These are remediated in the current
+implementation: tenant is no longer mapped to a class field, unavailable
+numeric fields are nullable and rendered as unavailable, and behavioral tests
+exercise valid, malformed, incomplete, wrong-type, and non-2xx session cases.

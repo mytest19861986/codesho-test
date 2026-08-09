@@ -16,7 +16,7 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.length > 0;
 }
 
-function parseSessionContract(payload: unknown): SessionContract | null {
+export function parseSessionContract(payload: unknown): SessionContract | null {
   if (typeof payload !== "object" || payload === null) return null;
   const candidate = payload as Record<string, unknown>;
   const user = candidate.user;
