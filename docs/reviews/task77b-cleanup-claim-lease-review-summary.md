@@ -14,5 +14,10 @@ Evidence checkpoint:
 - Full backend: `217 passed, 52 skipped, 1 failed`; the sole failure is the
   pre-existing OpenAPI canonical-byte LF/CRLF mismatch in `docs/openapi.yaml`,
   outside this Task's allow-list.
-- Remote CI/Compose and mandatory Claude hard gate are pending final frozen
-  HEAD; no verdict is claimed yet.
+- Exact-head CI `31294215288`: SUCCESS; Compose smoke_restore
+  `31294215324`: SUCCESS.
+- Claude prompt `CLAUDE_TASK77C_CLEAN_INTEGRATION_HARD_GATE_01_V1`: `PASS`,
+  `OPEN_BLOCKERS=0`, `P0=0`, `P1=0` against HEAD `338ee7a`.
+- P2 notes: Claude observed an environment-dependent full-suite count,
+  recommended a future negative-path RLS test, and could not independently
+  query GitHub API. None is a blocker; no remediation was required.

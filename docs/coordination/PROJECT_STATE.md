@@ -9,8 +9,11 @@ delta is being transferred without replaying historical coordination or
 governance. Focused tests and local static/application gates pass; the full
 backend has `217 passed, 52 skipped, 1 failed`, with the known unrelated
 OpenAPI canonical LF/CRLF failure outside the allow-list. Remote CI/Compose
-and Claude hard review remain pending. No protected-repository, release,
-deployment, or production action occurred.
+and Claude hard review are green for HEAD `338ee7a`: CI `31294215288`, Compose
+`31294215324`, and Claude `CLAUDE_TASK77C_CLEAN_INTEGRATION_HARD_GATE_01_V1`
+all passed with zero P0/P1/open blockers. Non-blocking P2 notes are recorded
+in the review summary. No protected-repository, release, deployment, or
+production action occurred.
 
 ## Task76A checkpoint (2026-08-08)
 

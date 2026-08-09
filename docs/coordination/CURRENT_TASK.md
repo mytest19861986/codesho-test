@@ -13,8 +13,12 @@
 - LOCAL_EVIDENCE: focused `9 passed, 3 skipped`; Ruff/MyPy/boundaries/Django/
   migration/compileall/diff checks pass. Full backend `217 passed, 52 skipped,
   1 failed` only on the pre-existing out-of-scope OpenAPI LF/CRLF mismatch.
-- NEXT: inspect/freeze final diff, commit and push only this branch, run fresh
-  CI/Compose, then mandatory sequential Claude hard gate against exact HEAD.
+- CHECKPOINT_HEAD: `338ee7a438f7fc55a6486f573e988a3e7ce78c81`
+- REMOTE_EVIDENCE: CI `31294215288` SUCCESS; Compose `31294215324` SUCCESS.
+- CLAUDE: `CLAUDE_TASK77C_CLEAN_INTEGRATION_HARD_GATE_01_V1` PASS with zero
+  open/P0/P1 blockers; P2 notes are non-blocking and recorded in review summary.
+- NEXT: record this evidence in the final coordination checkpoint, then any
+  post-checkpoint HEAD requires fresh exact-head CI/Compose/Claude evidence.
 - EXCLUSIONS: no governance replacement, scheduler/Beat/cron, public API,
   protected `codesho`, Release, Deployment, Production or Alpha action.
 
