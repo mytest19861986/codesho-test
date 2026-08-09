@@ -703,3 +703,13 @@ Commander-approved implementation task.
   implementation failure, and is evaluating an attachment-capable channel or
   an approved gate disposition. No Ready, merge, release, deployment, or
   protected-repository action was requested or taken.
+
+## TASK78A_REMOTE_EVIDENCE_20260809
+
+- Exact HEAD `4c427b2acec52c514d4a90c2b3725204d1345bfe` passed CI run
+  `31300337616` (`success`).
+- The same exact HEAD passed Compose smoke and restore run `31300337623`
+  (`success`).
+- The branch remains clean and the PR remains Draft. Gemini attachment review
+  is still pending; no Ready, merge, release, deployment, or Production action
+  was taken.
