@@ -52,6 +52,18 @@ after checkpoint push, using versioned GitHub links.
   controllably.`
 - The shared browser was not closed; no Gemini verdict is claimed.
 
+## Direct file clipboard paste test
+
+- The exact `DashboardScreen.tsx` file was placed on the Windows clipboard as
+  a file-drop object, then pasted into the Gemini prompt with `Ctrl+V`.
+- Result: Gemini's contenteditable prompt received the file contents as plain
+  text; no attachment chip or file object was created. This was not an
+  attachment-verified review.
+- Disposition: this route is not a valid substitute for exact file upload. No
+  Gemini verdict is claimed and no finding from this test is applied.
+- The shared Chrome session was handed back open; no browser profile or
+  repository source was changed.
+
 ## Direct bundle upload retry
 
 - `GEMII_REVIEW_GUIDE.md` was reread and `GEMIN_REVIEW.py` was run with the
