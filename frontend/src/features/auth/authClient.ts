@@ -6,6 +6,39 @@ const loginPath = "/api/v1/auth/passcode/login/";
 const sessionPath = "/api/v1/auth/session/";
 const passcodeChangePath = "/api/v1/auth/passcode/change/complete/";
 
+export interface SessionContract {
+  readonly authenticated: true;
+  readonly user: { readonly id: string; readonly username: string };
+  readonly tenant: { readonly id: string; readonly slug: string; readonly role: string };
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0;
+}
+
+export function parseSessionContract(payload: unknown): SessionContract | null {
+  if (typeof payload !== "object" || payload === null) return null;
+  const candidate = payload as Record<string, unknown>;
+  const user = candidate.user;
+  const tenant = candidate.tenant;
+  if (candidate.authenticated !== true || typeof user !== "object" || user === null || typeof tenant !== "object" || tenant === null) return null;
+  const userRecord = user as Record<string, unknown>;
+  const tenantRecord = tenant as Record<string, unknown>;
+  if (!isNonEmptyString(userRecord.id) || !isNonEmptyString(userRecord.username) || !isNonEmptyString(tenantRecord.id) || !isNonEmptyString(tenantRecord.slug) || !isNonEmptyString(tenantRecord.role)) return null;
+  return { authenticated: true, user: { id: userRecord.id, username: userRecord.username }, tenant: { id: tenantRecord.id, slug: tenantRecord.slug, role: tenantRecord.role } };
+}
+
+export async function getSession(): Promise<SessionContract | null> {
+  try {
+    const sessionEndpoint = sessionPath;
+    const response = await fetch(sessionEndpoint, { credentials: "same-origin", headers: { Accept: "application/json" } });
+    if (!response.ok) return null;
+    return parseSessionContract(await response.json());
+  } catch {
+    return null;
+  }
+}
+
 function csrfToken(): string | null {
   return document.cookie.split(";").map((part) => part.trim()).find((part) => part.startsWith("csrftoken="))?.slice("csrftoken=".length) ?? null;
 }

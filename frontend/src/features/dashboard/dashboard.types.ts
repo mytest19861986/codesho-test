@@ -3,16 +3,16 @@ export type DashboardViewState = "ready" | "loading" | "empty" | "error";
 export interface DashboardStudent {
   readonly displayName: string;
   readonly greeting: string;
-  readonly className: string;
+  readonly contextLabel: string;
 }
 
 export interface DashboardLearning {
   readonly course: string;
   readonly module: string;
   readonly lesson: string;
-  readonly progress: number;
-  readonly totalUnits: number;
-  readonly completedUnits: number;
+  readonly progress: number | null;
+  readonly totalUnits: number | null;
+  readonly completedUnits: number | null;
 }
 
 export interface DashboardSession {
@@ -24,9 +24,9 @@ export interface DashboardSession {
 }
 
 export interface DashboardMomentum {
-  readonly xp: number;
+  readonly xp: number | null;
   readonly rank: string;
-  readonly streak: number;
+  readonly streak: number | null;
 }
 
 export interface DashboardAssignment {

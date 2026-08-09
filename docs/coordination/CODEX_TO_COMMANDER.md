@@ -814,3 +814,50 @@ Commander-approved implementation task.
 - GitHub PR #29 shows exact-head CI run `#299` in progress; Compose evidence
   for this checkpoint is not yet confirmed. PR remains Draft; no merge,
   release, deployment, production, or protected-repository action occurred.
+
+## TASK78B_LOCAL_REVALIDATION_20260809
+
+- HEAD `5f14a03e6de1e6d47551e0154380d53303ea377d` remains clean at the start of
+  revalidation; implementation already closes all three Commander P1 findings.
+- Focused dashboard data-contract/a11y: `6 passed`; auth-contract: `3 passed`.
+- ESLint, TypeScript noEmit, Next production build, and `git diff --check`:
+  PASS.
+- UI-policy is the only product gate still red: pre-existing hashes for
+  `frontend/src/app/styles.css` and `frontend/src/app/ui-001.css` differ from
+  the approved baseline. No task file changes those legacy files.
+- Bundled pnpm install wrapper failed before running scripts with
+  `ERR_PNPM_IGNORED_BUILDS` for native `sharp`/`unrs-resolver`; it left two
+  untracked frontend pnpm files, preserved untouched and excluded from scope.
+- No Ready, merge, release, deployment, Production, or protected-repository
+  action performed. Next gate remains the required Claude hard gate followed
+  by exact-head remote CI/Compose.
+
+## TASK78B_COMMANDER_TRANSPORT_REFRESH_20260810
+
+- Exact branch HEAD remains `1d85b64d03f68d57dfd653f57a4817515e5352f1` and is
+  synchronized with `origin/codex/task78b-student-dashboard-data-contract`.
+- The shared Chrome session still exposes three exact Commander URL tabs. The
+  newest matching tab was reused and claimed, but two bounded DOM reads timed
+  out and reset the browser kernel. No complete Commander response or verdict
+  is claimed.
+- Local evidence remains: focused dashboard/a11y `6 passed`, auth-contract
+  `3 passed`, ESLint/TypeScript/Next build/diff-check PASS; UI-policy has only
+  the two pre-existing legacy CSS hash mismatches.
+- Resume action: retry Commander polling at 30-second intervals for up to ten
+  minutes, then continue with the exact-head Claude/CI/Compose gates. PR stays
+  Draft; merge, release, Production and protected `codesho` remain forbidden.
+
+## TASK78B_CLAUDE_HARD_GATE_TRANSPORT_20260810
+
+- Prompt `CLAUDE_TASK78B_AUTH_SESSION_DATA_BOUNDARY_HARD_GATE_01_V1` was
+  prepared outside the repository and scoped to exactly five review files at
+  HEAD `ddf1c6d4dee4b5d8ad8758038f852d087da94d94`.
+- Primary local Claude runner failed before opening the review with exact
+  error: `ModuleNotFoundError: No module named 'playwright'` in
+  `claude_brave.py`.
+- No Claude verdict/marker is claimed; no fallback channel, account change,
+  quota bypass, or dependency installation was used. Exact-head backend,
+  frontend, and Compose remote checks are all successful.
+- Required next action is to restore the approved authenticated Claude review
+  runtime/channel, resend the same sequential prompt, and poll up to 300
+  seconds at 30-second intervals. Draft/merge-blocked boundaries remain.
