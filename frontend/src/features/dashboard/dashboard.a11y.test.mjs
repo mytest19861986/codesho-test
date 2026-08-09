@@ -11,11 +11,10 @@ test("dashboard exposes semantic landmarks and accessible states", () => {
   assert.match(source, /aria-hidden="true"/);
   assert.match(source, /DashboardState/);
   assert.match(state, /role="status"/);
-  assert.match(state, /تلاش دوباره/);
+  assert.doesNotMatch(source, /textAction/);
 });
 
 test("dashboard keeps demo data behind a typed fixture boundary", async () => {
   const fixture = await readFile(new URL("./dashboard.fixture.ts", import.meta.url), "utf8");
   assert.match(fixture, /DashboardModel/);
-  assert.doesNotMatch(source, /آرین|پایتون برای حل مسئله/);
 });

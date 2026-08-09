@@ -98,3 +98,14 @@ after checkpoint push, using versioned GitHub links.
 - Verification after the scoped changes: ESLint PASS, TypeScript PASS,
   dashboard accessibility tests `2 passed`, Next production build PASS, and
   `git diff --check` PASS.
+
+## Commander disposition and remediation
+
+- Disposition ID: `TASK78A_GEMINI_REVIEW_02_DISPOSITION_01`.
+- Verdict: `CHANGES_REQUIRED HIGH=1 MEDIUM=3 LOW=2`.
+- The blocking issue was accepted: `شروع چالش ←` visually implied an action
+  without an implemented contract. It is now non-interactive status text:
+  `این پیشنهاد با اتصال مسیر یادگیری فعال می‌شود.`
+- No invented route, href, or onClick was introduced. Dead `.textAction`
+  styling was removed, and the accessibility test asserts that the old action
+  class is absent. The change is limited to the authorized UI files.

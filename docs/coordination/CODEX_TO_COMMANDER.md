@@ -789,3 +789,16 @@ Commander-approved implementation task.
   `compose-smoke-restore-31301344387`.
 - Both runs validated exact HEAD `03d14c4`; Gemini attachment verification
   remains the only open Task78A gate.
+
+## TASK78A_COMMANDER_DISPOSITION_20260809
+
+- Commander disposition: `TASK78A_GEMINI_REVIEW_02_DISPOSITION_01`.
+- Gemini verdict: `CHANGES_REQUIRED HIGH=1 MEDIUM=3 LOW=2`.
+- Applied the blocking finding only: replaced the non-interactive
+  `شروع چالش ←` affordance with Persian informational status text and removed
+  its dead action styling. No route, href, or fabricated interaction was added.
+- Authorized files changed: `DashboardScreen.tsx`, `dashboard.module.css`,
+  and `dashboard.a11y.test.mjs`.
+- Local verification after remediation: dashboard a11y 2/2, ESLint PASS,
+  TypeScript PASS, Next production build PASS, and `git diff --check` PASS.
+- Pending: checkpoint commit/push and exact-head remote CI/Compose evidence.
