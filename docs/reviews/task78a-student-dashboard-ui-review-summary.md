@@ -51,3 +51,15 @@ after checkpoint push, using versioned GitHub links.
   once and run this script again so it can reopen the same profile
   controllably.`
 - The shared browser was not closed; no Gemini verdict is claimed.
+
+## Clean bundle link test
+
+- A clean disposable bundle was created in separate branch
+  `codex/task78a-review-bundle-test`; the target folder was verified absent
+  before population, then populated with five exact UI files and a README.
+- Bundle commit: `a2435bb`.
+- Folder link tested:
+  `https://github.com/mytest19861986/codesho-test/tree/a2435bb/docs/review-bundles/task78a-dashboard`.
+- Primary link-only retry result was the same automation precondition failure:
+  `The browser is already open, but it was not started in automation/debug
+  mode.` The shared browser was not closed; no Gemini verdict is claimed.
