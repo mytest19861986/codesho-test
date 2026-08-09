@@ -52,6 +52,17 @@ after checkpoint push, using versioned GitHub links.
   controllably.`
 - The shared browser was not closed; no Gemini verdict is claimed.
 
+## Direct bundle upload retry
+
+- `GEMII_REVIEW_GUIDE.md` was reread and `GEMIN_REVIEW.py` was run with the
+  clean bundle's five exact files and the required structured review prompt.
+- Exact result: `Automation browser: Google Chrome` followed by `The browser
+  is already open, but it was not started in automation/debug mode. Close it
+  once and run this script again so it can reopen the same profile
+  controllably.`
+- The shared browser was preserved; no Gemini response or verdict was
+  accepted.
+
 ## Clean bundle link test
 
 - A clean disposable bundle was created in separate branch
