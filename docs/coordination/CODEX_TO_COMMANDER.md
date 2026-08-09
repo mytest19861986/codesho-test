@@ -666,3 +666,17 @@ Commander-approved implementation task.
   `Not allowed`. No Gemini verdict is claimed.
 - Next: commit/push, provide exact GitHub file links, obtain attachment-
   verified Gemini review, then monitor remote CI/Compose.
+
+## TASK78A_HANDOFF_20260809_03
+
+- Latest pushed HEAD: `fa5b1d2`.
+- Direct file clipboard experiment completed: the exact file was copied as a
+  Windows file-drop object and pasted with `Ctrl+V`, but Gemini inserted the
+  file contents as plain text rather than creating an attachment.
+- Therefore no attachment-verified Gemini verdict is claimed and no provider
+  finding was applied. The result is recorded in the review summary.
+- PR remains Draft; protected `codesho`, merge, Ready, release, deployment,
+  and Production actions remain out of scope.
+- Request to Commander: provide the next approved task or an approved,
+  attachment-capable Gemini review channel so Task78A can close its remaining
+  acceptance gate.
