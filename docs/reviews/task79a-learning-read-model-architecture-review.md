@@ -53,3 +53,15 @@ whether the minimum V1 scope avoids synthetic academic data.
 Non-blocking successor-task notes: pin concrete title/state bounds in the
 schema/OpenAPI ADR; explicitly choose append-only progress unless a mutation
 need is justified; and define a concrete maximum page size.
+
+## Claude exact-content follow-up
+
+- Prompt: `CLAUDE_TASK79A_LEARNING_READ_MODEL_ARCHITECTURE_REVIEW_02_EXACT_HEAD_V1`
+- HEAD_REVIEWED: content target `cd9c74a`; cryptographic verification was not
+  available to Claude and is delegated to Commander provenance evidence.
+- VERDICT: `PASS (content-only; provenance unverified)`
+- P0: `0`; P1: `0`; P2: `3`; OPEN_BLOCKERS: `0`
+- IMPLEMENTATION_READINESS: `READY_FOR_SEPARATE_IMPLEMENTATION_TASK`
+- P2_DISPOSITION: all three notes remain required acceptance items for the
+  successor schema/OpenAPI ADR and do not block this architecture-only gate.
+- FINAL_MARKER: `CLAUDE_TASK79A_REVIEW_02_COMPLETE`

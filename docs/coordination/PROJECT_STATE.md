@@ -16,6 +16,8 @@
   `CLAUDE_TASK79A_LEARNING_READ_MODEL_ARCHITECTURE_REVIEW_01_V1`.
 - Implementation remains forbidden until a separate Commander-authorized task;
   three P2 successor notes are recorded in the review summary.
+- Exact-content follow-up also passed with zero P0/P1/open blockers; provenance
+  binding for `cd9c74a` remains Commander-owned evidence.
 
 ## TASK77C_CHECKPOINT_20260809
 
