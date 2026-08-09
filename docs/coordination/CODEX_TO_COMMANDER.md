@@ -722,3 +722,10 @@ Commander-approved implementation task.
 - Both runs tested exact HEAD `3090006`; this closes the remote CI/Compose
   evidence for that checkpoint. The documentation update below will create a
   new exact-head run as required.
+
+## TASK78A_REMOTE_EVIDENCE_CHECKPOINT_D405EF3
+
+- CI run `31300549220` passed with backend and frontend successful.
+- Compose smoke and restore run `31300549240` passed successfully.
+- Both runs validated exact HEAD `d405ef3`; Gemini attachment verification
+  remains the only open Task78A gate.
