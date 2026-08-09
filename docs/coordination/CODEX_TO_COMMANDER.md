@@ -713,3 +713,12 @@ Commander-approved implementation task.
 - The branch remains clean and the PR remains Draft. Gemini attachment review
   is still pending; no Ready, merge, release, deployment, or Production action
   was taken.
+
+## TASK78A_REMOTE_EVIDENCE_CHECKPOINT_3090006
+
+- CI run `31300452093` passed with frontend and backend jobs successful.
+- Compose smoke and restore run `31300452057` passed with
+  `smoke_restore` successful.
+- Both runs tested exact HEAD `3090006`; this closes the remote CI/Compose
+  evidence for that checkpoint. The documentation update below will create a
+  new exact-head run as required.
