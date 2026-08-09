@@ -1,5 +1,27 @@
 # Codex to Commander — Task72B legal/policy gate
 
+## CODEX_TASK77C_IMPLEMENTATION_CHECKPOINT_20260809
+
+- TASK_ID: `SPRINT1-SECURITY-CLEANUP-CLAIM-LEASE-CLEAN-INTEGRATION-77C`
+- BASE_SHA: `39c35a50965184681599a0ade0dd65f34b7aa548`
+- BRANCH: `codex/task77c-cleanup-claim-lease-clean-integration`
+- STATUS: `LOCAL_GATES_PARTIAL`
+- FOCUSED: `9 passed, 3 skipped`; Ruff, MyPy, module boundaries, Django,
+  migration, compileall and diff checks pass.
+- FULL_BACKEND: `217 passed, 52 skipped, 1 failed`; only the pre-existing
+  `docs/openapi.yaml` canonical LF/CRLF mismatch failed, outside allow-list.
+- FINAL_HEAD_CHECKPOINT: `338ee7a438f7fc55a6486f573e988a3e7ce78c81`
+- CI: `31294215288` SUCCESS; Compose smoke_restore `31294215324` SUCCESS.
+- CLAUDE: `CLAUDE_TASK77C_CLEAN_INTEGRATION_HARD_GATE_01_V1` returned
+  `PASS / OPEN_BLOCKERS=0 / P0=0 / P1=0`; P2 notes are non-blocking and
+  recorded in `docs/reviews/task77b-cleanup-claim-lease-review-summary.md`.
+- FINAL_CLAUDE: `CLAUDE_TASK77C_CLEAN_INTEGRATION_HARD_GATE_02_V1` returned
+  `PASS / OPEN_BLOCKERS=0 / P0=0 / P1=0` for the final docs-only successor.
+- NEXT: this documentation checkpoint changes HEAD; rerun exact-head remote
+  gates and Claude before final acceptance/merge.
+- PROTECTED_BOUNDARY: no Release, Deployment, Production, or protected
+  `codesho` action occurred.
+
 ## TASK76A_VERIFICATION_20260808
 
 - Environment: Django 5.2.17 and project dependencies available.

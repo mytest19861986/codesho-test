@@ -1,5 +1,29 @@
 # Current Task: SPRINT1-SECURITY-CLEANUP-SCHEDULING-ARCHITECTURE-77A
 
+## TASK77C_ACTIVE_CHECKPOINT_20260809
+
+- TASK_ID: `SPRINT1-SECURITY-CLEANUP-CLAIM-LEASE-CLEAN-INTEGRATION-77C`
+- BASE_SHA: `39c35a50965184681599a0ade0dd65f34b7aa548`
+- BRANCH: `codex/task77c-cleanup-claim-lease-clean-integration`
+- STATUS: `IMPLEMENTATION / LOCAL_GATES_PARTIAL`
+- SOURCE_REFERENCE: `47cb8acc9290bdff927b63679d0a07e85132f06f`
+- COMPLETED: clean worktree from exact base; claim persistence, DB-time lease
+  operations, fencing, transactional Outbox acquisition, durable retry/DEAD
+  task flow, RLS migration and focused assertions transferred.
+- LOCAL_EVIDENCE: focused `9 passed, 3 skipped`; Ruff/MyPy/boundaries/Django/
+  migration/compileall/diff checks pass. Full backend `217 passed, 52 skipped,
+  1 failed` only on the pre-existing out-of-scope OpenAPI LF/CRLF mismatch.
+- CHECKPOINT_HEAD: `338ee7a438f7fc55a6486f573e988a3e7ce78c81`
+- REMOTE_EVIDENCE: CI `31294215288` SUCCESS; Compose `31294215324` SUCCESS.
+- CLAUDE: `CLAUDE_TASK77C_CLEAN_INTEGRATION_HARD_GATE_01_V1` PASS with zero
+  open/P0/P1 blockers; P2 notes are non-blocking and recorded in review summary.
+- FINAL_CLAUDE_REVALIDATION: `CLAUDE_TASK77C_CLEAN_INTEGRATION_HARD_GATE_02_V1`
+  PASS with zero open/P0/P1 blockers for the docs-only successor HEAD.
+- NEXT: record this evidence in the final coordination checkpoint, then any
+  post-checkpoint HEAD requires fresh exact-head CI/Compose/Claude evidence.
+- EXCLUSIONS: no governance replacement, scheduler/Beat/cron, public API,
+  protected `codesho`, Release, Deployment, Production or Alpha action.
+
 ## Active Task77A handoff — 2026-08-08
 
 - Task: `SPRINT1-SECURITY-CLEANUP-SCHEDULING-ARCHITECTURE-77A`

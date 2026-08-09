@@ -1,5 +1,23 @@
 # Codesho Project State
 
+## TASK77C_CHECKPOINT_20260809
+
+Task77C clean integration is in progress on branch
+`codex/task77c-cleanup-claim-lease-clean-integration`, based exactly on
+`39c35a50965184681599a0ade0dd65f34b7aa548`. The reviewed Task77B semantic
+delta is being transferred without replaying historical coordination or
+governance. Focused tests and local static/application gates pass; the full
+backend has `217 passed, 52 skipped, 1 failed`, with the known unrelated
+OpenAPI canonical LF/CRLF failure outside the allow-list. Remote CI/Compose
+and Claude hard review are green for HEAD `338ee7a`: CI `31294215288`, Compose
+`31294215324`, and Claude `CLAUDE_TASK77C_CLEAN_INTEGRATION_HARD_GATE_01_V1`
+all passed with zero P0/P1/open blockers. Non-blocking P2 notes are recorded
+in the review summary. No protected-repository, release, deployment, or
+production action occurred.
+Final Claude exact-head revalidation `CLAUDE_TASK77C_CLEAN_INTEGRATION_HARD_GATE_02_V1`
+also returned PASS with zero open/P0/P1 blockers; its P2 notes are retained
+as non-blocking evidence.
+
 ## Task76A checkpoint (2026-08-08)
 
 Task76A implementation is complete on `codex/task76a-passcode-change-cleanup-hardening`

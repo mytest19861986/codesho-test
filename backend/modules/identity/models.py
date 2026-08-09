@@ -367,6 +367,72 @@ class PasscodeChangeChallenge(models.Model):
         return f"Passcode change challenge {self.id}"
 
 
+class CleanupWorkClaim(models.Model):
+    """Durable, tenant-scoped ownership record for bounded cleanup work."""
+
+    class Kind(models.TextChoices):
+        PASSCODE_CHANGE_CHALLENGE_CLEANUP = (
+            "passcode_change_challenge_cleanup",
+            "Passcode change challenge cleanup",
+        )
+
+    class State(models.TextChoices):
+        PENDING = "pending", "Pending"
+        CLAIMED = "claimed", "Claimed"
+        DISPATCHED = "dispatched", "Dispatched"
+        RUNNING = "running", "Running"
+        RETRYABLE = "retryable", "Retryable"
+        SUCCEEDED = "succeeded", "Succeeded"
+        DEAD = "dead", "Dead"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant_id = models.UUIDField(editable=False)
+    kind = models.CharField(max_length=64, choices=Kind.choices, editable=False)
+    state = models.CharField(max_length=16, choices=State.choices, default=State.PENDING)
+    next_eligible_at = models.DateTimeField()
+    owner_token = models.UUIDField(null=True, blank=True, editable=False)
+    fencing_generation = models.PositiveBigIntegerField(default=0, editable=False)
+    claimed_at = models.DateTimeField(null=True, blank=True, editable=False)
+    lease_expires_at = models.DateTimeField(null=True, blank=True, editable=False)
+    started_at = models.DateTimeField(null=True, blank=True, editable=False)
+    completed_at = models.DateTimeField(null=True, blank=True, editable=False)
+    retry_count = models.PositiveSmallIntegerField(default=0, editable=False)
+    last_failure_code = models.CharField(max_length=32, null=True, blank=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+    updated_at = models.DateTimeField(auto_now=True, editable=False)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["state", "next_eligible_at", "id"], name="cleanup_claim_due_idx"),
+            models.Index(fields=["tenant_id", "state"], name="cleanup_claim_tenant_idx"),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(kind="passcode_change_challenge_cleanup"),
+                name="cleanup_claim_kind_valid",
+            ),
+            models.CheckConstraint(
+                condition=Q(fencing_generation__gte=0), name="cleanup_claim_generation_nonnegative"
+            ),
+            models.CheckConstraint(
+                condition=Q(retry_count__gte=0), name="cleanup_claim_retry_nonnegative"
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(
+                        state__in=["pending", "retryable", "succeeded", "dead"],
+                        owner_token__isnull=True,
+                    )
+                    | Q(state__in=["claimed", "dispatched", "running"], owner_token__isnull=False)
+                ),
+                name="cleanup_claim_ownership_consistent",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"CleanupWorkClaim({self.id})"
+
+
 class PlatformOperatorPolicy(models.Model):
     """Platform operator administrative access policy."""
 
