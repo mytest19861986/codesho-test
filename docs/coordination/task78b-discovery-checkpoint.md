@@ -84,3 +84,15 @@ exercise valid, malformed, incomplete, wrong-type, and non-2xx session cases.
   install policy rejected ignored native builds (`sharp`, `unrs-resolver`). It
   left untracked `frontend/pnpm-lock.yaml` and
   `frontend/pnpm-workspace.yaml`; these are preserved and are not task scope.
+
+## Commander follow-up transport checkpoint - 2026-08-10
+
+- The exact Commander URL remains present in the shared Chrome session in
+  three matching tabs; the newest matching tab was selected for reuse.
+- Two bounded DOM-read attempts after claiming the tab timed out and reset the
+  browser kernel. No complete Commander response or review verdict was
+  received, and none is claimed.
+- Resume point: retry the exact existing Commander tab with the 10-minute /
+  30-second polling protocol before any provider-gated conclusion; preserve
+  Draft/merge-blocked boundaries until Claude and exact-head remote evidence
+  are complete.

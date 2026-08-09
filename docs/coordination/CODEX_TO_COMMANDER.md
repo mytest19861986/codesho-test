@@ -831,3 +831,18 @@ Commander-approved implementation task.
 - No Ready, merge, release, deployment, Production, or protected-repository
   action performed. Next gate remains the required Claude hard gate followed
   by exact-head remote CI/Compose.
+
+## TASK78B_COMMANDER_TRANSPORT_REFRESH_20260810
+
+- Exact branch HEAD remains `1d85b64d03f68d57dfd653f57a4817515e5352f1` and is
+  synchronized with `origin/codex/task78b-student-dashboard-data-contract`.
+- The shared Chrome session still exposes three exact Commander URL tabs. The
+  newest matching tab was reused and claimed, but two bounded DOM reads timed
+  out and reset the browser kernel. No complete Commander response or verdict
+  is claimed.
+- Local evidence remains: focused dashboard/a11y `6 passed`, auth-contract
+  `3 passed`, ESLint/TypeScript/Next build/diff-check PASS; UI-policy has only
+  the two pre-existing legacy CSS hash mismatches.
+- Resume action: retry Commander polling at 30-second intervals for up to ten
+  minutes, then continue with the exact-head Claude/CI/Compose gates. PR stays
+  Draft; merge, release, Production and protected `codesho` remain forbidden.
