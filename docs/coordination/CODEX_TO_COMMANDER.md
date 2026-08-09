@@ -653,3 +653,16 @@ NON_BLOCKING: stale CURRENT_TASK title; future implementation must record claim
 table DDL provenance. No Ready/Merge/Release/Deploy/Promote authority granted.
 NEXT_ACTION: checkpoint, commit, push codesho-test, and await a separate
 Commander-approved implementation task.
+
+## TASK78A_CHECKPOINT_20260809
+
+- Task: `SPRINT1-UI-STUDENT-DASHBOARD-FOUNDATION-78A`.
+- Base SHA: `4c52816a15d34ce28955034f2ab77c04bd733506`.
+- Branch: `codex/task78a-student-dashboard-ui-foundation`.
+- Local gates passed: ESLint, TypeScript, dashboard a11y (`2 passed`), Next
+  build, responsive overflow checks, and diff-check.
+- Gemini prompt `GEMINI_TASK78A_STUDENT_DASHBOARD_UI_REVIEW_01_V1` was retried;
+  its response cited unrelated files and exact upload failed with transport
+  `Not allowed`. No Gemini verdict is claimed.
+- Next: commit/push, provide exact GitHub file links, obtain attachment-
+  verified Gemini review, then monitor remote CI/Compose.
