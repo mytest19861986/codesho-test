@@ -772,3 +772,11 @@ Commander-approved implementation task.
 - Compose smoke and restore run `31301152579` passed successfully.
 - Both runs validated exact HEAD `27a081e`; Gemini attachment verification
   remains the only open Task78A gate.
+
+## TASK78A_REMOTE_EVIDENCE_CHECKPOINT_95C21AA
+
+- CI run `31301242836` passed successfully.
+- Compose smoke and restore run `31301242814` passed with `smoke_restore`
+  successful.
+- Both runs validated exact HEAD `95c21aa`; Gemini attachment verification
+  remains the only open Task78A gate.
