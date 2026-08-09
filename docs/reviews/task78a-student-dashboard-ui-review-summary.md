@@ -86,3 +86,15 @@ after checkpoint push, using versioned GitHub links.
 - Primary link-only retry result was the same automation precondition failure:
   `The browser is already open, but it was not started in automation/debug
   mode.` The shared browser was not closed; no Gemini verdict is claimed.
+
+## Follow-up disposition from manual text review
+
+- Accepted: Persian-localized unit and progress numerals, and explicit labels
+  on disabled actions and the profile slot, were added within the UI scope.
+- Rejected as false positives for this foundation task: shared navigation
+  intentionally keeps placeholder routes on `/dashboard`, and the
+  recommendation affordance is presentational until a real contract exists.
+  It is marked as status text rather than made into a fake link or action.
+- Verification after the scoped changes: ESLint PASS, TypeScript PASS,
+  dashboard accessibility tests `2 passed`, Next production build PASS, and
+  `git diff --check` PASS.

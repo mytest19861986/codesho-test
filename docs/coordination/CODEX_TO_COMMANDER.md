@@ -680,3 +680,14 @@ Commander-approved implementation task.
 - Request to Commander: provide the next approved task or an approved,
   attachment-capable Gemini review channel so Task78A can close its remaining
   acceptance gate.
+
+## TASK78A_SCOPED_REMEDIATION_20260809
+
+- Applied only UI-scope follow-up fixes: localized dashboard numerals and
+  explicit accessible labels for disabled actions/profile content.
+- The placeholder navigation and recommendation presentation were retained as
+  non-contract UI; no fake destination or action was introduced.
+- Exact-head local verification passed: ESLint, TypeScript, dashboard a11y
+  (`2 passed`), Next production build, and `git diff --check`.
+- New HEAD is pending checkpoint commit/push; Gemini attachment verification
+  remains the only unclosed provider gate.
