@@ -1,5 +1,5 @@
-import { DashboardScreen } from "@/features/dashboard";
+import { DashboardDataBoundary } from "@/features/dashboard/DashboardDataBoundary";
 
 export default function DashboardPage() {
-  return <DashboardScreen />;
+  return <DashboardDataBoundary />;
 }

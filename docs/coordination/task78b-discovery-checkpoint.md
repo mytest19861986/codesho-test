@@ -21,11 +21,23 @@ The work is isolated on branch `codex/task78b-student-dashboard-data-contract`.
   existing CSRF/session policy; the frontend auth client uses same-origin
   credentials.
 
-## Decision pending
+## Commander disposition and implementation boundary
 
-The endpoint path, response schema, and mapping for the Dashboard data
-contract must be confirmed by Commander before inventing domain data or adding
-models/migrations. No product code has been changed in this checkpoint.
+Commander confirmed that the current backend has no learning-domain module and
+that 78B must remain limited to the existing read-only session contract. New
+course/progress/assignment/session domain models, migrations, or endpoints are
+deferred to a separately reviewed task.
+
+The implementation therefore adds a client-side data boundary that reads
+`/api/v1/auth/session/` with same-origin credentials and uses the authenticated
+username for the existing Dashboard identity surface. The existing typed
+fixture remains the explicitly bounded presentation source for fields that are
+not represented by the current backend contract; it is not promoted to a
+claimed real domain payload. Session failure renders the existing error state.
+
+Because this touches the authentication/tenant boundary, Claude hard-gate
+review is required before merge. No product code was changed before this
+disposition was observed.
 
 ## Safety
 

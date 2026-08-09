@@ -6,6 +6,25 @@ const loginPath = "/api/v1/auth/passcode/login/";
 const sessionPath = "/api/v1/auth/session/";
 const passcodeChangePath = "/api/v1/auth/passcode/change/complete/";
 
+export interface SessionContract {
+  readonly authenticated: true;
+  readonly user: { readonly id: string; readonly username: string };
+  readonly tenant: { readonly id: string; readonly slug: string; readonly role: string };
+}
+
+export async function getSession(): Promise<SessionContract | null> {
+  try {
+    const sessionEndpoint = sessionPath;
+    const response = await fetch(sessionEndpoint, { credentials: "same-origin", headers: { Accept: "application/json" } });
+    if (!response.ok) return null;
+    const payload = await response.json() as SessionContract;
+    if (payload.authenticated !== true || !payload.user?.username || !payload.tenant?.slug) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
 function csrfToken(): string | null {
   return document.cookie.split(";").map((part) => part.trim()).find((part) => part.startsWith("csrftoken="))?.slice("csrftoken=".length) ?? null;
 }
