@@ -30,10 +30,19 @@ deferred to a separately reviewed task.
 
 The implementation therefore adds a client-side data boundary that reads
 `/api/v1/auth/session/` with same-origin credentials and uses the authenticated
-username for the existing Dashboard identity surface. The existing typed
-fixture remains the explicitly bounded presentation source for fields that are
-not represented by the current backend contract; it is not promoted to a
-claimed real domain payload. Session failure renders the existing error state.
+username and tenant slug for the identity surface. The session response is
+runtime-parsed and incomplete or malformed payloads fail closed. Academic
+fields that are not represented by the current backend contract render an
+explicit unavailable state; the fixture is not imported into the authenticated
+runtime path. Session failure renders the existing error state.
+
+## Remediation checkpoint
+
+The pre-Claude review recorded `CHANGES_REQUIRED` for synthetic academic data
+in the authenticated ready model and incomplete session validation. Both were
+remediated in the follow-up commit. The versioned hard-gate prompt remains
+`CLAUDE_TASK78B_AUTH_SESSION_DATA_BOUNDARY_HARD_GATE_01_V1`; Claude PASS with
+P0=0, P1=0, and OPEN_BLOCKERS=0 is required before merge.
 
 Because this touches the authentication/tenant boundary, Claude hard-gate
 review is required before merge. No product code was changed before this
