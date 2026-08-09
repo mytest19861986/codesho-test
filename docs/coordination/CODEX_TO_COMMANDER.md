@@ -814,3 +814,20 @@ Commander-approved implementation task.
 - GitHub PR #29 shows exact-head CI run `#299` in progress; Compose evidence
   for this checkpoint is not yet confirmed. PR remains Draft; no merge,
   release, deployment, production, or protected-repository action occurred.
+
+## TASK78B_LOCAL_REVALIDATION_20260809
+
+- HEAD `5f14a03e6de1e6d47551e0154380d53303ea377d` remains clean at the start of
+  revalidation; implementation already closes all three Commander P1 findings.
+- Focused dashboard data-contract/a11y: `6 passed`; auth-contract: `3 passed`.
+- ESLint, TypeScript noEmit, Next production build, and `git diff --check`:
+  PASS.
+- UI-policy is the only product gate still red: pre-existing hashes for
+  `frontend/src/app/styles.css` and `frontend/src/app/ui-001.css` differ from
+  the approved baseline. No task file changes those legacy files.
+- Bundled pnpm install wrapper failed before running scripts with
+  `ERR_PNPM_IGNORED_BUILDS` for native `sharp`/`unrs-resolver`; it left two
+  untracked frontend pnpm files, preserved untouched and excluded from scope.
+- No Ready, merge, release, deployment, Production, or protected-repository
+  action performed. Next gate remains the required Claude hard gate followed
+  by exact-head remote CI/Compose.

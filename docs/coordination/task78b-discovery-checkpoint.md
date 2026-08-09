@@ -69,3 +69,18 @@ parser behavior was only source-tested. These are remediated in the current
 implementation: tenant is no longer mapped to a class field, unavailable
 numeric fields are nullable and rendered as unavailable, and behavioral tests
 exercise valid, malformed, incomplete, wrong-type, and non-2xx session cases.
+
+## Exact-head local revalidation - 2026-08-09
+
+- HEAD: `5f14a03e6de1e6d47551e0154380d53303ea377d`.
+- Dashboard data-contract and accessibility tests: `6 passed`.
+- Auth-contract tests: `3 passed`.
+- ESLint: PASS; TypeScript `--noEmit`: PASS; Next production build: PASS.
+- `git diff --check`: PASS.
+- UI-policy remains blocked by pre-existing legacy CSS baseline hash
+  mismatches in `src/app/styles.css` and `src/app/ui-001.css`; neither file is
+  changed by this task and no baseline weakening was performed.
+- The bundled pnpm wrapper stopped before scripts because its dependency
+  install policy rejected ignored native builds (`sharp`, `unrs-resolver`). It
+  left untracked `frontend/pnpm-lock.yaml` and
+  `frontend/pnpm-workspace.yaml`; these are preserved and are not task scope.
