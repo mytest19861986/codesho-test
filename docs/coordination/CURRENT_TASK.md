@@ -142,3 +142,20 @@ Claude hard gate completed against `f0692d53cdeb1d65857d3efeb35a49dc709c4ab2`.
 Verdict: `PASS`; `OPEN_BLOCKERS: 0`; `P0: 0`; `P1: 0`. This closes the
 architecture-only review gate. It does not authorize implementation, merge,
 release, deployment, promotion, or protected-repository changes.
+
+## Active Task78A handoff - 2026-08-09
+
+- Task: `SPRINT1-UI-STUDENT-DASHBOARD-FOUNDATION-78A`
+- Status: `IMPLEMENTED / LOCAL_UI_GATES_PASS / GEMINI_ATTACHMENT_REVIEW_PENDING`
+- Base SHA: `4c52816a15d34ce28955034f2ab77c04bd733506`
+- Branch: `codex/task78a-student-dashboard-ui-foundation`
+- Scope: Persian-first RTL student dashboard UI foundation only; no backend,
+  API, auth/session, database, migration, OpenAPI, dependency, workflow,
+  deployment, Production, or protected-repository changes.
+- Local evidence: ESLint, TypeScript, dashboard a11y (`2 passed`), Next build,
+  responsive viewport checks at 360/390/768/1024/1440, and diff-check passed.
+- Gemini: primary launcher failed on Firefox; Chrome retry cited unrelated
+  files; exact attachment upload failed with `fileChooser.setFiles failed:
+  Not allowed`. No Gemini PASS is claimed.
+- Next action: push checkpoint, provide versioned GitHub links for exact files,
+  obtain attachment-verified Gemini review, then run remote CI/Compose.

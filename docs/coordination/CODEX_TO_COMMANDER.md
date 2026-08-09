@@ -653,3 +653,164 @@ NON_BLOCKING: stale CURRENT_TASK title; future implementation must record claim
 table DDL provenance. No Ready/Merge/Release/Deploy/Promote authority granted.
 NEXT_ACTION: checkpoint, commit, push codesho-test, and await a separate
 Commander-approved implementation task.
+
+## TASK78A_CHECKPOINT_20260809
+
+- Task: `SPRINT1-UI-STUDENT-DASHBOARD-FOUNDATION-78A`.
+- Base SHA: `4c52816a15d34ce28955034f2ab77c04bd733506`.
+- Branch: `codex/task78a-student-dashboard-ui-foundation`.
+- Local gates passed: ESLint, TypeScript, dashboard a11y (`2 passed`), Next
+  build, responsive overflow checks, and diff-check.
+- Gemini prompt `GEMINI_TASK78A_STUDENT_DASHBOARD_UI_REVIEW_01_V1` was retried;
+  its response cited unrelated files and exact upload failed with transport
+  `Not allowed`. No Gemini verdict is claimed.
+- Next: commit/push, provide exact GitHub file links, obtain attachment-
+  verified Gemini review, then monitor remote CI/Compose.
+
+## TASK78A_HANDOFF_20260809_03
+
+- Latest pushed HEAD: `fa5b1d2`.
+- Direct file clipboard experiment completed: the exact file was copied as a
+  Windows file-drop object and pasted with `Ctrl+V`, but Gemini inserted the
+  file contents as plain text rather than creating an attachment.
+- Therefore no attachment-verified Gemini verdict is claimed and no provider
+  finding was applied. The result is recorded in the review summary.
+- PR remains Draft; protected `codesho`, merge, Ready, release, deployment,
+  and Production actions remain out of scope.
+- Request to Commander: provide the next approved task or an approved,
+  attachment-capable Gemini review channel so Task78A can close its remaining
+  acceptance gate.
+
+## TASK78A_SCOPED_REMEDIATION_20260809
+
+- Applied only UI-scope follow-up fixes: localized dashboard numerals and
+  explicit accessible labels for disabled actions/profile content.
+- The placeholder navigation and recommendation presentation were retained as
+  non-contract UI; no fake destination or action was introduced.
+- Exact-head local verification passed: ESLint, TypeScript, dashboard a11y
+  (`2 passed`), Next production build, and `git diff --check`.
+- New HEAD is pending checkpoint commit/push; Gemini attachment verification
+  remains the only unclosed provider gate.
+
+## TASK78A_COMMANDER_RESPONSE_20260809
+
+- Commander was messaged through the shared authenticated conversation with
+  the exact HEAD and local evidence.
+- Commander confirmed the latest HEAD is present on PR #29 and mergeable.
+- Commander reported exact-head remote runs in progress: CI `31300264500` and
+  Compose `31300264495`.
+- Commander identified the remaining blocker as Gemini transport, not a UI
+  implementation failure, and is evaluating an attachment-capable channel or
+  an approved gate disposition. No Ready, merge, release, deployment, or
+  protected-repository action was requested or taken.
+
+## TASK78A_REMOTE_EVIDENCE_20260809
+
+- Exact HEAD `4c427b2acec52c514d4a90c2b3725204d1345bfe` passed CI run
+  `31300337616` (`success`).
+- The same exact HEAD passed Compose smoke and restore run `31300337623`
+  (`success`).
+- The branch remains clean and the PR remains Draft. Gemini attachment review
+  is still pending; no Ready, merge, release, deployment, or Production action
+  was taken.
+
+## TASK78A_REMOTE_EVIDENCE_CHECKPOINT_3090006
+
+- CI run `31300452093` passed with frontend and backend jobs successful.
+- Compose smoke and restore run `31300452057` passed with
+  `smoke_restore` successful.
+- Both runs tested exact HEAD `3090006`; this closes the remote CI/Compose
+  evidence for that checkpoint. The documentation update below will create a
+  new exact-head run as required.
+
+## TASK78A_REMOTE_EVIDENCE_CHECKPOINT_D405EF3
+
+- CI run `31300549220` passed with backend and frontend successful.
+- Compose smoke and restore run `31300549240` passed successfully.
+- Both runs validated exact HEAD `d405ef3`; Gemini attachment verification
+  remains the only open Task78A gate.
+
+## TASK78A_REMOTE_EVIDENCE_CHECKPOINT_3C7C19C
+
+- CI run `31300653369` passed with frontend and backend successful.
+- Compose smoke and restore run `31300653367` passed successfully.
+- Both runs validated exact HEAD `3c7c19c`; Gemini attachment verification
+  remains the only open Task78A gate.
+
+## TASK78A_REMOTE_EVIDENCE_CHECKPOINT_022500F
+
+- CI run `31300754118` passed with backend and frontend successful.
+- Compose smoke and restore run `31300754133` passed successfully.
+- Both runs validated exact HEAD `022500f`; Gemini attachment verification
+  remains the only open Task78A gate.
+
+## TASK78A_REMOTE_EVIDENCE_CHECKPOINT_34205E9
+
+- CI run `31300845840` passed with frontend and backend successful.
+- Compose smoke and restore run `31300845819` passed successfully.
+- Both runs validated exact HEAD `34205e9`; Gemini attachment verification
+  remains the only open Task78A gate.
+
+## TASK78A_REMOTE_EVIDENCE_CHECKPOINT_5CD8DE1
+
+- CI run `31300931925` passed successfully.
+- Compose smoke and restore run `31300931919` passed with `smoke_restore`
+  successful.
+- Both runs validated exact HEAD `5cd8de1`; Gemini attachment verification
+  remains the only open Task78A gate.
+
+## TASK78A_REMOTE_EVIDENCE_CHECKPOINT_D14A70E
+
+- CI run `31301058869` passed successfully.
+- Compose smoke and restore run `31301058871` passed successfully.
+- Both runs validated exact HEAD `d14a70e`; Gemini attachment verification
+  remains the only open Task78A gate.
+
+## TASK78A_REMOTE_EVIDENCE_CHECKPOINT_27A081E
+
+- CI run `31301152555` passed successfully.
+- Compose smoke and restore run `31301152579` passed successfully.
+- Both runs validated exact HEAD `27a081e`; Gemini attachment verification
+  remains the only open Task78A gate.
+
+## TASK78A_REMOTE_EVIDENCE_CHECKPOINT_95C21AA
+
+- CI run `31301242836` passed successfully.
+- Compose smoke and restore run `31301242814` passed with `smoke_restore`
+  successful.
+- Both runs validated exact HEAD `95c21aa`; Gemini attachment verification
+  remains the only open Task78A gate.
+
+## TASK78A_REMOTE_EVIDENCE_CHECKPOINT_03D14C4
+
+- CI run `31301344366` passed successfully.
+- Compose smoke and restore run `31301344387` passed with `smoke_restore`
+  successful; GitHub Actions reports a 2m22s successful run and artifact
+  `compose-smoke-restore-31301344387`.
+- Both runs validated exact HEAD `03d14c4`; Gemini attachment verification
+  remains the only open Task78A gate.
+
+## TASK78A_COMMANDER_DISPOSITION_20260809
+
+- Commander disposition: `TASK78A_GEMINI_REVIEW_02_DISPOSITION_01`.
+- Gemini verdict: `CHANGES_REQUIRED HIGH=1 MEDIUM=3 LOW=2`.
+- Applied the blocking finding only: replaced the non-interactive
+  `شروع چالش ←` affordance with Persian informational status text and removed
+  its dead action styling. No route, href, or fabricated interaction was added.
+- Authorized files changed: `DashboardScreen.tsx`, `dashboard.module.css`,
+  and `dashboard.a11y.test.mjs`.
+- Local verification after remediation: dashboard a11y 2/2, ESLint PASS,
+  TypeScript PASS, Next production build PASS, and `git diff --check` PASS.
+- Pending: checkpoint commit/push and exact-head remote CI/Compose evidence.
+
+## TASK78A_CHECKPOINT_28725EC
+
+- Remediation commit `28725ec` was pushed to
+  `codex/task78a-student-dashboard-ui-foundation`.
+- Local gates remain green: dashboard a11y 2/2, ESLint, TypeScript, Next
+  production build, and `git diff --check`.
+- Commander was messaged through the authenticated Chrome conversation with
+  the disposition, exact HEAD, and next-action request.
+- GitHub PR #29 shows exact-head CI run `#299` in progress; Compose evidence
+  for this checkpoint is not yet confirmed. PR remains Draft; no merge,
+  release, deployment, production, or protected-repository action occurred.

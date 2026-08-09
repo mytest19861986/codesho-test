@@ -314,3 +314,15 @@ boundary, tenant-safe architecture, fail-closed rules, RLS/role separation,
 Qwen disposition, and governance boundary. The next step requires a separate
 Commander-approved implementation task; no implementation or release authority
 is implied.
+
+## TASK78A_STUDENT_DASHBOARD_FOUNDATION_20260809
+
+- Base: `4c52816a15d34ce28955034f2ab77c04bd733506`.
+- Branch: `codex/task78a-student-dashboard-ui-foundation`.
+- Scope: frontend dashboard UI only; no API, auth, database, migration,
+  OpenAPI, dependency, CI, deployment, Production, or protected-repository
+  changes.
+- State: typed synthetic fixture, AppShell-based responsive screen,
+  ready/loading/empty/error states, and local UI gates pass.
+- Provider hygiene: raw prompts/responses and screenshots remain outside the
+  repository; no unverified Gemini verdict is claimed.

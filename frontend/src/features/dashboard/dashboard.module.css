@@ -1,0 +1,40 @@
+.page { max-inline-size: 78rem; margin-inline: auto; padding: clamp(1.25rem, 3vw, 3rem); }
+.brand { display: inline-flex; align-items: center; gap: .5rem; color: inherit; font-size: 1.35rem; font-weight: 800; text-decoration: none; }
+.brand span:first-child { color: var(--cs-color-brand-primary); font-size: 1.8rem; }
+.profile { display: grid; place-items: center; inline-size: 2.5rem; block-size: 2.5rem; border-radius: 50%; background: var(--cs-color-brand-primary-soft); color: var(--cs-color-brand-primary); font-weight: 800; }
+.hero { display: flex; align-items: center; justify-content: space-between; gap: 2rem; margin-block-end: 1.5rem; padding: clamp(1.5rem, 4vw, 3rem); border: 1px solid var(--cs-color-border-subtle); border-radius: 1.5rem; background: radial-gradient(circle at 12% 10%, rgb(78 231 180 / .2), transparent 35%), var(--cs-color-bg-surface); overflow: hidden; }
+.hero h1 { max-inline-size: 42rem; margin: .4rem 0 .8rem; font-size: clamp(1.65rem, 3vw, 2.75rem); line-height: 1.35; }
+.heroMeta, .muted { color: var(--cs-color-text-secondary); }
+.eyebrow { margin: 0; color: var(--cs-color-brand-primary); font-size: .78rem; font-weight: 700; letter-spacing: .04em; }
+.heroOrb { display: grid; place-items: center; flex: 0 0 auto; inline-size: 7rem; block-size: 7rem; border: 1px solid rgb(78 231 180 / .5); border-radius: 50%; color: var(--cs-color-brand-primary); font-size: 3rem; box-shadow: 0 0 3rem rgb(78 231 180 / .18); }
+.primaryGrid, .secondaryGrid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 1rem; }
+.card { display: flex; flex-direction: column; gap: .9rem; min-block-size: 100%; }
+.card h2, .section h2, .attention h2 { margin: .35rem 0 0; font-size: 1.15rem; }
+.cardHeader, .sectionHeading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.progressMeta { display: flex; justify-content: space-between; color: var(--cs-color-text-secondary); font-size: .82rem; }
+.progressMeta strong { color: var(--cs-color-brand-primary); }
+.sessionDate { margin: .3rem 0 0; font-size: 1.15rem; font-weight: 700; }
+.section { margin-block: 2.5rem; }
+.sectionMark, .recommendationIcon { color: var(--cs-color-brand-primary); font-size: 1.8rem; }
+.momentumGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-block-start: 1rem; }
+.statCard { gap: .25rem; }
+.statCard span, .statCard small { color: var(--cs-color-text-secondary); }
+.statCard strong { font-size: clamp(1.35rem, 2vw, 1.8rem); }
+.statCard small { font-size: .75rem; }
+.secondaryGrid { margin-block: 1rem 2.5rem; }
+.inlineAction { color: var(--cs-color-brand-primary); font-weight: 700; }
+.attention { display: grid; grid-template-columns: minmax(12rem, .7fr) 1.3fr; gap: 1.5rem; padding: 1.25rem; border: 1px solid var(--cs-color-border-subtle); border-radius: 1rem; background: var(--cs-color-bg-surface); }
+.attention ul { display: grid; gap: .65rem; margin: 0; padding: 0; list-style: none; color: var(--cs-color-text-secondary); }
+.attention li { display: flex; gap: .65rem; align-items: baseline; }
+.attention li span { color: var(--cs-color-brand-primary); }
+.stateCard { max-inline-size: 38rem; margin: 8rem auto; padding: 3rem 2rem; border: 1px solid var(--cs-color-border-subtle); border-radius: 1.25rem; background: var(--cs-color-bg-surface); text-align: center; }
+.stateCard h2 { margin: 1rem 0 .5rem; }
+.stateCard p { color: var(--cs-color-text-secondary); }
+.stateIcon { display: inline-grid; place-items: center; inline-size: 3.5rem; block-size: 3.5rem; border-radius: 50%; background: var(--cs-color-brand-primary-soft); color: var(--cs-color-brand-primary); font-size: 1.7rem; }
+.inlineAction { border: 0; background: none; cursor: pointer; font: inherit; }
+.stateGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; max-inline-size: 60rem; margin: 3rem auto; }
+.stateGrid span { display: block; min-block-size: 13rem; border-radius: 1rem; background: linear-gradient(90deg, var(--cs-color-bg-surface), var(--cs-color-bg-surface-raised), var(--cs-color-bg-surface)); background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .stateGrid span { animation: none; } }
+@media (max-width: 48rem) { .page { padding-block-end: 6rem; } .hero { align-items: flex-start; } .heroOrb { inline-size: 4.5rem; block-size: 4.5rem; font-size: 2rem; } .primaryGrid, .secondaryGrid, .attention { grid-template-columns: 1fr; } .momentumGrid { gap: .6rem; } .statCard { padding: .85rem; } .statCard strong { font-size: 1.1rem; } }
+@media (max-width: 24rem) { .heroOrb { display: none; } .momentumGrid { grid-template-columns: 1fr; } }
