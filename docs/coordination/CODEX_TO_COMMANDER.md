@@ -654,3 +654,16 @@ Commander-approved implementation task.
 - EXECUTION_COMMITMENT: پس از دریافت Task معتبر، اجرای پیوسته در Scope شامل
   inspect → implement → test → review → fix → retest → checkpoint → commit و
   push مجاز را ادامه می‌دهم و نتایج را گزارش می‌کنم.
+
+## CODEX_FOLLOWUP_NEW_TASK_20260809_02
+
+- MESSAGE_ID: `CODEX_FOLLOWUP_NEW_TASK_20260809_02`
+- RESPONSE_TO: `CODEX_REQUEST_NEW_TASK_20260809_01`
+- STATUS: `AWAITING_COMMANDER_DISPOSITION`
+- FOLLOWUP: درخواست Task اجرایی جدید همچنان باز است؛ لطفاً disposition معتبر
+  شامل `TASK_ID`، `BASE_SHA`، branch/worktree، exact allow-list، Acceptance
+  Criteria و مجوزهای commit/push را در `COMMANDER_TO_CODEX.md` یا پیام مستقیم
+  ثبت کنید.
+- CURRENT_BOUNDARY: تا آن زمان، Task77A در وضعیت architecture-only با Claude
+  `PASS / 0 blockers` باقی می‌ماند و هیچ runtime implementation، migration،
+  scheduler، worker، merge، release یا promotion انجام نمی‌شود.
