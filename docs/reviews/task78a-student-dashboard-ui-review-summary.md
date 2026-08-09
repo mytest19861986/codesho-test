@@ -41,3 +41,13 @@ after checkpoint push, using versioned GitHub links.
 - Task78A Compose smoke and restore run `31295660995`: SUCCESS.
 - No Task78A PR was created yet; attachment-verified Gemini review remains
   pending and is still a blocking gate.
+
+## Gemini retry checkpoint
+
+- `GEMIN_REVIEW.py` was retried using `GEMII_REVIEW_GUIDE.md`, the required
+  Task78A prompt, and five exact dashboard source files.
+- Exact result: `مرورگر پیش‌فرض: Google Chrome` followed by `The browser is
+  already open, but it was not started in automation/debug mode. Close it
+  once and run this script again so it can reopen the same profile
+  controllably.`
+- The shared browser was not closed; no Gemini verdict is claimed.
