@@ -17,6 +17,8 @@
 - REMOTE_EVIDENCE: CI `31294215288` SUCCESS; Compose `31294215324` SUCCESS.
 - CLAUDE: `CLAUDE_TASK77C_CLEAN_INTEGRATION_HARD_GATE_01_V1` PASS with zero
   open/P0/P1 blockers; P2 notes are non-blocking and recorded in review summary.
+- FINAL_CLAUDE_REVALIDATION: `CLAUDE_TASK77C_CLEAN_INTEGRATION_HARD_GATE_02_V1`
+  PASS with zero open/P0/P1 blockers for the docs-only successor HEAD.
 - NEXT: record this evidence in the final coordination checkpoint, then any
   post-checkpoint HEAD requires fresh exact-head CI/Compose/Claude evidence.
 - EXCLUSIONS: no governance replacement, scheduler/Beat/cron, public API,

@@ -14,6 +14,9 @@ and Claude hard review are green for HEAD `338ee7a`: CI `31294215288`, Compose
 all passed with zero P0/P1/open blockers. Non-blocking P2 notes are recorded
 in the review summary. No protected-repository, release, deployment, or
 production action occurred.
+Final Claude exact-head revalidation `CLAUDE_TASK77C_CLEAN_INTEGRATION_HARD_GATE_02_V1`
+also returned PASS with zero open/P0/P1 blockers; its P2 notes are retained
+as non-blocking evidence.
 
 ## Task76A checkpoint (2026-08-08)
 

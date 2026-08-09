@@ -21,3 +21,7 @@ Evidence checkpoint:
 - P2 notes: Claude observed an environment-dependent full-suite count,
   recommended a future negative-path RLS test, and could not independently
   query GitHub API. None is a blocker; no remediation was required.
+- Final exact-head revalidation prompt `CLAUDE_TASK77C_CLEAN_INTEGRATION_HARD_GATE_02_V1`
+  also returned `PASS`, `OPEN_BLOCKERS=0`, `P0=0`, `P1=0` for the docs-only
+  successor `8f06ebb71608b22d462c476db0f728aee7f74f33`; carried-forward P2
+  notes are non-blocking and require no remediation.

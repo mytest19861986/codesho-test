@@ -15,6 +15,8 @@
 - CLAUDE: `CLAUDE_TASK77C_CLEAN_INTEGRATION_HARD_GATE_01_V1` returned
   `PASS / OPEN_BLOCKERS=0 / P0=0 / P1=0`; P2 notes are non-blocking and
   recorded in `docs/reviews/task77b-cleanup-claim-lease-review-summary.md`.
+- FINAL_CLAUDE: `CLAUDE_TASK77C_CLEAN_INTEGRATION_HARD_GATE_02_V1` returned
+  `PASS / OPEN_BLOCKERS=0 / P0=0 / P1=0` for the final docs-only successor.
 - NEXT: this documentation checkpoint changes HEAD; rerun exact-head remote
   gates and Claude before final acceptance/merge.
 - PROTECTED_BOUNDARY: no Release, Deployment, Production, or protected
