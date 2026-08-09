@@ -846,3 +846,18 @@ Commander-approved implementation task.
 - Resume action: retry Commander polling at 30-second intervals for up to ten
   minutes, then continue with the exact-head Claude/CI/Compose gates. PR stays
   Draft; merge, release, Production and protected `codesho` remain forbidden.
+
+## TASK78B_CLAUDE_HARD_GATE_TRANSPORT_20260810
+
+- Prompt `CLAUDE_TASK78B_AUTH_SESSION_DATA_BOUNDARY_HARD_GATE_01_V1` was
+  prepared outside the repository and scoped to exactly five review files at
+  HEAD `ddf1c6d4dee4b5d8ad8758038f852d087da94d94`.
+- Primary local Claude runner failed before opening the review with exact
+  error: `ModuleNotFoundError: No module named 'playwright'` in
+  `claude_brave.py`.
+- No Claude verdict/marker is claimed; no fallback channel, account change,
+  quota bypass, or dependency installation was used. Exact-head backend,
+  frontend, and Compose remote checks are all successful.
+- Required next action is to restore the approved authenticated Claude review
+  runtime/channel, resend the same sequential prompt, and poll up to 300
+  seconds at 30-second intervals. Draft/merge-blocked boundaries remain.

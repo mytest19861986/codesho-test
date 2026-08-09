@@ -96,3 +96,17 @@ exercise valid, malformed, incomplete, wrong-type, and non-2xx session cases.
   30-second polling protocol before any provider-gated conclusion; preserve
   Draft/merge-blocked boundaries until Claude and exact-head remote evidence
   are complete.
+
+## Claude hard-gate transport checkpoint - 2026-08-10
+
+- Prompt: `CLAUDE_TASK78B_AUTH_SESSION_DATA_BOUNDARY_HARD_GATE_01_V1`.
+- Exact five-file review package was prepared outside the repository for HEAD
+  `ddf1c6d4dee4b5d8ad8758038f852d087da94d94`.
+- The primary local Claude runner failed before opening the review with exact
+  error: `ModuleNotFoundError: No module named 'playwright'` from
+  `claude_brave.py`.
+- No Claude response, verdict, marker, or finding is claimed. No fallback,
+  account change, quota bypass, or dependency installation was attempted.
+- Resume action: restore the approved authenticated review channel or its
+  required runtime, then send this same sequential prompt and poll for up to
+  300 seconds at 30-second intervals.
