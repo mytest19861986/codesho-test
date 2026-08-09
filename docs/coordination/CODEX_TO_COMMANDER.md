@@ -802,3 +802,15 @@ Commander-approved implementation task.
 - Local verification after remediation: dashboard a11y 2/2, ESLint PASS,
   TypeScript PASS, Next production build PASS, and `git diff --check` PASS.
 - Pending: checkpoint commit/push and exact-head remote CI/Compose evidence.
+
+## TASK78A_CHECKPOINT_28725EC
+
+- Remediation commit `28725ec` was pushed to
+  `codex/task78a-student-dashboard-ui-foundation`.
+- Local gates remain green: dashboard a11y 2/2, ESLint, TypeScript, Next
+  production build, and `git diff --check`.
+- Commander was messaged through the authenticated Chrome conversation with
+  the disposition, exact HEAD, and next-action request.
+- GitHub PR #29 shows exact-head CI run `#299` in progress; Compose evidence
+  for this checkpoint is not yet confirmed. PR remains Draft; no merge,
+  release, deployment, production, or protected-repository action occurred.
