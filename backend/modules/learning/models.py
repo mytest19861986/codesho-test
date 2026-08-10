@@ -59,10 +59,16 @@ class Course(models.Model):
             )
         ]
 
+    def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+        super().__init__(*args, **kwargs)
+        self._immutable_original_id = self.id
+
     def __str__(self) -> str:
         return f"{self.tenant_id}:{self.code}"
 
     def save(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+        if not self._state.adding and self.id != self._immutable_original_id:
+            raise ValidationError({"id": "Course id is immutable after creation."})
         if self.pk and not self._state.adding:
             original_code = (
                 type(self)
@@ -73,6 +79,7 @@ class Course(models.Model):
             if original_code is not None and original_code != self.code:
                 raise ValidationError({"code": "Course code is immutable after creation."})
         super().save(*args, **kwargs)
+        self._immutable_original_id = self.id
 
 
 class Lesson(models.Model):
@@ -128,10 +135,16 @@ class Lesson(models.Model):
             )
         ]
 
+    def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+        super().__init__(*args, **kwargs)
+        self._immutable_original_id = self.id
+
     def __str__(self) -> str:
         return f"{self.tenant_id}:{self.course_id}:{self.code}"
 
     def save(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+        if not self._state.adding and self.id != self._immutable_original_id:
+            raise ValidationError({"id": "Lesson id is immutable after creation."})
         if self.pk and not self._state.adding:
             original = type(self).objects.filter(pk=self.pk).values("code", "position").first()
             if original is not None:
@@ -143,3 +156,4 @@ class Lesson(models.Model):
                 if errors:
                     raise ValidationError(errors)
         super().save(*args, **kwargs)
+        self._immutable_original_id = self.id
