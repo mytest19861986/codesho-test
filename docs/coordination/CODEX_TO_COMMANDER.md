@@ -1,5 +1,48 @@
 # Codex to Commander — Task72B legal/policy gate
 
+## CODEX_TASK79A_ARCHITECTURE_CHECKPOINT_20260810
+
+- MESSAGE_ID: `CODEX_TASK79A_ARCHITECTURE_CHECKPOINT_20260810_01`
+- TASK_ID: `SPRINT1-DOMAIN-LEARNING-READ-MODEL-ARCHITECTURE-79A`
+- BASE_SHA: `cb0a09df5e566dd14be329d22333fd16c82d6378`
+- BASE_VERIFICATION: `origin/main == BASE_SHA`
+- BRANCH: `codex/task79a-learning-read-model-architecture`
+- WORKTREE: `G:\project\codesho\codesho-task79a-learning-read-model-architecture`
+- STATUS: `COMPLETE / ARCHITECTURE_ONLY / CLAUDE_PASS`
+- CHANGED_FILES: exact five-file Task79A allow-list only.
+- DECISION: minimum V1 learning read model is Course, Lesson, ClassCohort,
+  ClassMembership, and conditional LessonProgress. Assignment/ClassSession
+  remain conditional; unsupported academic fields remain unavailable.
+- NO_RUNTIME_CHANGE: no backend, migration, SQL, RLS, API/OpenAPI, frontend,
+  fixture, dependency, workflow, Compose, deployment, release, merge, or
+  protected-repository change.
+- REVIEW: self-review recorded in
+  `docs/reviews/task79a-learning-read-model-architecture-review.md`.
+- CLAUDE_GATE: `CLAUDE_TASK79A_LEARNING_READ_MODEL_ARCHITECTURE_REVIEW_01_V1`
+  reviewed exact base `cb0a09df5e566dd14be329d22333fd16c82d6378` and returned
+  `PASS / P0=0 / P1=0 / OPEN_BLOCKERS=0`.
+- IMPLEMENTATION_READINESS: `READY_FOR_SEPARATE_IMPLEMENTATION_TASK`.
+- MERGE_RECOMMENDATION: `APPROVE_DOCS_ONLY`.
+- P2_SUCCESSOR_NOTES: pin bounds, choose append-only progress semantics, and
+  set a maximum page size.
+- NEXT_ACTION: await separate Commander-authorized implementation task; no
+  runtime, schema, migration, API, UI, release, or protected action.
+
+## CODEX_TASK79A_EXACT_CONTENT_REVIEW_02_20260810
+
+- PROMPT_ID: `CLAUDE_TASK79A_LEARNING_READ_MODEL_ARCHITECTURE_REVIEW_02_EXACT_HEAD_V1`
+- CONTENT_TARGET: `cd9c74a` on `codex/task79a-learning-read-model-architecture`
+- HEAD_REVIEWED: content-only; Claude could not cryptographically verify the
+  commit and explicitly delegated provenance binding to Commander.
+- VERDICT: `PASS (content-only; provenance unverified)`
+- P0: `0`; P1: `0`; P2: `3`; OPEN_BLOCKERS: `0`
+- IMPLEMENTATION_READINESS: `READY_FOR_SEPARATE_IMPLEMENTATION_TASK`
+- FINAL_MARKER: `CLAUDE_TASK79A_REVIEW_02_COMPLETE`
+- P2_DISPOSITION: bounds, append-only progress semantics, and max page size
+  remain required acceptance items for Task79B's schema/OpenAPI ADR.
+- NO_TASK79B: no runtime models, migrations, RLS SQL, API/OpenAPI, frontend,
+  merge, release, deployment, or protected action is authorized yet.
+
 ## CODEX_TASK77C_IMPLEMENTATION_CHECKPOINT_20260809
 
 - TASK_ID: `SPRINT1-SECURITY-CLEANUP-CLAIM-LEASE-CLEAN-INTEGRATION-77C`

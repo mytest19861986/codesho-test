@@ -1,4 +1,30 @@
-# Current Task: SPRINT1-SECURITY-CLEANUP-SCHEDULING-ARCHITECTURE-77A
+# Current Task: SPRINT1-DOMAIN-LEARNING-READ-MODEL-ARCHITECTURE-79A
+
+## Active Task79A handoff — 2026-08-10
+
+- Task: `SPRINT1-DOMAIN-LEARNING-READ-MODEL-ARCHITECTURE-79A`
+- Status: `COMPLETE / ARCHITECTURE_ONLY / CLAUDE_PASS`
+- Base SHA: `cb0a09df5e566dd14be329d22333fd16c82d6378`
+- Branch: `codex/task79a-learning-read-model-architecture`
+- Worktree: `G:\project\codesho\codesho-task79a-learning-read-model-architecture`
+- Exact write allow-list: the Task79A decision, this file,
+  `docs/coordination/PROJECT_STATE.md`, `docs/coordination/CODEX_TO_COMMANDER.md`,
+  and the Task79A review summary.
+- No runtime implementation, migration, SQL, RLS, API/OpenAPI, frontend,
+  fixture, workflow, Compose, deployment, release, merge, or protected
+  `codesho` action is authorized.
+- `origin/main` was verified equal to the required base before worktree creation.
+- Decision: minimum V1 is Course, Lesson, ClassCohort, ClassMembership, and
+  conditional LessonProgress; unsupported fields remain unavailable.
+- Claude gate: `CLAUDE_TASK79A_LEARNING_READ_MODEL_ARCHITECTURE_REVIEW_01_V1`
+  returned `PASS / P0=0 / P1=0 / OPEN_BLOCKERS=0` with
+  `READY_FOR_SEPARATE_IMPLEMENTATION_TASK`.
+- Three non-blocking successor notes: pin field bounds, choose append-only
+  progress semantics, and set a maximum page size.
+- Exact-content follow-up `CLAUDE_TASK79A_LEARNING_READ_MODEL_ARCHITECTURE_REVIEW_02_EXACT_HEAD_V1`
+  returned `PASS (content-only) / P0=0 / P1=0 / OPEN_BLOCKERS=0`; Claude's
+  cryptographic provenance limitation is recorded for Commander.
+- Next action: await separate Commander-authorized implementation task.
 
 ## TASK77C_ACTIVE_CHECKPOINT_20260809
 

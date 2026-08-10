@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "modules.identity",
     "modules.platform_tenant",
     "modules.platform_event",
+    "modules.learning",
 ]
 
 MIDDLEWARE = [
