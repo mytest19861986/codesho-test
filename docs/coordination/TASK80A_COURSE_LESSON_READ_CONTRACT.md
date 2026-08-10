@@ -6,43 +6,19 @@ Base: `f96733da69e42df3fe8ea8710ec1e9a0f81d91a2`
 
 Implementation branch: `codex/task80a-learning-course-lesson-read-contract-architecture`
 
-Closeout branch: `codex/task80a-closeout`
+Provider-readiness closeout PR: `#36`
 
-Status: `ARCHITECTURE MERGED / POST-MERGE GREEN / PROVIDER HARD-GATES PENDING / PROVIDER_TRANSPORT_BLOCKED`
+Status: `ARCHITECTURE MERGED / CLOSEOUT MERGED / POST-MERGE GREEN / PROVIDER_TRANSPORT_BLOCKED`
 
 ## Objective
 
 Define a bounded, tenant-safe, read-only Course/Lesson contract for a later separately authorized implementation task.
 
-## Authorized architecture files
+## Reviewed architecture packet
 
-1. `docs/decisions/2026-08-10-learning-course-lesson-read-contract-architecture-80a.md`
-2. `docs/reviews/task80a-learning-course-lesson-read-contract-review.md`
-3. `docs/coordination/TASK80A_COURSE_LESSON_READ_CONTRACT.md`
+Reviewed architecture HEAD: `0eeb107e064bb99669c7ea0e94d52654df4687fe`.
 
-No runtime Python/TypeScript, API route, serializer, URL, canonical OpenAPI schema, migration, SQL, RLS, grant, model, frontend, fixture, cohort, progress, learner-specific state, PII activation, Release, Deployment, Production, or protected `codesho` change was introduced.
-
-## Contract decisions
-
-- Future read surface is limited to two GET proposals: Course list and lessons-by-course list.
-- Learner-visible rows are published only.
-- Tenant authority comes only from the validated existing request/session boundary.
-- Existing active tenant membership remains the admission boundary.
-- Cross-tenant and hidden parent identifiers must not disclose existence.
-- Course response fields: id, code, title, state.
-- Lesson response fields: id, code, title, position, state.
-- Default page size: 20.
-- Maximum page size: 100.
-- Empty states are truthful empty collections; no fabricated academic values.
-- Current canonical six-operation OpenAPI file remained unchanged in Task80A.
-
-## Exact architecture provenance
-
-Reviewed architecture HEAD: `0eeb107e064bb99669c7ea0e94d52654df4687fe`
-
-Exact changed-file count: `3`.
-
-Exact file/blob bindings:
+Exact immutable provider file/blob bindings:
 
 1. `docs/decisions/2026-08-10-learning-course-lesson-read-contract-architecture-80a.md`
    - blob: `5ad991af630f107a72edcd9d6e30af26eb78d4db`
@@ -51,125 +27,151 @@ Exact file/blob bindings:
 3. `docs/coordination/TASK80A_COURSE_LESSON_READ_CONTRACT.md`
    - blob: `03b1143e698eeff778bbb1aef84cdbe9f99c0415`
 
-The provider packet is permanently bound to those three blobs. Closeout/readiness documentation created after merge is evidence only and must not replace the reviewed architecture packet.
+The provider packet remains bound to those three blobs. Later readiness/closeout revisions are evidence only and must not replace the reviewed architecture packet.
 
-## Pre-merge evidence
+## Architecture scope
 
-- CI run `31402531075`: `SUCCESS`.
-- Compose smoke/restore run `31402530817`: `SUCCESS`.
-- Exact diff: three documentation files only.
-- Runtime/API/OpenAPI canonical schema diff: none.
+- future read surface limited to two GET proposals: Course list and lessons-by-course list;
+- published Course/Lesson rows only;
+- tenant authority from the validated existing request/session boundary;
+- active tenant membership remains the admission boundary;
+- cross-tenant and hidden parent identifiers must not disclose existence;
+- Course fields: id, code, title, state;
+- Lesson fields: id, code, title, position, state;
+- pagination default 20, maximum 100;
+- truthful empty states;
+- no runtime/API/OpenAPI canonical schema, migration, SQL/RLS, model, frontend, cohort/progress, PII activation, Release, Deployment, Production, or protected `codesho` change in Task80A.
 
-## Merge evidence
+## Architecture validation and merge evidence
 
-PR: `#35`.
+Pre-merge architecture CI: `31402531075` — `SUCCESS`.
 
-Merge method: race-safe squash with expected head SHA.
+Pre-merge architecture Compose: `31402530817` — `SUCCESS`.
 
-Expected/reviewed head: `0eeb107e064bb99669c7ea0e94d52654df4687fe`.
+Architecture PR: `#35`.
 
-Merged commit on `main`: `813db363411f857d35bc5774b7856cdc71b49e41`.
+Architecture merge commit on `main`: `813db363411f857d35bc5774b7856cdc71b49e41`.
 
-PR state after merge: `CLOSED / MERGED`.
+Architecture post-merge CI: `31402907652` — `SUCCESS`.
 
-## Post-merge evidence
+Architecture post-merge Compose: `31402907634` — `SUCCESS`.
 
-Post-merge CI on `main@813db363411f857d35bc5774b7856cdc71b49e41`:
+Evidence included backend full tests, frontend checks/build, canonical OpenAPI parity, PostgreSQL RLS/connection-reuse, and backup/restore.
 
-- run `31402907652`: `SUCCESS`;
+## Provider-readiness closeout evidence
+
+Readiness exact HEAD: `6883cfb91f5480879e4a6dbeb4e26aa3d7a94f37`.
+
+Readiness diff: exactly two docs-only files:
+
+- `docs/coordination/TASK80A_COURSE_LESSON_READ_CONTRACT.md`;
+- `docs/reviews/task80a-learning-course-lesson-read-contract-review.md`.
+
+Readiness pre-merge CI: `31403967254` — `SUCCESS`.
+
+Readiness pre-merge Compose: `31403966932` — `SUCCESS`.
+
+Readiness PR `#36` was marked Ready and squash-merged race-safely with expected head SHA `6883cfb91f5480879e4a6dbeb4e26aa3d7a94f37`.
+
+Readiness merge commit on `main`: `ff1723c5b1fde651bacf4d49c414ca94b8f513db`.
+
+Readiness post-merge CI: `31404270837` — `SUCCESS`.
+
+Readiness post-merge Compose: `31404270834` — `SUCCESS`.
+
+Post-merge readiness evidence specifically confirms:
+
 - backend full tests: `SUCCESS`;
 - frontend checks/build: `SUCCESS`;
-- migration/OpenAPI/runtime-image checks: `SUCCESS`.
-
-Post-merge Compose smoke/restore:
-
-- run `31402907634`: `SUCCESS`;
+- canonical OpenAPI parity: `SUCCESS`;
+- backend runtime image inspection: `SUCCESS`;
 - PostgreSQL RLS and connection-reuse tests: `SUCCESS`;
-- backup/restore verification: `SUCCESS`.
+- backup create/restore/verify: `SUCCESS`.
 
 ## Provider transport blocker
 
 Blocker classification: `PENDING_PROVIDER_TRANSPORT`.
 
-This is an operational transport/tooling blocker only. It is not a Qwen or Claude architecture verdict and is not a substantive architecture finding.
+This is an operational transport/tooling blocker only. It is neither a Qwen/Claude architecture verdict nor a substantive architecture finding.
 
-### Permitted-path checks and evidence
+### Checked permitted paths
 
-1. Provider connector discovery
-   - command/query: plugin discovery for `Qwen OR Claude OR Anthropic`.
-   - result: no Qwen, Claude, or Anthropic connector was available; unrelated Vercel/Base44 suggestions were returned only.
-   - disposition: unusable as substitutes; no provider call made.
-2. Repository provider-runner discovery
-   - command/query: GitHub code search `claude qwen runner browser` in `mytest19861986/codesho-test`.
+1. Plugin discovery query: `Qwen OR Claude OR Anthropic`.
+   - result: no direct Qwen, Claude, or Anthropic connector available; only unrelated Vercel/Base44 suggestions.
+   - disposition: unrelated providers are not substitutes.
+2. GitHub repository code search: `claude qwen runner browser`.
+   - repository: `mytest19861986/codesho-test`.
    - result: `results=[]`, connector error `null`.
-3. Claude-specific runner discovery
-   - command/query: GitHub code search `claude_brave` in `mytest19861986/codesho-test`.
+3. GitHub repository code search: `claude_brave`.
    - result: `results=[]`, connector error `null`.
-4. Qwen-specific runner discovery
-   - command/query: GitHub code search `qwen` in `mytest19861986/codesho-test`.
+4. GitHub repository code search: `qwen`.
    - result: `results=[]`, connector error `null`.
-5. Available GitHub connector capability inspection
-   - result: GitHub actions can read/write repository state and CI evidence but expose no external Qwen/Claude model-session invocation.
+5. Available GitHub connector capabilities were inspected.
+   - result: repository/PR/Actions operations are available, but no external Qwen/Claude model-session invocation exists.
 
-No command above failed due to architecture content. The blocking outcome is absence of a permitted provider transport in the current execution environment.
+A previous attempt to create the final evidence branch using a direct SHA was rejected by the tool safety check; the permitted `base_ref=main` path was then used after re-verifying `main@ff1723c5b1fde651bacf4d49c414ca94b8f513db`. This did not affect repository content or provider status.
 
-### Operational safety rules while blocked
+### Safety rules while blocked
 
 - do not fabricate a provider response;
-- do not use unrelated provider services as substitutes;
-- do not bypass quotas, authentication, browser/profile locks, or attachment restrictions;
-- do not retry aggressively or disrupt a shared authenticated browser/profile;
-- Qwen must run first on the exact three-blob packet;
-- Claude must run only after a real Qwen PASS and must receive the same packet plus Qwen's complete response.
+- do not infer provider PASS from Commander preflight, CI, Compose, or absence of findings;
+- do not use unrelated model services as substitutes;
+- do not bypass quota, authentication, browser/profile locks, file-attachment restrictions, or other provider controls;
+- do not disrupt shared authenticated browser/profile sessions;
+- Qwen must run first;
+- Claude must run only after a real Qwen PASS.
 
 ## Resumable provider checkpoint
 
-Checkpoint state: `TASK80A_PROVIDER_GATE_READY_TO_RESUME`.
+Checkpoint: `TASK80A_PROVIDER_GATE_READY_TO_RESUME`.
 
-Resume prerequisites:
+Qwen prompt ID: `QWEN_TASK80A_COURSE_LESSON_READ_CONTRACT_ARCH_REVIEW_01_V1`.
 
-1. A permitted, authenticated Qwen transport becomes available.
-2. It can receive complete, untruncated contents of the three fixed architecture blobs.
-3. No architecture blob or reviewed architecture HEAD is changed before Qwen review.
+Qwen PASS condition:
+
+- `CONTENT_RECEIVED_COMPLETE=YES`;
+- `P0_COUNT=0`;
+- `P1_COUNT=0`;
+- `OPEN_BLOCKERS=0`;
+- `IMPLEMENTATION_RECOMMENDATION=READY_FOR_CLAUDE`.
+
+Claude prompt ID: `CLAUDE_TASK80A_COURSE_LESSON_READ_CONTRACT_ARCH_HARD_GATE_01_V1`.
+
+Claude receives the identical three-blob architecture packet plus Qwen's complete real response and runs only after Qwen PASS.
+
+Claude PASS condition:
+
+- `CONTENT_RECEIVED_COMPLETE=YES`;
+- `P0_COUNT=0`;
+- `P1_COUNT=0`;
+- `OPEN_BLOCKERS=0`;
+- `IMPLEMENTATION_RECOMMENDATION=READY_FOR_SEPARATE_IMPLEMENTATION_TASK`.
 
 Resume procedure:
 
-1. Re-bind the three blob SHAs listed above.
-2. Send `QWEN_TASK80A_COURSE_LESSON_READ_CONTRACT_ARCH_REVIEW_01_V1` with the complete three-file packet.
-3. Accept Qwen PASS only when `CONTENT_RECEIVED_COMPLETE=YES`, `P0_COUNT=0`, `P1_COUNT=0`, `OPEN_BLOCKERS=0`, and `IMPLEMENTATION_RECOMMENDATION=READY_FOR_CLAUDE`.
-4. If Qwen fails or blocks, stop before Claude and return the real result to Commander.
-5. If Qwen passes, send `CLAUDE_TASK80A_COURSE_LESSON_READ_CONTRACT_ARCH_HARD_GATE_01_V1` sequentially using the identical three-file packet plus Qwen's complete response.
-6. Accept Claude PASS only when `CONTENT_RECEIVED_COMPLETE=YES`, `P0_COUNT=0`, `P1_COUNT=0`, `OPEN_BLOCKERS=0`, and `IMPLEMENTATION_RECOMMENDATION=READY_FOR_SEPARATE_IMPLEMENTATION_TASK`.
-7. Only after both real PASS results may Commander authorize a separately bounded runtime successor.
-
-## Required provider sequence
-
-### Qwen
-
-Prompt ID: `QWEN_TASK80A_COURSE_LESSON_READ_CONTRACT_ARCH_REVIEW_01_V1`.
-
-Current status: `PENDING_PROVIDER_TRANSPORT`.
-
-### Claude
-
-Prompt ID: `CLAUDE_TASK80A_COURSE_LESSON_READ_CONTRACT_ARCH_HARD_GATE_01_V1`.
-
-Current status: `BLOCKED_ON_QWEN_AND_PROVIDER_TRANSPORT`.
+1. Confirm a permitted authenticated Qwen transport is available.
+2. Re-bind the three immutable provider blobs.
+3. Send the complete, untruncated three-file packet to Qwen.
+4. Record Qwen's complete real response.
+5. If Qwen is not a PASS, stop before Claude and remediate only documented architecture issues.
+6. If Qwen PASSes, send the identical packet plus Qwen result to Claude.
+7. Record Claude's complete real response.
+8. Only after both real PASS results may a separately bounded runtime successor be started.
 
 ## Runtime successor gate
 
-No runtime/API/OpenAPI implementation successor may start until both real provider reviews complete and the Claude PASS condition above is satisfied.
+Runtime/API/OpenAPI implementation is `BLOCKED`.
 
-While provider transport is unavailable, only documentation/readiness/provenance work that cannot change the reviewed architecture packet is permitted.
+No runtime successor may start while provider transport is unavailable or while either provider gate is incomplete.
 
-## Final disposition at this checkpoint
+Independent work permitted while blocked is limited to docs-only provenance/readiness/coordination that does not alter the reviewed architecture packet.
 
-Architecture documentation is merged and post-merge green.
+## Final disposition
 
-Provider packet provenance is fixed and audited.
+Task80A architecture and provider-readiness closeout are merged and fully validated in `codesho-test`.
 
-Provider transport absence is recorded with commands/results and a resumable checkpoint.
+Provider transport remains the only open blocker.
 
-Runtime implementation remains blocked by sequential provider hard gates.
+Runtime successor remains blocked pending real sequential Qwen→Claude PASS results.
 
 No Release, Deployment, Production, or protected `codesho` action occurred.
