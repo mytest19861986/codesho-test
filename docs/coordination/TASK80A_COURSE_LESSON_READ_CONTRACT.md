@@ -93,14 +93,27 @@ Blocker classification: `PENDING_PROVIDER_TRANSPORT`.
 
 This is an operational transport/tooling blocker only. It is not a Qwen or Claude architecture verdict and is not a substantive architecture finding.
 
-Checked permitted paths in the Commander session:
+### Permitted-path checks and evidence
 
-1. Installed/available plugin discovery for `Qwen`, `Claude`, and `Anthropic`: no direct provider connector was available.
-2. GitHub repository search for a checked-in `Qwen`/`Claude` runner, browser bridge, or provider transport: no usable runner/bridge was found.
-3. Available GitHub connector capabilities do not invoke external Qwen or Claude model sessions.
-4. No verdict may be inferred from Commander preflight analysis, CI, Compose, or absence of findings.
+1. Provider connector discovery
+   - command/query: plugin discovery for `Qwen OR Claude OR Anthropic`.
+   - result: no Qwen, Claude, or Anthropic connector was available; unrelated Vercel/Base44 suggestions were returned only.
+   - disposition: unusable as substitutes; no provider call made.
+2. Repository provider-runner discovery
+   - command/query: GitHub code search `claude qwen runner browser` in `mytest19861986/codesho-test`.
+   - result: `results=[]`, connector error `null`.
+3. Claude-specific runner discovery
+   - command/query: GitHub code search `claude_brave` in `mytest19861986/codesho-test`.
+   - result: `results=[]`, connector error `null`.
+4. Qwen-specific runner discovery
+   - command/query: GitHub code search `qwen` in `mytest19861986/codesho-test`.
+   - result: `results=[]`, connector error `null`.
+5. Available GitHub connector capability inspection
+   - result: GitHub actions can read/write repository state and CI evidence but expose no external Qwen/Claude model-session invocation.
 
-Operational rules while blocked:
+No command above failed due to architecture content. The blocking outcome is absence of a permitted provider transport in the current execution environment.
+
+### Operational safety rules while blocked
 
 - do not fabricate a provider response;
 - do not use unrelated provider services as substitutes;
@@ -109,35 +122,37 @@ Operational rules while blocked:
 - Qwen must run first on the exact three-blob packet;
 - Claude must run only after a real Qwen PASS and must receive the same packet plus Qwen's complete response.
 
+## Resumable provider checkpoint
+
+Checkpoint state: `TASK80A_PROVIDER_GATE_READY_TO_RESUME`.
+
+Resume prerequisites:
+
+1. A permitted, authenticated Qwen transport becomes available.
+2. It can receive complete, untruncated contents of the three fixed architecture blobs.
+3. No architecture blob or reviewed architecture HEAD is changed before Qwen review.
+
+Resume procedure:
+
+1. Re-bind the three blob SHAs listed above.
+2. Send `QWEN_TASK80A_COURSE_LESSON_READ_CONTRACT_ARCH_REVIEW_01_V1` with the complete three-file packet.
+3. Accept Qwen PASS only when `CONTENT_RECEIVED_COMPLETE=YES`, `P0_COUNT=0`, `P1_COUNT=0`, `OPEN_BLOCKERS=0`, and `IMPLEMENTATION_RECOMMENDATION=READY_FOR_CLAUDE`.
+4. If Qwen fails or blocks, stop before Claude and return the real result to Commander.
+5. If Qwen passes, send `CLAUDE_TASK80A_COURSE_LESSON_READ_CONTRACT_ARCH_HARD_GATE_01_V1` sequentially using the identical three-file packet plus Qwen's complete response.
+6. Accept Claude PASS only when `CONTENT_RECEIVED_COMPLETE=YES`, `P0_COUNT=0`, `P1_COUNT=0`, `OPEN_BLOCKERS=0`, and `IMPLEMENTATION_RECOMMENDATION=READY_FOR_SEPARATE_IMPLEMENTATION_TASK`.
+7. Only after both real PASS results may Commander authorize a separately bounded runtime successor.
+
 ## Required provider sequence
 
 ### Qwen
 
 Prompt ID: `QWEN_TASK80A_COURSE_LESSON_READ_CONTRACT_ARCH_REVIEW_01_V1`.
 
-PASS requires:
-
-- `CONTENT_RECEIVED_COMPLETE=YES`;
-- `P0_COUNT=0`;
-- `P1_COUNT=0`;
-- `OPEN_BLOCKERS=0`;
-- `IMPLEMENTATION_RECOMMENDATION=READY_FOR_CLAUDE`.
-
 Current status: `PENDING_PROVIDER_TRANSPORT`.
 
 ### Claude
 
 Prompt ID: `CLAUDE_TASK80A_COURSE_LESSON_READ_CONTRACT_ARCH_HARD_GATE_01_V1`.
-
-Claude must run sequentially only after Qwen PASS on the same exact architecture packet.
-
-PASS requires:
-
-- `CONTENT_RECEIVED_COMPLETE=YES`;
-- `P0_COUNT=0`;
-- `P1_COUNT=0`;
-- `OPEN_BLOCKERS=0`;
-- `IMPLEMENTATION_RECOMMENDATION=READY_FOR_SEPARATE_IMPLEMENTATION_TASK`.
 
 Current status: `BLOCKED_ON_QWEN_AND_PROVIDER_TRANSPORT`.
 
@@ -152,6 +167,8 @@ While provider transport is unavailable, only documentation/readiness/provenance
 Architecture documentation is merged and post-merge green.
 
 Provider packet provenance is fixed and audited.
+
+Provider transport absence is recorded with commands/results and a resumable checkpoint.
 
 Runtime implementation remains blocked by sequential provider hard gates.
 
