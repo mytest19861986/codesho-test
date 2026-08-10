@@ -1,8 +1,8 @@
 from uuid import uuid4
 
 import pytest
-from django.db import IntegrityError, connection, transaction
-from psycopg.errors import ForeignKeyViolation, InsufficientPrivilege, RaiseException
+from django.db import IntegrityError, ProgrammingError, connection, transaction
+from psycopg.errors import ForeignKeyViolation, InsufficientPrivilege
 
 from modules.learning.models import Course, Lesson
 from modules.platform_tenant.context import tenant_atomic
@@ -78,7 +78,8 @@ def test_runtime_cannot_insert_cross_tenant_course_or_lesson(runtime_connection)
         cursor.execute("SELECT set_config('app.tenant_id', %s, true)", [str(first.id)])
         with pytest.raises(InsufficientPrivilege):
             cursor.execute(
-                "INSERT INTO learning_course (id, tenant_id, code, title, state, created_at, updated_at) "
+                "INSERT INTO learning_course "
+                "(id, tenant_id, code, title, state, created_at, updated_at) "
                 "VALUES (%s, %s, %s, %s, 'draft', now(), now())",
                 [uuid4(), second.id, "forbidden", "Forbidden"],
             )
@@ -148,11 +149,11 @@ def test_database_guards_immutable_learning_keys():
     lesson = lesson_factory(tenant, course, "intro", 1)
 
     with tenant_atomic(tenant.id):
-        with pytest.raises((RaiseException, IntegrityError)), transaction.atomic():
+        with pytest.raises(ProgrammingError), transaction.atomic():
             Course.objects.filter(pk=course.pk).update(code="changed")
-        with pytest.raises((RaiseException, IntegrityError)), transaction.atomic():
+        with pytest.raises(ProgrammingError), transaction.atomic():
             Lesson.objects.filter(pk=lesson.pk).update(code="changed")
-        with pytest.raises((RaiseException, IntegrityError)), transaction.atomic():
+        with pytest.raises(ProgrammingError), transaction.atomic():
             Lesson.objects.filter(pk=lesson.pk).update(position=2)
 
 
