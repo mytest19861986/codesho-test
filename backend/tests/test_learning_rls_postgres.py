@@ -76,7 +76,8 @@ def test_runtime_cannot_insert_or_reassign_cross_tenant_rows(runtime_connection)
         cursor.execute("SELECT set_config('app.tenant_id', %s, true)", [str(first.id)])
         with pytest.raises(InsufficientPrivilege):
             cursor.execute(
-                "INSERT INTO learning_course (id, tenant_id, code, title, state, created_at, updated_at) "
+                "INSERT INTO learning_course "
+                "(id, tenant_id, code, title, state, created_at, updated_at) "
                 "VALUES (%s, %s, %s, %s, 'draft', now(), now())",
                 [uuid4(), second.id, "forbidden", "Forbidden"],
             )
@@ -87,7 +88,8 @@ def test_runtime_cannot_insert_or_reassign_cross_tenant_rows(runtime_connection)
         with pytest.raises((ForeignKeyViolation, IntegrityError)):
             cursor.execute(
                 "INSERT INTO learning_lesson "
-                "(id, tenant_id, course_id, code, title, position, state, created_at, updated_at) "
+                "(id, tenant_id, course_id, code, title, position, state, "
+                "created_at, updated_at) "
                 "VALUES (%s, %s, %s, %s, %s, 1, 'draft', now(), now())",
                 [uuid4(), first.id, second_course.id, "cross", "Cross"],
             )
