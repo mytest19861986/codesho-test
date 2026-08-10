@@ -31,26 +31,48 @@ class Course(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["tenant", "code"], name="learning_course_tenant_code_uniq"),
-            models.UniqueConstraint(fields=["tenant", "id"], name="learning_course_tenant_id_uniq"),
+            models.UniqueConstraint(
+                fields=["tenant", "code"],
+                name="learning_course_tenant_code_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_course_tenant_id_uniq",
+            ),
             models.CheckConstraint(
                 condition=Q(state__in=PublicationState.values),
                 name="learning_course_state_valid",
             ),
-            models.CheckConstraint(condition=~Q(code=""), name="learning_course_code_nonempty"),
-            models.CheckConstraint(condition=~Q(title=""), name="learning_course_title_nonempty"),
+            models.CheckConstraint(
+                condition=~Q(code=""),
+                name="learning_course_code_nonempty",
+            ),
+            models.CheckConstraint(
+                condition=~Q(title=""),
+                name="learning_course_title_nonempty",
+            ),
         ]
-        indexes = [models.Index(fields=["tenant", "state"], name="learn_course_tenant_state_ix")]
-
-    def save(self, *args, **kwargs):  # type: ignore[no-untyped-def]
-        if self.pk and not self._state.adding:
-            original_code = type(self).objects.filter(pk=self.pk).values_list("code", flat=True).first()
-            if original_code is not None and original_code != self.code:
-                raise ValidationError({"code": "Course code is immutable after creation."})
-        super().save(*args, **kwargs)
+        indexes = [
+            models.Index(
+                fields=["tenant", "state"],
+                name="learn_course_tenant_state_ix",
+            )
+        ]
 
     def __str__(self) -> str:
         return f"{self.tenant_id}:{self.code}"
+
+    def save(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+        if self.pk and not self._state.adding:
+            original_code = (
+                type(self)
+                .objects.filter(pk=self.pk)
+                .values_list("code", flat=True)
+                .first()
+            )
+            if original_code is not None and original_code != self.code:
+                raise ValidationError({"code": "Course code is immutable after creation."})
+        super().save(*args, **kwargs)
 
 
 class Lesson(models.Model):
@@ -90,8 +112,14 @@ class Lesson(models.Model):
                 condition=Q(state__in=PublicationState.values),
                 name="learning_lesson_state_valid",
             ),
-            models.CheckConstraint(condition=~Q(code=""), name="learning_lesson_code_nonempty"),
-            models.CheckConstraint(condition=~Q(title=""), name="learning_lesson_title_nonempty"),
+            models.CheckConstraint(
+                condition=~Q(code=""),
+                name="learning_lesson_code_nonempty",
+            ),
+            models.CheckConstraint(
+                condition=~Q(title=""),
+                name="learning_lesson_title_nonempty",
+            ),
         ]
         indexes = [
             models.Index(
@@ -99,6 +127,9 @@ class Lesson(models.Model):
                 name="learn_lesson_tenant_course_ix",
             )
         ]
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.course_id}:{self.code}"
 
     def save(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         if self.pk and not self._state.adding:
@@ -112,6 +143,3 @@ class Lesson(models.Model):
                 if errors:
                     raise ValidationError(errors)
         super().save(*args, **kwargs)
-
-    def __str__(self) -> str:
-        return f"{self.tenant_id}:{self.course_id}:{self.code}"

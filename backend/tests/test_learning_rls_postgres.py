@@ -1,8 +1,8 @@
 from uuid import uuid4
 
 import pytest
-from django.db import IntegrityError, ProgrammingError, connection, transaction
-from psycopg.errors import ForeignKeyViolation, InsufficientPrivilege
+from django.db import IntegrityError, connection, transaction
+from psycopg.errors import ForeignKeyViolation, InsufficientPrivilege, RaiseException
 
 from modules.learning.models import Course, Lesson
 from modules.platform_tenant.context import tenant_atomic
@@ -90,7 +90,8 @@ def test_runtime_cannot_insert_cross_tenant_course_or_lesson(runtime_connection)
         with pytest.raises(InsufficientPrivilege):
             cursor.execute(
                 "INSERT INTO learning_lesson "
-                "(id, tenant_id, course_id, code, title, position, state, created_at, updated_at) "
+                "(id, tenant_id, course_id, code, title, position, state, "
+                "created_at, updated_at) "
                 "VALUES (%s, %s, %s, %s, %s, 2, 'draft', now(), now())",
                 [uuid4(), second.id, first_course.id, "forbidden", "Forbidden"],
             )
@@ -108,7 +109,8 @@ def test_database_rejects_cross_tenant_lesson_course_reference(runtime_connectio
         with pytest.raises((ForeignKeyViolation, IntegrityError)):
             cursor.execute(
                 "INSERT INTO learning_lesson "
-                "(id, tenant_id, course_id, code, title, position, state, created_at, updated_at) "
+                "(id, tenant_id, course_id, code, title, position, state, "
+                "created_at, updated_at) "
                 "VALUES (%s, %s, %s, %s, %s, 1, 'draft', now(), now())",
                 [uuid4(), first.id, second_course.id, "cross", "Cross"],
             )
@@ -149,11 +151,11 @@ def test_database_guards_immutable_learning_keys():
     lesson = lesson_factory(tenant, course, "intro", 1)
 
     with tenant_atomic(tenant.id):
-        with pytest.raises(ProgrammingError), transaction.atomic():
+        with pytest.raises((RaiseException, IntegrityError)), transaction.atomic():
             Course.objects.filter(pk=course.pk).update(code="changed")
-        with pytest.raises(ProgrammingError), transaction.atomic():
+        with pytest.raises((RaiseException, IntegrityError)), transaction.atomic():
             Lesson.objects.filter(pk=lesson.pk).update(code="changed")
-        with pytest.raises(ProgrammingError), transaction.atomic():
+        with pytest.raises((RaiseException, IntegrityError)), transaction.atomic():
             Lesson.objects.filter(pk=lesson.pk).update(position=2)
 
 
@@ -172,16 +174,31 @@ def test_force_rls_and_runtime_role_contract_for_learning_tables(runtime_connect
         ]
         cursor.execute(
             "SELECT tableowner FROM pg_tables WHERE schemaname = current_schema() "
-            "AND tablename IN ('learning_course', 'learning_lesson') ORDER BY tablename"
+            "AND tablename IN ('learning_course', 'learning_lesson') "
+            "ORDER BY tablename"
         )
         assert cursor.fetchall() == [("codesho_migrator",), ("codesho_migrator",)]
 
     with runtime_connection.cursor() as cursor:
-        cursor.execute("SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname = current_user")
+        cursor.execute(
+            "SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname = current_user"
+        )
         assert cursor.fetchone()[0] is False
-        for table in ("learning_course", "learning_lesson"):
-            cursor.execute("SELECT has_table_privilege(current_user, %s, 'TRUNCATE')", [table])
-            assert cursor.fetchone()[0] is False
-            with pytest.raises(InsufficientPrivilege):
-                cursor.execute(f"TRUNCATE TABLE {table}")
-            runtime_connection.rollback()
+        cursor.execute(
+            "SELECT has_table_privilege(current_user, 'learning_course', 'TRUNCATE')"
+        )
+        assert cursor.fetchone()[0] is False
+        cursor.execute(
+            "SELECT has_table_privilege(current_user, 'learning_lesson', 'TRUNCATE')"
+        )
+        assert cursor.fetchone()[0] is False
+
+    with runtime_connection.cursor() as cursor:
+        with pytest.raises(InsufficientPrivilege):
+            cursor.execute("TRUNCATE TABLE learning_course")
+    runtime_connection.rollback()
+
+    with runtime_connection.cursor() as cursor:
+        with pytest.raises(InsufficientPrivilege):
+            cursor.execute("TRUNCATE TABLE learning_lesson")
+    runtime_connection.rollback()
