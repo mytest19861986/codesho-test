@@ -1,8 +1,8 @@
 from uuid import uuid4
 
 import pytest
-from django.db import IntegrityError, connection, transaction
-from psycopg.errors import ForeignKeyViolation, InsufficientPrivilege, RaiseException
+from django.db import IntegrityError, ProgrammingError, connection, transaction
+from psycopg.errors import ForeignKeyViolation, InsufficientPrivilege
 
 from modules.learning.models import Course, Lesson
 from modules.platform_tenant.context import tenant_atomic
@@ -151,11 +151,11 @@ def test_database_guards_immutable_learning_keys():
     lesson = lesson_factory(tenant, course, "intro", 1)
 
     with tenant_atomic(tenant.id):
-        with pytest.raises((RaiseException, IntegrityError)), transaction.atomic():
+        with pytest.raises(ProgrammingError), transaction.atomic():
             Course.objects.filter(pk=course.pk).update(code="changed")
-        with pytest.raises((RaiseException, IntegrityError)), transaction.atomic():
+        with pytest.raises(ProgrammingError), transaction.atomic():
             Lesson.objects.filter(pk=lesson.pk).update(code="changed")
-        with pytest.raises((RaiseException, IntegrityError)), transaction.atomic():
+        with pytest.raises(ProgrammingError), transaction.atomic():
             Lesson.objects.filter(pk=lesson.pk).update(position=2)
 
 
@@ -184,19 +184,18 @@ def test_force_rls_and_runtime_role_contract_for_learning_tables(runtime_connect
             "SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname = current_user"
         )
         assert cursor.fetchone()[0] is False
-        cursor.execute(
-            "SELECT has_table_privilege(current_user, 'learning_course', 'TRUNCATE')"
-        )
-        assert cursor.fetchone()[0] is False
-        cursor.execute(
-            "SELECT has_table_privilege(current_user, 'learning_lesson', 'TRUNCATE')"
-        )
-        assert cursor.fetchone()[0] is False
+        for table in ("learning_course", "learning_lesson"):
+            cursor.execute(
+                "SELECT has_table_privilege(current_user, %s, 'DELETE'), "
+                "has_table_privilege(current_user, %s, 'TRUNCATE')",
+                [table, table],
+            )
+            assert cursor.fetchone() == (False, False)
 
-    with runtime_connection.cursor() as cursor, pytest.raises(InsufficientPrivilege):
-        cursor.execute("TRUNCATE TABLE learning_course")
-    runtime_connection.rollback()
-
-    with runtime_connection.cursor() as cursor, pytest.raises(InsufficientPrivilege):
-        cursor.execute("TRUNCATE TABLE learning_lesson")
-    runtime_connection.rollback()
+    for table in ("learning_course", "learning_lesson"):
+        with runtime_connection.cursor() as cursor, pytest.raises(InsufficientPrivilege):
+            cursor.execute(f"DELETE FROM {table}")
+        runtime_connection.rollback()
+        with runtime_connection.cursor() as cursor, pytest.raises(InsufficientPrivilege):
+            cursor.execute(f"TRUNCATE TABLE {table}")
+        runtime_connection.rollback()
