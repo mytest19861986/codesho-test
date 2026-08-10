@@ -152,6 +152,10 @@ def test_database_guards_immutable_learning_keys():
 
     with tenant_atomic(tenant.id):
         with pytest.raises(ProgrammingError), transaction.atomic():
+            Course.objects.filter(pk=course.pk).update(id=uuid4())
+        with pytest.raises(ProgrammingError), transaction.atomic():
+            Lesson.objects.filter(pk=lesson.pk).update(id=uuid4())
+        with pytest.raises(ProgrammingError), transaction.atomic():
             Course.objects.filter(pk=course.pk).update(code="changed")
         with pytest.raises(ProgrammingError), transaction.atomic():
             Lesson.objects.filter(pk=lesson.pk).update(code="changed")
