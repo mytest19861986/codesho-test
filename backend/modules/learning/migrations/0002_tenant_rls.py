@@ -45,10 +45,10 @@ WITH CHECK (
     tenant_id::text = NULLIF(current_setting('app.tenant_id', true), '')
 );
 
--- PostgreSQL RLS does not apply to TRUNCATE. The runtime role inherits
--- TRUNCATE through default privileges, so tenant-owned learning tables must
--- revoke it explicitly.
-REVOKE TRUNCATE ON TABLE learning_course, learning_lesson FROM codesho_runtime;
+-- The bootstrap role grants broad table DML by default. Task79B has no
+-- destructive catalog lifecycle contract, and RLS does not apply to TRUNCATE,
+-- so runtime deletion/truncation is explicitly denied for learning tables.
+REVOKE DELETE, TRUNCATE ON TABLE learning_course, learning_lesson FROM codesho_runtime;
 
 CREATE OR REPLACE FUNCTION learning_reject_immutable_updates()
 RETURNS trigger
@@ -91,7 +91,7 @@ ALTER TABLE learning_course NO FORCE ROW LEVEL SECURITY;
 ALTER TABLE learning_lesson DISABLE ROW LEVEL SECURITY;
 ALTER TABLE learning_course DISABLE ROW LEVEL SECURITY;
 ALTER TABLE learning_lesson DROP CONSTRAINT IF EXISTS learning_lesson_same_tenant_course_fk;
-GRANT TRUNCATE ON TABLE learning_course, learning_lesson TO codesho_runtime;
+GRANT DELETE, TRUNCATE ON TABLE learning_course, learning_lesson TO codesho_runtime;
 """
 
 
