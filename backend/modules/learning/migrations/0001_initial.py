@@ -1,3 +1,4 @@
+import django.core.validators
 import django.db.models.deletion
 import uuid
 from django.db import migrations, models
@@ -23,7 +24,7 @@ class Migration(migrations.Migration):
                 ("tenant", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name="courses", to="platform_tenant.tenant")),
             ],
             options={
-                "indexes": [models.Index(fields=["tenant", "state"], name="learning_co_tenant__8a6042_idx")],
+                "indexes": [models.Index(fields=["tenant", "state"], name="learn_course_tenant_state_ix")],
                 "constraints": [
                     models.UniqueConstraint(fields=("tenant", "code"), name="learning_course_tenant_code_uniq"),
                     models.UniqueConstraint(fields=("tenant", "id"), name="learning_course_tenant_id_uniq"),
@@ -39,7 +40,7 @@ class Migration(migrations.Migration):
                 ("id", models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ("code", models.CharField(max_length=64)),
                 ("title", models.CharField(max_length=160)),
-                ("position", models.PositiveIntegerField()),
+                ("position", models.PositiveIntegerField(validators=[django.core.validators.MinValueValidator(1)])),
                 ("state", models.CharField(choices=[("draft", "Draft"), ("published", "Published"), ("archived", "Archived")], default="draft", max_length=16)),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
@@ -47,7 +48,7 @@ class Migration(migrations.Migration):
                 ("tenant", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name="lessons", to="platform_tenant.tenant")),
             ],
             options={
-                "indexes": [models.Index(fields=["tenant", "course", "state"], name="learning_le_tenant__876ae3_idx")],
+                "indexes": [models.Index(fields=["tenant", "course", "state"], name="learn_lesson_tenant_course_ix")],
                 "constraints": [
                     models.UniqueConstraint(fields=("tenant", "course", "code"), name="learning_lesson_tenant_course_code_uniq"),
                     models.UniqueConstraint(fields=("tenant", "course", "position"), name="learning_lesson_tenant_course_position_uniq"),
