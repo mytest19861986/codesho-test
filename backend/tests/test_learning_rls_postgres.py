@@ -193,12 +193,10 @@ def test_force_rls_and_runtime_role_contract_for_learning_tables(runtime_connect
         )
         assert cursor.fetchone()[0] is False
 
-    with runtime_connection.cursor() as cursor:
-        with pytest.raises(InsufficientPrivilege):
-            cursor.execute("TRUNCATE TABLE learning_course")
+    with runtime_connection.cursor() as cursor, pytest.raises(InsufficientPrivilege):
+        cursor.execute("TRUNCATE TABLE learning_course")
     runtime_connection.rollback()
 
-    with runtime_connection.cursor() as cursor:
-        with pytest.raises(InsufficientPrivilege):
-            cursor.execute("TRUNCATE TABLE learning_lesson")
+    with runtime_connection.cursor() as cursor, pytest.raises(InsufficientPrivilege):
+        cursor.execute("TRUNCATE TABLE learning_lesson")
     runtime_connection.rollback()
