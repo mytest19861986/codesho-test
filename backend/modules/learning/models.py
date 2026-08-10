@@ -44,7 +44,7 @@ class Course(models.Model):
                 name="learning_course_title_nonempty",
             ),
         ]
-        indexes = [models.Index(fields=["tenant", "state"])]
+        indexes = [models.Index(fields=["tenant", "state"], name="learn_course_tenant_state_ix")]
 
     def save(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         if self.pk and not self._state.adding:
@@ -99,7 +99,12 @@ class Lesson(models.Model):
                 name="learning_lesson_title_nonempty",
             ),
         ]
-        indexes = [models.Index(fields=["tenant", "course", "state"])]
+        indexes = [
+            models.Index(
+                fields=["tenant", "course", "state"],
+                name="learn_lesson_tenant_course_ix",
+            )
+        ]
 
     def save(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         if self.pk and not self._state.adding:
