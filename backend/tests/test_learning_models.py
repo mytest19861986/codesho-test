@@ -27,11 +27,29 @@ def test_course_code_is_unique_per_tenant():
 def test_lesson_code_and_position_are_unique_per_course():
     tenant = Tenant.objects.create(slug="learning-b", name="Learning B")
     course = Course.objects.create(tenant=tenant, code="web", title="Web")
-    Lesson.objects.create(tenant=tenant, course=course, code="intro", title="Intro", position=1)
+    Lesson.objects.create(
+        tenant=tenant,
+        course=course,
+        code="intro",
+        title="Intro",
+        position=1,
+    )
     with pytest.raises(IntegrityError), transaction.atomic():
-        Lesson.objects.create(tenant=tenant, course=course, code="intro", title="Duplicate", position=2)
+        Lesson.objects.create(
+            tenant=tenant,
+            course=course,
+            code="intro",
+            title="Duplicate",
+            position=2,
+        )
     with pytest.raises(IntegrityError), transaction.atomic():
-        Lesson.objects.create(tenant=tenant, course=course, code="other", title="Other", position=1)
+        Lesson.objects.create(
+            tenant=tenant,
+            course=course,
+            code="other",
+            title="Other",
+            position=1,
+        )
 
 
 @pytest.mark.django_db
@@ -46,7 +64,13 @@ def test_lesson_position_must_be_positive():
 def test_stable_codes_and_lesson_position_are_guarded_from_model_mutation():
     tenant = Tenant.objects.create(slug="learning-d", name="Learning D")
     course = Course.objects.create(tenant=tenant, code="js", title="JavaScript")
-    lesson = Lesson.objects.create(tenant=tenant, course=course, code="dom", title="DOM", position=1)
+    lesson = Lesson.objects.create(
+        tenant=tenant,
+        course=course,
+        code="dom",
+        title="DOM",
+        position=1,
+    )
 
     course.code = "changed"
     with pytest.raises(ValidationError):
