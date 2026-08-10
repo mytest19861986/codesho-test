@@ -7,6 +7,7 @@ ALLOWED_DEPENDENCIES = {
     "identity": set(),
     "platform_event": set(),
     "platform_tenant": {"identity"},
+    "learning": {"platform_tenant"},
 }
 
 
