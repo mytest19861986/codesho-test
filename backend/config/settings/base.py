@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "modules.identity",
     "modules.platform_tenant",
     "modules.platform_event",
+    "modules.learning",
 ]
 
 MIDDLEWARE = [
@@ -50,7 +51,7 @@ TEMPLATES = [
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
-                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
             ]
