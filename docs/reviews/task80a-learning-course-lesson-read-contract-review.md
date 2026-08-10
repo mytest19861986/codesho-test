@@ -4,7 +4,7 @@ Task: `SPRINT1-DOMAIN-LEARNING-COURSE-LESSON-READ-CONTRACT-ARCHITECTURE-80A`
 
 Base: `f96733da69e42df3fe8ea8710ec1e9a0f81d91a2`
 
-Status: `ARCHITECTURE MERGED / POST-MERGE GREEN / PROVIDER REVIEWS PENDING`
+Status: `ARCHITECTURE MERGED / POST-MERGE GREEN / PROVIDER_TRANSPORT_BLOCKED`
 
 ## Scope under review
 
@@ -39,6 +39,8 @@ Exact architecture file/blob bindings:
 
 Exact architecture diff: three documentation files only.
 
+Provider review must use those immutable blobs, not later closeout/readiness revisions.
+
 ## Validation evidence
 
 Pre-merge exact-head CI `31402531075`: `SUCCESS`.
@@ -55,29 +57,56 @@ Post-merge Compose smoke/restore `31402907634`: `SUCCESS`.
 
 Post-merge evidence includes backend full tests, frontend checks/build, canonical OpenAPI parity, PostgreSQL RLS/connection-reuse, and backup/restore success.
 
+## Provider transport evidence
+
+Operational status: `PENDING_PROVIDER_TRANSPORT`.
+
+Checked paths:
+
+- installed plugin discovery for Qwen/Claude/Anthropic did not expose a direct provider connector;
+- repository code search did not find an authorized checked-in Qwen/Claude runner or browser/provider bridge;
+- available GitHub connector actions cannot execute external model review sessions.
+
+This status must not be treated as provider failure or provider PASS. No quota, authentication, browser/profile lock, attachment restriction, or other provider boundary may be bypassed to obtain a verdict.
+
 ## Required Qwen architecture gate
 
 Prompt ID: `QWEN_TASK80A_COURSE_LESSON_READ_CONTRACT_ARCH_REVIEW_01_V1`
 
-Qwen must review the exact three-file packet bound above and return:
+Qwen must receive complete, untruncated contents of exactly the three architecture blobs above.
 
-- `CONTENT_RECEIVED_COMPLETE`;
-- `HEAD_LABEL_REVIEWED`;
-- verdict;
-- P0/P1/P2 counts;
-- open blockers;
-- findings on tenant authority, active membership authorization, enumeration resistance, publication visibility, field minimization, pagination bounds, deterministic ordering, empty states, OpenAPI proposal boundary, and scope;
-- `IMPLEMENTATION_RECOMMENDATION=READY_FOR_CLAUDE` only when P0=0, P1=0 and open blockers=0.
+Required review areas:
 
-Status: `PENDING`.
+- tenant authority;
+- active membership authorization;
+- object-enumeration resistance;
+- published-only visibility;
+- field minimization;
+- deterministic ordering;
+- pagination default 20 / maximum 100;
+- invalid pagination semantics;
+- truthful empty states;
+- canonical OpenAPI unchanged in Task80A;
+- exactly two future GET proposals;
+- no runtime/cohort/progress scope creep.
+
+PASS requires:
+
+- `CONTENT_RECEIVED_COMPLETE=YES`;
+- `P0_COUNT=0`;
+- `P1_COUNT=0`;
+- `OPEN_BLOCKERS=0`;
+- `IMPLEMENTATION_RECOMMENDATION=READY_FOR_CLAUDE`.
+
+Status: `PENDING_PROVIDER_TRANSPORT`.
 
 ## Required Claude architecture hard gate
 
 Prompt ID: `CLAUDE_TASK80A_COURSE_LESSON_READ_CONTRACT_ARCH_HARD_GATE_01_V1`
 
-Claude runs only after Qwen passes and receives the same exact three-file packet plus Qwen's complete response.
+Claude runs only after a real Qwen PASS and receives the same exact three-file packet plus Qwen's complete response.
 
-Claude must independently assess tenant isolation, membership authorization, privacy/data minimization, enumeration behavior, pagination bounds, publication visibility, OpenAPI expansion proposal safety, preservation of existing auth/session/CSRF/cookie behavior, and absence of cohort/progress/runtime scope creep.
+Claude independently assesses tenant isolation, membership authorization, privacy/data minimization, enumeration behavior, pagination bounds, publication visibility, OpenAPI expansion proposal safety, preservation of existing auth/session/CSRF/cookie behavior, and absence of cohort/progress/runtime scope creep.
 
 PASS requires:
 
@@ -87,10 +116,12 @@ PASS requires:
 - `OPEN_BLOCKERS=0`;
 - `IMPLEMENTATION_RECOMMENDATION=READY_FOR_SEPARATE_IMPLEMENTATION_TASK`.
 
-Status: `PENDING`.
+Status: `BLOCKED_ON_QWEN_AND_PROVIDER_TRANSPORT`.
 
 ## Runtime successor gate
 
 No runtime/API/OpenAPI implementation successor may start until both provider reviews are complete and the Claude PASS condition above is satisfied.
+
+Until then, only independent docs-only provenance/readiness/closeout work is allowed.
 
 No Release, Deployment, Production, or protected `codesho` action is authorized.
