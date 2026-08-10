@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import pytest
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
@@ -95,6 +97,32 @@ def test_stable_codes_and_lesson_position_are_guarded_from_model_mutation():
         lesson.position = 2
         with pytest.raises(ValidationError):
             lesson.save()
+
+
+@pytest.mark.django_db
+def test_primary_keys_are_guarded_from_model_mutation():
+    tenant = Tenant.objects.create(slug="learning-id", name="Learning ID")
+    with tenant_atomic(tenant.id):
+        course = Course.objects.create(tenant=tenant, code="ids", title="IDs")
+        lesson = Lesson.objects.create(
+            tenant=tenant,
+            course=course,
+            code="stable-id",
+            title="Stable ID",
+            position=1,
+        )
+        original_course_id = course.id
+        original_lesson_id = lesson.id
+
+        course.id = uuid4()
+        with pytest.raises(ValidationError):
+            course.save()
+        assert Course.objects.filter(pk=original_course_id).exists()
+
+        lesson.id = uuid4()
+        with pytest.raises(ValidationError):
+            lesson.save()
+        assert Lesson.objects.filter(pk=original_lesson_id).exists()
 
 
 def test_learning_app_does_not_define_learner_or_progress_models():
