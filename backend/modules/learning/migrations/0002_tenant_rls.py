@@ -2,6 +2,26 @@ from django.db import migrations
 
 
 POSTGRES_SQL = """
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'codesho_runtime') THEN
+        RAISE EXCEPTION 'codesho_runtime role must exist before learning RLS migration';
+    END IF;
+    IF EXISTS (
+        SELECT 1 FROM pg_roles
+        WHERE rolname = 'codesho_runtime' AND (rolsuper OR rolbypassrls)
+    ) THEN
+        RAISE EXCEPTION 'codesho_runtime must not be superuser or BYPASSRLS';
+    END IF;
+END;
+$$;
+
+ALTER TABLE learning_lesson
+ADD CONSTRAINT learning_lesson_same_tenant_course_fk
+FOREIGN KEY (tenant_id, course_id)
+REFERENCES learning_course (tenant_id, id)
+DEFERRABLE INITIALLY IMMEDIATE;
+
 ALTER TABLE learning_course ENABLE ROW LEVEL SECURITY;
 ALTER TABLE learning_course FORCE ROW LEVEL SECURITY;
 ALTER TABLE learning_lesson ENABLE ROW LEVEL SECURITY;
@@ -25,15 +45,15 @@ WITH CHECK (
     tenant_id::text = NULLIF(current_setting('app.tenant_id', true), '')
 );
 
-ALTER TABLE learning_lesson
-ADD CONSTRAINT learning_lesson_same_tenant_course_fk
-FOREIGN KEY (tenant_id, course_id)
-REFERENCES learning_course (tenant_id, id)
-DEFERRABLE INITIALLY IMMEDIATE;
+-- PostgreSQL RLS does not apply to TRUNCATE. The runtime role inherits
+-- TRUNCATE through default privileges, so tenant-owned learning tables must
+-- revoke it explicitly.
+REVOKE TRUNCATE ON TABLE learning_course, learning_lesson FROM codesho_runtime;
 
 CREATE OR REPLACE FUNCTION learning_reject_immutable_updates()
 RETURNS trigger
 LANGUAGE plpgsql
+SET search_path = pg_catalog, codesho, pg_temp
 AS $$
 BEGIN
     IF TG_TABLE_NAME = 'learning_course' AND NEW.code IS DISTINCT FROM OLD.code THEN
@@ -64,11 +84,14 @@ REVERSE_SQL = """
 DROP TRIGGER IF EXISTS learning_lesson_immutable_guard ON learning_lesson;
 DROP TRIGGER IF EXISTS learning_course_immutable_guard ON learning_course;
 DROP FUNCTION IF EXISTS learning_reject_immutable_updates();
-ALTER TABLE learning_lesson DROP CONSTRAINT IF EXISTS learning_lesson_same_tenant_course_fk;
 DROP POLICY IF EXISTS learning_lesson_tenant_isolation ON learning_lesson;
 DROP POLICY IF EXISTS learning_course_tenant_isolation ON learning_course;
+ALTER TABLE learning_lesson NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE learning_course NO FORCE ROW LEVEL SECURITY;
 ALTER TABLE learning_lesson DISABLE ROW LEVEL SECURITY;
 ALTER TABLE learning_course DISABLE ROW LEVEL SECURITY;
+ALTER TABLE learning_lesson DROP CONSTRAINT IF EXISTS learning_lesson_same_tenant_course_fk;
+GRANT TRUNCATE ON TABLE learning_course, learning_lesson TO codesho_runtime;
 """
 
 
