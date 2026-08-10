@@ -37,13 +37,11 @@ Course code, lesson code, and lesson position are guarded in the Django model an
 
 Full content versioning is intentionally deferred. Task79B adds no body/content field and therefore does not create an unsupported publication mutation workflow.
 
-## Module boundary amendment
+## Module boundary evidence
 
-The repository module-boundary gate previously knew only identity/platform modules. Task79B adds exactly one dependency edge:
+The repository module-boundary script is unchanged from the Task79B base. The learning runtime code uses a string model reference (`platform_tenant.Tenant`) rather than a Python import from `modules.platform_tenant`, so no new module-boundary declaration is required for this task.
 
-`learning -> platform_tenant`
-
-No dependency on identity, platform_event, config services, API code, or frontend is opened.
+Task79B therefore opens no dependency edge in `scripts/check_module_boundaries.py` and introduces no dependency on identity, platform_event, config services, API code, or frontend code.
 
 ## Migration strategy
 
