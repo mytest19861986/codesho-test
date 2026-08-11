@@ -1,5 +1,14 @@
 # Codesho Project State
 
+## Task80B merged closeout / Task80C checkpoint — 2026-08-11
+
+- Validated `main`: `d1da19f76e7f7bae48b836029873272d6cac642a`.
+- `SPRINT1-DOMAIN-LEARNING-COURSE-LESSON-READ-API-80B`: `COMPLETE`; PR `#39` `MERGED`.
+- Qwen and Claude implementation gates: `PASS` (`P0=0`, `P1=0`, `OPEN_BLOCKERS=0`).
+- Post-merge CI `31477878067`: `SUCCESS`; Compose `31477878000`: `SUCCESS`.
+- Carry-forward items are `NON_BLOCKING_FUTURE_HARDENING`; they do not reopen Task80B.
+- Task80C updates coordination pointers only. No production, deployment, release, or protected `codesho` authorization exists.
+
 ## Task79A architecture checkpoint — 2026-08-10
 
 - `SPRINT1-DOMAIN-LEARNING-READ-MODEL-ARCHITECTURE-79A` is architecture-only.

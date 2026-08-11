@@ -1,4 +1,15 @@
-# Current Task: SPRINT1-DOMAIN-LEARNING-READ-MODEL-ARCHITECTURE-79A
+# Current Task: SPRINT1-DOMAIN-LEARNING-COURSE-LESSON-READ-CLOSEOUT-80C
+
+## Active Task80C coordination closeout — 2026-08-11
+
+- Status: `IN_PROGRESS / COORDINATION_ONLY`.
+- Validated main / base: `d1da19f76e7f7bae48b836029873272d6cac642a`.
+- Task80B: `COMPLETE`; PR `#39` is `MERGED`.
+- Qwen and Claude implementation gates: `PASS` (`P0=0`, `P1=0`, `OPEN_BLOCKERS=0`).
+- Post-merge CI `31477878067` and Compose `31477878000`: `SUCCESS`.
+- Scope is coordination closeout only. Production, deployment, release, and protected `codesho` remain unauthorized.
+
+# Historical Task79A record
 
 ## Active Task79A handoff — 2026-08-10
 
