@@ -6,6 +6,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from config import auth_views
 from config import platform_admin as _platform_admin  # noqa: F401
 from config.adult_signup import adult_age_attestation
+from modules.learning.views import course_lesson_list, course_list
 from modules.platform_event.views import health_live, health_ready
 
 urlpatterns = [
@@ -26,6 +27,16 @@ urlpatterns = [
     ),
     path("api/v1/auth/session/", auth_views.session, name="auth-session"),
     path("api/v1/auth/logout/", auth_views.logout, name="auth-logout"),
+    path(
+        "api/v1/learning/courses/",
+        course_list,
+        name="learning-course-list",
+    ),
+    path(
+        "api/v1/learning/courses/<str:course_id>/lessons/",
+        course_lesson_list,
+        name="learning-course-lesson-list",
+    ),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
         "api/schema/swagger-ui/",

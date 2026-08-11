@@ -13,6 +13,7 @@ from django.test import Client
 from django.urls import get_resolver, resolve
 
 from config import adult_signup, auth_views
+from modules.learning.views import course_lesson_list, course_list
 
 CONTRACT_ROUTES = {
     "/api/v1/auth/csrf/": ("auth-csrf", auth_views.csrf, "GET"),
@@ -29,6 +30,16 @@ CONTRACT_ROUTES = {
     ),
     "/api/v1/auth/session/": ("auth-session", auth_views.session, "GET"),
     "/api/v1/auth/logout/": ("auth-logout", auth_views.logout, "POST"),
+    "/api/v1/learning/courses/": (
+        "learning-course-list",
+        course_list,
+        "GET",
+    ),
+    "/api/v1/learning/courses/<str:course_id>/lessons/": (
+        "learning-course-lesson-list",
+        course_lesson_list,
+        "GET",
+    ),
 }
 
 
@@ -92,7 +103,7 @@ def test_generated_schema_is_canonical_and_only_exposes_contract_routes():
         assert generated.read_bytes() == expected.read_bytes()
         contents = generated.read_text(encoding="utf-8")
     for route in CONTRACT_ROUTES:
-        assert route in contents
+        assert route.replace("<str:course_id>", "{course_id}") in contents
     assert "/admin/" not in contents
     assert "/health/" not in contents
     assert "/api/schema/" not in contents

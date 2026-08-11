@@ -7,6 +7,8 @@ handler raises ``Http404`` if it is called accidentally.
 
 from __future__ import annotations
 
+from uuid import UUID
+
 from django.http import Http404
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import serializers
@@ -58,6 +60,29 @@ class SessionStateSerializer(serializers.Serializer):  # type: ignore[misc]
     authenticated = serializers.BooleanField()
     user = UserSerializer()
     tenant = TenantSerializer()
+
+
+class CourseItemSerializer(serializers.Serializer):  # type: ignore[misc]
+    id = serializers.UUIDField()
+    code = serializers.CharField()
+    title = serializers.CharField()
+    state = serializers.ChoiceField(choices=["published"])
+
+
+class LessonItemSerializer(serializers.Serializer):  # type: ignore[misc]
+    id = serializers.UUIDField()
+    code = serializers.CharField()
+    title = serializers.CharField()
+    position = serializers.IntegerField(min_value=1)
+    state = serializers.ChoiceField(choices=["published"])
+
+
+class CourseResultsSerializer(serializers.Serializer):  # type: ignore[misc]
+    results = CourseItemSerializer(many=True)
+
+
+class LessonResultsSerializer(serializers.Serializer):  # type: ignore[misc]
+    results = LessonItemSerializer(many=True)
 
 
 ERROR_RESPONSES = {
@@ -195,4 +220,75 @@ class LogoutSchemaView(SchemaOnlyAPIView):
         },
     )
     def post(self, request: Request) -> Response:
+        return self._unreachable(request)
+
+
+PAGINATION_PARAMETERS = [
+    OpenApiParameter(
+        name="page",
+        type=int,
+        location=OpenApiParameter.QUERY,
+        required=False,
+        description="Positive page number; defaults to 1.",
+    ),
+    OpenApiParameter(
+        name="page_size",
+        type=int,
+        location=OpenApiParameter.QUERY,
+        required=False,
+        description="Positive page size, maximum 100; defaults to 20.",
+    ),
+]
+
+
+class LearningCourseListSchemaView(SchemaOnlyAPIView):
+    @extend_schema(
+        operation_id="api_v1_learning_courses_list",
+        tags=["learning"],
+        summary="List published courses for the current tenant",
+        description=(
+            "Returns only published courses visible to the authenticated active tenant "
+            "membership. Pagination is evaluated independently per request."
+        ),
+        parameters=PAGINATION_PARAMETERS,
+        responses={
+            200: CourseResultsSerializer,
+            400: OpenApiResponse(ErrorSerializer, "Invalid pagination."),
+            401: ERROR_RESPONSES[401],
+            403: ERROR_RESPONSES[403],
+        },
+    )
+    def get(self, request: Request) -> Response:
+        return self._unreachable(request)
+
+
+class LearningCourseLessonListSchemaView(SchemaOnlyAPIView):
+    @extend_schema(
+        operation_id="api_v1_learning_course_lessons_list",
+        tags=["learning"],
+        summary="List published lessons for a visible course",
+        description=(
+            "Returns only published lessons for a published course visible to the "
+            "authenticated active tenant membership. Hidden, missing, and cross-tenant "
+            "parents have identical not-found semantics."
+        ),
+        parameters=[
+            OpenApiParameter(
+                name="course_id",
+                type=UUID,
+                location=OpenApiParameter.PATH,
+                required=True,
+                description="Course UUID.",
+            ),
+            *PAGINATION_PARAMETERS,
+        ],
+        responses={
+            200: LessonResultsSerializer,
+            400: OpenApiResponse(ErrorSerializer, "Invalid pagination."),
+            401: ERROR_RESPONSES[401],
+            403: ERROR_RESPONSES[403],
+            404: OpenApiResponse(ErrorSerializer, "Course not found."),
+        },
+    )
+    def get(self, request: Request, course_id: str) -> Response:
         return self._unreachable(request)

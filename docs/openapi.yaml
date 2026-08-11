@@ -267,6 +267,112 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: Internal-only feature disabled.
+  /api/v1/learning/courses/:
+    get:
+      operationId: api_v1_learning_courses_list
+      description: Returns only published courses visible to the authenticated active
+        tenant membership. Pagination is evaluated independently per request.
+      summary: List published courses for the current tenant
+      parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: Positive page number; defaults to 1.
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+        description: Positive page size, maximum 100; defaults to 20.
+      tags:
+      - learning
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseResults'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Invalid pagination.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Fixed authentication failure response.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: CSRF failure or authorization boundary.
+  /api/v1/learning/courses/{course_id}/lessons/:
+    get:
+      operationId: api_v1_learning_course_lessons_list
+      description: Returns only published lessons for a published course visible to
+        the authenticated active tenant membership. Hidden, missing, and cross-tenant
+        parents have identical not-found semantics.
+      summary: List published lessons for a visible course
+      parameters:
+      - in: path
+        name: course_id
+        schema:
+          type: string
+          format: uuid
+        description: Course UUID.
+        required: true
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: Positive page number; defaults to 1.
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+        description: Positive page size, maximum 100; defaults to 20.
+      tags:
+      - learning
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LessonResults'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Invalid pagination.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Fixed authentication failure response.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: CSRF failure or authorization boundary.
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Course not found.
 components:
   schemas:
     AdultAgeAttestationReceipt:
@@ -305,6 +411,32 @@ components:
       - adultAttestation
       - policyVersion
       - subjectId
+    CourseItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        title:
+          type: string
+        state:
+          $ref: '#/components/schemas/StateEnum'
+      required:
+      - code
+      - id
+      - state
+      - title
+    CourseResults:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CourseItem'
+      required:
+      - results
     Error:
       type: object
       properties:
@@ -312,6 +444,36 @@ components:
           type: string
       required:
       - code
+    LessonItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        title:
+          type: string
+        position:
+          type: integer
+          minimum: 1
+        state:
+          $ref: '#/components/schemas/StateEnum'
+      required:
+      - code
+      - id
+      - position
+      - state
+      - title
+    LessonResults:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/LessonItem'
+      required:
+      - results
     PasscodeChangeCompletionRequest:
       type: object
       properties:
@@ -350,6 +512,11 @@ components:
       - internal_test_api
       type: string
       description: '* `internal_test_api` - internal_test_api'
+    StateEnum:
+      enum:
+      - published
+      type: string
+      description: '* `published` - published'
     StatusEnum:
       enum:
       - adult_attested

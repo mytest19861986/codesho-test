@@ -5,6 +5,8 @@ from django.urls import path
 from config.openapi_schema import (
     AdultAttestationSchemaView,
     CsrfSchemaView,
+    LearningCourseLessonListSchemaView,
+    LearningCourseListSchemaView,
     LogoutSchemaView,
     PasscodeChangeCompletionSchemaView,
     PasscodeLoginSchemaView,
@@ -26,4 +28,14 @@ urlpatterns = [
     ),
     path("api/v1/auth/session/", SessionSchemaView.as_view(), name="auth-session"),
     path("api/v1/auth/logout/", LogoutSchemaView.as_view(), name="auth-logout"),
+    path(
+        "api/v1/learning/courses/",
+        LearningCourseListSchemaView.as_view(),
+        name="learning-course-list",
+    ),
+    path(
+        "api/v1/learning/courses/<str:course_id>/lessons/",
+        LearningCourseLessonListSchemaView.as_view(),
+        name="learning-course-lesson-list",
+    ),
 ]
