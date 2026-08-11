@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Protocol, cast
 from uuid import UUID
 
 from django.http import HttpRequest
@@ -9,6 +10,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Course, Lesson, PublicationState
+
+
+class _Tenant(Protocol):
+    id: UUID
+
+
+class _TenantRequest(Protocol):
+    tenant: _Tenant
 
 
 def _invalid_pagination() -> Response:
@@ -27,10 +36,11 @@ def _pagination(request: Request) -> tuple[int, int] | Response:
 
 
 def _tenant_id(request: HttpRequest) -> UUID:
-    return request.tenant.id  # type: ignore[attr-defined]
+    tenant_request = cast(_TenantRequest, request)
+    return tenant_request.tenant.id
 
 
-class CourseListView(APIView):
+class CourseListView(APIView):  # type: ignore[misc]
     def get(self, request: Request) -> Response:
         pagination = _pagination(request)
         if isinstance(pagination, Response):
@@ -52,7 +62,7 @@ class CourseListView(APIView):
         )
 
 
-class CourseLessonListView(APIView):
+class CourseLessonListView(APIView):  # type: ignore[misc]
     def get(self, request: Request, course_id: str) -> Response:
         pagination = _pagination(request)
         if isinstance(pagination, Response):
