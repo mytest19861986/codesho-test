@@ -63,16 +63,19 @@ def test_courses_publish_minimize_and_order(learner):
     response = client.get("/api/v1/learning/courses/", HTTP_HOST="catalog-a.localhost")
 
     assert response.status_code == 200
+    with tenant_atomic(tenant.id):
+        alpha_id = str(Course.objects.get(code="alpha").id)
+        zeta_id = str(Course.objects.get(code="zeta").id)
     assert response.json() == {
         "results": [
             {
-                "id": str(Course.objects.get(code="alpha").id),
+                "id": alpha_id,
                 "code": "alpha",
                 "title": "Alpha",
                 "state": "published",
             },
             {
-                "id": str(Course.objects.get(code="zeta").id),
+                "id": zeta_id,
                 "code": "zeta",
                 "title": "Zeta",
                 "state": "published",
