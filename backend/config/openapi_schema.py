@@ -7,6 +7,8 @@ handler raises ``Http404`` if it is called accidentally.
 
 from __future__ import annotations
 
+from uuid import UUID
+
 from django.http import Http404
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import serializers
@@ -273,7 +275,7 @@ class LearningCourseLessonListSchemaView(SchemaOnlyAPIView):
         parameters=[
             OpenApiParameter(
                 name="course_id",
-                type=str,
+                type=UUID,
                 location=OpenApiParameter.PATH,
                 required=True,
                 description="Course UUID.",

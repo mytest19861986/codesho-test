@@ -168,6 +168,36 @@ def test_pagination_has_bounded_results_and_no_metadata(learner):
 
 
 @pytest.mark.django_db(transaction=True)
+def test_tenant_authority_is_not_overridden_by_request_values(learner):
+    tenant, client = learner
+    other = Tenant.objects.create(slug="catalog-b", name="Catalog B")
+    other_course = create_course(other, "other")
+    local_course = create_course(tenant, "local")
+    response = client.get(
+        f"/api/v1/learning/courses/?tenant_id={other.id}", HTTP_HOST="catalog-a.localhost"
+    )
+    assert [item["id"] for item in response.json()["results"]] == [str(local_course.id)]
+    cross_tenant = client.get(
+        f"/api/v1/learning/courses/{other_course.id}/lessons/",
+        HTTP_HOST="catalog-a.localhost",
+    )
+    assert (cross_tenant.status_code, cross_tenant.json()) == (404, {"code": "not_found"})
+
+
+@pytest.mark.django_db(transaction=True)
+def test_publication_state_is_evaluated_independently_per_request(learner):
+    tenant, client = learner
+    course = create_course(tenant, "mutable")
+    first = client.get("/api/v1/learning/courses/", HTTP_HOST="catalog-a.localhost")
+    assert [item["id"] for item in first.json()["results"]] == [str(course.id)]
+    course.state = PublicationState.DRAFT
+    with tenant_atomic(tenant.id):
+        course.save(update_fields=["state"])
+    second = client.get("/api/v1/learning/courses/", HTTP_HOST="catalog-a.localhost")
+    assert second.json() == {"results": []}
+
+
+@pytest.mark.django_db(transaction=True)
 def test_unauthenticated_and_inactive_membership_fail_closed(learner):
     tenant, _ = learner
     anonymous = Client()

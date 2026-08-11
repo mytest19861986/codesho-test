@@ -325,6 +325,7 @@ paths:
         name: course_id
         schema:
           type: string
+          format: uuid
         description: Course UUID.
         required: true
       - in: query
