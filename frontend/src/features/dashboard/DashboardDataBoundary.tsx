@@ -37,14 +37,15 @@ export function DashboardDataBoundary() {
         const session: SessionContract | null = await getSession();
         const sessionGeneration = ++generation;
         if (!isCurrent(sessionGeneration)) return;
-        if (session === null) { setView({ state: "unauthenticated", model: null }); return; }
+        if (session === null) { setSelectedCourseId(null); setView({ state: "unauthenticated", model: null }); return; }
         const courses = await fetchCourses({ signal: controller.signal });
         if (!isCurrent(sessionGeneration)) return;
-        if (courses.length === 0) { setView({ state: "empty", model: { student: { displayName: session.user.username }, learning: { courses, lessons: [], selectedCourseId: null } } }); return; }
+        if (courses.length === 0) { setSelectedCourseId(null); setView({ state: "empty", model: { student: { displayName: session.user.username }, learning: { courses, lessons: [], selectedCourseId: null } } }); return; }
         setSelectedCourseId(courses[0].id);
         setView({ state: "loading", model: { student: { displayName: session.user.username }, learning: { courses, lessons: [], selectedCourseId: courses[0].id } } });
       } catch (error) {
         if (!isCurrent(generation) || (error instanceof DOMException && error.name === "AbortError")) return;
+        setSelectedCourseId(null);
         setView({ state: classify(error), model: null });
       }
     })();
@@ -61,14 +62,17 @@ export function DashboardDataBoundary() {
       setView((previous) => previous.model === null ? previous : { state: lessons.length === 0 ? "lessons-empty" : "ready", model: { ...previous.model, learning: { ...previous.model.learning, lessons, selectedCourseId: courseId } } });
     }).catch((error: unknown) => {
       if (!current || (error instanceof DOMException && error.name === "AbortError")) return;
-      setView({ state: classify(error), model: null });
+      const state = classify(error);
+      if (state === "parent-not-found" || state === "unauthenticated" || state === "forbidden") setSelectedCourseId(null);
+      setView({ state, model: null });
     });
     return () => { current = false; controller.abort(); };
   }, [selectedCourseId, courseCount]);
 
   const selectCourse = (courseId: string) => {
+    if (view.model === null || !view.model.learning.courses.some((course) => course.id === courseId)) return;
     setSelectedCourseId(courseId);
-    setView((previous) => previous.model === null ? previous : { state: "loading", model: { ...previous.model, learning: { ...previous.model.learning, lessons: [], selectedCourseId: courseId } } });
+    setView({ state: "loading", model: { ...view.model, learning: { ...view.model.learning, lessons: [], selectedCourseId: courseId } } });
   };
   return view.model === null || (view.state !== "ready" && view.state !== "lessons-empty")
     ? <DashboardScreen state={view.state} />
