@@ -2,6 +2,7 @@ export type DashboardViewState =
   | "ready"
   | "loading"
   | "empty"
+  | "lessons-empty"
   | "error"
   | "unauthenticated"
   | "parent-not-found"

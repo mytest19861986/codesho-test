@@ -23,6 +23,8 @@ function classify(error: unknown): DashboardViewState {
 
 export function DashboardDataBoundary() {
   const [view, setView] = useState<BoundaryState>(initial);
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const courseCount = view.model?.learning.courses.length ?? 0;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -39,10 +41,8 @@ export function DashboardDataBoundary() {
         const courses = await fetchCourses({ signal: controller.signal });
         if (!isCurrent(sessionGeneration)) return;
         if (courses.length === 0) { setView({ state: "empty", model: { student: { displayName: session.user.username }, learning: { courses, lessons: [], selectedCourseId: null } } }); return; }
-        const selectedCourseId = courses[0].id;
-        const lessons = await fetchLessons(selectedCourseId, { signal: controller.signal });
-        if (!isCurrent(sessionGeneration)) return;
-        setView({ state: "ready", model: { student: { displayName: session.user.username }, learning: { courses, lessons, selectedCourseId } } });
+        setSelectedCourseId(courses[0].id);
+        setView({ state: "loading", model: { student: { displayName: session.user.username }, learning: { courses, lessons: [], selectedCourseId: courses[0].id } } });
       } catch (error) {
         if (!isCurrent(generation) || (error instanceof DOMException && error.name === "AbortError")) return;
         setView({ state: classify(error), model: null });
@@ -51,7 +51,26 @@ export function DashboardDataBoundary() {
     return () => { mounted = false; controller.abort(); generation += 1; };
   }, []);
 
-  return view.model === null || view.state !== "ready"
+  useEffect(() => {
+    if (selectedCourseId === null || courseCount === 0) return;
+    const controller = new AbortController();
+    let current = true;
+    const courseId = selectedCourseId;
+    void fetchLessons(courseId, { signal: controller.signal }).then((lessons) => {
+      if (!current) return;
+      setView((previous) => previous.model === null ? previous : { state: lessons.length === 0 ? "lessons-empty" : "ready", model: { ...previous.model, learning: { ...previous.model.learning, lessons, selectedCourseId: courseId } } });
+    }).catch((error: unknown) => {
+      if (!current || (error instanceof DOMException && error.name === "AbortError")) return;
+      setView({ state: classify(error), model: null });
+    });
+    return () => { current = false; controller.abort(); };
+  }, [selectedCourseId, courseCount]);
+
+  const selectCourse = (courseId: string) => {
+    setSelectedCourseId(courseId);
+    setView((previous) => previous.model === null ? previous : { state: "loading", model: { ...previous.model, learning: { ...previous.model.learning, lessons: [], selectedCourseId: courseId } } });
+  };
+  return view.model === null || (view.state !== "ready" && view.state !== "lessons-empty")
     ? <DashboardScreen state={view.state} />
-    : <DashboardScreen model={view.model} state="ready" />;
+    : <DashboardScreen model={view.model} state={view.state} onSelectCourse={selectCourse} />;
 }

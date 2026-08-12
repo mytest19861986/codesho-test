@@ -3,6 +3,7 @@ import styles from "./dashboard.module.css";
 
 const messages: Record<Exclude<DashboardViewState, "ready" | "loading">, string> = {
   empty: "هنوز دوره‌ای برای نمایش وجود ندارد.",
+  "lessons-empty": "این دوره هنوز درسی برای نمایش ندارد.",
   unauthenticated: "برای دیدن دوره‌های خود وارد حساب کاربری شوید.",
   "parent-not-found": "این دوره دیگر در دسترس نیست.",
   forbidden: "دسترسی به این دوره ممکن نیست.",
