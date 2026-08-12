@@ -5,6 +5,7 @@ import { Buffer } from "node:buffer";
 import ts from "typescript";
 
 const boundary = await readFile(new URL("./DashboardDataBoundary.tsx", import.meta.url), "utf8");
+const screen = await readFile(new URL("./DashboardScreen.tsx", import.meta.url), "utf8");
 const client = await readFile(new URL("../auth/authClient.ts", import.meta.url), "utf8");
 const learningSource = await readFile(new URL("./learningClient.ts", import.meta.url), "utf8");
 const compiledClient = ts.transpileModule(client, { compilerOptions: { module: ts.ModuleKind.ES2022, target: ts.ScriptTarget.ES2022 } }).outputText;
@@ -28,6 +29,13 @@ test("dashboard reads the existing authenticated session contract", () => {
   assert.doesNotMatch(boundary, /dashboardFixture/);
   assert.match(boundary, /fetchCourses/);
   assert.match(boundary, /fetchLessons/);
+});
+
+test("course selection keeps button content valid and non-interactive", () => {
+  assert.match(screen, /<button[^>]*aria-pressed=/);
+  assert.doesNotMatch(screen, /<button[^>]*>[\s\S]*?<h[1-6][^>]*>/);
+  assert.doesNotMatch(screen, /<button[^>]*>[\s\S]*?<p(?:\s|>)/);
+  assert.doesNotMatch(screen, /<button[^>]*>[\s\S]*?<a(?:\s|>)/);
 });
 
 test("dashboard does not create a domain or mutation endpoint", () => {
