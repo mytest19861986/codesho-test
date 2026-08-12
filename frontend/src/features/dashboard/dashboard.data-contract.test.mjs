@@ -20,7 +20,8 @@ test("dashboard reads the existing authenticated session contract", () => {
   assert.match(client, /tenantRecord\.role/);
   assert.match(client, /parseSessionContract/);
   assert.doesNotMatch(boundary, /dashboardFixture/);
-  assert.match(boundary, /Not connected/);
+  assert.match(boundary, /fetchCourses/);
+  assert.match(boundary, /fetchLessons/);
 });
 
 test("dashboard does not create a domain or mutation endpoint", () => {
