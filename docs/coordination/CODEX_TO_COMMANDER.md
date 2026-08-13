@@ -950,6 +950,15 @@ Commander-approved implementation task.
 - Release, deployment, production, and protected promotion were not
   performed and remain unauthorized.
 
+# CODEX_TASK81B_POST_MERGE_CI_20260813_17
+
+- Merge commit: `e9c2f6211f41140cc30fed9d261fbf6a3cc6f341`.
+- Post-merge CI run `31708802271`: `completed/success`.
+- Post-merge Compose smoke/restore run `31708802073`: `completed/success`.
+- Both workflows ran against the exact merge commit.
+- Task81B scope ended at the authorized merge; no release, deployment,
+  production action, or protected promotion was performed.
+
 # CODEX_TASK81B_COMMANDER_PROVENANCE_DISPOSITION_20260813_13
 
 - STATUS: `WAITING_FOR_INDEPENDENT_CI_COMPOSE_PROVENANCE_CONFIRMATION`
