@@ -935,6 +935,21 @@ Commander-approved implementation task.
 - `READY` and `MERGE` remain not authorized pending explicit employer approval.
 - Release, production, and protected promotion remain forbidden.
 
+# CODEX_TASK81B_MERGE_COMPLETION_20260813_16
+
+- Employer authorization: `EMPLOYER_APPROVED_MERGE=YES`.
+- PR #42 was verified open, mergeable, and at implementation HEAD
+  `e98d1c575903f7b5657a20c004ea2802189e4394` before merge.
+- Required pre-merge checks were green: frontend, backend, and
+  `smoke_restore`.
+- PR #42 merged into `main` at
+  `e9c2f6211f41140cc30fed9d261fbf6a3cc6f341` on 2026-08-13T14:10:54Z.
+- Post-merge CI and Compose workflows were triggered for the merge commit:
+  CI run `31708802271`; Compose run `31708802073`; both were in progress at
+  checkpoint time.
+- Release, deployment, production, and protected promotion were not
+  performed and remain unauthorized.
+
 # CODEX_TASK81B_COMMANDER_PROVENANCE_DISPOSITION_20260813_13
 
 - STATUS: `WAITING_FOR_INDEPENDENT_CI_COMPOSE_PROVENANCE_CONFIRMATION`
