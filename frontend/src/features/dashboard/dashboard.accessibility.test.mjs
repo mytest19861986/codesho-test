@@ -15,8 +15,14 @@ test("course controls are native keyboard controls with truthful selection state
 
 test("loading, empty, and failure transitions expose live announcements", () => {
   assert.match(state, /aria-live="polite"[^>]+className=\{styles\.stateGrid\}[^>]+role="status"/);
+  assert.match(state, /state === "empty" \|\| state === "lessons-empty"/);
+  assert.match(state, /aria-live="polite"/);
+  assert.match(state, /role="status"/);
+  assert.match(state, /styles\.emptyIcon/);
   assert.match(state, /aria-live=\{isFailure \? "assertive" : "polite"\}/);
   assert.match(state, /role=\{isFailure \? "alert" : "status"\}/);
+  const emptyBranch = state.split('if (state === "empty" || state === "lessons-empty")')[1].split("  return")[0];
+  assert.doesNotMatch(emptyBranch, /window\.location\.reload/);
 });
 
 test("RTL and stale selection boundaries remain explicit", () => {

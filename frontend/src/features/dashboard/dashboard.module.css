@@ -28,6 +28,8 @@
 .attention li { display: flex; gap: .65rem; align-items: baseline; }
 .attention li span { color: var(--cs-color-brand-primary); }
 .stateCard { max-inline-size: 38rem; margin: 8rem auto; padding: 3rem 2rem; border: 1px solid var(--cs-color-border-subtle); border-radius: 1.25rem; background: var(--cs-color-bg-surface); text-align: center; }
+.emptyState { border-style: dashed; }
+.emptyIcon { display: inline-grid; place-items: center; inline-size: 3.5rem; block-size: 3.5rem; border: 1px solid var(--cs-color-border-subtle); border-radius: 50%; color: var(--cs-color-text-secondary); font-size: 1.7rem; }
 .stateCard h2 { margin: 1rem 0 .5rem; }
 .stateCard p { color: var(--cs-color-text-secondary); }
 .stateIcon { display: inline-grid; place-items: center; inline-size: 3.5rem; block-size: 3.5rem; border-radius: 50%; background: var(--cs-color-brand-primary-soft); color: var(--cs-color-brand-primary); font-size: 1.7rem; }
