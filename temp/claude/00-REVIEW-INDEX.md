@@ -15,4 +15,5 @@ FILES=
 - 05-CLAUDE-V5-RESULT.md
 - 06-FINAL-FOLLOWUP-PROMPT.md
 - 07-ACCEPTANCE-CRITERIA-AC01-AC43.md
+- 08-PROVENANCE-CI-COMPOSE-CLOSURE.md
 Read every raw link individually. This branch is evidence transport only; do not confuse it with implementation HEAD.
