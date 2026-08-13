@@ -1,0 +1,7 @@
+frontend/src/features/dashboard/DashboardDataBoundary.tsx
+frontend/src/features/dashboard/DashboardScreen.tsx
+frontend/src/features/dashboard/DashboardState.tsx
+frontend/src/features/dashboard/dashboard.data-contract.test.mjs
+frontend/src/features/dashboard/dashboard.fixture.ts
+frontend/src/features/dashboard/dashboard.types.ts
+frontend/src/features/dashboard/learningClient.ts

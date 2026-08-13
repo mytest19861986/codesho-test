@@ -1,0 +1,401 @@
+diff --git a/frontend/src/features/dashboard/DashboardDataBoundary.tsx b/frontend/src/features/dashboard/DashboardDataBoundary.tsx
+index 9b1d9ca..8e0038c 100644
+--- a/frontend/src/features/dashboard/DashboardDataBoundary.tsx
++++ b/frontend/src/features/dashboard/DashboardDataBoundary.tsx
+@@ -4,36 +4,77 @@ import { useEffect, useState } from "react";
+ 
+ import { getSession, type SessionContract } from "@/features/auth/authClient";
+ 
++import { fetchCourses, fetchLessons, LearningRequestError } from "./learningClient";
+ import { DashboardScreen } from "./DashboardScreen";
+-import type { DashboardModel } from "./dashboard.types";
+-
+-function modelForSession(session: SessionContract): DashboardModel {
+-  return {
+-    student: { displayName: session.user.username, greeting: "Dashboard connected", contextLabel: "Academic data unavailable" },
+-    learning: { course: "Not connected", module: "Not connected", lesson: "Not connected", progress: null, totalUnits: null, completedUnits: null },
+-    nextSession: { title: "Not connected", date: "Not available", time: "Not available", type: "Read-only placeholder", status: "Unavailable" },
+-    momentum: { xp: null, rank: "Not connected", streak: null },
+-    assignment: { title: "Not connected", dueLabel: "Not available", status: "Unavailable", actionLabel: "Unavailable" },
+-    recommendation: { title: "Not connected", reason: "Learning data will appear when the reviewed contract is available." },
+-    attention: ["Academic dashboard data is not connected yet."],
+-  };
++import type { DashboardModel, DashboardViewState } from "./dashboard.types";
++
++interface BoundaryState { readonly state: DashboardViewState; readonly model: DashboardModel | null }
++
++const initial: BoundaryState = { state: "loading", model: null };
++
++function classify(error: unknown): DashboardViewState {
++  if (!(error instanceof LearningRequestError)) return "recoverable-error";
++  if (error.kind === "unauthenticated") return "unauthenticated";
++  if (error.kind === "parent-not-found") return "parent-not-found";
++  if (error.kind === "forbidden") return "forbidden";
++  if (error.kind === "invalid-request") return "invalid-request";
++  return "recoverable-error";
+ }
+ 
+ export function DashboardDataBoundary() {
+-  const [model, setModel] = useState<DashboardModel | null>(null);
+-  const [failed, setFailed] = useState(false);
++  const [view, setView] = useState<BoundaryState>(initial);
++  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
++  const courseCount = view.model?.learning.courses.length ?? 0;
+ 
+   useEffect(() => {
+-    let active = true;
+-    void getSession().then((session) => {
+-      if (!active) return;
+-      if (session === null) setFailed(true);
+-      else setModel(modelForSession(session));
+-    });
+-    return () => { active = false; };
++    const controller = new AbortController();
++    let generation = 0;
++    let mounted = true;
++    const isCurrent = (value: number) => mounted && value === generation && !controller.signal.aborted;
++
++    void (async () => {
++      try {
++        const session: SessionContract | null = await getSession();
++        const sessionGeneration = ++generation;
++        if (!isCurrent(sessionGeneration)) return;
++        if (session === null) { setSelectedCourseId(null); setView({ state: "unauthenticated", model: null }); return; }
++        const courses = await fetchCourses({ signal: controller.signal });
++        if (!isCurrent(sessionGeneration)) return;
++        if (courses.length === 0) { setSelectedCourseId(null); setView({ state: "empty", model: { student: { displayName: session.user.username }, learning: { courses, lessons: [], selectedCourseId: null } } }); return; }
++        setSelectedCourseId(courses[0].id);
++        setView({ state: "loading", model: { student: { displayName: session.user.username }, learning: { courses, lessons: [], selectedCourseId: courses[0].id } } });
++      } catch (error) {
++        if (!isCurrent(generation) || (error instanceof DOMException && error.name === "AbortError")) return;
++        setSelectedCourseId(null);
++        setView({ state: classify(error), model: null });
++      }
++    })();
++    return () => { mounted = false; controller.abort(); generation += 1; };
+   }, []);
+ 
+-  if (failed) return <DashboardScreen state="error" />;
+-  if (model === null) return <DashboardScreen state="loading" />;
+-  return <DashboardScreen model={model} />;
++  useEffect(() => {
++    if (selectedCourseId === null || courseCount === 0) return;
++    const controller = new AbortController();
++    let current = true;
++    const courseId = selectedCourseId;
++    void fetchLessons(courseId, { signal: controller.signal }).then((lessons) => {
++      if (!current) return;
++      setView((previous) => previous.model === null ? previous : { state: lessons.length === 0 ? "lessons-empty" : "ready", model: { ...previous.model, learning: { ...previous.model.learning, lessons, selectedCourseId: courseId } } });
++    }).catch((error: unknown) => {
++      if (!current || (error instanceof DOMException && error.name === "AbortError")) return;
++      const state = classify(error);
++      if (state === "parent-not-found" || state === "unauthenticated" || state === "forbidden") setSelectedCourseId(null);
++      setView({ state, model: null });
++    });
++    return () => { current = false; controller.abort(); };
++  }, [selectedCourseId, courseCount]);
++
++  const selectCourse = (courseId: string) => {
++    if (view.model === null || !view.model.learning.courses.some((course) => course.id === courseId)) return;
++    setSelectedCourseId(courseId);
++    setView({ state: "loading", model: { ...view.model, learning: { ...view.model.learning, lessons: [], selectedCourseId: courseId } } });
++  };
++  return view.model === null || (view.state !== "ready" && view.state !== "lessons-empty")
++    ? <DashboardScreen state={view.state} />
++    : <DashboardScreen model={view.model} state={view.state} onSelectCourse={selectCourse} />;
+ }
+diff --git a/frontend/src/features/dashboard/DashboardScreen.tsx b/frontend/src/features/dashboard/DashboardScreen.tsx
+index 5e705b9..e30249c 100644
+--- a/frontend/src/features/dashboard/DashboardScreen.tsx
++++ b/frontend/src/features/dashboard/DashboardScreen.tsx
+@@ -1,42 +1,15 @@
+-import { Badge, Button, Card, Progress } from "@/components/ui";
++import { Card } from "@/components/ui";
+ import { AppShell, type NavigationItem } from "@/components/layout";
+ 
+-import { dashboardFixture } from "./dashboard.fixture";
+ import { DashboardState } from "./DashboardState";
+ import type { DashboardModel, DashboardViewState } from "./dashboard.types";
+ import styles from "./dashboard.module.css";
+ 
+-const navigationItems: NavigationItem[] = [
+-  { id: "dashboard", label: "داشبورد", href: "/dashboard", icon: "⌂" },
+-  { id: "learning", label: "یادگیری", href: "/dashboard", icon: "◈" },
+-  { id: "assignments", label: "تمرین‌ها", href: "/dashboard", icon: "✓" },
+-  { id: "calendar", label: "تقویم", href: "/dashboard", icon: "◷" },
+-];
++const navigationItems: NavigationItem[] = [{ id: "dashboard", label: "داشبورد", href: "/dashboard", icon: "⌂" }, { id: "learning", label: "یادگیری", href: "/dashboard", icon: "◈" }];
++function Brand() { return <a className={styles.brand} href="/dashboard"><span aria-hidden="true">⌁</span><span>کُدشو</span></a>; }
+ 
+-function Brand() {
+-  return <a className={styles.brand} href="/dashboard"><span aria-hidden="true">⌁</span><span>کُدشو</span></a>;
+-}
+-
+-function DashboardContent({ model, state }: { model: DashboardModel; state: DashboardViewState }) {
+-  if (state !== "ready") return <DashboardState state={state} />;
+-  return <>
+-    <section aria-labelledby="dashboard-greeting" className={styles.hero}>
+-      <div><p className={styles.eyebrow}>فضای یادگیری تو</p><h1 id="dashboard-greeting">سلام {model.student.displayName}، {model.student.greeting}</h1><p className={styles.heroMeta}>{model.student.contextLabel}</p></div>
+-      <div aria-hidden="true" className={styles.heroOrb}>✦</div>
+-    </section>
+-    <div className={styles.primaryGrid}>
+-      <Card className={`${styles.card} ${styles.learningCard}`}>
+-        <div className={styles.cardHeader}><div><p className={styles.eyebrow}>ادامه یادگیری</p><h2>{model.learning.course}</h2></div>{model.learning.progress === null ? <Badge variant="warning">Unavailable</Badge> : <Badge variant="info">ماژول فعال</Badge>}</div>
+-        <p className={styles.muted}>{model.learning.module} · {model.learning.lesson}</p>{model.learning.progress === null ? <p className={styles.muted} role="status">Academic progress unavailable until the reviewed data contract is connected.</p> : <><Progress label={`پیشرفت دوره، ${model.learning.progress} درصد`} value={model.learning.progress} /><div className={styles.progressMeta}><span>{model.learning.completedUnits?.toLocaleString("fa-IR")} از {model.learning.totalUnits?.toLocaleString("fa-IR")} واحد</span><strong>{model.learning.progress.toLocaleString("fa-IR")}%</strong></div></>}<Button disabled aria-label="ادامه درس؛ با اتصال قرارداد داده فعال می‌شود" title="با اتصال قرارداد داده فعال می‌شود">ادامه درس</Button>
+-      </Card>
+-      <Card className={styles.card}><div className={styles.cardHeader}><div><p className={styles.eyebrow}>جلسه بعدی</p><h2>{model.nextSession.title}</h2></div><Badge variant="success">{model.nextSession.status}</Badge></div><p className={styles.sessionDate}>{model.nextSession.date} · {model.nextSession.time}</p><p className={styles.muted}>{model.nextSession.type}</p><Button disabled aria-label="مشاهده جزئیات؛ با اتصال قرارداد داده فعال می‌شود" variant="outline" title="با اتصال قرارداد داده فعال می‌شود">مشاهده جزئیات</Button></Card>
+-    </div>
+-    <section aria-labelledby="momentum-title" className={styles.section}><div className={styles.sectionHeading}><div><p className={styles.eyebrow}>ریتم تو</p><h2 id="momentum-title">با همین استمرار ادامه بده</h2></div><span aria-hidden="true" className={styles.sectionMark}>↗</span></div><div className={styles.momentumGrid}><Card className={styles.statCard}><span>امتیاز تجربه</span><strong>{model.momentum.xp === null ? "Unavailable" : model.momentum.xp.toLocaleString("fa-IR")}</strong><small>{model.momentum.xp === null ? "Academic data not connected" : "XP"}</small></Card><Card className={styles.statCard}><span>رتبه فعلی</span><strong>{model.momentum.rank}</strong><small>در مسیر رشد</small></Card><Card className={styles.statCard}><span>زنجیره تمرین</span><strong>{model.momentum.streak === null ? "Unavailable" : model.momentum.streak}</strong><small>{model.momentum.streak === null ? "Academic data not connected" : "روز پشت سر هم"}</small></Card></div></section>
+-    <div className={styles.secondaryGrid}><Card className={styles.card}><div className={styles.cardHeader}><div><p className={styles.eyebrow}>تمرین نزدیک</p><h2>{model.assignment.title}</h2></div><Badge variant="warning">{model.assignment.status}</Badge></div><p className={styles.muted}>{model.assignment.dueLabel}</p><Button disabled aria-label={`${model.assignment.actionLabel}؛ با اتصال قرارداد داده فعال می‌شود`} variant="secondary" title="با اتصال قرارداد داده فعال می‌شود">{model.assignment.actionLabel}</Button></Card><Card className={styles.card}><div className={styles.cardHeader}><div><p className={styles.eyebrow}>پیشنهاد بعدی</p><h2>{model.recommendation.title}</h2></div><span aria-hidden="true" className={styles.recommendationIcon}>✧</span></div><p className={styles.muted}>{model.recommendation.reason}</p><span className={styles.muted} role="status">این پیشنهاد با اتصال مسیر یادگیری فعال می‌شود.</span></Card></div>
+-    <section aria-labelledby="attention-title" className={styles.attention}><div><p className={styles.eyebrow}>خلاصه توجه</p><h2 id="attention-title">چیزهایی که ارزش دیدن دارند</h2></div><ul>{model.attention.map((item) => <li key={item}><span aria-hidden="true">•</span>{item}</li>)}</ul></section>
+-  </>;
+-}
+-
+-export function DashboardScreen({ model = dashboardFixture, state = "ready" }: { model?: DashboardModel; state?: DashboardViewState }) {
+-  return <AppShell activeItemId="dashboard" brand={<Brand />} drawerCloseLabel="بستن منو" menuButtonLabel="باز کردن منوی داشبورد" bottomNavigationItems={navigationItems} navigationItems={navigationItems} navigationLabel="ناوبری داشبورد" tone="learner" profileSlot={<span aria-label="حساب کاربری آ" className={styles.profile}>آ</span>}><div className={styles.page}><DashboardContent model={model} state={state} /></div></AppShell>;
++export function DashboardScreen({ model, state, onSelectCourse }: { readonly model?: DashboardModel; readonly state: DashboardViewState; readonly onSelectCourse?: (courseId: string) => void }) {
++  const courses = model?.learning.courses ?? [];
++  const lessons = model?.learning.lessons ?? [];
++  return <AppShell activeItemId="dashboard" brand={<Brand />} drawerCloseLabel="بستن منو" menuButtonLabel="باز کردن منوی داشبورد" bottomNavigationItems={navigationItems} navigationItems={navigationItems} navigationLabel="ناوبری داشبورد" tone="learner" profileSlot={<span aria-label="حساب کاربری" className={styles.profile}>آ</span>}><main className={styles.page} dir="rtl">{state !== "ready" && state !== "lessons-empty" || model === undefined ? <DashboardState state={state as Exclude<DashboardViewState, "ready">} /> : <><section aria-labelledby="dashboard-greeting" className={styles.hero}><div><p className={styles.eyebrow}>فضای یادگیری تو</p><h1 id="dashboard-greeting">سلام {model.student.displayName}</h1><p className={styles.heroMeta}>دوره‌ها و درس‌های منتشرشده</p></div></section><section aria-labelledby="courses-title" className={styles.section}><div className={styles.sectionHeading}><div><p className={styles.eyebrow}>یادگیری</p><h2 id="courses-title">دوره‌های من</h2></div></div><div className={styles.primaryGrid}>{courses.map((course) => <Card className={styles.card} key={course.id}><button type="button" aria-pressed={course.id === model.learning.selectedCourseId} onClick={() => onSelectCourse?.(course.id)}><span>{course.title}</span><span className={styles.muted}>{course.code}</span></button>{course.id === model.learning.selectedCourseId && (lessons.length > 0 ? <ul aria-label="درس‌های دوره" className={styles.lessonList}>{lessons.map((item) => <li key={item.id}><span>{item.position}. {item.title}</span><small>{item.code}</small></li>)}</ul> : <p role="status">این دوره هنوز درسی برای نمایش ندارد.</p>)}</Card>)}</div></section></>}</main></AppShell>;
+ }
+diff --git a/frontend/src/features/dashboard/DashboardState.tsx b/frontend/src/features/dashboard/DashboardState.tsx
+index a1c9e6f..15710b1 100644
+--- a/frontend/src/features/dashboard/DashboardState.tsx
++++ b/frontend/src/features/dashboard/DashboardState.tsx
+@@ -1,12 +1,21 @@
+ import type { DashboardViewState } from "./dashboard.types";
+ import styles from "./dashboard.module.css";
+ 
++const messages: Record<Exclude<DashboardViewState, "ready" | "loading">, string> = {
++  empty: "هنوز دوره‌ای برای نمایش وجود ندارد.",
++  "lessons-empty": "این دوره هنوز درسی برای نمایش ندارد.",
++  unauthenticated: "برای دیدن دوره‌های خود وارد حساب کاربری شوید.",
++  "parent-not-found": "این دوره دیگر در دسترس نیست.",
++  forbidden: "دسترسی به این دوره ممکن نیست.",
++  "invalid-request": "درخواست دوره معتبر نبود.",
++  "recoverable-error": "اتصال موقتاً برقرار نشد. دوباره تلاش کنید.",
++  "stale-session": "نشست شما تغییر کرده است. در حال به‌روزرسانی…",
++  error: "اتصال داشبورد موقتاً برقرار نیست.",
++};
++
+ export function DashboardState({ state }: { state: Exclude<DashboardViewState, "ready"> }) {
+   if (state === "loading") {
+     return <div aria-label="در حال بارگذاری داشبورد" className={styles.stateGrid} role="status"><span /><span /><span /><span /></div>;
+   }
+-  if (state === "empty") {
+-    return <section className={styles.stateCard}><span aria-hidden="true" className={styles.stateIcon}>✦</span><h2>مسیر یادگیری تو آماده می‌شود</h2><p>به‌زودی اولین کلاس و تمرینت اینجا نمایش داده می‌شود.</p></section>;
+-  }
+-  return <section className={styles.stateCard}><span aria-hidden="true" className={styles.stateIcon}>!</span><h2>اتصال داشبورد موقتاً برقرار نیست</h2><p>لطفاً دوباره تلاش کن. اطلاعات تو حذف نشده است.</p><button className={styles.inlineAction} type="button" onClick={() => window.location.reload()}>تلاش دوباره</button></section>;
++  return <section className={styles.stateCard} role="status"><span aria-hidden="true" className={styles.stateIcon}>!</span><h2>{messages[state]}</h2><button className={styles.inlineAction} type="button" onClick={() => window.location.reload()}>تلاش دوباره</button></section>;
+ }
+diff --git a/frontend/src/features/dashboard/dashboard.data-contract.test.mjs b/frontend/src/features/dashboard/dashboard.data-contract.test.mjs
+index d8411c2..6c2c7db 100644
+--- a/frontend/src/features/dashboard/dashboard.data-contract.test.mjs
++++ b/frontend/src/features/dashboard/dashboard.data-contract.test.mjs
+@@ -5,9 +5,16 @@ import { Buffer } from "node:buffer";
+ import ts from "typescript";
+ 
+ const boundary = await readFile(new URL("./DashboardDataBoundary.tsx", import.meta.url), "utf8");
++const screen = await readFile(new URL("./DashboardScreen.tsx", import.meta.url), "utf8");
+ const client = await readFile(new URL("../auth/authClient.ts", import.meta.url), "utf8");
++const learningSource = await readFile(new URL("./learningClient.ts", import.meta.url), "utf8");
+ const compiledClient = ts.transpileModule(client, { compilerOptions: { module: ts.ModuleKind.ES2022, target: ts.ScriptTarget.ES2022 } }).outputText;
+ const authClient = await import(`data:text/javascript;base64,${Buffer.from(compiledClient).toString("base64")}`);
++const compiledLearning = ts.transpileModule(learningSource, { compilerOptions: { module: ts.ModuleKind.ES2022, target: ts.ScriptTarget.ES2022 } }).outputText.replace(/from "\.\/dashboard\.types";/, "from \"data:text/javascript,export{}\";");
++const learningClient = await import(`data:text/javascript;base64,${Buffer.from(compiledLearning).toString("base64")}`);
++
++const courseId = "11111111-1111-4111-8111-111111111111";
++const lessonId = "22222222-2222-4222-8222-222222222222";
+ 
+ test("dashboard reads the existing authenticated session contract", () => {
+   assert.match(boundary, /getSession\(\)/);
+@@ -20,7 +27,15 @@ test("dashboard reads the existing authenticated session contract", () => {
+   assert.match(client, /tenantRecord\.role/);
+   assert.match(client, /parseSessionContract/);
+   assert.doesNotMatch(boundary, /dashboardFixture/);
+-  assert.match(boundary, /Not connected/);
++  assert.match(boundary, /fetchCourses/);
++  assert.match(boundary, /fetchLessons/);
++});
++
++test("course selection keeps button content valid and non-interactive", () => {
++  assert.match(screen, /<button[^>]*aria-pressed=/);
++  assert.doesNotMatch(screen, /<button[^>]*>[\s\S]*?<h[1-6][^>]*>/);
++  assert.doesNotMatch(screen, /<button[^>]*>[\s\S]*?<p(?:\s|>)/);
++  assert.doesNotMatch(screen, /<button[^>]*>[\s\S]*?<a(?:\s|>)/);
+ });
+ 
+ test("dashboard does not create a domain or mutation endpoint", () => {
+@@ -28,6 +43,44 @@ test("dashboard does not create a domain or mutation endpoint", () => {
+   assert.doesNotMatch(boundary, /localStorage|sessionStorage|document\.cookie/);
+ });
+ 
++test("learning client enforces the bounded read contract and same-origin authority", async () => {
++  const originalFetch = globalThis.fetch;
++  const calls = [];
++  try {
++    globalThis.fetch = async (input, init) => { calls.push({ input, init }); return { ok: true, status: 200, json: async () => ({ results: [{ id: courseId, code: "C1", title: "Course", state: "published", tenant_id: "must-not-leak" }] }) }; };
++    assert.deepEqual(await learningClient.fetchCourses(), [{ id: courseId, code: "C1", title: "Course", state: "published" }]);
++    assert.equal(calls[0].input, "/api/v1/learning/courses/?page=1&page_size=20");
++    assert.equal(calls[0].init.credentials, "same-origin");
++    assert.equal(calls[0].init.headers.Accept, "application/json");
++    assert.doesNotMatch(String(calls[0].input), /tenant|role|slug/i);
++
++    globalThis.fetch = async (input, init) => { calls.push({ input, init }); return { ok: true, status: 200, json: async () => ({ results: [{ id: lessonId, code: "L1", title: "Lesson", position: 1, state: "published" }] }) }; };
++    assert.deepEqual(await learningClient.fetchLessons(courseId), [{ id: lessonId, code: "L1", title: "Lesson", position: 1, state: "published" }]);
++    assert.match(String(calls.at(-1).input), new RegExp(`/api/v1/learning/courses/${courseId}/lessons/\\?page=1&page_size=20$`));
++  } finally { globalThis.fetch = originalFetch; }
++});
++
++test("learning client preserves typed status failures and rejects malformed data", async () => {
++  const originalFetch = globalThis.fetch;
++  try {
++    for (const [status, kind] of [[400, "invalid-request"], [401, "unauthenticated"], [403, "forbidden"], [404, "parent-not-found"], [500, "recoverable"]]) {
++      globalThis.fetch = async () => ({ ok: false, status, json: async () => ({}) });
++      await assert.rejects(() => learningClient.fetchLessons(courseId), (error) => error.kind === kind);
++    }
++
++    globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => ({ results: [{ id: "not-a-uuid", code: "C1", title: "Course", state: "published" }] }) });
++    await assert.rejects(() => learningClient.fetchCourses(), (error) => error.kind === "recoverable");
++
++    globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => ({ results: [{ id: lessonId, code: "L1", title: "Lesson", position: 0, state: "published" }] }) });
++    await assert.rejects(() => learningClient.fetchLessons(courseId), (error) => error.kind === "recoverable");
++
++    globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => ({ results: Array.from({ length: 21 }, (_, index) => ({ id: `${String(index + 1).padStart(8, "0")}-1111-4111-8111-111111111111`, code: `C${index}`, title: "Course", state: "published" })) }) });
++    await assert.rejects(() => learningClient.fetchCourses(), (error) => error.kind === "recoverable");
++
++    await assert.rejects(() => learningClient.fetchLessons("course-1"), (error) => error.kind === "invalid-request");
++  } finally { globalThis.fetch = originalFetch; }
++});
++
+ test("session parser fails closed for malformed and incomplete contracts", async () => {
+   const valid = { authenticated: true, user: { id: "user-1", username: "student" }, tenant: { id: "tenant-1", slug: "school", role: "student" } };
+   assert.deepEqual(authClient.parseSessionContract(valid), valid);
+diff --git a/frontend/src/features/dashboard/dashboard.fixture.ts b/frontend/src/features/dashboard/dashboard.fixture.ts
+index db8e985..4656dc5 100644
+--- a/frontend/src/features/dashboard/dashboard.fixture.ts
++++ b/frontend/src/features/dashboard/dashboard.fixture.ts
+@@ -1,12 +1,7 @@
+ import type { DashboardModel } from "./dashboard.types";
+ 
+-/** Synthetic presentation data only; replace with a reviewed read contract in Task78B. */
++/** Typed empty fixture retained for focused component-contract tests. */
+ export const dashboardFixture: DashboardModel = {
+-  student: { displayName: "آرین", greeting: "امروز آماده‌ای یک قدم جلوتر بروی؟", contextLabel: "مسیر پایتون مقدماتی" },
+-  learning: { course: "پایتون برای حل مسئله", module: "ماژول ۳ · حلقه‌ها", lesson: "تمرین‌های تکرار و الگوها", progress: 64, totalUnits: 25, completedUnits: 16 },
+-  nextSession: { title: "کارگاه حل مسئله", date: "شنبه ۲۵ مرداد", time: "۱۷:۳۰", type: "جلسه زنده", status: "رزروشده" },
+-  momentum: { xp: 1240, rank: "کاوشگر کد", streak: 7 },
+-  assignment: { title: "ساخت الگوی ستاره‌ای", dueLabel: "تا ۲ روز دیگر", status: "در انتظار ارسال", actionLabel: "ادامه تمرین" },
+-  recommendation: { title: "چالش حلقه‌های تو در تو", reason: "برای تثبیت مهارت همین ماژول پیشنهاد شده است." },
+-  attention: ["بازخورد مربی برای تمرین قبلی آماده است.", "جلسه بعدی در تقویم تو رزرو شده است."],
++  student: { displayName: "آرین" },
++  learning: { courses: [], lessons: [], selectedCourseId: null },
+ };
+diff --git a/frontend/src/features/dashboard/dashboard.types.ts b/frontend/src/features/dashboard/dashboard.types.ts
+index fad8469..4ab25ed 100644
+--- a/frontend/src/features/dashboard/dashboard.types.ts
++++ b/frontend/src/features/dashboard/dashboard.types.ts
+@@ -1,52 +1,42 @@
+-export type DashboardViewState = "ready" | "loading" | "empty" | "error";
++export type DashboardViewState =
++  | "ready"
++  | "loading"
++  | "empty"
++  | "lessons-empty"
++  | "error"
++  | "unauthenticated"
++  | "parent-not-found"
++  | "forbidden"
++  | "invalid-request"
++  | "recoverable-error"
++  | "stale-session";
+ 
+ export interface DashboardStudent {
+   readonly displayName: string;
+-  readonly greeting: string;
+-  readonly contextLabel: string;
+ }
+ 
+-export interface DashboardLearning {
+-  readonly course: string;
+-  readonly module: string;
+-  readonly lesson: string;
+-  readonly progress: number | null;
+-  readonly totalUnits: number | null;
+-  readonly completedUnits: number | null;
+-}
+-
+-export interface DashboardSession {
++export interface CourseItem {
++  readonly id: string;
++  readonly code: string;
+   readonly title: string;
+-  readonly date: string;
+-  readonly time: string;
+-  readonly type: string;
+-  readonly status: string;
++  readonly state: "published";
+ }
+ 
+-export interface DashboardMomentum {
+-  readonly xp: number | null;
+-  readonly rank: string;
+-  readonly streak: number | null;
+-}
+-
+-export interface DashboardAssignment {
++export interface LessonItem {
++  readonly id: string;
++  readonly code: string;
+   readonly title: string;
+-  readonly dueLabel: string;
+-  readonly status: string;
+-  readonly actionLabel: string;
++  readonly position: number;
++  readonly state: "published";
+ }
+ 
+-export interface DashboardRecommendation {
+-  readonly title: string;
+-  readonly reason: string;
++export interface DashboardLearning {
++  readonly courses: readonly CourseItem[];
++  readonly lessons: readonly LessonItem[];
++  readonly selectedCourseId: string | null;
+ }
+ 
+ export interface DashboardModel {
+   readonly student: DashboardStudent;
+   readonly learning: DashboardLearning;
+-  readonly nextSession: DashboardSession;
+-  readonly momentum: DashboardMomentum;
+-  readonly assignment: DashboardAssignment;
+-  readonly recommendation: DashboardRecommendation;
+-  readonly attention: readonly string[];
+ }
+diff --git a/frontend/src/features/dashboard/learningClient.ts b/frontend/src/features/dashboard/learningClient.ts
+new file mode 100644
+index 0000000..5b31cdd
+--- /dev/null
++++ b/frontend/src/features/dashboard/learningClient.ts
+@@ -0,0 +1,20 @@
++import type { CourseItem, LessonItem } from "./dashboard.types";
++
++type LearningErrorKind = "unauthenticated" | "forbidden" | "parent-not-found" | "invalid-request" | "recoverable";
++export class LearningRequestError extends Error { constructor(readonly kind: LearningErrorKind, message: string) { super(message); this.name = "LearningRequestError"; } }
++
++const pageSize = 20;
++const coursesPath = `/api/v1/learning/courses/?page=1&page_size=${pageSize}`;
++const lessonsPath = (courseId: string) => `/api/v1/learning/courses/${encodeURIComponent(courseId)}/lessons/?page=1&page_size=${pageSize}`;
++const uuidLike = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
++
++function record(value: unknown): Record<string, unknown> | null { return typeof value === "object" && value !== null ? value as Record<string, unknown> : null; }
++function stringValue(value: unknown): value is string { return typeof value === "string" && value.length > 0; }
++function opaqueId(value: unknown): value is string { return stringValue(value) && uuidLike.test(value); }
++function course(value: unknown): CourseItem | null { const r = record(value); return r && opaqueId(r.id) && stringValue(r.code) && stringValue(r.title) && r.state === "published" ? { id: r.id, code: r.code, title: r.title, state: "published" } : null; }
++function lesson(value: unknown): LessonItem | null { const r = record(value); return r && opaqueId(r.id) && stringValue(r.code) && stringValue(r.title) && typeof r.position === "number" && Number.isInteger(r.position) && r.position > 0 && r.state === "published" ? { id: r.id, code: r.code, title: r.title, position: r.position, state: "published" } : null; }
++function statusError(status: number): LearningRequestError { if (status === 401) return new LearningRequestError("unauthenticated", "session required"); if (status === 403) return new LearningRequestError("forbidden", "access denied"); if (status === 404) return new LearningRequestError("parent-not-found", "parent not found"); if (status === 400) return new LearningRequestError("invalid-request", "invalid request"); return new LearningRequestError("recoverable", `learning request failed: ${status}`); }
++async function readResults<T extends CourseItem | LessonItem>(response: Response, parse: (value: unknown) => T | null, signal?: AbortSignal): Promise<readonly T[]> { if (!response.ok) throw statusError(response.status); const payload: unknown = await response.json(); const root = record(payload); if (!root || !Array.isArray(root.results) || root.results.length > pageSize) throw new LearningRequestError("recoverable", "malformed learning envelope"); const output = root.results.map(parse); if (output.some((value) => value === null)) throw new LearningRequestError("recoverable", "malformed learning item"); if (signal?.aborted) throw new DOMException("aborted", "AbortError"); return output as readonly T[]; }
++async function get<T extends CourseItem | LessonItem>(path: string, parse: (value: unknown) => T | null, signal?: AbortSignal): Promise<readonly T[]> { try { return await readResults(await fetch(path, { credentials: "same-origin", headers: { Accept: "application/json" }, signal }), parse, signal); } catch (error) { if (error instanceof LearningRequestError || (error instanceof DOMException && error.name === "AbortError")) throw error; throw new LearningRequestError("recoverable", "learning request unavailable"); } }
++export async function fetchCourses(options: { readonly signal?: AbortSignal } = {}): Promise<readonly CourseItem[]> { return await get(coursesPath, course, options.signal); }
++export async function fetchLessons(courseId: string, options: { readonly signal?: AbortSignal } = {}): Promise<readonly LessonItem[]> { if (!opaqueId(courseId)) throw new LearningRequestError("invalid-request", "valid course id required"); return await get(lessonsPath(courseId), lesson, options.signal); }
