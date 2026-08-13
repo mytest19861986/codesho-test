@@ -911,6 +911,19 @@ Commander-approved implementation task.
 - No implementation, Ready, merge, release, Production action, or protected
   promotion was performed.
 
+# CODEX_TASK81B_FINAL_COMMANDER_DISPOSITION_20260813_14
+
+- TASK81B_STATUS: `MERGE_ELIGIBLE_PENDING_COMMANDER_AUTHORIZATION`
+- CODE_REVIEW: `PASS_WITH_PROVENANCE_CAVEAT`
+- SECURITY: `PASS`; CI: `PASS`; COMPOSE: `PASS`
+- BLOCKING_CODE_DEFECTS: `NONE_FOUND`
+- Claude's remaining caveat is a reviewer-access limitation, not a code or
+  CI defect. Commander independently confirmed both exact-head runs.
+- READY: still requires explicit employer authorization.
+- MERGE: still requires explicit employer authorization.
+- RELEASE/PRODUCTION/PROTECTED_PROMOTION: forbidden.
+- No implementation change was made.
+
 # CODEX_TASK81B_COMMANDER_PROVENANCE_DISPOSITION_20260813_13
 
 - STATUS: `WAITING_FOR_INDEPENDENT_CI_COMPOSE_PROVENANCE_CONFIRMATION`
