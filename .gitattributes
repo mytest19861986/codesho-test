@@ -1,8 +1,0 @@
-# Keep Linux-executed shell entrypoints stable across Windows checkouts.
-*.sh text eol=lf
-*.bash text eol=lf
-
-# Explicitly keep the repository's executable shebang scripts LF-normalized.
-backend/manage.py text eol=lf
-frontend/scripts/capture-login-evidence.mjs text eol=lf
-scripts/check_module_boundaries.py text eol=lf
