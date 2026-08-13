@@ -881,3 +881,15 @@ Commander-approved implementation task.
 - Claude did not issue `READY_FOR_COMMANDER_MERGE_DISPOSITION` or the hard-gate
   PASS marker. Merge, Ready, release, Production, and protected promotion remain
   unauthorized.
+
+# CODEX_TASK81B_PROVENANCE_CLOSURE_20260813_11
+
+- Commander-directed evidence-only closure added as
+  `temp/claude/08-PROVENANCE-CI-COMPOSE-CLOSURE.md`.
+- Evidence commit: `f4af1c939b1a1027e9013c9d8aae1bdccb398fbb`.
+- Raw transport verification: `RAW_00..RAW_08=HTTP_200`.
+- CI `31624692088` and Compose `31624692028` are both associated with exact
+  implementation HEAD `e98d1c575903f7b5657a20c004ea2802189e4394` and recorded
+  as successful in the external verification record.
+- Implementation HEAD unchanged; Ready, merge, release, Production and
+  protected promotion remain unauthorized.
