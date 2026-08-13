@@ -8,8 +8,7 @@ export type DashboardViewState =
   | "parent-not-found"
   | "forbidden"
   | "invalid-request"
-  | "recoverable-error"
-  | "stale-session";
+  | "recoverable-error";
 
 export interface DashboardStudent {
   readonly displayName: string;
