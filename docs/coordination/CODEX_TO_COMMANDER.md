@@ -667,3 +667,157 @@ Commander-approved implementation task.
 - CURRENT_BOUNDARY: تا آن زمان، Task77A در وضعیت architecture-only با Claude
   `PASS / 0 blockers` باقی می‌ماند و هیچ runtime implementation، migration،
   scheduler، worker، merge، release یا promotion انجام نمی‌شود.
+## CODEX_CONTINUATION_REQUEST_20260812_01
+
+- STATUS: `AWAITING_AUTHORITATIVE_IMPLEMENTATION_TASK`
+- Task77A architecture-only work is closed with Claude `PASS / 0 blockers`.
+- No runtime implementation is authorized from the current coordination state.
+- Please issue the next authoritative `TASK_ID`, independent `BASE_SHA`,
+  branch/worktree, exact file allow-list, Acceptance Criteria, required local/
+  remote/provider gates, and commit/push/PR authority.
+- Until that disposition arrives, preserve the current checkout and all
+  unrelated untracked files; do not implement, merge, release, deploy, or
+  promote to protected `codesho`.
+# CODEX_TASK80B_PROVIDER_GATE_READY_20260812_01
+
+- TASK_ID: `SPRINT1-DOMAIN-LEARNING-COURSE-LESSON-READ-API-80B`
+- PR: `#39`
+- HEAD: `74fb0adf69fa510c0b150be004f3b6f6123b727f`
+- Fresh exact-head CI `31468878808`: SUCCESS.
+- Fresh exact-head Compose smoke/restore `31468878817`: SUCCESS.
+- Local gates and packet evidence are present; Qwen implementation review is
+  the next sequential gate, followed only after PASS by Claude hard gate.
+- Merge, Ready, release, deployment, and protected `codesho` promotion remain
+  unauthorized.
+- Shared Chrome metadata lists the Commander conversation, but the current
+  automation binding cannot attach to the existing tab; no provider verdict is
+  fabricated and no review prompt is sent without the required channel.
+# CODEX_TASK80B_STALE_DISPOSITION_AND_TASK81B_NEXT_GATE_20260812_02
+
+- Commander confirmed Task80B is `COMPLETE / MERGED / CLOSED`.
+- Task80B final implementation HEAD: `74fb0adf69fa510c0b150be004f3b6f6123b727f`.
+- Task80B merge SHA: `d1da19f76e7f7bae48b836029873272d6cac642a`.
+- The newly captured Task80B Qwen PASS is historical evidence only; no further
+  Qwen/Claude review, commit, reopen, or modification is permitted for 80B.
+- Current active flow: Task81B, PR `#42`, HEAD
+  `869532b77d9dc2c9a058401d6052e6e42fb2d961`.
+- Task81B Qwen gate is PASS; the next required gate is Claude hard review.
+- Task81B repository remains frozen; no merge, Ready, release, deployment, or
+  production action is authorized.
+
+# CODEX_TASK81B_CURRENT_HEAD_CORRECTION_20260813_01
+
+- Commander correction received through the authenticated Chrome conversation.
+- TASK_ID: `SPRINT1-UI-LEARNING-DASHBOARD-READ-INTEGRATION-81B`
+- PR: `#42`
+- AUTHORITATIVE_BASE: `d2b9803972f0c20bc154df471ad941b2f78855fd`
+- AUTHORITATIVE_CURRENT_HEAD: `e98d1c575903f7b5657a20c004ea2802189e4394`
+- The previously recorded `869532b77d9dc2c9a058401d6052e6e42fb2d961` is stale
+  and must not be used as the final review head.
+- Current exact-head CI and Compose are reported `SUCCESS` by Commander.
+- Required sequence: fresh Qwen implementation/security PASS on the current
+  HEAD, then sequential Claude hard review on the same current HEAD.
+- Repository remains frozen; Ready, merge, release, deployment, Production and
+  promotion to protected `codesho` remain forbidden.
+
+# CODEX_TASK81B_QWEN_STATUS_REFRESH_20260813_02
+
+- Commander status refresh confirms fresh Qwen PASS on
+  `e98d1c575903f7b5657a20c004ea2802189e4394` is not yet received or recorded.
+- No Qwen verdict is inferred from older HEADs. Claude hard gate remains
+  blocked until the fresh same-HEAD Qwen PASS is available.
+- No repository change, new push, Ready, merge, release, deployment,
+  Production action, or protected promotion was performed.
+
+# CODEX_TASK81B_QWEN_CURRENT_HEAD_PASS_20260813_03
+
+- REVIEW_PROMPT_ID: `QWEN_TASK81B_CURRENT_HEAD_IMPLEMENTATION_REVIEW_20260813_V1`
+- Repository: `https://github.com/mytest19861986/codesho-test`
+- PR: `#42`
+- HEAD_REVIEWED: `e98d1c575903f7b5657a20c004ea2802189e4394`
+- CONTENT_RECEIVED_COMPLETE: `YES`
+- VERDICT: `PASS`
+- P0_COUNT: `0`
+- P1_COUNT: `0`
+- OPEN_BLOCKERS: `0`
+- IMPLEMENTATION_RECOMMENDATION: `READY_FOR_CLAUDE`
+- FINAL_MARKER: `QWEN_TASK81B_IMPLEMENTATION_REVIEW_COMPLETE`
+- Review covered GitHub current-head evidence, tenant/auth/session boundaries,
+  stale-response races, UUID validation, bounded page size/cardinality, state
+  semantics, non-enumerating 404, removal of fabricated metrics, accessibility/
+  RTL, tests, and scope. No code changes were made.
+- NEXT_GATE: sequential Claude hard review on the same exact HEAD.
+- Ready, merge, release, deployment, Production and protected `codesho`
+  promotion remain unauthorized.
+
+# CODEX_TASK81B_CLAUDE_STATUS_REFRESH_20260813_04
+
+- Commander status refresh found no complete Claude hard-gate verdict for
+  `HEAD=e98d1c575903f7b5657a20c004ea2802189e4394`.
+- `HEAD_REVIEWED=NOT_FOUND`, `PR_REVIEWED=NOT_FOUND`,
+  `VERDICT=NOT_YET_EVIDENCED`, `P0/P1/P2=NOT_AVAILABLE`,
+  `FINAL_MARKER=NOT_FOUND`.
+- The only retrieved Claude PASS evidence is historical Task80B / PR #39 and
+  does not satisfy the Task81B gate. This remains an open blocker.
+- Repository stays frozen; no code change, Ready, merge, release, deployment,
+  Production action, or protected promotion was performed.
+
+# CODEX_TASK81B_CLAUDE_TEMP_ACCESS_FAILED_20260813_05
+
+- PROMPT_ID: `CLAUDE_TASK81B_CURRENT_HEAD_IMPLEMENTATION_HARD_GATE_20260813_V1`
+- Evidence branch: `review-evidence-task81b-claude`
+- Evidence commit: `16df06cae3f18ad899439f1c183006cc3f2b4a33`
+- Folder URL: `https://github.com/mytest19861986/codesho-test/tree/review-evidence-task81b-claude/temp/claude/task81b`
+- Claude received the folder link but reported the repository/evidence folder
+  inaccessible through its transport (search could not find it and direct fetch
+  was blocked). Claude correctly refused to infer or fabricate a security PASS.
+- CLAUDE_TEMP_EVIDENCE_ACCESS_FAILED: `YES`
+- HEAD_REVIEWED: `NOT_FOUND`; VERDICT: `NOT_YET_RECEIVED`;
+  OPEN_BLOCKERS: `1`; FINAL_MARKER: `NOT_FOUND`.
+- No code remediation was applied. PR #42 remains frozen at
+  `e98d1c575903f7b5657a20c004ea2802189e4394`; Ready, merge, release,
+  deployment, Production and protected promotion remain forbidden.
+
+# CODEX_TASK81B_CLAUDE_REVIEW_INCOMPLETE_NO_ACCESS_20260813_06
+
+- Claude returned the complete handoff response for
+  `CLAUDE_TASK81B_CURRENT_HEAD_IMPLEMENTATION_HARD_GATE_20260813_V1`.
+- `CONTENT_RECEIVED_COMPLETE=false`; `HEAD_REVIEWED=none`; `PR_REVIEWED=none`.
+- `VERDICT=BLOCKED — UNABLE TO VERIFY`.
+- `P0/P1/P2=N/A`; evidence folder and referenced ZIP were not fetchable through
+  Claude's available transport; `FINAL_MARKER=REVIEW_INCOMPLETE_NO_ACCESS`.
+- Claude generated no findings because no source content was reviewed and
+  explicitly refused to fabricate a PASS. It requested pasted/uploaded source
+  contents or accessible raw GitHub content instead.
+- No code change, PR #42 mutation, Ready, merge, release, deployment,
+  Production action, or protected promotion was performed.
+
+# CODEX_TASK81B_CLAUDE_RAW_FILES_RETRY_20260813_07
+
+- PROMPT_ID: `CLAUDE_TASK81B_CURRENT_HEAD_IMPLEMENTATION_HARD_GATE_20260813_V4_RAW_FILES_RETRY`
+- Evidence branch: `review-evidence-task81b-claude-v4`
+- Evidence commit: `7d16d4e`
+- Raw evidence base:
+  `https://raw.githubusercontent.com/mytest19861986/codesho-test/review-evidence-task81b-claude-v4/temp/claude/task81b/`
+- Claude fetched and independently reviewed the raw evidence files. The seven
+  authorized implementation files matched the diff byte-for-byte and scope
+  was confirmed.
+- CONTENT_RECEIVED_COMPLETE: `NO` for hard-gate purposes because the packet
+  lacked independently retrievable CI/Compose output, AC-01 through AC-43
+  text, and Task81A P2 source material.
+- HEAD_REVIEWED: `e98d1c575903f7b5657a20c004ea2802189e4394`
+- PR_REVIEWED: `#42` (manifest-reported; live PR page not independently fetched)
+- VERDICT: `BLOCKED_PENDING_EVIDENCE`
+- P0_COUNT: `0`; P1_COUNT: `0`; P2_COUNT: `2`; OPEN_BLOCKERS: `2`.
+- P2 findings: `stale-session` is defined but unreachable, and rendered DOM/
+  keyboard accessibility behavior lacks component-level tests.
+- IMPLEMENTATION_RECOMMENDATION: `ADDITIONAL_EVIDENCE_REQUIRED_BEFORE_MERGE`
+- FINAL_MARKER: `CLAUDE_TASK81B_INDEPENDENT_REVIEW_COMPLETE_CONDITIONAL`
+- Positive review observations included same-origin credentials, strict
+  runtime parsing, UUID validation, bounded page size, stale-request abort /
+  generation guards, no fabricated metrics, semantic course buttons, RTL and
+  live status semantics, and no client-side tenant identifier leakage.
+- Required next evidence: actual exact-head CI/Compose results, AC-01--AC-43
+  text, and Task81A P2 descriptions/dispositions. Repository remains frozen;
+  no code change, Ready, merge, release, deployment, Production action, or
+  protected promotion is authorized.
