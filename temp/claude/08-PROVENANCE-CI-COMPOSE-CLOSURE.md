@@ -12,7 +12,7 @@ CI_RUN_ID=31624692088
 WORKFLOW=CI
 HEAD_SHA=e98d1c575903f7b5657a20c004ea2802189e4394
 CONCLUSION=success
-SOURCE=external verification record from Commander
+SOURCE=direct read-only GitHub Actions REST API verification by Codex on 2026-08-13
 SUCCESSFUL_JOBS_AND_STEPS=Frontend npm ci; npm run test:ui-policy; npm run check:ui-policy; npm run lint; npm run typecheck; npm run build. Backend Ruff; MyPy; module-boundary checks; makemigrations check; migrations; canonical OpenAPI verification; backend tests; runtime image build and inspection.
 
 ## Compose smoke and restore
@@ -21,7 +21,7 @@ COMPOSE_RUN_ID=31624692028
 WORKFLOW=Compose smoke and restore
 HEAD_SHA=e98d1c575903f7b5657a20c004ea2802189e4394
 CONCLUSION=success
-SOURCE=external verification record from Commander
+SOURCE=direct read-only GitHub Actions REST API verification by Codex on 2026-08-13
 SUCCESSFUL_JOBS_AND_STEPS=Compose configuration validation; complete stack build/start; Nginx routes and service dependencies; PostgreSQL RLS and connection-reuse tests; backup create/restore/verify; evidence collection/upload; cleanup.
 
 ## Scope and limitation
@@ -31,3 +31,20 @@ HEAD above. This file is an external verification record, not a claim that
 Claude itself fetched GitHub Actions pages. It is provided so Commander can
 make the final provenance disposition. Implementation HEAD remains unchanged;
 Ready, merge, release, Production, and protected promotion remain forbidden.
+
+## Direct API confirmation
+
+CI API response: `id=31624692088`, `status=completed`,
+`conclusion=success`, `head_sha=e98d1c575903f7b5657a20c004ea2802189e4394`,
+`created_at=2026-08-12T17:51:09Z`, `updated_at=2026-08-12T17:53:04Z`.
+Frontend and backend jobs both completed successfully. Frontend steps
+included npm ci, UI policy tests/check, lint, typecheck, and build; backend
+steps included Ruff, MyPy, module boundaries, migration checks, OpenAPI,
+backend tests, and runtime image inspection.
+
+Compose API response: `id=31624692028`, `status=completed`,
+`conclusion=success`, `head_sha=e98d1c575903f7b5657a20c004ea2802189e4394`,
+`created_at=2026-08-12T17:51:09Z`, `updated_at=2026-08-12T17:53:03Z`.
+The smoke_restore job completed successfully: Compose validation, full stack,
+Nginx/dependencies, PostgreSQL RLS/connection reuse, backup restore/verify,
+evidence upload, and isolated cleanup all succeeded.
