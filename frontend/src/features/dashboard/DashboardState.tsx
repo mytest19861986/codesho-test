@@ -16,6 +16,9 @@ export function DashboardState({ state }: { state: Exclude<DashboardViewState, "
   if (state === "loading") {
     return <div aria-label="در حال بارگذاری داشبورد" aria-live="polite" className={styles.stateGrid} role="status"><span /><span /><span /><span /></div>;
   }
-  const isFailure = state !== "empty" && state !== "lessons-empty";
+  if (state === "empty" || state === "lessons-empty") {
+    return <section aria-live="polite" className={`${styles.stateCard} ${styles.emptyState}`} role="status"><span aria-hidden="true" className={styles.emptyIcon}>○</span><h2>{messages[state]}</h2></section>;
+  }
+  const isFailure = true;
   return <section aria-live={isFailure ? "assertive" : "polite"} className={styles.stateCard} role={isFailure ? "alert" : "status"}><span aria-hidden="true" className={styles.stateIcon}>!</span><h2>{messages[state]}</h2><button className={styles.inlineAction} type="button" onClick={() => window.location.reload()}>تلاش دوباره</button></section>;
 }

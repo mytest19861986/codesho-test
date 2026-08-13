@@ -6,6 +6,7 @@ import ts from "typescript";
 
 const boundary = await readFile(new URL("./DashboardDataBoundary.tsx", import.meta.url), "utf8");
 const screen = await readFile(new URL("./DashboardScreen.tsx", import.meta.url), "utf8");
+const state = await readFile(new URL("./DashboardState.tsx", import.meta.url), "utf8");
 const client = await readFile(new URL("../auth/authClient.ts", import.meta.url), "utf8");
 const learningSource = await readFile(new URL("./learningClient.ts", import.meta.url), "utf8");
 const compiledClient = ts.transpileModule(client, { compilerOptions: { module: ts.ModuleKind.ES2022, target: ts.ScriptTarget.ES2022 } }).outputText;
@@ -15,6 +16,22 @@ const learningClient = await import(`data:text/javascript;base64,${Buffer.from(c
 
 const courseId = "11111111-1111-4111-8111-111111111111";
 const lessonId = "22222222-2222-4222-8222-222222222222";
+
+test("empty states are non-failure status views without retry affordances", () => {
+  assert.match(state, /state === "empty" \|\| state === "lessons-empty"/);
+  assert.match(state, /aria-live="polite"/);
+  assert.match(state, /role="status"/);
+  assert.match(state, /styles\.emptyIcon/);
+  const emptyBranch = state.split('if (state === "empty" || state === "lessons-empty")')[1].split("  return")[0];
+  assert.doesNotMatch(emptyBranch, /window\.location\.reload/);
+});
+
+test("failure states retain a native retry control and assertive semantics", () => {
+  assert.match(state, /role=\{isFailure \? "alert" : "status"\}/);
+  assert.match(state, /aria-live=\{isFailure \? "assertive" : "polite"\}/);
+  assert.match(state, /<button className=\{styles\.inlineAction\} type="button"/);
+  assert.match(state, /window\.location\.reload\(\)/);
+});
 
 test("dashboard reads the existing authenticated session contract", () => {
   assert.match(boundary, /getSession\(\)/);
