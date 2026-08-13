@@ -14,4 +14,5 @@ FILES=
 - 04-COMPOSE-RUN-31624692028.md
 - 05-CLAUDE-V5-RESULT.md
 - 06-FINAL-FOLLOWUP-PROMPT.md
+- 07-ACCEPTANCE-CRITERIA-AC01-AC43.md
 Read every raw link individually. This branch is evidence transport only; do not confuse it with implementation HEAD.
