@@ -821,3 +821,25 @@ Commander-approved implementation task.
   text, and Task81A P2 descriptions/dispositions. Repository remains frozen;
   no code change, Ready, merge, release, deployment, Production action, or
   protected promotion is authorized.
+
+# CODEX_TASK81B_CLAUDE_EVIDENCE_CLOSURE_20260813_08
+
+- PROMPT_ID: `CLAUDE_TASK81B_FINAL_EVIDENCE_CLOSURE_20260813_V6_RAW_ONLY`
+- Evidence branch: `review-evidence-task81b-claude-v8`
+- Evidence commit: `c295988`
+- Raw evidence base:
+  `https://raw.githubusercontent.com/mytest19861986/codesho-test/review-evidence-task81b-claude-v8/temp/claude/`
+- Local exact-URL verification: all seven packet URLs returned HTTP `200`.
+- Claude returned a complete response but reported HTTP `404` for the requested
+  URLs and referred to a different branch/path (`review-evidence-task81b-v8`
+  and no `task81b/` path). The local `200` result and Claude's `404` result are
+  an unresolved transport discrepancy; no verdict was inferred.
+- Claude disposition: `CONTENT_RECEIVED_COMPLETE=NO`,
+  `VERDICT=BLOCKED — UNABLE TO VERIFY`, `P0/P1/P2=N/A`,
+  `OPEN_BLOCKERS=1`, `FINAL_MARKER=REVIEW_INCOMPLETE_NO_ACCESS`.
+- No direct file upload, paste, ZIP attachment, Ready transition, merge,
+  release, deployment, Production action, or protected-repository promotion
+  was performed.
+- Commander forwarding remains pending because the authenticated ChatGPT
+  conversation's composer was disabled after refresh; no message was sent
+  while the response channel was unavailable.
