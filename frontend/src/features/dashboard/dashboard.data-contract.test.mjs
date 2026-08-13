@@ -32,10 +32,12 @@ test("dashboard reads the existing authenticated session contract", () => {
 });
 
 test("course selection keeps button content valid and non-interactive", () => {
-  assert.match(screen, /<button[^>]*aria-pressed=/);
-  assert.doesNotMatch(screen, /<button[^>]*>[\s\S]*?<h[1-6][^>]*>/);
-  assert.doesNotMatch(screen, /<button[^>]*>[\s\S]*?<p(?:\s|>)/);
-  assert.doesNotMatch(screen, /<button[^>]*>[\s\S]*?<a(?:\s|>)/);
+  const buttons = [...screen.matchAll(/<button\b[\s\S]*?<\/button>/g)].map(([value]) => value);
+  assert.equal(buttons.length, 1);
+  assert.match(buttons[0], /aria-pressed=/);
+  assert.doesNotMatch(buttons[0], /<h[1-6](?:\s|>)/);
+  assert.doesNotMatch(buttons[0], /<p(?:\s|>)/);
+  assert.doesNotMatch(buttons[0], /<a(?:\s|>)/);
 });
 
 test("dashboard does not create a domain or mutation endpoint", () => {
