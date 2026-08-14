@@ -13,9 +13,9 @@ function loadComponent(source, exportedName, prelude) {
   const compiled = typescript.transpileModule(`${prelude}\n${withoutImports}`, {
     compilerOptions: { jsx: typescript.JsxEmit.React, module: typescript.ModuleKind.CommonJS, target: typescript.ScriptTarget.ES2022 },
   }).outputText;
-  const module = { exports: {} };
-  new Function("require", "module", "exports", "React", compiled)(require, module, module.exports, React);
-  return module.exports[exportedName];
+  const componentModule = { exports: {} };
+  new Function("require", "module", "exports", "React", compiled)(require, componentModule, componentModule.exports, React);
+  return componentModule.exports[exportedName];
 }
 
 const screenSource = await readFile(new URL("./LearningScreen.tsx", import.meta.url), "utf8");
