@@ -6,7 +6,6 @@ from .base import *  # noqa: F403
 
 if SECRET_KEY == "unsafe-local-only":  # noqa: F405
     raise ImproperlyConfigured("DJANGO_SECRET_KEY must be configured")
-
 from modules.identity.challenge_cookie import (
     COOKIE_DOMAIN,
     COOKIE_HTTPONLY,
@@ -45,10 +44,5 @@ if (
 ):
     raise ImproperlyConfigured("forced passcode-change cookie policy is unsafe")
 
-SECURE_SSL_REDIRECT = env.bool("DJANGO_SECURE_SSL_REDIRECT", default=True)  # noqa: F405
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-SECURE_HSTS_SECONDS = 31536000
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
+if not SECURE_TRANSPORT_ENABLED:  # noqa: F405
+    raise ImproperlyConfigured("CODESHO_SECURE_TRANSPORT must be enabled in production")
