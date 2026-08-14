@@ -49,9 +49,12 @@ jobs:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
+      - name: Verify repository line endings
+        working-directory: .
+        run: sh scripts/check-line-endings.sh
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.12.13"
           cache: pip
       - name: Configure migrator and runtime roles
         env:
@@ -63,7 +66,18 @@ jobs:
           sh ../scripts/configure-postgres-roles.sh
           psql -h localhost -U codesho_admin -d codesho -v ON_ERROR_STOP=1 -c "CREATE DATABASE codesho_test OWNER codesho_migrator;"
           POSTGRES_ADMIN_URL=postgresql://codesho_admin:admin-test@localhost:5432/codesho_test sh ../scripts/configure-postgres-roles.sh
-      - run: pip install -e '.[dev]'
+      - name: Verify dependency locks are reproducible
+        run: |
+          ../scripts/update-backend-locks.sh --check
+          test -z "$(git status --short -- requirements)"
+      - name: Install hash-locked build and development dependencies
+        run: |
+          python -m pip install --require-hashes --only-binary=:all: --no-deps -r requirements/dev.txt
+          python -m pip check
+      - name: Audit runtime dependencies and inventory licenses
+        run: |
+          python -m pip_audit --strict -r requirements/runtime.txt
+          python -m pip list --format=freeze > /tmp/codesho-license-inventory.txt
       - run: ruff check .
       - run: mypy .
       - run: python ../scripts/check_module_boundaries.py
