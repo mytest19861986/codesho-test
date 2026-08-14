@@ -1,0 +1,27 @@
+.page { max-inline-size: 78rem; margin-inline: auto; padding: clamp(1.25rem, 3vw, 3rem); }
+.brand { display: inline-flex; align-items: center; gap: .5rem; color: inherit; font-size: 1.35rem; font-weight: 800; text-decoration: none; }
+.brand span:first-child { color: var(--cs-color-brand-primary); font-size: 1.8rem; }
+.profile { display: grid; place-items: center; inline-size: 2.5rem; block-size: 2.5rem; border-radius: 50%; background: var(--cs-color-brand-primary-soft); color: var(--cs-color-brand-primary); font-weight: 800; }
+.hero { margin-block-end: 2rem; padding: clamp(1.5rem, 4vw, 3rem); border: 1px solid var(--cs-color-border-subtle); border-radius: 1.5rem; background: radial-gradient(circle at 12% 10%, rgb(78 231 180 / .2), transparent 35%), var(--cs-color-bg-surface); }
+.hero h1 { margin: .4rem 0 .8rem; font-size: clamp(1.65rem, 3vw, 2.75rem); }
+.hero p:last-child, .muted { color: var(--cs-color-text-secondary); }
+.eyebrow { margin: 0; color: var(--cs-color-brand-primary); font-size: .78rem; font-weight: 700; }
+.section { margin-block: 2.5rem; }
+.heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-block-end: 1rem; }
+.heading h2 { margin: .35rem 0 0; font-size: 1.15rem; }
+.count { color: var(--cs-color-text-secondary); font-size: .85rem; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.card { display: flex; flex-direction: column; gap: .9rem; }
+.card button { display: grid; gap: .35rem; text-align: start; }
+.card button span, .card small { color: var(--cs-color-text-secondary); }
+.lessons { display: grid; gap: .6rem; margin: 0; padding: .85rem 1rem; border-block-start: 1px solid var(--cs-color-border-subtle); list-style: none; }
+.lessons li { display: flex; justify-content: space-between; gap: 1rem; }
+.state { display: grid; place-items: center; gap: .75rem; max-inline-size: 38rem; margin: 4rem auto; padding: 2rem; border: 1px solid var(--cs-color-border-subtle); border-radius: 1.25rem; background: var(--cs-color-bg-surface); text-align: center; }
+.state h2 { margin: 0; font-size: 1.05rem; }
+.state span { display: grid; place-items: center; inline-size: 3rem; block-size: 3rem; border-radius: 50%; background: var(--cs-color-brand-primary-soft); color: var(--cs-color-brand-primary); font-size: 1.5rem; }
+.state button { border: 0; background: none; color: var(--cs-color-brand-primary); cursor: pointer; font: inherit; font-weight: 700; }
+.empty { border-style: dashed; }
+.spinner { animation: pulse 1.2s ease-in-out infinite alternate; }
+@keyframes pulse { to { transform: scale(.7); opacity: .5; } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+@media (max-width: 48rem) { .page { padding-block-end: 6rem; } .grid { grid-template-columns: 1fr; } }
