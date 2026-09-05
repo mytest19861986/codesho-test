@@ -1,4 +1,22 @@
-# Current Task: SPRINT1-DOMAIN-LEARNING-COURSE-LESSON-READ-CLOSEOUT-80C
+# Current Task: TASK82A-POST-81B-READINESS-GAP-AUDIT
+
+## Task82A active checkpoint
+
+- Status: `AUDIT COMPLETE / DOCUMENTATION-ONLY / REVIEW RECONCILED`.
+- Base SHA: `e58281fb5fbaef22711ea16290bad6a8ef80ba24` (`origin/main`).
+- Branch: `codex/task82a-post81b-readiness-audit`.
+- Exact write allow-list: this file, `PROJECT_STATE.md`,
+  `CODEX_TO_COMMANDER.md`, and `TASK82A_READINESS_GAP_AUDIT.md`.
+- No application, runtime, migration, workflow, deployment, release, or
+  protected-repository change is authorized.
+- Qwen completed the independent technical review; GLM supplied advisory
+  repository-unverified risk framing. Codex reconciled both against local
+  evidence.
+- Recommended next implementation task: `TASK82B-SUPPLY-CHAIN-PINNING-AND-
+  DEPENDENCY-GOVERNANCE`, subject to normal Commander task authorization and
+  an exact write allow-list.
+- Real-user onboarding, deployment, release, Production and protected
+  promotion remain blocked or unauthorized.
 
 ## Active Task80C coordination closeout — 2026-08-11
 

@@ -1,5 +1,18 @@
 # Codesho Project State
 
+## Task82A post-Task81B readiness audit
+
+Task82A audited base `e58281fb5fbaef22711ea16290bad6a8ef80ba24` after merged
+Task81B, Task82A UX hardening and Task83A empty-state semantics. It made no
+runtime change. The audit confirms PostgreSQL RLS CI, tenant-negative tests,
+frontend lint/type checks, and Compose backup/restore ownership/grant checks.
+It records documentation drift in coordination state, mutable Action/image
+references, and incomplete Python dependency reproducibility/update governance.
+The complete classification, deferred-policy items, ranked backlog and review
+reconciliation are in `docs/coordination/TASK82A_READINESS_GAP_AUDIT.md`.
+Real-user onboarding remains `PENDING_COUNSEL`/`PENDING_EMPLOYER`; no release,
+deployment, Production or protected-repository action is authorized.
+
 ## Task80B merged closeout / Task80C checkpoint — 2026-08-11
 
 - Validated `main`: `d1da19f76e7f7bae48b836029873272d6cac642a`.
