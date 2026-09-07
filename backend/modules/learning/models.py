@@ -545,3 +545,91 @@ class Progress(models.Model):
             raise ValidationError({"id": "Progress id is immutable after creation."})
         super().save(*args, **kwargs)
         self._immutable_original_id = self.id
+
+
+class MediaFSMState(models.TextChoices):
+    PENDING = "pending", "Pending"
+    PROCESSING = "processing", "Processing"
+    READY = "ready", "Ready"
+    QUARANTINED = "quarantined", "Quarantined"
+
+
+class SyntheticMediaAttachment(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="synthetic_media_attachments",
+    )
+    lesson = models.ForeignKey(
+        Lesson,
+        on_delete=models.CASCADE,
+        related_name="media_attachments",
+    )
+    title = models.CharField(max_length=160)
+    storage_key = models.CharField(max_length=255)
+    mime_type = models.CharField(max_length=100, default="application/pdf")
+    file_size_bytes = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    checksum_sha256 = models.CharField(max_length=64)
+    state = models.CharField(
+        max_length=16,
+        choices=MediaFSMState.choices,
+        default=MediaFSMState.PENDING,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_synthetic_media_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "storage_key"],
+                name="learning_synthetic_media_tenant_storage_uniq",
+            ),
+            models.CheckConstraint(
+                condition=Q(state__in=MediaFSMState.values),
+                name="learning_synthetic_media_state_valid",
+            ),
+            models.CheckConstraint(
+                condition=~Q(title=""),
+                name="learning_synthetic_media_title_nonempty",
+            ),
+            models.CheckConstraint(
+                condition=~Q(storage_key=""),
+                name="learning_synthetic_media_storage_key_nonempty",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "lesson", "state"], name="learn_media_tenant_les_ix"),
+        ]
+
+    def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+        super().__init__(*args, **kwargs)
+        self._immutable_original_id = self.id
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.lesson_id}:{self.title}"
+
+    def save(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+        if not self._state.adding and self.id != self._immutable_original_id:
+            raise ValidationError(
+                {"id": "SyntheticMediaAttachment id is immutable after creation."}
+            )
+        self.full_clean()
+        super().save(*args, **kwargs)
+        self._immutable_original_id = self.id
+
+    def clean(self) -> None:
+        super().clean()
+        if self.lesson_id and self.tenant_id and self.lesson.tenant_id != self.tenant_id:
+            raise ValidationError(
+                {"lesson": "Lesson tenant does not match Media Attachment tenant."}
+            )
+        expected_prefix = f"{self.tenant_id}/media/"
+        if not self.storage_key.startswith(expected_prefix):
+            raise ValidationError(
+                {"storage_key": f"Storage key must be tenant-prefixed with '{expected_prefix}'."}
+            )

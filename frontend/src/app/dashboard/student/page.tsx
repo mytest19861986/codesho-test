@@ -122,6 +122,56 @@ export default function StudentDashboardPage() {
           </div>
         </div>
       </section>
+
+      {/* Phase 3 Synthetic Media Attachments Section */}
+      <section
+        style={{
+          maxWidth: "78rem",
+          margin: "0 auto 3rem",
+          padding: "0 1.5rem",
+          direction: "rtl",
+        }}
+        aria-labelledby="media-attachments-title"
+      >
+        <div
+          style={{
+            background: "var(--cs-color-bg-surface, #ffffff)",
+            border: "1px solid var(--cs-color-border-subtle, #e2e8f0)",
+            borderRadius: "1rem",
+            padding: "1.5rem",
+          }}
+        >
+          <h2 id="media-attachments-title" style={{ margin: "0 0 1rem 0", fontSize: "1.25rem" }}>
+            📁 منابع و رسانه‌های ضمیمه آموزشی
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1rem" }}>
+            <div style={{ padding: "1rem", borderRadius: "0.75rem", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+                <span aria-hidden="true" style={{ fontSize: "1.25rem" }}>📄</span>
+                <strong>راهنمای سریع سینتکس پایتون</strong>
+              </div>
+              <p style={{ margin: "0.25rem 0", fontSize: "0.85rem", color: "#64748b" }}>
+                فرمت: PDF | حجم: ۱.۲ مگابایت | درس: مبانی متغیرها
+              </p>
+              <span style={{ display: "inline-block", marginTop: "0.5rem", fontSize: "0.75rem", padding: "0.15rem 0.5rem", borderRadius: "0.25rem", background: "#e0f2fe", color: "#0369a1" }}>
+                تأیید اصالت داده: SYNTHETIC
+              </span>
+            </div>
+            <div style={{ padding: "1rem", borderRadius: "0.75rem", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+                <span aria-hidden="true" style={{ fontSize: "1.25rem" }}>📊</span>
+                <strong>دیاگرام ساختارهای داده و حافظه</strong>
+              </div>
+              <p style={{ margin: "0.25rem 0", fontSize: "0.85rem", color: "#64748b" }}>
+                فرمت: PNG | حجم: ۴۸۰ کیلوبایت | درس: ساختارهای داده
+              </p>
+              <span style={{ display: "inline-block", marginTop: "0.5rem", fontSize: "0.75rem", padding: "0.15rem 0.5rem", borderRadius: "0.25rem", background: "#e0f2fe", color: "#0369a1" }}>
+                تأیید اصالت داده: SYNTHETIC
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

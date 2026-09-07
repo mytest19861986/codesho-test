@@ -21,6 +21,7 @@ from .models import (
     Progress,
     PublicationState,
     Submission,
+    SyntheticMediaAttachment,
 )
 from .serializers import (
     AssignmentSerializer,
@@ -33,6 +34,7 @@ from .serializers import (
     ParentStudentSummarySerializer,
     ProgressSerializer,
     SubmissionSerializer,
+    SyntheticMediaAttachmentSerializer,
 )
 from .services import (
     AssignmentStateMachine,
@@ -587,3 +589,54 @@ def course_list(request: HttpRequest) -> Response:
 @require_GET
 def course_lesson_list(request: HttpRequest, course_id: str) -> Response:
     return CourseLessonListView.as_view()(request, course_id=course_id)
+
+
+class SyntheticMediaAttachmentView(APIView):
+    def get(self, request: Request, lesson_id: str) -> Response:
+        tr = cast(_TenantRequest, request)
+        tenant = getattr(tr, "tenant", None)
+        if not tenant or not hasattr(tenant, "id"):
+            return Response({"code": "tenant_required"}, status=403)
+        try:
+            parsed_lesson_id = UUID(lesson_id)
+        except ValueError:
+            return Response({"code": "invalid_id"}, status=400)
+
+        lesson = Lesson.objects.filter(id=parsed_lesson_id, tenant=tenant).first()
+        if not lesson:
+            return Response({"code": "not_found"}, status=404)
+
+        attachments = SyntheticMediaAttachment.objects.filter(lesson=lesson, tenant=tenant)
+        serializer = SyntheticMediaAttachmentSerializer(attachments, many=True)
+        return Response(serializer.data, status=200)
+
+    def post(self, request: Request, lesson_id: str) -> Response:
+        tr = cast(_TenantRequest, request)
+        tenant = getattr(tr, "tenant", None)
+        membership = getattr(tr, "tenant_membership", None)
+        if not tenant or not hasattr(tenant, "id") or not membership or membership.role != "admin":
+            return Response({"code": "forbidden"}, status=403)
+
+        try:
+            parsed_lesson_id = UUID(lesson_id)
+        except ValueError:
+            return Response({"code": "invalid_id"}, status=400)
+
+        lesson = Lesson.objects.filter(id=parsed_lesson_id, tenant=tenant).first()
+        if not lesson:
+            return Response({"code": "not_found"}, status=404)
+
+        data = request.data.copy()
+        data["lesson"] = str(lesson.id)
+
+        # Enforce G4 Storage Key Tenant Prefix: {tenant_id}/media/
+        storage_key = data.get("storage_key", "")
+        expected_prefix = f"{tenant.id}/media/"
+        if not storage_key.startswith(expected_prefix):
+            data["storage_key"] = f"{expected_prefix}{storage_key.lstrip('/')}"
+
+        serializer = SyntheticMediaAttachmentSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save(tenant=tenant)
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)

@@ -17,6 +17,7 @@ from .views import (
     StudentFeedbackView,
     SubmissionDraftView,
     SubmissionSubmitView,
+    SyntheticMediaAttachmentView,
 )
 
 urlpatterns = [
@@ -85,5 +86,11 @@ urlpatterns = [
         "admin/curriculum/transition/",
         AdminLearningTransitionView.as_view(),
         name="learning-admin-curriculum-transition",
+    ),
+    # Phase 3 Synthetic Media Attachment Endpoints
+    path(
+        "lessons/<str:lesson_id>/media/",
+        SyntheticMediaAttachmentView.as_view(),
+        name="learning-lesson-media",
     ),
 ]
