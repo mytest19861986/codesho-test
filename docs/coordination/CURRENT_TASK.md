@@ -1,43 +1,26 @@
-# Current Task: P3-VS1-CONTENT-MEDIA-NOTIFICATION-FOUNDATION
+# Current Task: P3-VS3-DISCOVERY
 
-## Active Phase 3 Vertical Slice 1 — 2026-09-07
+## Active Phase 3 Vertical Slice 3 — 2026-09-08
 
-- Status: `COMPLETE_FINAL / CLOSED`.
+- Status: `DISCOVERY_ACTIVE / RUNTIME_LOCKED`.
 - Branch: `codex/phase3-product-platform-foundation`.
-- Authority: `COMMANDER_P3_BOUNDARY_FINAL_DISPOSITION`.
-- Mandatory Implementation Gates (G1 - G6 & Qwen Invariants):
-  - `G1: Dispatcher Fail-Closed`: Confirmed.
-  - `G2: Append-Only Outbox Semantics`: Verified in `test_p3_outbox_events.py`.
-  - `G3: Zero-PII Payload Invariant`: Enforced in `modules/learning/events.py`.
-  - `G4: Tenant-Prefixed Media Storage Key`: Enforced (`{tenant_id}/media/`).
-  - `G5: Media FSM Lifecycle`: PENDING -> PROCESSING -> READY / QUARANTINED.
-  - `G6: Blocked Boundaries`: Real PII, payment, live identity, AI runtime blocked.
-  - `Q-FK: Composite Foreign Key Integrity`: `lesson.tenant_id == media.tenant_id`.
-  - `Q-TEST: Negative Cross-Tenant Matrix`: Verified in `test_p3_cross_tenant_negative.py`.
-- Multi-Agent Fleet Final Reviews:
-  - `QWEN_FINAL`: PASS (Backend architecture, outbox events, cross-tenant isolation).
-  - `GLM_FINAL`: PASS (PostgreSQL RLS, database integrity, privacy bounds).
-  - `GEMINI_FINAL`: PASS (Student dashboard UI/UX, RTL layout, WCAG 2.2 AA, NotificationBell integration).
-- Machine Evidence:
-  - Backend Suite: `262 passed, 59 skipped, 0 failed` in 27.34s.
-  - Focused P3 Tests: `23 passed, 0 failed` in 4.92s (`test_p3_media_attachment.py`, `test_p3_outbox_events.py`, `test_p3_cross_tenant_negative.py`, `test_learning_api.py`).
-  - Ruff Linter & Formatter: `100% clean` (0 errors).
-  - Django Check: `0 issues`.
-  - Migration Drift: `0 changes detected`.
-  - PostgreSQL RLS & FORCE RLS: Enforced via `0007_syntheticmediaattachment_rls.py`.
-  - Git Diff Hygiene: `git diff --check` clean.
-- Current Active Task: `P3-VS2-PRODUCT-EVENTS-ANALYTICS-AND-ACTIVITY`
-  - Order: `COMMANDER_P3_VS2_RUNTIME_EXECUTION_ORDER` (Risk: R2).
-  - Status: `IN_PROGRESS / RUNTIME_ACTIVE`.
-  - Authority: Commander Execution Order (`AUTHORIZED_NOW`).
-  - Mandatory Scope Gates Passed:
-    * `P3_VS1`: COMPLETE_FINAL / CLOSED.
-    * `QWEN_SCOPE`: PASS (Backend & Event/Projection Business Logic).
-    * `GLM_SCOPE`: PASS (Source authority preservation, watermark idempotency, zero-tracking, G1-G8 criteria).
-    * `GEMINI_SCOPE`: PASS (WCAG 2.2 AA, RTL layout, responsive desktop/mobile, state drift prevention).
-  - Write Manifest: `docs/coordination/PHASE3_VS2_WRITE_MANIFEST.md` (LOCKED, ZERO_WILDCARDS).
-  - Open Blockers: `0 (R3_R4 = 0)`.
-  - Mandatory DoD Invariant: Full product route discovery and regression testing across all roles (`/`, `/login`, `/dashboard/student`, `/dashboard/mentor`, `/dashboard/parent`, `/admin/learning`, etc.) prior to closeout.
+- Authority: `COMMANDER_P3_VS2_FINAL_DISPOSITION`.
+- Previous Slices:
+  - `P3-VS1`: COMPLETE_FINAL / CLOSED.
+  - `P3-VS2`: COMPLETE_FINAL / CLOSED (Commit `112fe85`).
+    * All Acceptance Gates A through F: PASS.
+    * All 6 product routes regression tested in Brave browser: 100% PASS.
+    * Projections, Watermark, Dead-Letter Queue with FORCE RLS: Operational.
+- Current Invariants for P3-VS3:
+  - NO RUNTIME IMPLEMENTATION until Discovery is fully complete.
+  - Required Artifacts:
+    * `docs/architecture/PHASE3_VS3_BOUNDARY_PLAN.md`
+    * `docs/coordination/PHASE3_VS3_WRITE_MANIFEST.md` (ZERO_WILDCARDS: YES, EXACT_PATHS_ONLY: YES, UNREVIEWED_PATHS: 0)
+  - Fleet Scope Reviews Required:
+    * `Qwen 3.8 Max`: PASS (Domain logic, state machines, API contracts, test strategy).
+    * `GLM 5.3`: PASS (Architecture boundary, data ownership, RLS, privacy & security).
+    * `Gemini 3.8`: PASS (Frontend scope, UX, RTL, accessibility, browser impact).
+  - Open Blockers: 0 (R3_R4 = 0).
 
 
 # Historical Task79A record
