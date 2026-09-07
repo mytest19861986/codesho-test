@@ -4,12 +4,16 @@ from typing import Protocol, cast
 from uuid import UUID
 
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.http import HttpRequest
 from django.views.decorators.http import require_GET
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from modules.platform_event.services import append_outbox_event
+
+from .events import LearningDomainEvents
 from .models import (
     Assignment,
     AssignmentState,
@@ -592,6 +596,9 @@ def course_lesson_list(request: HttpRequest, course_id: str) -> Response:
 
 
 class SyntheticMediaAttachmentView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
     def get(self, request: Request, lesson_id: str) -> Response:
         tr = cast(_TenantRequest, request)
         tenant = getattr(tr, "tenant", None)
@@ -611,11 +618,19 @@ class SyntheticMediaAttachmentView(APIView):
         return Response(serializer.data, status=200)
 
     def post(self, request: Request, lesson_id: str) -> Response:
-        tr = cast(_TenantRequest, request)
-        tenant = getattr(tr, "tenant", None)
-        membership = getattr(tr, "tenant_membership", None)
-        if not tenant or not hasattr(tenant, "id") or not membership or membership.role != "admin":
+        raw_req = getattr(request, "_request", None)
+        tenant = getattr(request, "tenant", None) or getattr(raw_req, "tenant", None)
+        membership = getattr(request, "tenant_membership", None) or getattr(
+            raw_req, "tenant_membership", None
+        )
+        if (
+            not tenant
+            or not hasattr(tenant, "id")
+            or not membership
+            or getattr(membership, "role", None) != "admin"
+        ):
             return Response({"code": "forbidden"}, status=403)
+
 
         try:
             parsed_lesson_id = UUID(lesson_id)
@@ -637,6 +652,21 @@ class SyntheticMediaAttachmentView(APIView):
 
         serializer = SyntheticMediaAttachmentSerializer(data=data)
         if serializer.is_valid():
-            serializer.save(tenant=tenant)
+            with transaction.atomic():
+                instance = serializer.save(tenant=tenant)
+                event = LearningDomainEvents.media_attached(
+                    tenant_id=tenant.id,
+                    media_id=instance.id,
+                    lesson_id=lesson.id,
+                    title=instance.title,
+                    storage_key=instance.storage_key,
+                )
+                append_outbox_event(
+                    topic=event.event_type,
+                    aggregate_type="synthetic_media_attachment",
+                    aggregate_id=str(instance.id),
+                    payload=event.payload,
+                    tenant_id=tenant.id,
+                )
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
