@@ -1,31 +1,29 @@
-# Current Task: P3-VS1-CONTENT-MEDIA-NOTIFICATION-FOUNDATION
+# Current Task: P2-FINAL-PRODUCT-READINESS-AND-PHASE3-BOUNDARY
 
-## Active Phase 3 Vertical Slice 1 — 2026-09-07
+## Active Phase 2 Closeout & Phase 3 Boundary Audit — 2026-09-07
 
-- Status: `IN_PROGRESS / CORE_GATES_PASS / ZERO_FABRICATION_VERIFIED`.
+- Status: `PHASE2_COMPLETE / READY_FOR_DRAFT_PR / PHASE3_DISCOVERY_AUTHORIZED`.
 - Branch: `codex/phase1-engineering-readiness`.
-- Authority: `COMMANDER_P3_BOUNDARY_FINAL_DISPOSITION`.
-- Mandatory Implementation Gates (G1 - G6 & Qwen Invariants):
-  - `G1: Dispatcher Fail-Closed`: Confirmed.
-  - `G2: Append-Only Outbox Semantics`: Verified in `test_p3_outbox_events.py`.
-  - `G3: Zero-PII Payload Invariant`: Enforced in `modules/learning/events.py`.
-  - `G4: Tenant-Prefixed Media Storage Key`: Enforced (`{tenant_id}/media/`).
-  - `G5: Media FSM Lifecycle`: PENDING -> PROCESSING -> READY / QUARANTINED.
-  - `G6: Blocked Boundaries`: Real PII, payment, live identity, AI runtime blocked.
-  - `Q-FK: Composite Foreign Key Integrity`: `lesson.tenant_id == media.tenant_id`.
-  - `Q-TEST: Negative Cross-Tenant Matrix`: Verified in `test_p3_cross_tenant_negative.py`.
-- Machine Evidence:
-  - Backend Suite: `262 passed, 59 skipped, 0 failed` in 27.34s.
-  - Media & FSM Tests: `3 passed` (`test_p3_media_attachment.py`).
-  - Outbox Event Tests: `1 passed` (`test_p3_outbox_events.py`).
-  - Cross-Tenant Negative Tests: `2 passed` (`test_p3_cross_tenant_negative.py`).
-  - Dependency Governance: `1 passed` (`test_dependency_governance.py`).
-  - Ruff Linter & Formatter: `100% clean` (0 errors, 8 files formatted).
-  - Django Check: `0 issues`.
-  - Migration Drift: `0 changes detected`.
-  - Frontend Webpack Build: `11 static pages generated cleanly`.
-  - Git Diff Hygiene: `git diff --check` clean.
-
+- Phase 2 Core Product Build: `COMPLETE`.
+  - `P2-VS1`: `COMPLETE` (Student Discovery, Lesson View, Submission).
+  - `P2-VS2`: `COMPLETE` (Mentor Review Queue, Scoring, Feedback).
+  - `P2-VS3`: `COMPLETE` (Parent Dashboard, Admin Curriculum Operations).
+  - `P2-VS4`: `COMPLETE` (Cross-Role Integration, Authorization Matrix Hardening).
+- Local Core Gates:
+  - Backend Ruff/Formatting: `PASS` (0 errors).
+  - Django Check: `PASS` (0 issues).
+  - Migration Drift: `PASS` (0 changes).
+  - Full Backend Suite: `PASS` (259 passed, 59 skipped, 0 failed).
+  - PostgreSQL RLS Contract: `PASS` (7 passed, fail-closed isolation verified).
+  - Canonical OpenAPI: `PASS` (FC no differences).
+  - Frontend Lint/Typecheck/Webpack Build: `PASS` (11 static routes).
+  - Git Diff Hygiene: `PASS` (`git diff --check` clean).
+  - R3/R4 Guard: `PASS` (Zero payments, zero real PII, zero runtime AI mentor).
+- Active Phase 3 Audit Objective:
+  - Divide Phase 3 into:
+    1. `PHASE3_ENGINEERING_READY` (Provider abstractions, notification adapters, synthetic onboarding, etc.)
+    2. `PHASE3_BLOCKED_BY_COUNSEL_OR_EMPLOYER` (Real user signup, real PII, SMS/email, payments, runtime AI mentor).
+- Authority: `DRAFT_PR_AUTHORIZED_AFTER_FINAL_GATES` (Draft PR to `main` authorized; Merge / Ready / Direct Main strictly prohibited without explicit employer approval).
 
 # Historical Task79A record
 

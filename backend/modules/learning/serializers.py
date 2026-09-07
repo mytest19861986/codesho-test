@@ -9,7 +9,6 @@ from .models import (
     Module,
     Progress,
     Submission,
-    SyntheticMediaAttachment,
 )
 
 
@@ -140,20 +139,3 @@ class ParentStudentSummarySerializer(serializers.Serializer):
     active_assignments = AssignmentSerializer(many=True)
     submissions = MentorSubmissionQueueSerializer(many=True)
     recent_feedbacks = FeedbackSerializer(many=True)
-
-
-class SyntheticMediaAttachmentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SyntheticMediaAttachment
-        fields = [
-            "id",
-            "lesson",
-            "title",
-            "storage_key",
-            "mime_type",
-            "file_size_bytes",
-            "checksum_sha256",
-            "state",
-            "created_at",
-        ]
-        read_only_fields = ["id", "created_at"]
