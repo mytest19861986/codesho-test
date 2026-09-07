@@ -26,15 +26,18 @@
   - Migration Drift: `0 changes detected`.
   - PostgreSQL RLS & FORCE RLS: Enforced via `0007_syntheticmediaattachment_rls.py`.
   - Git Diff Hygiene: `git diff --check` clean.
-- Next Phase: `P3-VS2-PRODUCT-EVENTS-ANALYTICS-AND-ACTIVITY`
-  - Status: `DISCOVERY_COMPLETE / SCOPE_GATES_PASS / RUNTIME_AUTHORIZED`.
-  - Scope Gate Verification (All 3 Models):
-    * `QWEN_SCOPE`: PASS (Architecture & Business Logic verified; P0 DB RLS & composite isolation resolved).
+- Current Active Task: `P3-VS2-PRODUCT-EVENTS-ANALYTICS-AND-ACTIVITY`
+  - Order: `COMMANDER_P3_VS2_RUNTIME_EXECUTION_ORDER` (Risk: R2).
+  - Status: `IN_PROGRESS / RUNTIME_ACTIVE`.
+  - Authority: Commander Execution Order (`AUTHORIZED_NOW`).
+  - Mandatory Scope Gates Passed:
+    * `P3_VS1`: COMPLETE_FINAL / CLOSED.
+    * `QWEN_SCOPE`: PASS (Backend & Event/Projection Business Logic).
     * `GLM_SCOPE`: PASS (Source authority preservation, watermark idempotency, zero-tracking, G1-G8 criteria).
-    * `GEMINI_SCOPE`: PASS (4,288 chars comprehensive review: WCAG 2.2 AA, RTL layout, responsive desktop/mobile, state drift prevention).
-  - Write Manifest: `docs/coordination/PHASE3_VS2_WRITE_MANIFEST.md` LOCKED.
+    * `GEMINI_SCOPE`: PASS (WCAG 2.2 AA, RTL layout, responsive desktop/mobile, state drift prevention).
+  - Write Manifest: `docs/coordination/PHASE3_VS2_WRITE_MANIFEST.md` (LOCKED, ZERO_WILDCARDS).
   - Open Blockers: `0 (R3_R4 = 0)`.
-  - Authority: Commander Order ("START P3-VS2 RUNTIME AUTOMATICALLY").
+  - Mandatory DoD Invariant: Full product route discovery and regression testing across all roles (`/`, `/login`, `/dashboard/student`, `/dashboard/mentor`, `/dashboard/parent`, `/admin/learning`, etc.) prior to closeout.
 
 
 # Historical Task79A record
