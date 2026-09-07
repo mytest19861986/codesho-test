@@ -631,7 +631,6 @@ class SyntheticMediaAttachmentView(APIView):
         ):
             return Response({"code": "forbidden"}, status=403)
 
-
         try:
             parsed_lesson_id = UUID(lesson_id)
         except ValueError:
