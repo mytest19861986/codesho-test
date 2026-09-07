@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 # Explicit static import for platform admin site registration in Composition Root
@@ -37,6 +37,7 @@ urlpatterns = [
         course_lesson_list,
         name="learning-course-lesson-list",
     ),
+    path("api/v1/learning/", include("modules.learning.urls")),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
         "api/schema/swagger-ui/",

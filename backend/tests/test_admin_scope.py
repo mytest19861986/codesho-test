@@ -119,9 +119,7 @@ class TestAdminPolicyEngine:
             active=True,
             created_by_user=superuser,
         )
-        assert evaluate_admin_policy(
-            operator_user, "identity.User", "list", "platform_user_safe"
-        )
+        assert evaluate_admin_policy(operator_user, "identity.User", "list", "platform_user_safe")
         assert not evaluate_admin_policy(
             operator_user, "identity.User", "view", "platform_user_safe"
         )
@@ -333,9 +331,7 @@ class TestSafePlatformUserAdmin:
 
             assert not mock_get_object.called
 
-    def test_10_audit_failure_remains_fail_closed(
-        self, rf, operator_user, target_user, superuser
-    ):
+    def test_10_audit_failure_remains_fail_closed(self, rf, operator_user, target_user, superuser):
         """10. audit failure remains fail-closed."""
         PlatformOperatorPolicy.objects.create(
             operator_user=operator_user,
@@ -378,8 +374,9 @@ class TestSafePlatformUserAdmin:
         request.session = SessionStore()
         request._messages = FallbackStorage(request)
 
-        with patch("config.platform_admin.append_security_event") as mock_append, pytest.raises(
-            PermissionDenied
+        with (
+            patch("config.platform_admin.append_security_event") as mock_append,
+            pytest.raises(PermissionDenied),
         ):
             if mutation == "add":
                 admin_obj.add_view(request)
@@ -400,10 +397,13 @@ class TestSafePlatformUserAdmin:
         request.session = SessionStore()
         request._messages = FallbackStorage(request)
 
-        with patch(
-            "config.platform_admin.append_security_event",
-            side_effect=SecurityAuditError("audit append failed"),
-        ), pytest.raises(PermissionDenied) as exc_info:
+        with (
+            patch(
+                "config.platform_admin.append_security_event",
+                side_effect=SecurityAuditError("audit append failed"),
+            ),
+            pytest.raises(PermissionDenied) as exc_info,
+        ):
             admin_obj.changeform_view(request, object_id=str(target_user.id))
 
         assert str(target_user.id) not in str(exc_info.value)
@@ -458,9 +458,7 @@ class TestPlatformOperatorPolicyImmutability:
             policy.delete()
 
     @pytest.mark.skipif(connection.vendor != "postgresql", reason="requires PostgreSQL trigger")
-    def test_postgresql_rejects_raw_sql_immutable_policy_mutations(
-        self, operator_user, superuser
-    ):
+    def test_postgresql_rejects_raw_sql_immutable_policy_mutations(self, operator_user, superuser):
         policy = PlatformOperatorPolicy.objects.create(
             operator_user=operator_user,
             model_label="identity.User",

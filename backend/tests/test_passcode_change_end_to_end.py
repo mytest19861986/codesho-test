@@ -80,10 +80,7 @@ def _audit_rows(*, tenant_id, user_id):
             (tenant_id, user_id, tenant_id, user_id),
         )
         rows = [dict(zip(columns, row, strict=True)) for row in cursor.fetchall()]
-    assert all(
-        row["tenant_id"] == tenant_id and row["subject_user_id"] == user_id
-        for row in rows
-    )
+    assert all(row["tenant_id"] == tenant_id and row["subject_user_id"] == user_id for row in rows)
     return rows
 
 

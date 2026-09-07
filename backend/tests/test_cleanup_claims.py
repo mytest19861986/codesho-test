@@ -160,13 +160,16 @@ def test_failure_retries_then_dead(settings, tenant):
     )
     lease = acquire_cleanup_claims(tenant_id=tenant.id, limit=1)[0]
 
-    assert fail_claim(
-        claim_id=claim.id,
-        tenant_id=tenant.id,
-        owner_token=lease.owner_token,
-        generation=lease.fencing_generation,
-        failure_code="cleanup_error",
-    ) == CleanupWorkClaim.State.DEAD
+    assert (
+        fail_claim(
+            claim_id=claim.id,
+            tenant_id=tenant.id,
+            owner_token=lease.owner_token,
+            generation=lease.fencing_generation,
+            failure_code="cleanup_error",
+        )
+        == CleanupWorkClaim.State.DEAD
+    )
     with tenant_atomic(tenant.id):
         claim.refresh_from_db()
     assert claim.last_failure_code == "cleanup_error"
@@ -179,10 +182,13 @@ def test_outbox_failure_rolls_back_claim_transition(settings, tenant):
         tenant_id=tenant.id, next_eligible_at=timezone.now() - timedelta(minutes=1)
     )
 
-    with patch(
-        "config.cleanup_claims.append_outbox_event",
-        side_effect=RuntimeError("simulated outbox failure"),
-    ), pytest.raises(RuntimeError, match="simulated outbox failure"):
+    with (
+        patch(
+            "config.cleanup_claims.append_outbox_event",
+            side_effect=RuntimeError("simulated outbox failure"),
+        ),
+        pytest.raises(RuntimeError, match="simulated outbox failure"),
+    ):
         acquire_cleanup_claims(tenant_id=tenant.id, limit=1)
 
     with tenant_atomic(tenant.id):
@@ -200,25 +206,31 @@ def test_retry_limit_one_then_dead(settings, tenant):
         tenant_id=tenant.id, next_eligible_at=timezone.now() - timedelta(minutes=1)
     )
     first = acquire_cleanup_claims(tenant_id=tenant.id, limit=1)[0]
-    assert fail_claim(
-        claim_id=claim.id,
-        tenant_id=tenant.id,
-        owner_token=first.owner_token,
-        generation=first.fencing_generation,
-        failure_code="cleanup_error",
-    ) == CleanupWorkClaim.State.RETRYABLE
+    assert (
+        fail_claim(
+            claim_id=claim.id,
+            tenant_id=tenant.id,
+            owner_token=first.owner_token,
+            generation=first.fencing_generation,
+            failure_code="cleanup_error",
+        )
+        == CleanupWorkClaim.State.RETRYABLE
+    )
     with tenant_atomic(tenant.id):
         CleanupWorkClaim.objects.filter(pk=claim.id).update(
             next_eligible_at=timezone.now() - timedelta(minutes=1)
         )
     second = acquire_cleanup_claims(tenant_id=tenant.id, limit=1)[0]
-    assert fail_claim(
-        claim_id=claim.id,
-        tenant_id=tenant.id,
-        owner_token=second.owner_token,
-        generation=second.fencing_generation,
-        failure_code="cleanup_error",
-    ) == CleanupWorkClaim.State.DEAD
+    assert (
+        fail_claim(
+            claim_id=claim.id,
+            tenant_id=tenant.id,
+            owner_token=second.owner_token,
+            generation=second.fencing_generation,
+            failure_code="cleanup_error",
+        )
+        == CleanupWorkClaim.State.DEAD
+    )
     assert acquire_cleanup_claims(tenant_id=tenant.id, limit=1) == []
 
 
@@ -256,10 +268,13 @@ def test_actual_cleanup_task_failure_retries_then_dead(settings, tenant):
         "owner_token": str(first.owner_token),
     }
 
-    with patch(
-        "modules.identity.tasks.cleanup_current_tenant",
-        side_effect=RuntimeError("controlled cleanup failure"),
-    ), pytest.raises(RuntimeError, match="controlled cleanup failure"):
+    with (
+        patch(
+            "modules.identity.tasks.cleanup_current_tenant",
+            side_effect=RuntimeError("controlled cleanup failure"),
+        ),
+        pytest.raises(RuntimeError, match="controlled cleanup failure"),
+    ):
         run_cleanup_claim_task.apply(kwargs=task_kwargs, throw=True)
 
     with tenant_atomic(tenant.id):
@@ -280,10 +295,13 @@ def test_actual_cleanup_task_failure_retries_then_dead(settings, tenant):
         fencing_generation=second.fencing_generation,
         owner_token=str(second.owner_token),
     )
-    with patch(
-        "modules.identity.tasks.cleanup_current_tenant",
-        side_effect=RuntimeError("controlled cleanup failure"),
-    ), pytest.raises(RuntimeError, match="controlled cleanup failure"):
+    with (
+        patch(
+            "modules.identity.tasks.cleanup_current_tenant",
+            side_effect=RuntimeError("controlled cleanup failure"),
+        ),
+        pytest.raises(RuntimeError, match="controlled cleanup failure"),
+    ):
         run_cleanup_claim_task.apply(kwargs=task_kwargs, throw=True)
 
     with tenant_atomic(tenant.id):
@@ -303,9 +321,7 @@ def test_postgres_claim_rls_and_runtime_privileges(runtime_connection, tenant, s
         cursor.execute("SELECT count(*) FROM identity_cleanupworkclaim")
         assert cursor.fetchone()[0] == 0
         cursor.execute("SELECT set_config('app.tenant_id', %s, true)", [str(tenant.id)])
-        cursor.execute(
-            "SELECT count(*) FROM identity_cleanupworkclaim WHERE id = %s", [claim.id]
-        )
+        cursor.execute("SELECT count(*) FROM identity_cleanupworkclaim WHERE id = %s", [claim.id])
         assert cursor.fetchone()[0] == 1
         cursor.execute(
             "SELECT has_table_privilege(current_user, "

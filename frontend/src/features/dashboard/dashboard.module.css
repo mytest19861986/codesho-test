@@ -37,6 +37,52 @@
 .stateGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; max-inline-size: 60rem; margin: 3rem auto; }
 .stateGrid span { display: block; min-block-size: 13rem; border-radius: 1rem; background: linear-gradient(90deg, var(--cs-color-bg-surface), var(--cs-color-bg-surface-raised), var(--cs-color-bg-surface)); background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite; }
 @keyframes shimmer { to { background-position: -200% 0; } }
-@media (prefers-reduced-motion: reduce) { .stateGrid span { animation: none; } }
+.courseButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  background: var(--cs-color-bg-surface);
+  border: 1px solid var(--cs-color-border-subtle);
+  border-radius: 0.75rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: right;
+  transition: all 0.2s ease;
+}
+
+.courseButton[aria-pressed="true"] {
+  border-color: var(--cs-color-brand-primary);
+  background: var(--cs-color-brand-primary-soft);
+  color: var(--cs-color-brand-primary);
+}
+
+.lessonList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lessonItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--cs-color-bg-surface-raised, rgba(0,0,0,0.02));
+  border: 1px solid var(--cs-color-border-subtle);
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.lessonItem small {
+  color: var(--cs-color-text-secondary);
+  font-size: 0.8rem;
+}
+
 @media (max-width: 48rem) { .page { padding-block-end: 6rem; } .hero { align-items: flex-start; } .heroOrb { inline-size: 4.5rem; block-size: 4.5rem; font-size: 2rem; } .primaryGrid, .secondaryGrid, .attention { grid-template-columns: 1fr; } .momentumGrid { gap: .6rem; } .statCard { padding: .85rem; } .statCard strong { font-size: 1.1rem; } }
 @media (max-width: 24rem) { .heroOrb { display: none; } .momentumGrid { grid-template-columns: 1fr; } }

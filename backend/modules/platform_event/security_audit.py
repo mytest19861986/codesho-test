@@ -34,9 +34,7 @@ class SecurityEventType(StrEnum):
     ADMIN_TENANT_ACCESS_DENIED = "admin_tenant_access_denied"
     ADMIN_POLICY_EVALUATED = "admin_policy_evaluated"
     ADULT_AGE_ATTESTATION_ACCEPTED = "adult_age_attestation_accepted"
-    ADULT_SIGNUP_REJECTED_AGE_ATTESTATION_MISSING = (
-        "adult_signup_rejected_age_attestation_missing"
-    )
+    ADULT_SIGNUP_REJECTED_AGE_ATTESTATION_MISSING = "adult_signup_rejected_age_attestation_missing"
     SYNTHETIC_ACCOUNT_BOOTSTRAPPED = "synthetic_account_bootstrapped"
 
 

@@ -184,9 +184,7 @@ def test_force_rls_and_runtime_role_contract_for_learning_tables(runtime_connect
         assert cursor.fetchall() == [("codesho_migrator",), ("codesho_migrator",)]
 
     with runtime_connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname = current_user"
-        )
+        cursor.execute("SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname = current_user")
         assert cursor.fetchone()[0] is False
         for table in ("learning_course", "learning_lesson"):
             cursor.execute(

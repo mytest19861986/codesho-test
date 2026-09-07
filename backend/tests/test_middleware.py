@@ -77,3 +77,78 @@ def test_tenant_middleware_rejects_non_member(db, settings):
     request.user = user
 
     assert middleware(request).status_code == 403
+
+
+def test_tenant_middleware_rejects_inactive_membership(db, settings):
+    settings.TENANT_BASE_DOMAIN = "localhost"
+    settings.ALLOWED_HOSTS = [".localhost"]
+    tenant = Tenant.objects.create(slug="alpha", name="Alpha")
+    user = User.objects.create_user(username="inactive_user", email="inactive@example.com")
+    with tenant_atomic(tenant.id):
+        TenantMembership.objects.create(
+            tenant=tenant,
+            user=user,
+            role=TenantMembership.Role.LEARNER,
+            is_active=False,
+        )
+
+    middleware = TenantCandidateMiddleware(
+        TenantTransactionMiddleware(lambda request: HttpResponse("ok"))
+    )
+    request = RequestFactory().get("/api/me/", HTTP_HOST="alpha.localhost")
+    request.user = user
+
+    assert middleware(request).status_code == 403
+
+
+def test_tenant_middleware_rejects_cross_tenant_member(db, settings):
+    settings.TENANT_BASE_DOMAIN = "localhost"
+    settings.ALLOWED_HOSTS = [".localhost"]
+    Tenant.objects.create(slug="alpha", name="Alpha")
+    tenant_b = Tenant.objects.create(slug="beta", name="Beta")
+    user_b = User.objects.create_user(username="user_b", email="b@example.com")
+    with tenant_atomic(tenant_b.id):
+        TenantMembership.objects.create(
+            tenant=tenant_b,
+            user=user_b,
+            role=TenantMembership.Role.LEARNER,
+            is_active=True,
+        )
+
+    middleware = TenantCandidateMiddleware(
+        TenantTransactionMiddleware(lambda request: HttpResponse("ok"))
+    )
+    request = RequestFactory().get("/api/me/", HTTP_HOST="alpha.localhost")
+    request.user = user_b
+
+    assert middleware(request).status_code == 403
+
+
+def test_tenant_middleware_fails_closed_without_tenant_host(db, settings):
+    settings.TENANT_BASE_DOMAIN = "localhost"
+    settings.ALLOWED_HOSTS = [".localhost", "localhost"]
+    user = User.objects.create_user(username="user1", email="u1@example.com")
+
+    middleware = TenantCandidateMiddleware(
+        TenantTransactionMiddleware(lambda request: HttpResponse("ok"))
+    )
+    request = RequestFactory().get("/api/me/", HTTP_HOST="localhost")
+    request.user = user
+
+    response = middleware(request)
+    assert response.status_code == 400
+
+
+def test_tenant_middleware_fails_closed_on_unknown_tenant(db, settings):
+    settings.TENANT_BASE_DOMAIN = "localhost"
+    settings.ALLOWED_HOSTS = [".localhost"]
+    user = User.objects.create_user(username="user2", email="u2@example.com")
+
+    middleware = TenantCandidateMiddleware(
+        TenantTransactionMiddleware(lambda request: HttpResponse("ok"))
+    )
+    request = RequestFactory().get("/api/me/", HTTP_HOST="unknown.localhost")
+    request.user = user
+
+    response = middleware(request)
+    assert response.status_code == 404
