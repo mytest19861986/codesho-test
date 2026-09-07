@@ -1,14 +1,15 @@
 from uuid import uuid4
+
 import pytest
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
-from modules.platform_tenant.models import Tenant
+
 from modules.learning.models import (
     Course,
     Lesson,
     MediaFSMState,
     SyntheticMediaAttachment,
 )
+from modules.platform_tenant.models import Tenant
 
 
 @pytest.mark.django_db
@@ -17,7 +18,9 @@ def test_cross_tenant_read_isolation():
     tenant2 = Tenant.objects.create(name="T2", slug=f"t2-{uuid4().hex[:6]}")
 
     c1 = Course.objects.create(tenant=tenant1, code=f"C1-{uuid4().hex[:4]}", title="Course 1")
-    l1 = Lesson.objects.create(tenant=tenant1, course=c1, code=f"L1-{uuid4().hex[:4]}", title="Lesson 1", position=1)
+    l1 = Lesson.objects.create(
+        tenant=tenant1, course=c1, code=f"L1-{uuid4().hex[:4]}", title="Lesson 1", position=1
+    )
 
     SyntheticMediaAttachment.objects.create(
         tenant=tenant1,
@@ -41,7 +44,9 @@ def test_cross_tenant_update_and_delete_protection():
     tenant2 = Tenant.objects.create(name="T2", slug=f"t2-{uuid4().hex[:6]}")
 
     c1 = Course.objects.create(tenant=tenant1, code=f"C1-{uuid4().hex[:4]}", title="Course 1")
-    l1 = Lesson.objects.create(tenant=tenant1, course=c1, code=f"L1-{uuid4().hex[:4]}", title="Lesson 1", position=1)
+    l1 = Lesson.objects.create(
+        tenant=tenant1, course=c1, code=f"L1-{uuid4().hex[:4]}", title="Lesson 1", position=1
+    )
 
     media = SyntheticMediaAttachment.objects.create(
         tenant=tenant1,

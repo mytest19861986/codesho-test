@@ -1,13 +1,15 @@
 from uuid import uuid4
+
 import pytest
 from django.core.exceptions import ValidationError
-from modules.platform_tenant.models import Tenant
+
 from modules.learning.models import (
     Course,
     Lesson,
     MediaFSMState,
     SyntheticMediaAttachment,
 )
+from modules.platform_tenant.models import Tenant
 
 
 @pytest.mark.django_db
@@ -82,7 +84,9 @@ def test_composite_tenant_integrity_rejection():
     tenant2 = Tenant.objects.create(name="Tenant Two", slug=f"t-two-{uuid4().hex[:6]}")
 
     course1 = Course.objects.create(tenant=tenant1, code=f"C-{uuid4().hex[:4]}", title="Course 1")
-    lesson1 = Lesson.objects.create(tenant=tenant1, course=course1, code=f"L-{uuid4().hex[:4]}", title="Lesson 1", position=1)
+    lesson1 = Lesson.objects.create(
+        tenant=tenant1, course=course1, code=f"L-{uuid4().hex[:4]}", title="Lesson 1", position=1
+    )
 
     # Attempt to attach lesson from tenant1 under tenant2
     with pytest.raises(ValidationError) as exc:
