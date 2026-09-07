@@ -59,7 +59,11 @@ def test_metadata_rejects_unbounded_or_invalid_values(version, key):
 def test_metadata_rejects_non_uuid_identifiers():
     with pytest.raises(ValueError, match="invalid passcode change audit metadata"):
         PasscodeChangeAuditMetadata(
-            "not-an-event-id", uuid4(), uuid4(), uuid4(), 1  # type: ignore[arg-type]
+            "not-an-event-id",
+            uuid4(),
+            uuid4(),
+            uuid4(),
+            1,  # type: ignore[arg-type]
         )
 
 

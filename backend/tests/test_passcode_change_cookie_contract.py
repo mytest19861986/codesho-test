@@ -51,10 +51,14 @@ def test_cookie_serializer_rejects_invalid_or_oversized_material_without_disclos
 @pytest.mark.parametrize(
     "raw",
     [
-        "v2.a.b", "v1.a", "v1.a.b.c", "v1.not-a-uuid.QUJD",
+        "v2.a.b",
+        "v1.a",
+        "v1.a.b.c",
+        "v1.not-a-uuid.QUJD",
         "v1.00000000-0000-0000-0000-000000000000.abc=",
         "v1.00000000-0000-0000-0000-000000000000.@@@",
-        "v1.00000000-0000-0000-0000-000000000000.YQ", "x" * 513,
+        "v1.00000000-0000-0000-0000-000000000000.YQ",
+        "x" * 513,
         "v1.00000000-0000-0000-0000-000000000000.QUJD".upper(),
     ],
 )

@@ -92,7 +92,18 @@ def test_completion_counter_dimensions_and_distinct_alert_thresholds(settings):
     )
     with patch("modules.identity.abuse._client") as factory:
         factory.return_value.eval.return_value = [
-            0, 0, 0, 0, 1, 600000, 1, 600000, 99, 600000, 19, 600000
+            0,
+            0,
+            0,
+            0,
+            1,
+            600000,
+            1,
+            600000,
+            99,
+            600000,
+            19,
+            600000,
         ]
         decision = record_failed_completion_attempt(
             signals, CompletionDimensions(ip=True, device=True, global_detection=True)
@@ -109,9 +120,5 @@ def test_completion_counter_dimensions_and_distinct_alert_thresholds(settings):
     assert not _completion_decision(
         [0, 0, 0, 0, 99], [600000] * 5, distinct_subjects=19
     ).global_alert
-    assert _completion_decision(
-        [0, 0, 0, 0, 99], [600000] * 5, distinct_subjects=20
-    ).global_alert
-    assert _completion_decision(
-        [0, 0, 0, 0, 100], [600000] * 5, distinct_subjects=1
-    ).global_alert
+    assert _completion_decision([0, 0, 0, 0, 99], [600000] * 5, distinct_subjects=20).global_alert
+    assert _completion_decision([0, 0, 0, 0, 100], [600000] * 5, distinct_subjects=1).global_alert

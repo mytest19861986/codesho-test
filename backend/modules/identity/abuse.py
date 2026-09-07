@@ -247,11 +247,7 @@ def _completion_keys(signals: CompletionSignals) -> list[str]:
     # The selector is never retained: challenge_subject is an internal UUID and
     # only its keyed digest is used in Redis.
     return [
-        (
-            f"{prefix}:account:{_digest(signals.account_subject)}"
-            if signals.account_subject
-            else ""
-        ),
+        (f"{prefix}:account:{_digest(signals.account_subject)}" if signals.account_subject else ""),
         f"{prefix}:challenge:{_digest(signals.challenge_subject)}"
         if signals.challenge_subject
         else "",
@@ -269,11 +265,7 @@ def _completion_run(
     script: str, signals: CompletionSignals, *, bump: bool
 ) -> tuple[list[int], list[int]]:
     keys = _completion_keys(signals)
-    args = (
-        [settings.PASSCODE_CHANGE_COMPLETION_WINDOW_SECONDS * 1000] * len(keys)
-        if bump
-        else []
-    )
+    args = [settings.PASSCODE_CHANGE_COMPLETION_WINDOW_SECONDS * 1000] * len(keys) if bump else []
     result = _client().eval(script, len(keys), *keys, *args)
     if not isinstance(result, list) or (len(result) != 10 and result != [-1]):
         raise ValueError("malformed completion abuse backend response")

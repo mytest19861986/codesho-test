@@ -27,6 +27,25 @@ def test_context_is_reset_after_transaction_error():
     assert current_tenant_id() is None
 
 
+def test_current_tenant_id_fails_closed_outside_atomic():
+    assert current_tenant_id() is None
+
+
+@pytest.mark.django_db(transaction=True)
+def test_sequential_tenant_atomic_switches_and_cleans_up():
+    first_id = uuid4()
+    second_id = uuid4()
+
+    assert current_tenant_id() is None
+    with tenant_atomic(first_id):
+        assert current_tenant_id() == first_id
+    assert current_tenant_id() is None
+
+    with tenant_atomic(second_id):
+        assert current_tenant_id() == second_id
+    assert current_tenant_id() is None
+
+
 @pytest.mark.django_db(transaction=True)
 def test_membership_rls_fails_closed_without_context():
     if connection.vendor != "postgresql":
@@ -51,9 +70,7 @@ def test_runtime_database_role_cannot_bypass_rls():
         pytest.skip("PostgreSQL-specific RLS contract")
 
     with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname = current_user"
-        )
+        cursor.execute("SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname = current_user")
         can_bypass_rls = cursor.fetchone()[0]
     assert can_bypass_rls is False
 

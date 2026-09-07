@@ -1,13 +1,29 @@
-# Current Task: SPRINT1-DOMAIN-LEARNING-COURSE-LESSON-READ-CLOSEOUT-80C
+# Current Task: P2-FINAL-PRODUCT-READINESS-AND-PHASE3-BOUNDARY
 
-## Active Task80C coordination closeout — 2026-08-11
+## Active Phase 2 Closeout & Phase 3 Boundary Audit — 2026-09-07
 
-- Status: `IN_PROGRESS / COORDINATION_ONLY`.
-- Validated main / base: `d1da19f76e7f7bae48b836029873272d6cac642a`.
-- Task80B: `COMPLETE`; PR `#39` is `MERGED`.
-- Qwen and Claude implementation gates: `PASS` (`P0=0`, `P1=0`, `OPEN_BLOCKERS=0`).
-- Post-merge CI `31477878067` and Compose `31477878000`: `SUCCESS`.
-- Scope is coordination closeout only. Production, deployment, release, and protected `codesho` remain unauthorized.
+- Status: `PHASE2_COMPLETE / READY_FOR_DRAFT_PR / PHASE3_DISCOVERY_AUTHORIZED`.
+- Branch: `codex/phase1-engineering-readiness`.
+- Phase 2 Core Product Build: `COMPLETE`.
+  - `P2-VS1`: `COMPLETE` (Student Discovery, Lesson View, Submission).
+  - `P2-VS2`: `COMPLETE` (Mentor Review Queue, Scoring, Feedback).
+  - `P2-VS3`: `COMPLETE` (Parent Dashboard, Admin Curriculum Operations).
+  - `P2-VS4`: `COMPLETE` (Cross-Role Integration, Authorization Matrix Hardening).
+- Local Core Gates:
+  - Backend Ruff/Formatting: `PASS` (0 errors).
+  - Django Check: `PASS` (0 issues).
+  - Migration Drift: `PASS` (0 changes).
+  - Full Backend Suite: `PASS` (259 passed, 59 skipped, 0 failed).
+  - PostgreSQL RLS Contract: `PASS` (7 passed, fail-closed isolation verified).
+  - Canonical OpenAPI: `PASS` (FC no differences).
+  - Frontend Lint/Typecheck/Webpack Build: `PASS` (11 static routes).
+  - Git Diff Hygiene: `PASS` (`git diff --check` clean).
+  - R3/R4 Guard: `PASS` (Zero payments, zero real PII, zero runtime AI mentor).
+- Active Phase 3 Audit Objective:
+  - Divide Phase 3 into:
+    1. `PHASE3_ENGINEERING_READY` (Provider abstractions, notification adapters, synthetic onboarding, etc.)
+    2. `PHASE3_BLOCKED_BY_COUNSEL_OR_EMPLOYER` (Real user signup, real PII, SMS/email, payments, runtime AI mentor).
+- Authority: `DRAFT_PR_AUTHORIZED_AFTER_FINAL_GATES` (Draft PR to `main` authorized; Merge / Ready / Direct Main strictly prohibited without explicit employer approval).
 
 # Historical Task79A record
 

@@ -179,9 +179,7 @@ class SafePlatformUserAdmin(_UserAdminBase):
             raise PermissionDenied("administrative mutations are disabled")
         return super().changelist_view(request, extra_context)
 
-    def _audit_denied(
-        self, request: HttpRequest, subject_user_id: uuid.UUID | None = None
-    ) -> None:
+    def _audit_denied(self, request: HttpRequest, subject_user_id: uuid.UUID | None = None) -> None:
         if request.META.get("_codesho_admin_denial_audited"):
             return
         request.META["_codesho_admin_denial_audited"] = True

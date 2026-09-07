@@ -306,6 +306,7 @@ def test_postgres_parallel_completion_consumes_a_challenge_once(tenant_member):
     start = Barrier(2)
     results = []
     audit_events = []
+
     def submit() -> None:
         close_old_connections()
         try:
@@ -322,12 +323,17 @@ def test_postgres_parallel_completion_consumes_a_challenge_once(tenant_member):
             ):
                 results.append(
                     complete_forced_passcode_change(
-                        tenant=tenant, selector=cookie.selector, secret=cookie.secret,
-                        new_passcode="654321", client_ip="127.0.0.1", device_id=None,
+                        tenant=tenant,
+                        selector=cookie.selector,
+                        secret=cookie.secret,
+                        new_passcode="654321",
+                        client_ip="127.0.0.1",
+                        device_id=None,
                     ).status
                 )
         finally:
             close_old_connections()
+
     threads = [Thread(target=submit), Thread(target=submit)]
     with patch(
         "config.passcode_change_completion.append_security_event",
@@ -353,7 +359,8 @@ def test_postgres_parallel_completion_consumes_a_challenge_once(tenant_member):
     successful_keys = {
         event.event_type.value: event.idempotency_key
         for event in audit_events
-        if event.event_type.value in {
+        if event.event_type.value
+        in {
             "passcode_changed",
             "passcode_change_challenge_consumed",
         }
@@ -365,7 +372,11 @@ def test_postgres_parallel_completion_consumes_a_challenge_once(tenant_member):
     assert len(set(successful_keys.values())) == 2
     assert all(str(challenge.id) in key for key in successful_keys.values())
     replay = complete_forced_passcode_change(
-        tenant=tenant, selector=cookie.selector, secret=cookie.secret,
-        new_passcode="000000", client_ip="127.0.0.1", device_id=None,
+        tenant=tenant,
+        selector=cookie.selector,
+        secret=cookie.secret,
+        new_passcode="000000",
+        client_ip="127.0.0.1",
+        device_id=None,
     )
     assert replay.status is CompletionStatus.INVALID

@@ -225,8 +225,7 @@ def complete_forced_passcode_change(
                     actor_user_id=user.id,
                     credential_version=credential.credential_version,
                     idempotency_key=(
-                        f"passcode-change:{SecurityEventType.PASSCODE_CHANGED.value}:"
-                        f"{challenge.id}"
+                        f"passcode-change:{SecurityEventType.PASSCODE_CHANGED.value}:{challenge.id}"
                     ),
                 )
             )

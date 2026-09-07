@@ -89,12 +89,15 @@ def test_partial_unique_constraint_allows_only_one_active_challenge():
     first.secret_digest = None
     first.revoked_at = now
     first.save(update_fields=["state", "secret_digest", "revoked_at"])
-    assert challenge_factory(
-        credential=first.credential,
-        tenant=first.tenant,
-        issued_at=now,
-        expires_at=now + timedelta(seconds=600),
-    ).state == PasscodeChangeChallenge.State.ACTIVE
+    assert (
+        challenge_factory(
+            credential=first.credential,
+            tenant=first.tenant,
+            issued_at=now,
+            expires_at=now + timedelta(seconds=600),
+        ).state
+        == PasscodeChangeChallenge.State.ACTIVE
+    )
 
 
 @pytest.mark.django_db

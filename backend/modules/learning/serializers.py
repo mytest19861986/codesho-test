@@ -1,0 +1,141 @@
+from rest_framework import serializers
+
+from .models import (
+    Assignment,
+    Course,
+    Feedback,
+    LearningPath,
+    Lesson,
+    Module,
+    Progress,
+    Submission,
+)
+
+
+class LearningPathSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LearningPath
+        fields = ["id", "code", "title", "state", "created_at"]
+        read_only_fields = ["id", "created_at"]
+
+
+class CourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = ["id", "learning_path", "code", "title", "state", "created_at"]
+        read_only_fields = ["id", "created_at"]
+
+
+class ModuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Module
+        fields = [
+            "id",
+            "course",
+            "code",
+            "title",
+            "position",
+            "state",
+            "created_at",
+        ]
+        read_only_fields = ["id", "created_at"]
+
+
+class LessonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lesson
+        fields = [
+            "id",
+            "course",
+            "module",
+            "code",
+            "title",
+            "position",
+            "state",
+            "created_at",
+        ]
+        read_only_fields = ["id", "created_at"]
+
+
+class AssignmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Assignment
+        fields = ["id", "lesson", "code", "title", "description", "state", "created_at"]
+        read_only_fields = ["id", "created_at"]
+
+
+class SubmissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Submission
+        fields = [
+            "id",
+            "assignment",
+            "student_id",
+            "content",
+            "state",
+            "submitted_at",
+            "created_at",
+        ]
+        read_only_fields = ["id", "state", "submitted_at", "created_at"]
+
+
+class FeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Feedback
+        fields = ["id", "submission", "mentor_id", "content", "created_at"]
+        read_only_fields = ["id", "created_at"]
+
+
+class ProgressSerializer(serializers.ModelSerializer):
+    lesson_title = serializers.CharField(source="lesson.title", read_only=True)
+    lesson_code = serializers.CharField(source="lesson.code", read_only=True)
+
+    class Meta:
+        model = Progress
+        fields = [
+            "id",
+            "lesson",
+            "lesson_title",
+            "lesson_code",
+            "student_id",
+            "state",
+            "completed_at",
+            "created_at",
+        ]
+        read_only_fields = ["id", "state", "completed_at", "created_at"]
+
+
+class MentorSubmissionQueueSerializer(serializers.ModelSerializer):
+    assignment_title = serializers.CharField(source="assignment.title", read_only=True)
+    assignment_code = serializers.CharField(source="assignment.code", read_only=True)
+    lesson_title = serializers.CharField(source="assignment.lesson.title", read_only=True)
+    feedbacks = FeedbackSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Submission
+        fields = [
+            "id",
+            "assignment",
+            "assignment_title",
+            "assignment_code",
+            "lesson_title",
+            "student_id",
+            "content",
+            "state",
+            "submitted_at",
+            "created_at",
+            "feedbacks",
+        ]
+        read_only_fields = fields
+
+
+class ParentStudentSummarySerializer(serializers.Serializer):
+    student_id = serializers.UUIDField()
+    learning_paths = LearningPathSerializer(many=True)
+    courses = CourseSerializer(many=True)
+    total_lessons = serializers.IntegerField()
+    completed_lessons = serializers.IntegerField()
+    completion_percentage = serializers.IntegerField()
+    active_assignments = AssignmentSerializer(many=True)
+    submissions = MentorSubmissionQueueSerializer(many=True)
+    recent_feedbacks = FeedbackSerializer(many=True)

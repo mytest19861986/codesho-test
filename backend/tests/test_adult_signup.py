@@ -153,10 +153,7 @@ def test_false_attestation_is_audited_and_rejected(adult_signup):
     assert AdultAgeAttestation.objects.count() == 0
     assert provenance_count(adult_signup.id) == 0
     event = append.call_args.args[0]
-    assert (
-        event.event_type
-        is SecurityEventType.ADULT_SIGNUP_REJECTED_AGE_ATTESTATION_MISSING
-    )
+    assert event.event_type is SecurityEventType.ADULT_SIGNUP_REJECTED_AGE_ATTESTATION_MISSING
     assert event.subject_user_id == subject_id
 
 
@@ -513,6 +510,7 @@ def test_postgres_trigger_and_runtime_privileges_are_append_only(adult_signup):
             tenant_id=adult_signup.id,
             attestation=attestation,
         )
+
     def assert_migrator_rejects(statement, params):
         with connect(migrator_url) as migrator, migrator.cursor() as cursor:
             cursor.execute(
@@ -524,8 +522,7 @@ def test_postgres_trigger_and_runtime_privileges_are_append_only(adult_signup):
             migrator.rollback()
 
     assert_migrator_rejects(
-        "UPDATE codesho.identity_adultageattestation "
-        "SET policy_version = 'tampered' WHERE id = %s",
+        "UPDATE codesho.identity_adultageattestation SET policy_version = 'tampered' WHERE id = %s",
         (str(attestation.id),),
     )
     assert_migrator_rejects(
@@ -533,8 +530,7 @@ def test_postgres_trigger_and_runtime_privileges_are_append_only(adult_signup):
         (str(attestation.id),),
     )
     assert_migrator_rejects(
-        "UPDATE codesho.identity_adultattestationprovenance "
-        "SET tenant_id = %s WHERE id = %s",
+        "UPDATE codesho.identity_adultattestationprovenance SET tenant_id = %s WHERE id = %s",
         (str(adult_signup.id), str(provenance.id)),
     )
     assert_migrator_rejects(

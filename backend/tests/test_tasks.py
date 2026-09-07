@@ -32,3 +32,19 @@ def test_base_tenant_task_sets_and_resets_context():
     assert value == "value"
     assert observed_id == tenant_id
     assert current_tenant_id() is None
+
+
+@pytest.mark.django_db(transaction=True)
+def test_base_tenant_task_sequential_execution_no_leakage():
+    first_tenant = uuid4()
+    second_tenant = uuid4()
+
+    val1, obs1 = EchoTenantTask()("run1", tenant_id=str(first_tenant))
+    assert val1 == "run1"
+    assert obs1 == first_tenant
+    assert current_tenant_id() is None
+
+    val2, obs2 = EchoTenantTask()("run2", tenant_id=str(second_tenant))
+    assert val2 == "run2"
+    assert obs2 == second_tenant
+    assert current_tenant_id() is None

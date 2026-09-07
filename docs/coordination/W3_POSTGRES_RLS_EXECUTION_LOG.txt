@@ -1,0 +1,19 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.13.14, pytest-8.4.2, pluggy-1.6.0 -- C:\Users\MYIT\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+django: version: 5.2.17, settings: config.settings.test (from env)
+rootdir: G:\project\codesho\codesho\worktrees\phase1-engineering-readiness\backend
+configfile: pyproject.toml
+plugins: anyio-4.14.2, asyncio-1.4.0, cov-6.3.0, django-4.13.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 7 items
+
+backend\tests\test_learning_rls_postgres.py::test_learning_rls_fails_closed_without_tenant_context PASSED
+backend\tests\test_learning_rls_postgres.py::test_learning_rls_isolates_tenants_and_connection_reuse PASSED
+backend\tests\test_learning_rls_postgres.py::test_runtime_cannot_insert_cross_tenant_course_or_lesson PASSED
+backend\tests\test_learning_rls_postgres.py::test_database_rejects_cross_tenant_lesson_course_reference PASSED
+backend\tests\test_learning_rls_postgres.py::test_runtime_cannot_reassign_learning_tenant_ownership PASSED
+backend\tests\test_learning_rls_postgres.py::test_database_guards_immutable_learning_keys PASSED
+backend\tests\test_learning_rls_postgres.py::test_force_rls_and_runtime_role_contract_for_learning_tables PASSED
+
+============================== 7 passed in 2.57s ==============================

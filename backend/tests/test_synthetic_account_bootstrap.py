@@ -147,12 +147,10 @@ def test_000_postgres_empty_reverse_contracts_execute_real_sql_and_roll_back():
             # FORCE RLS deliberately hides rows from the owning migrator. Temporarily
             # restore owner visibility so the empty-path precondition is explicit.
             schema_editor.execute(
-                "ALTER TABLE codesho.identity_syntheticbootstraprequest "
-                "NO FORCE ROW LEVEL SECURITY"
+                "ALTER TABLE codesho.identity_syntheticbootstraprequest NO FORCE ROW LEVEL SECURITY"
             )
             schema_editor.execute(
-                "ALTER TABLE codesho.platform_tenant_tenantmembership "
-                "NO FORCE ROW LEVEL SECURITY"
+                "ALTER TABLE codesho.platform_tenant_tenantmembership NO FORCE ROW LEVEL SECURITY"
             )
             with connection.cursor() as cursor:
                 cursor.execute(
@@ -168,12 +166,10 @@ def test_000_postgres_empty_reverse_contracts_execute_real_sql_and_roll_back():
                 )
                 incompatible_rows = cursor.fetchone()
             schema_editor.execute(
-                "ALTER TABLE codesho.identity_syntheticbootstraprequest "
-                "FORCE ROW LEVEL SECURITY"
+                "ALTER TABLE codesho.identity_syntheticbootstraprequest FORCE ROW LEVEL SECURITY"
             )
             schema_editor.execute(
-                "ALTER TABLE codesho.platform_tenant_tenantmembership "
-                "FORCE ROW LEVEL SECURITY"
+                "ALTER TABLE codesho.platform_tenant_tenantmembership FORCE ROW LEVEL SECURITY"
             )
             assert incompatible_rows == (0, 0, 0, 0), (
                 "successful reverse probe requires a database with no synthetic "
@@ -334,10 +330,13 @@ def test_missing_or_cross_tenant_attestation_and_provenance_fail_closed(
 
 @pytest.mark.django_db
 def test_audit_failure_rolls_back_every_bootstrap_row(bootstrap_inputs):
-    with patch(
-        "modules.identity.synthetic_bootstrap.append_security_event",
-        side_effect=SecurityAuditError("audit unavailable"),
-    ), pytest.raises(SecurityAuditError):
+    with (
+        patch(
+            "modules.identity.synthetic_bootstrap.append_security_event",
+            side_effect=SecurityAuditError("audit unavailable"),
+        ),
+        pytest.raises(SecurityAuditError),
+    ):
         bootstrap_synthetic_account(**bootstrap_inputs.__dict__)
 
     assert User.objects.count() == 0
@@ -457,8 +456,7 @@ def test_postgres_runtime_grants_and_dormancy_guards(bootstrap_inputs):
             [str(bootstrap_inputs.tenant_id)],
         )
         cursor.execute(
-            "SELECT count(*) FROM codesho.identity_syntheticbootstraprequest "
-            "WHERE id = %s",
+            "SELECT count(*) FROM codesho.identity_syntheticbootstraprequest WHERE id = %s",
             [str(result.request_id)],
         )
         assert cursor.fetchone()[0] == 1
@@ -510,14 +508,12 @@ def test_postgres_runtime_grants_and_dormancy_guards(bootstrap_inputs):
         )
         assert cursor.fetchone() == (True, True, False)
         cursor.execute(
-            "UPDATE codesho.platform_tenant_tenantmembership "
-            "SET is_active = false WHERE id = %s",
+            "UPDATE codesho.platform_tenant_tenantmembership SET is_active = false WHERE id = %s",
             [str(human_membership.id)],
         )
         assert cursor.rowcount == 1
         cursor.execute(
-            "UPDATE codesho.platform_tenant_tenantmembership "
-            "SET is_active = true WHERE id = %s",
+            "UPDATE codesho.platform_tenant_tenantmembership SET is_active = true WHERE id = %s",
             [str(human_membership.id)],
         )
         assert cursor.rowcount == 1
@@ -532,8 +528,7 @@ def test_postgres_runtime_grants_and_dormancy_guards(bootstrap_inputs):
     with connect(runtime_url, autocommit=True) as runtime, runtime.cursor() as cursor:
         cursor.execute("SELECT set_config('app.tenant_id', %s, false)", [str(other.id)])
         cursor.execute(
-            "SELECT count(*) FROM codesho.identity_syntheticbootstraprequest "
-            "WHERE id = %s",
+            "SELECT count(*) FROM codesho.identity_syntheticbootstraprequest WHERE id = %s",
             [str(result.request_id)],
         )
         assert cursor.fetchone()[0] == 0
@@ -557,8 +552,7 @@ def test_postgres_runtime_grants_and_dormancy_guards(bootstrap_inputs):
             )
         with pytest.raises(RaiseException):
             cursor.execute(
-                "UPDATE codesho.platform_tenant_tenantmembership "
-                "SET tenant_id = %s WHERE id = %s",
+                "UPDATE codesho.platform_tenant_tenantmembership SET tenant_id = %s WHERE id = %s",
                 [str(other.id), str(result.membership_id)],
             )
         with pytest.raises(RaiseException):
@@ -704,8 +698,11 @@ def test_postgres_request_trigger_requires_exact_audit_evidence(bootstrap_inputs
             )
             assert cursor.fetchone()[0] is True
 
-        with transaction.atomic(), pytest.raises(
-            DatabaseError, match="synthetic bootstrap audit evidence is missing or invalid"
+        with (
+            transaction.atomic(),
+            pytest.raises(
+                DatabaseError, match="synthetic bootstrap audit evidence is missing or invalid"
+            ),
         ):
             SyntheticBootstrapRequest.objects.create(
                 tenant_id=bootstrap_inputs.tenant_id,
@@ -777,8 +774,7 @@ def test_postgres_real_audit_and_all_or_nothing_bootstrap(bootstrap_inputs):
     result = bootstrap_synthetic_account(**bootstrap_inputs.__dict__)
     with connection.cursor() as cursor:
         cursor.execute(
-            "SELECT event_type, reason_code FROM audit.identity_security_event "
-            "WHERE event_id = %s",
+            "SELECT event_type, reason_code FROM audit.identity_security_event WHERE event_id = %s",
             [str(result.audit_event_id)],
         )
         assert cursor.fetchone() == (
@@ -792,16 +788,18 @@ def test_postgres_real_audit_rolls_back_after_late_request_failure(bootstrap_inp
     if connection.vendor != "postgresql":
         pytest.skip("PostgreSQL-specific audit rollback integration")
     idempotency_key = str(bootstrap_inputs.idempotency_key)
-    with patch(
-        "modules.identity.synthetic_bootstrap.SyntheticBootstrapRequest.objects.create",
-        side_effect=DatabaseError("request contract rejected"),
-    ), pytest.raises(SyntheticBootstrapConflict):
+    with (
+        patch(
+            "modules.identity.synthetic_bootstrap.SyntheticBootstrapRequest.objects.create",
+            side_effect=DatabaseError("request contract rejected"),
+        ),
+        pytest.raises(SyntheticBootstrapConflict),
+    ):
         bootstrap_synthetic_account(**bootstrap_inputs.__dict__)
 
     with connection.cursor() as cursor:
         cursor.execute(
-            "SELECT count(*) FROM audit.identity_security_event "
-            "WHERE idempotency_key = %s",
+            "SELECT count(*) FROM audit.identity_security_event WHERE idempotency_key = %s",
             [f"synthetic-bootstrap:{bootstrap_inputs.tenant_id}:{idempotency_key}"],
         )
         assert cursor.fetchone()[0] == 0
@@ -892,9 +890,13 @@ def test_postgres_reverse_contracts_reject_existing_synthetic_evidence(bootstrap
             False,
         ),
     )
-    for module_name, function_name, error_message, guard_message, has_database_cause in (
-        migration_functions
-    ):
+    for (
+        module_name,
+        function_name,
+        error_message,
+        guard_message,
+        has_database_cause,
+    ) in migration_functions:
         migration = importlib.import_module(module_name)
         with (
             pytest.raises(IrreversibleError, match=f"^{error_message}$") as exc_info,

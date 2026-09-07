@@ -5,7 +5,9 @@ WORKDIR /app
 
 RUN addgroup --system codesho && adduser --system --ingroup codesho codesho
 COPY pyproject.toml ./
-RUN pip install --upgrade pip && pip install .
+COPY requirements.lock ./
+RUN pip install --require-hashes --only-binary=:all: --no-deps -r requirements.lock \
+    && pip install --no-deps --no-build-isolation .
 # The final image is a runtime image: remove package-management and build
 # tooling from the system interpreter after installing the application.
 RUN rm -f /usr/local/bin/pip /usr/local/bin/pip3 /usr/local/bin/pip3.* \

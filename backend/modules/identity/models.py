@@ -526,17 +526,22 @@ class PlatformOperatorPolicy(models.Model):
             super().save(*args, **kwargs)
             return
 
-        previous = type(self).objects.filter(pk=self.pk).values(
-            "operator_user_id",
-            "model_label",
-            "action",
-            "scope_kind",
-            "active",
-            "created_at",
-            "created_by_user_id",
-            "revoked_at",
-            "revoked_by_user_id",
-        ).first()
+        previous = (
+            type(self)
+            .objects.filter(pk=self.pk)
+            .values(
+                "operator_user_id",
+                "model_label",
+                "action",
+                "scope_kind",
+                "active",
+                "created_at",
+                "created_by_user_id",
+                "revoked_at",
+                "revoked_by_user_id",
+            )
+            .first()
+        )
         if previous is None:
             raise ValidationError("operator policy does not exist")
         if not previous["active"]:

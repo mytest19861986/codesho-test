@@ -54,7 +54,9 @@ def test_completion_global_redis_window_and_distinct_are_atomic(real_completion_
     assert not record_failed_completion_attempt(first, dimensions).global_alert
     assert record_failed_completion_attempt(first, dimensions).global_alert
     assert real_completion_redis.zcard(_completion_distinct_key()) == 1
-    real_completion_redis.delete(*real_completion_redis.keys(f"{settings.PASSCODE_RATE_LIMIT_REDIS_PREFIX}:*"))
+    real_completion_redis.delete(
+        *real_completion_redis.keys(f"{settings.PASSCODE_RATE_LIMIT_REDIS_PREFIX}:*")
+    )
     for number in range(19):
         assert not record_failed_completion_attempt(_signals(str(number)), dimensions).global_alert
     assert record_failed_completion_attempt(_signals("20"), dimensions).global_alert

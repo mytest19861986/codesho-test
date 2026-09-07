@@ -1,0 +1,33 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.13.14, pytest-8.4.2, pluggy-1.6.0 -- C:\Users\MYIT\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+django: version: 5.2.17, settings: config.settings.test (from ini)
+rootdir: G:\project\codesho\codesho\worktrees\phase1-engineering-readiness\backend
+configfile: pyproject.toml
+plugins: anyio-4.14.2, asyncio-1.4.0, cov-6.3.0, django-4.13.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 21 items
+
+backend\tests\test_middleware.py::test_tenant_middleware_authorizes_inside_context PASSED [  4%]
+backend\tests\test_middleware.py::test_tenant_middleware_rejects_non_member PASSED [  9%]
+backend\tests\test_middleware.py::test_tenant_middleware_rejects_inactive_membership PASSED [ 14%]
+backend\tests\test_middleware.py::test_tenant_middleware_rejects_cross_tenant_member PASSED [ 19%]
+backend\tests\test_middleware.py::test_tenant_middleware_fails_closed_without_tenant_host PASSED [ 23%]
+backend\tests\test_middleware.py::test_tenant_middleware_fails_closed_on_unknown_tenant PASSED [ 28%]
+backend\tests\test_tasks.py::test_base_tenant_task_requires_tenant_id PASSED [ 33%]
+backend\tests\test_tasks.py::test_base_tenant_task_rejects_invalid_tenant_id PASSED [ 38%]
+backend\tests\test_tasks.py::test_base_tenant_task_sets_and_resets_context PASSED [ 42%]
+backend\tests\test_tasks.py::test_base_tenant_task_sequential_execution_no_leakage PASSED [ 47%]
+backend\tests\test_tenant_context.py::test_context_is_reset_after_transaction PASSED [ 52%]
+backend\tests\test_tenant_context.py::test_context_is_reset_after_transaction_error PASSED [ 57%]
+backend\tests\test_tenant_context.py::test_sequential_tenant_atomic_switches_and_cleans_up PASSED [ 61%]
+backend\tests\test_tenant_context.py::test_membership_rls_fails_closed_without_context SKIPPED [ 66%]
+backend\tests\test_tenant_context.py::test_runtime_database_role_cannot_bypass_rls SKIPPED [ 71%]
+backend\tests\test_tenant_context.py::test_runtime_database_role_cannot_execute_ddl_or_disable_rls SKIPPED [ 76%]
+backend\tests\test_tenant_context.py::test_context_does_not_leak_across_reused_connection SKIPPED [ 80%]
+backend\tests\test_middleware.py::test_candidate_is_only_single_subdomain PASSED [ 85%]
+backend\tests\test_middleware.py::test_tenant_bypass_paths_are_exact PASSED [ 90%]
+backend\tests\test_middleware.py::test_session_epoch_precedes_tenant_authorization_in_settings PASSED [ 95%]
+backend\tests\test_tenant_context.py::test_current_tenant_id_fails_closed_outside_atomic PASSED [100%]
+
+======================== 17 passed, 4 skipped in 1.46s ========================
