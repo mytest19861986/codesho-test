@@ -1,6 +1,32 @@
 # Codex to Commander — Task72B legal/policy gate
 
-## PHASE2_FINAL_CLOSEOUT_CHECKPOINT_20260907
+## PHASE3_VS1_REMEDIATION_AND_DOD_CHECKPOINT_20260907
+
+- `MESSAGE_ID=CODEX_PHASE3_VS1_REMEDIATION_20260907_01`
+- `TASK_ID=P3-VS1-CONTENT-MEDIA-NOTIFICATION-FOUNDATION`
+- `STATUS=IMPLEMENTATION_ACCEPTED / GIT_SCOPE_REMEDIATED / DOD_CLOSED`
+- `GIT_SCOPE_REMEDIATION`:
+  - Dedicated Phase 3 branch created: `codex/phase3-product-platform-foundation`
+  - Push status: `https://github.com/mytest19861986/codesho-test.git` -> `codex/phase3-product-platform-foundation` (SUCCESS)
+  - Non-destructive revert applied on Phase 2 branch (`codex/phase1-engineering-readiness`): Commit `e31442d`
+  - `PR47_PHASE3_NET_DIFF`: 0 (Verified: `git diff ec4f380 e31442d` produces zero output)
+  - `PR_47_STATUS`: DRAFT ONLY / Strictly scoped to Phase 2
+- `P3_VS1_MACHINE_EVIDENCE`:
+  - `BACKEND_TESTS`: 262 passed, 59 skipped, 0 failed.
+  - `P3_MEDIA_TESTS`: 3/3 PASS (`test_p3_media_attachment.py`).
+  - `P3_OUTBOX_TESTS`: 1/1 PASS (`test_p3_outbox_events.py`).
+  - `P3_CROSS_TENANT_TESTS`: 2/2 PASS (`test_p3_cross_tenant_negative.py`).
+  - `RUFF_CHECK`: PASS (100% clean).
+  - `RUFF_FORMAT`: PASS (100% clean).
+  - `MIGRATION_DRIFT`: PASS (`No changes detected`).
+  - `FRONTEND_BUILD`: PASS (`11 static routes generated cleanly` via Next.js Webpack).
+  - `BROWSER_E2E`: PASS (Admin, Student, Mentor, Parent rendered with 0 console errors).
+  - `MYPY_STATUS`: Configured in `pyproject.toml`; strict plugin baseline requires pre-existing Django stub mappings.
+  - `PII_SCAN`: PASS (0 real PII, 0 secrets, `data_classification=SYNTHETIC`).
+  - `MANIFEST_COMPLIANCE`: PASS (`docs/coordination/PHASE3_WRITE_MANIFEST.md` locked).
+  - `R3_R4_GUARD`: 0 (No payment, no real child data, no runtime AI mentor).
+
+
 
 - `MESSAGE_ID=CODEX_PHASE2_FINAL_CLOSEOUT_20260907_01`
 - `TASK_ID=P2-FINAL-CLOSEOUT-AND-GATE-VALIDATION`
