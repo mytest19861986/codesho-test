@@ -7,12 +7,15 @@ from .views import (
     CourseListView,
     LearningPathListView,
     MentorCompleteReviewView,
+    MentorMetricsView,
     MentorReviewQueueView,
     MentorStartReviewView,
     MentorSubmissionDetailView,
     ParentStudentFeedbackListView,
     ParentStudentProgressListView,
     ParentStudentSummaryView,
+    RoleActivityFeedView,
+    StudentCourseAnalyticsView,
     StudentDashboardSummaryView,
     StudentFeedbackView,
     SubmissionDraftView,
@@ -92,5 +95,21 @@ urlpatterns = [
         "lessons/<str:lesson_id>/media/",
         SyntheticMediaAttachmentView.as_view(),
         name="learning-lesson-media",
+    ),
+    # Phase 3 VS2 Product Events, Projections & Activity Feeds
+    path(
+        "analytics/student/progress/",
+        StudentCourseAnalyticsView.as_view(),
+        name="learning-student-course-analytics",
+    ),
+    path(
+        "analytics/mentor/metrics/",
+        MentorMetricsView.as_view(),
+        name="learning-mentor-metrics",
+    ),
+    path(
+        "activity/feed/",
+        RoleActivityFeedView.as_view(),
+        name="learning-role-activity-feed",
     ),
 ]

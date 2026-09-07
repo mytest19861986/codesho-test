@@ -633,3 +633,210 @@ class SyntheticMediaAttachment(models.Model):
             raise ValidationError(
                 {"storage_key": f"Storage key must be tenant-prefixed with '{expected_prefix}'."}
             )
+
+
+class CourseProgressAggregate(models.Model):
+    """
+    Tenant-bounded projection aggregate for course completion metrics.
+    Derived state only - never a source of truth.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="course_progress_aggregates",
+    )
+    student_id = models.UUIDField(db_index=True)
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="progress_aggregates",
+    )
+    total_lessons = models.PositiveIntegerField(default=0)
+    completed_lessons = models.PositiveIntegerField(default=0)
+    progress_percentage = models.PositiveIntegerField(default=0)
+    last_event_id = models.UUIDField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_cpa_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "student_id", "course"],
+                name="learning_cpa_tenant_student_course_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id"], name="cpa_tenant_student_ix"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.student_id}:{self.course_id}:{self.progress_percentage}%"
+
+
+class AssignmentSubmissionMetrics(models.Model):
+    """
+    Tenant-bounded projection aggregate for mentor review queues and assignment metrics.
+    Derived state only.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="assignment_submission_metrics",
+    )
+    assignment = models.ForeignKey(
+        Assignment,
+        on_delete=models.CASCADE,
+        related_name="submission_metrics",
+    )
+    submitted_count = models.PositiveIntegerField(default=0)
+    under_review_count = models.PositiveIntegerField(default=0)
+    reviewed_count = models.PositiveIntegerField(default=0)
+    last_event_id = models.UUIDField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_asm_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "assignment"],
+                name="learning_asm_tenant_assignment_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "assignment"], name="asm_tenant_assignment_ix"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.assignment_id}:submitted={self.submitted_count}"
+
+
+class RoleActivityFeed(models.Model):
+    """
+    Tenant-bounded append-friendly activity feed projection.
+    Strictly Zero-PII: stores only synthetic role identifiers and action metadata.
+    """
+
+    class ActivityRole(models.TextChoices):
+        STUDENT = "student", "Student"
+        MENTOR = "mentor", "Mentor"
+        PARENT = "parent", "Parent"
+        ADMIN = "admin", "Admin"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="role_activity_feeds",
+    )
+    source_event_id = models.UUIDField(db_index=True)
+    target_role = models.CharField(max_length=16, choices=ActivityRole.choices)
+    user_id = models.UUIDField(db_index=True, null=True, blank=True)
+    activity_type = models.CharField(max_length=64)
+    summary = models.CharField(max_length=255)
+    occurred_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_raf_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "source_event_id", "target_role"],
+                name="learning_raf_tenant_source_event_role_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=["tenant", "target_role", "user_id"], name="raf_tenant_role_user_ix"
+            ),
+            models.Index(fields=["tenant", "-occurred_at", "-id"], name="raf_tenant_cursor_ix"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.target_role}:{self.activity_type}"
+
+
+class ProjectionWatermark(models.Model):
+    """
+    Tracks processed event sequence/timestamp per tenant and projection to guarantee ordering and idempotency.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="projection_watermarks",
+    )
+    projection_name = models.CharField(max_length=64)
+    last_event_id = models.UUIDField()
+    last_occurred_at = models.DateTimeField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_pw_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "projection_name"],
+                name="learning_pw_tenant_projection_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "projection_name"], name="pw_tenant_proj_ix"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.projection_name}:{self.last_event_id}"
+
+
+class ProjectionDeadLetterEvent(models.Model):
+    """
+    Stores poisoned or unprocessable projection events with failure reason for offline debugging and replay.
+    Strictly Zero-PII.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="projection_dead_letters",
+    )
+    event_id = models.UUIDField(db_index=True)
+    event_type = models.CharField(max_length=64)
+    reason = models.CharField(max_length=255)
+    raw_payload_zero_pii = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_dle_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "event_id"],
+                name="learning_dle_tenant_event_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "event_type"], name="dle_tenant_type_ix"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:DLQ:{self.event_type}:{self.event_id}"

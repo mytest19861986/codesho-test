@@ -65,3 +65,64 @@ class LearningDomainEvents:
                 "data_classification": "SYNTHETIC",
             },
         )
+
+    @classmethod
+    def lesson_completed(
+        cls,
+        tenant_id: UUID,
+        progress_id: UUID,
+        student_id: UUID,
+        course_id: UUID,
+        lesson_id: UUID,
+    ) -> DomainEvent:
+        return DomainEvent(
+            event_type=cls.LESSON_COMPLETED,
+            tenant_id=tenant_id,
+            aggregate_id=progress_id,
+            payload={
+                "student_id": str(student_id),
+                "course_id": str(course_id),
+                "lesson_id": str(lesson_id),
+                "data_classification": "SYNTHETIC",
+            },
+        )
+
+    @classmethod
+    def submission_received(
+        cls,
+        tenant_id: UUID,
+        submission_id: UUID,
+        student_id: UUID,
+        assignment_id: UUID,
+    ) -> DomainEvent:
+        return DomainEvent(
+            event_type=cls.SUBMISSION_RECEIVED,
+            tenant_id=tenant_id,
+            aggregate_id=submission_id,
+            payload={
+                "student_id": str(student_id),
+                "assignment_id": str(assignment_id),
+                "data_classification": "SYNTHETIC",
+            },
+        )
+
+    @classmethod
+    def feedback_available(
+        cls,
+        tenant_id: UUID,
+        feedback_id: UUID,
+        submission_id: UUID,
+        student_id: UUID,
+        mentor_id: UUID,
+    ) -> DomainEvent:
+        return DomainEvent(
+            event_type=cls.FEEDBACK_AVAILABLE,
+            tenant_id=tenant_id,
+            aggregate_id=feedback_id,
+            payload={
+                "submission_id": str(submission_id),
+                "student_id": str(student_id),
+                "mentor_id": str(mentor_id),
+                "data_classification": "SYNTHETIC",
+            },
+        )

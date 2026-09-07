@@ -17,18 +17,23 @@ from .events import LearningDomainEvents
 from .models import (
     Assignment,
     AssignmentState,
+    AssignmentSubmissionMetrics,
     Course,
+    CourseProgressAggregate,
     Feedback,
     LearningPath,
     Lesson,
     Module,
     Progress,
     PublicationState,
+    RoleActivityFeed,
     Submission,
     SyntheticMediaAttachment,
 )
 from .serializers import (
     AssignmentSerializer,
+    AssignmentSubmissionMetricsSerializer,
+    CourseProgressAggregateSerializer,
     CourseSerializer,
     FeedbackSerializer,
     LearningPathSerializer,
@@ -37,6 +42,7 @@ from .serializers import (
     ModuleSerializer,
     ParentStudentSummarySerializer,
     ProgressSerializer,
+    RoleActivityFeedSerializer,
     SubmissionSerializer,
     SyntheticMediaAttachmentSerializer,
 )
@@ -669,3 +675,85 @@ class SyntheticMediaAttachmentView(APIView):
                 )
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
+
+
+class StudentCourseAnalyticsView(APIView):
+    """
+    Student learning analytics projection endpoint.
+    Only allows access to the requesting student's own aggregates.
+    """
+
+    def get(self, request: Request) -> Response:
+        tenant = getattr(request, "tenant", None)
+        membership = getattr(request, "membership", None)
+        if (
+            not tenant
+            or not membership
+            or not getattr(membership, "is_active", False)
+            or getattr(membership, "role", None) != "student"
+        ):
+            return Response({"code": "forbidden"}, status=403)
+
+        student_id = request.user.id
+        aggregates = CourseProgressAggregate.objects.filter(
+            tenant=tenant, student_id=student_id
+        ).select_related("course")
+
+        serializer = CourseProgressAggregateSerializer(aggregates, many=True)
+        return Response(serializer.data, status=200)
+
+
+class MentorMetricsView(APIView):
+    """
+    Mentor assignment submission queue metrics projection endpoint.
+    """
+
+    def get(self, request: Request) -> Response:
+        tenant = getattr(request, "tenant", None)
+        membership = getattr(request, "membership", None)
+        if (
+            not tenant
+            or not membership
+            or not getattr(membership, "is_active", False)
+            or getattr(membership, "role", None) not in ("mentor", "admin")
+        ):
+            return Response({"code": "forbidden"}, status=403)
+
+        metrics = AssignmentSubmissionMetrics.objects.filter(tenant=tenant).select_related(
+            "assignment"
+        )
+
+        serializer = AssignmentSubmissionMetricsSerializer(metrics, many=True)
+        return Response(serializer.data, status=200)
+
+
+class RoleActivityFeedView(APIView):
+    """
+    Role-specific activity feed projection endpoint.
+    Strictly Zero-PII and bounded to requesting role and tenant.
+    """
+
+    def get(self, request: Request) -> Response:
+        tenant = getattr(request, "tenant", None)
+        membership = getattr(request, "membership", None)
+        if not tenant or not membership or not getattr(membership, "is_active", False):
+            return Response({"code": "forbidden"}, status=403)
+
+        role = getattr(membership, "role", None)
+        user_id = request.user.id
+
+        qs = RoleActivityFeed.objects.filter(tenant=tenant)
+        if role == "student":
+            qs = qs.filter(target_role=RoleActivityFeed.ActivityRole.STUDENT, user_id=user_id)
+        elif role == "mentor":
+            qs = qs.filter(target_role=RoleActivityFeed.ActivityRole.MENTOR)
+        elif role == "parent":
+            qs = qs.filter(target_role=RoleActivityFeed.ActivityRole.PARENT)
+        elif role == "admin":
+            qs = qs.all()
+        else:
+            return Response({"code": "forbidden"}, status=403)
+
+        qs = qs.order_by("-occurred_at")[:50]
+        serializer = RoleActivityFeedSerializer(qs, many=True)
+        return Response(serializer.data, status=200)

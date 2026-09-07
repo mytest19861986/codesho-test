@@ -2,12 +2,15 @@ from rest_framework import serializers
 
 from .models import (
     Assignment,
+    AssignmentSubmissionMetrics,
     Course,
+    CourseProgressAggregate,
     Feedback,
     LearningPath,
     Lesson,
     Module,
     Progress,
+    RoleActivityFeed,
     Submission,
     SyntheticMediaAttachment,
 )
@@ -157,3 +160,44 @@ class SyntheticMediaAttachmentSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ["id", "created_at"]
+
+
+class CourseProgressAggregateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CourseProgressAggregate
+        fields = [
+            "id",
+            "course",
+            "total_lessons",
+            "completed_lessons",
+            "progress_percentage",
+            "updated_at",
+        ]
+        read_only_fields = fields
+
+
+class AssignmentSubmissionMetricsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AssignmentSubmissionMetrics
+        fields = [
+            "id",
+            "assignment",
+            "submitted_count",
+            "under_review_count",
+            "reviewed_count",
+            "updated_at",
+        ]
+        read_only_fields = fields
+
+
+class RoleActivityFeedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RoleActivityFeed
+        fields = [
+            "id",
+            "target_role",
+            "activity_type",
+            "summary",
+            "occurred_at",
+        ]
+        read_only_fields = fields
