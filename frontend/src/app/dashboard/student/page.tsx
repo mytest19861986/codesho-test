@@ -1,6 +1,8 @@
 import React from "react";
 import { DashboardScreen } from "@/features/dashboard/DashboardScreen";
 import type { DashboardModel } from "@/features/dashboard/dashboard.types";
+import { StreakIndicator } from "@/components/gamification/StreakIndicator";
+import { BadgeShelf, BadgeItem } from "@/components/gamification/BadgeShelf";
 
 const syntheticStudentModel: DashboardModel = {
   student: {
@@ -48,11 +50,65 @@ const syntheticStudentModel: DashboardModel = {
   },
 };
 
+const syntheticBadges: BadgeItem[] = [
+  {
+    id: "b1",
+    badge_code: "FIRST_LESSON",
+    badge_level: 1,
+    title: "نخستین گام یادگیری",
+    description: "تکمیل موفقیت‌آمیز اولین درس پایتون",
+    is_earned: true,
+  },
+  {
+    id: "b2",
+    badge_code: "STREAK_3_DAYS",
+    badge_level: 1,
+    title: "پشتکار ۳ روزه",
+    description: "استمرار در فعالیت آموزشی برای ۳ روز متوالی",
+    is_earned: true,
+  },
+  {
+    id: "b3",
+    badge_code: "STREAK_7_DAYS",
+    badge_level: 1,
+    title: "مشعل یادگیری",
+    description: "استمرار در فعالیت آموزشی برای ۷ روز متوالی",
+    is_earned: false,
+  },
+  {
+    id: "b4",
+    badge_code: "SUBMISSION_STAR",
+    badge_level: 1,
+    title: "تلاشگر برتر",
+    description: "ارسال تمرین و دریافت اولین بازخورد مربی",
+    is_earned: true,
+  },
+];
+
 export default function StudentDashboardPage() {
   return (
     <div>
       <DashboardScreen model={syntheticStudentModel} state="ready" />
       
+      {/* P3-VS4 Gamification Progression & Badges Section */}
+      <section
+        style={{
+          maxWidth: "78rem",
+          margin: "0 auto 1.5rem",
+          padding: "0 1.5rem",
+          direction: "rtl",
+        }}
+        aria-label="پیشرفت و دستاوردهای دانش‌آموز"
+      >
+        <StreakIndicator
+          currentStreak={3}
+          longestStreak={5}
+          totalXp={240}
+          level={3}
+        />
+        <BadgeShelf badges={syntheticBadges} />
+      </section>
+
       {/* VS2 Mentor Feedback Visibility Section */}
       <section
         style={{

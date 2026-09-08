@@ -832,3 +832,55 @@ class NotificationMarkReadView(APIView):
             item.save(update_fields=["read_at"])
 
         return Response(NotificationItemSerializer(item).data, status=200)
+
+
+class StudentGamificationView(APIView):
+    """
+    Student Gamification & Progression View.
+    Returns authoritative profile, earned badges, and available badge definitions.
+    Strictly Zero-PII, tenant-bounded.
+    """
+
+    def get(self, request: Request) -> Response:
+        tenant = getattr(request, "tenant", None)
+        membership = getattr(request, "membership", None)
+        if (
+            not tenant
+            or not membership
+            or not getattr(membership, "is_active", False)
+            or getattr(membership, "role", None) != "student"
+        ):
+            return Response({"code": "forbidden"}, status=403)
+
+        student_id = request.user.id
+
+        from .gamification import GamificationEngine
+        GamificationEngine.ensure_default_badges()
+
+        profile, _ = StudentProgressionProfile.objects.get_or_create(
+            tenant=tenant,
+            student_id=student_id,
+            defaults={"current_streak_days": 0, "longest_streak_days": 0, "total_xp": 0, "level": 1},
+        )
+
+        badges = StudentBadgeAward.objects.filter(
+            tenant=tenant, student_id=student_id
+        ).select_related("badge").order_by("-awarded_at")
+
+        available_badges = BadgeDefinition.objects.all().order_by("threshold")
+
+        from .serializers import (
+            BadgeDefinitionSerializer,
+            StudentBadgeAwardSerializer,
+            StudentProgressionProfileSerializer,
+        )
+
+        return Response(
+            {
+                "profile": StudentProgressionProfileSerializer(profile).data,
+                "badges": StudentBadgeAwardSerializer(badges, many=True).data,
+                "available_badges": BadgeDefinitionSerializer(available_badges, many=True).data,
+            },
+            status=200,
+        )
+

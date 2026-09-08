@@ -898,3 +898,124 @@ class NotificationItem(models.Model):
 
     def __str__(self) -> str:
         return f"{self.tenant_id}:{self.user_id}:{self.notification_type}:{self.state}"
+
+
+class BadgeDefinition(models.Model):
+    """
+    Catalog of gamification badges.
+    Can be global or tenant-scoped, strictly zero-PII.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    badge_code = models.CharField(max_length=64, unique=True, db_index=True)
+    badge_level = models.PositiveSmallIntegerField(default=1)
+    title = models.CharField(max_length=160)
+    description = models.CharField(max_length=255, default="")
+    threshold = models.PositiveIntegerField(default=1)
+    is_repeatable = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["badge_code", "badge_level"],
+                name="badge_def_code_level_uniq",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.badge_code}:L{self.badge_level}:{self.title}"
+
+
+class StudentProgressionProfile(models.Model):
+    """
+    Tenant-bounded progression and daily streak profile.
+    Strictly Zero-PII, protected by optimistic locking with version field.
+    Day boundary strictly normalized to UTC Midnight.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="student_progression_profiles",
+    )
+    student_id = models.UUIDField(db_index=True)
+    current_streak_days = models.PositiveIntegerField(default=0)
+    longest_streak_days = models.PositiveIntegerField(default=0)
+    last_qualifying_date = models.DateField(null=True, blank=True)
+    total_xp = models.PositiveIntegerField(default=0)
+    level = models.PositiveIntegerField(default=1)
+    completed_lessons_count = models.PositiveIntegerField(default=0)
+    reviewed_submissions_count = models.PositiveIntegerField(default=0)
+    version = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_spp_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "student_id"],
+                name="learning_spp_tenant_student_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id"], name="spp_tenant_student_ix"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.student_id}:streak={self.current_streak_days}:xp={self.total_xp}"
+
+
+class StudentBadgeAward(models.Model):
+    """
+    Immutable tenant-bounded record of student badge grants.
+    Protected by FORCE RLS and idempotency constraints.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="student_badge_awards",
+    )
+    student_id = models.UUIDField(db_index=True)
+    badge = models.ForeignKey(
+        BadgeDefinition,
+        on_delete=models.PROTECT,
+        related_name="awards",
+    )
+    badge_code = models.CharField(max_length=64, db_index=True)
+    badge_level = models.PositiveSmallIntegerField(default=1)
+    source_event_id = models.UUIDField(null=True, blank=True, db_index=True)
+    idempotency_key = models.CharField(max_length=255, null=True, blank=True)
+    awarded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_sba_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "student_id", "badge_code", "badge_level"],
+                name="learning_sba_tenant_student_badge_level_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "idempotency_key"],
+                condition=models.Q(idempotency_key__isnull=False),
+                name="learning_sba_tenant_idemp_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id", "-awarded_at"], name="sba_tenant_stud_award_ix"),
+            models.Index(fields=["tenant", "badge_code"], name="sba_tenant_badge_ix"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.student_id}:{self.badge_code}:L{self.badge_level}"
+

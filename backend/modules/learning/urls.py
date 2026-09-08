@@ -20,6 +20,7 @@ from .views import (
     StudentCourseAnalyticsView,
     StudentDashboardSummaryView,
     StudentFeedbackView,
+    StudentGamificationView,
     SubmissionDraftView,
     SubmissionSubmitView,
     SyntheticMediaAttachmentView,
@@ -125,4 +126,11 @@ urlpatterns = [
         NotificationMarkReadView.as_view(),
         name="learning-notification-mark-read",
     ),
+    # Phase 3 VS4 Gamification & Progression
+    path(
+        "student/gamification/",
+        StudentGamificationView.as_view(),
+        name="learning-student-gamification",
+    ),
 ]
+

@@ -1,19 +1,28 @@
-# Current Task: P3-VS3-COMMUNICATION-NOTIFICATIONS-DISPATCHER
+# Current Task: P3-VS4-DISCOVERY
 
-## Active Phase 3 Vertical Slice 3 — 2026-09-08
+## Active Phase 3 Vertical Slice 4 — 2026-09-08
 
-- Status: `RUNTIME_AUTHORIZED / RUNTIME_ACTIVE`.
+- Status: `DISCOVERY_ACTIVE / RUNTIME_LOCKED`.
 - Branch: `codex/phase3-product-platform-foundation`.
-- Authority: `COMMANDER_P3_VS3_RUNTIME_AUTHORIZATION`.
-- Gate Clearances:
-  * `GEMINI_SCOPE: PASS` (NotificationBell, NotificationDrawer, RTL, Accessibility, Tokens).
-  * `QWEN_SCOPE: PASS` (Domain logic, Notification Lifecycle, Outbox delivery, Retry, RLS).
-  * `GLM_SCOPE: PASS` (Source of Truth, Event Boundary, Zero-PII Policy, FORCE RLS).
-- Open Blockers: 0 (R3_R4 = 0).
-- Implementation Scope:
-  * Backend: NotificationItem model, FORCE RLS migration, notification dispatcher service, Celery task, API endpoints, tests.
-  * Frontend: NotificationBell, NotificationDrawer, Dashboard shell integrations.
-  * Regression: All-page verification in Brave browser with visual evidence.
+- Authority: `COMMANDER_P3_VS3_FINAL_DISPOSITION`.
+- Previous Slices:
+  - `P3-VS1`: COMPLETE_FINAL / CLOSED.
+  - `P3-VS2`: COMPLETE_FINAL / CLOSED (Commit `112fe85`).
+  - `P3-VS3`: COMPLETE_FINAL_ACCEPTED / CLOSED (Commit `936f971`).
+    * NotificationItem, Dispatcher, BaseTenantTask, Celery.
+    * PostgreSQL 17 FORCE RLS (0012, 0013).
+    * NotificationDrawer RTL & WCAG 2.2 AA.
+    * 100% Brave browser regression on all 6 product routes.
+- Current Invariants for P3-VS4:
+  - NO RUNTIME IMPLEMENTATION until Discovery is fully complete.
+  - Required Artifacts:
+    * `docs/architecture/PHASE3_VS4_BOUNDARY_PLAN.md`
+    * `docs/coordination/PHASE3_VS4_WRITE_MANIFEST.md` (ZERO_WILDCARDS: YES, EXACT_PATHS_ONLY: YES, UNREVIEWED_PATHS: 0)
+  - Fleet Scope Reviews Required:
+    * `Qwen 3.8 Max`: PASS (Gamification domain logic, streak rules, idempotency).
+    * `GLM 5.3`: PASS (Security boundary, RLS, zero-PII policy, auditability).
+    * `Gemini 3.8`: PASS (Frontend badge shelf, streak widget, RTL, accessibility).
+  - Open Blockers: 0 (R3_R4 = 0).
 
 
 # Historical Task79A record

@@ -14,6 +14,9 @@ from .models import (
     Submission,
     SyntheticMediaAttachment,
     NotificationItem,
+    BadgeDefinition,
+    StudentBadgeAward,
+    StudentProgressionProfile,
 )
 
 
@@ -224,3 +227,59 @@ class NotificationItemSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = fields
+
+
+class BadgeDefinitionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BadgeDefinition
+        fields = [
+            "id",
+            "badge_code",
+            "badge_level",
+            "title",
+            "description",
+            "threshold",
+            "is_repeatable",
+        ]
+        read_only_fields = fields
+
+
+class StudentBadgeAwardSerializer(serializers.ModelSerializer):
+    title = serializers.CharField(source="badge.title", read_only=True)
+    description = serializers.CharField(source="badge.description", read_only=True)
+
+    class Meta:
+        model = StudentBadgeAward
+        fields = [
+            "id",
+            "badge_code",
+            "badge_level",
+            "title",
+            "description",
+            "awarded_at",
+        ]
+        read_only_fields = fields
+
+
+class StudentProgressionProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentProgressionProfile
+        fields = [
+            "id",
+            "current_streak_days",
+            "longest_streak_days",
+            "last_qualifying_date",
+            "total_xp",
+            "level",
+            "completed_lessons_count",
+            "reviewed_submissions_count",
+            "updated_at",
+        ]
+        read_only_fields = fields
+
+
+class StudentGamificationResponseSerializer(serializers.Serializer):
+    profile = StudentProgressionProfileSerializer()
+    badges = StudentBadgeAwardSerializer(many=True)
+    available_badges = BadgeDefinitionSerializer(many=True)
+
