@@ -6,6 +6,32 @@ import type { DashboardModel } from "@/features/dashboard/dashboard.types";
 import { StreakIndicator } from "@/components/gamification/StreakIndicator";
 import { BadgeShelf, BadgeItem } from "@/components/gamification/BadgeShelf";
 import { EnrollmentCard, EnrollmentItem } from "@/components/enrollment/EnrollmentCard";
+import { AssignmentSubmissionCard, AssignmentItem } from "@/components/submissions/AssignmentSubmissionCard";
+
+const syntheticAssignments: AssignmentItem[] = [
+  {
+    id: "asgn-1",
+    code: "py-calc-p1",
+    title: "پروژه ماشین‌حساب پایتون",
+    lessonTitle: "توابع و شروط در پایتون",
+    dueDate: "۱۴۰۵/۰۶/۳۰",
+    maxScore: 100,
+    submissionState: "reviewed",
+    currentContent: "def add(a, b):\n    return a + b\n\ndef calculate():\n    print(add(5, 7))\n\ncalculate()",
+    feedback: "عالی! استفاده از توابع ماژولار و مدیریت شروط بسیار تمیز و استاندارد پیاده‌سازی شده است.",
+    score: 98,
+  },
+  {
+    id: "asgn-2",
+    code: "py-data-p2",
+    title: "پیاده‌سازی ساختار صف و پشته در پایتون",
+    lessonTitle: "ساختارهای داده پیشرفته",
+    dueDate: "۱۴۰۵/۰۷/۰۵",
+    maxScore: 100,
+    submissionState: "draft",
+    currentContent: "class Stack:\n    def __init__(self):\n        self.items = []\n    def push(self, item):\n        self.items.append(item)\n    def pop(self):\n        return self.items.pop()",
+  },
+];
 
 const syntheticEnrollments: EnrollmentItem[] = [
   {
@@ -214,6 +240,17 @@ export default function StudentDashboardPage() {
         }}
       >
         <EnrollmentCard enrollments={syntheticEnrollments} />
+      </section>
+
+      {/* Phase 3 VS6 Student Assignments & Submissions Section */}
+      <section
+        style={{
+          maxWidth: "78rem",
+          margin: "0 auto 2rem",
+          padding: "0 1.5rem",
+        }}
+      >
+        <AssignmentSubmissionCard assignments={syntheticAssignments} />
       </section>
 
       {/* Phase 3 Synthetic Media Attachments Section */}
