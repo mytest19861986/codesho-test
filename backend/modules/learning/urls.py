@@ -15,6 +15,8 @@ from .views import (
     ParentStudentProgressListView,
     ParentStudentSummaryView,
     RoleActivityFeedView,
+    NotificationListView,
+    NotificationMarkReadView,
     StudentCourseAnalyticsView,
     StudentDashboardSummaryView,
     StudentFeedbackView,
@@ -111,5 +113,16 @@ urlpatterns = [
         "activity/feed/",
         RoleActivityFeedView.as_view(),
         name="learning-role-activity-feed",
+    ),
+    # Phase 3 VS3 Notifications
+    path(
+        "notifications/",
+        NotificationListView.as_view(),
+        name="learning-notification-list",
+    ),
+    path(
+        "notifications/<str:notification_id>/read/",
+        NotificationMarkReadView.as_view(),
+        name="learning-notification-mark-read",
     ),
 ]

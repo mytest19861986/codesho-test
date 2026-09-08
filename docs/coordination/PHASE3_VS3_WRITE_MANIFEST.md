@@ -2,8 +2,8 @@
 
 ## Target Authority
 - Task: `P3-VS3-COMMUNICATION-NOTIFICATIONS-DISPATCHER`
-- Status: `DISCOVERY_LOCKED` (Zero Runtime Changes Permitted)
-- Authority: `COMMANDER_P3_VS2_FINAL_DISPOSITION`
+- Status: `RUNTIME_ACTIVE` (Implementation Authorized by Commander)
+- Authority: `COMMANDER_P3_VS3_RUNTIME_AUTHORIZATION`
 
 ## Manifest Invariants
 - ZERO_WILDCARDS: YES

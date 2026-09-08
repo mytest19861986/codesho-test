@@ -13,6 +13,7 @@ from .models import (
     RoleActivityFeed,
     Submission,
     SyntheticMediaAttachment,
+    NotificationItem,
 )
 
 
@@ -199,5 +200,27 @@ class RoleActivityFeedSerializer(serializers.ModelSerializer):
             "activity_type",
             "summary",
             "occurred_at",
+        ]
+        read_only_fields = fields
+
+
+class NotificationItemSerializer(serializers.ModelSerializer):
+    """
+    Serializer for NotificationItem.
+    Zero-PII, returns authoritative metadata and delivery state.
+    """
+
+    class Meta:
+        model = NotificationItem
+        fields = [
+            "id",
+            "role",
+            "title",
+            "message",
+            "notification_type",
+            "state",
+            "read_at",
+            "delivered_at",
+            "created_at",
         ]
         read_only_fields = fields

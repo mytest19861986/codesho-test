@@ -29,6 +29,7 @@ from .models import (
     RoleActivityFeed,
     Submission,
     SyntheticMediaAttachment,
+    NotificationItem,
 )
 from .serializers import (
     AssignmentSerializer,
@@ -40,6 +41,7 @@ from .serializers import (
     LessonSerializer,
     MentorSubmissionQueueSerializer,
     ModuleSerializer,
+    NotificationItemSerializer,
     ParentStudentSummarySerializer,
     ProgressSerializer,
     RoleActivityFeedSerializer,
@@ -757,3 +759,76 @@ class RoleActivityFeedView(APIView):
         qs = qs.order_by("-occurred_at")[:50]
         serializer = RoleActivityFeedSerializer(qs, many=True)
         return Response(serializer.data, status=200)
+
+
+class NotificationListView(APIView):
+    """
+    List user notifications partitioned by role, strictly Zero-PII and tenant-isolated.
+    """
+
+    def get(self, request: Request) -> Response:
+        tenant = getattr(request, "tenant", None)
+        membership = getattr(request, "membership", None)
+        if not tenant or not membership or not getattr(membership, "is_active", False):
+            return Response({"code": "forbidden"}, status=403)
+
+        role = getattr(membership, "role", None)
+        user_id = request.user.id
+
+        qs = NotificationItem.objects.filter(tenant=tenant, user_id=user_id, role=role).order_by(
+            "-created_at"
+        )[:50]
+
+        serializer = NotificationItemSerializer(qs, many=True)
+        unread_count = NotificationItem.objects.filter(
+            tenant=tenant, user_id=user_id, role=role, read_at__isnull=True
+        ).count()
+
+        return Response(
+            {
+                "unread_count": unread_count,
+                "notifications": serializer.data,
+            },
+            status=200,
+        )
+
+
+class NotificationMarkReadView(APIView):
+    """
+    Marks a single notification or all user notifications as read.
+    """
+
+    def post(self, request: Request, notification_id: str | None = None) -> Response:
+        tenant = getattr(request, "tenant", None)
+        membership = getattr(request, "membership", None)
+        if not tenant or not membership or not getattr(membership, "is_active", False):
+            return Response({"code": "forbidden"}, status=403)
+
+        role = getattr(membership, "role", None)
+        user_id = request.user.id
+        from django.utils import timezone
+        now = timezone.now()
+
+        if notification_id == "all":
+            updated = NotificationItem.objects.filter(
+                tenant=tenant,
+                user_id=user_id,
+                role=role,
+                read_at__isnull=True,
+            ).update(read_at=now)
+            return Response({"marked_count": updated}, status=200)
+
+        item = NotificationItem.objects.filter(
+            tenant=tenant,
+            user_id=user_id,
+            id=notification_id,
+        ).first()
+
+        if not item:
+            return Response({"code": "not_found"}, status=404)
+
+        if not item.read_at:
+            item.read_at = now
+            item.save(update_fields=["read_at"])
+
+        return Response(NotificationItemSerializer(item).data, status=200)

@@ -1,26 +1,19 @@
-# Current Task: P3-VS3-DISCOVERY
+# Current Task: P3-VS3-COMMUNICATION-NOTIFICATIONS-DISPATCHER
 
 ## Active Phase 3 Vertical Slice 3 — 2026-09-08
 
-- Status: `DISCOVERY_ACTIVE / RUNTIME_LOCKED`.
+- Status: `RUNTIME_AUTHORIZED / RUNTIME_ACTIVE`.
 - Branch: `codex/phase3-product-platform-foundation`.
-- Authority: `COMMANDER_P3_VS2_FINAL_DISPOSITION`.
-- Previous Slices:
-  - `P3-VS1`: COMPLETE_FINAL / CLOSED.
-  - `P3-VS2`: COMPLETE_FINAL / CLOSED (Commit `112fe85`).
-    * All Acceptance Gates A through F: PASS.
-    * All 6 product routes regression tested in Brave browser: 100% PASS.
-    * Projections, Watermark, Dead-Letter Queue with FORCE RLS: Operational.
-- Current Invariants for P3-VS3:
-  - NO RUNTIME IMPLEMENTATION until Discovery is fully complete.
-  - Required Artifacts:
-    * `docs/architecture/PHASE3_VS3_BOUNDARY_PLAN.md`
-    * `docs/coordination/PHASE3_VS3_WRITE_MANIFEST.md` (ZERO_WILDCARDS: YES, EXACT_PATHS_ONLY: YES, UNREVIEWED_PATHS: 0)
-  - Fleet Scope Reviews Required:
-    * `Qwen 3.8 Max`: PASS (Domain logic, state machines, API contracts, test strategy).
-    * `GLM 5.3`: PASS (Architecture boundary, data ownership, RLS, privacy & security).
-    * `Gemini 3.8`: PASS (Frontend scope, UX, RTL, accessibility, browser impact).
-  - Open Blockers: 0 (R3_R4 = 0).
+- Authority: `COMMANDER_P3_VS3_RUNTIME_AUTHORIZATION`.
+- Gate Clearances:
+  * `GEMINI_SCOPE: PASS` (NotificationBell, NotificationDrawer, RTL, Accessibility, Tokens).
+  * `QWEN_SCOPE: PASS` (Domain logic, Notification Lifecycle, Outbox delivery, Retry, RLS).
+  * `GLM_SCOPE: PASS` (Source of Truth, Event Boundary, Zero-PII Policy, FORCE RLS).
+- Open Blockers: 0 (R3_R4 = 0).
+- Implementation Scope:
+  * Backend: NotificationItem model, FORCE RLS migration, notification dispatcher service, Celery task, API endpoints, tests.
+  * Frontend: NotificationBell, NotificationDrawer, Dashboard shell integrations.
+  * Regression: All-page verification in Brave browser with visual evidence.
 
 
 # Historical Task79A record

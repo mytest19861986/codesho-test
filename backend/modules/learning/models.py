@@ -840,3 +840,61 @@ class ProjectionDeadLetterEvent(models.Model):
 
     def __str__(self) -> str:
         return f"{self.tenant_id}:DLQ:{self.event_type}:{self.event_id}"
+
+
+class NotificationDeliveryState(models.TextChoices):
+    PENDING = "pending", "Pending"
+    DISPATCHING = "dispatching", "Dispatching"
+    DELIVERED = "delivered", "Delivered"
+    FAILED = "failed", "Failed"
+
+
+class NotificationItem(models.Model):
+    """
+    In-app Notification Item for P3-VS3.
+    Strictly Zero-PII, multi-tenant with FORCE RLS, role-partitioned, idempotent.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="notification_items",
+    )
+    user_id = models.UUIDField(db_index=True)
+    role = models.CharField(max_length=16, db_index=True)
+    title = models.CharField(max_length=160)
+    message = models.CharField(max_length=500)
+    notification_type = models.CharField(max_length=64, db_index=True)
+    state = models.CharField(
+        max_length=16,
+        choices=NotificationDeliveryState.choices,
+        default=NotificationDeliveryState.PENDING,
+        db_index=True,
+    )
+    event_id = models.UUIDField(null=True, blank=True, db_index=True)
+    idempotency_key = models.CharField(max_length=255, null=True, blank=True)
+    retry_count = models.PositiveSmallIntegerField(default=0)
+    read_at = models.DateTimeField(null=True, blank=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_notification_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "idempotency_key"],
+                condition=models.Q(idempotency_key__isnull=False),
+                name="learning_notification_tenant_idemp_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "user_id", "-created_at"], name="notif_tenant_user_created_ix"),
+            models.Index(fields=["tenant", "role", "state"], name="notif_tenant_role_state_ix"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.user_id}:{self.notification_type}:{self.state}"
