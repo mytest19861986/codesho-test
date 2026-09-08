@@ -16,6 +16,68 @@ paths:
       responses:
         '204':
           description: CSRF and device cookies established.
+  /api/v1/learning/mentor/cohorts/{cohort_id}/analytics/:
+    get:
+      operationId: api_v1_learning_mentor_cohort_analytics_retrieve
+      summary: Retrieve aggregated cohort analytics projection for supervised cohort
+      parameters:
+      - in: path
+        name: cohort_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - learning-supervision
+      responses:
+        '200':
+          description: Cohort progress and assessment analytics aggregate.
+        '404':
+          description: Cohort not found or unassigned to requesting mentor.
+  /api/v1/learning/mentor/cohorts/{cohort_id}/alerts/:
+    get:
+      operationId: api_v1_learning_mentor_cohort_alerts_list
+      summary: List educational supervision alerts for a supervised cohort
+      parameters:
+      - in: path
+        name: cohort_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - learning-supervision
+      responses:
+        '200':
+          description: Active and historical supervision alerts.
+        '404':
+          description: Cohort not found or unassigned.
+  /api/v1/learning/mentor/cohorts/{cohort_id}/alerts/{alert_id}/transition/:
+    post:
+      operationId: api_v1_learning_mentor_cohort_alert_transition_create
+      summary: Transition alert state along FSM lifecycle
+      parameters:
+      - in: path
+        name: cohort_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: alert_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - learning-supervision
+      responses:
+        '200':
+          description: Alert state transitioned successfully.
+        '400':
+          description: Invalid FSM transition.
+        '404':
+          description: Cohort or alert not found.
   /api/v1/auth/logout/:
     post:
       operationId: api_v1_auth_logout_create

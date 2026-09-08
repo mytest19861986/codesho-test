@@ -1588,3 +1588,198 @@ class CertificateVerificationRecord(models.Model):
 
     def __str__(self) -> str:
         return f"{self.queried_number}:{self.result_status}"
+
+
+class CohortSupervision(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="cohort_supervisions",
+    )
+    cohort = models.ForeignKey(
+        Cohort,
+        on_delete=models.CASCADE,
+        related_name="supervisors",
+    )
+    mentor_id = models.UUIDField(db_index=True)
+    assigned_at = models.DateTimeField(auto_now_add=True)
+    assigned_by = models.UUIDField(null=True, blank=True)
+    is_lead = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True, db_index=True)
+    revoked_at = models.DateTimeField(null=True, blank=True)
+    revoked_by = models.UUIDField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_cohortsupervision_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "cohort", "mentor_id"],
+                condition=Q(is_active=True),
+                name="learning_cohortsupervision_active_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "cohort"],
+                condition=Q(is_active=True, is_lead=True),
+                name="learning_cohortsupervision_single_lead_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "mentor_id", "is_active"], name="cohortsup_t_men_act_ix"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.cohort and str(self.cohort.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between CohortSupervision and Cohort.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.cohort_id}:{self.mentor_id}:lead={self.is_lead}"
+
+
+class CohortProgressAggregate(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="cohort_progress_aggregates",
+    )
+    cohort = models.OneToOneField(
+        Cohort,
+        on_delete=models.CASCADE,
+        related_name="analytics_aggregate",
+    )
+    total_enrolled = models.PositiveIntegerField(default=0)
+    active_students = models.PositiveIntegerField(default=0)
+    completed_students = models.PositiveIntegerField(default=0)
+    average_progress_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    average_assessment_score = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    completion_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_cohortprogaggregate_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "cohort"],
+                name="learning_cohortprogaggregate_tenant_cohort_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "cohort"], name="cohortprog_t_coh_ix"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.cohort and str(self.cohort.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between CohortProgressAggregate and Cohort.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.cohort_id}:avg={self.average_progress_percentage}%"
+
+
+class StudentSupervisionAlertStatus(models.TextChoices):
+    ACTIVE = "ACTIVE", "Active"
+    ACKNOWLEDGED = "ACKNOWLEDGED", "Acknowledged"
+    RESOLVED = "RESOLVED", "Resolved"
+
+
+class StudentSupervisionAlertType(models.TextChoices):
+    STALLED_PROGRESS = "STALLED_PROGRESS", "Stalled Progress"
+    FAILED_ASSESSMENTS = "FAILED_ASSESSMENTS", "Failed Assessments"
+    AT_RISK_DROPOUT = "AT_RISK_DROPOUT", "At Risk Dropout"
+
+
+class StudentSupervisionAlertSeverity(models.TextChoices):
+    LOW = "LOW", "Low"
+    MEDIUM = "MEDIUM", "Medium"
+    HIGH = "HIGH", "High"
+
+
+class StudentSupervisionAlert(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="student_supervision_alerts",
+    )
+    cohort = models.ForeignKey(
+        Cohort,
+        on_delete=models.CASCADE,
+        related_name="alerts",
+    )
+    student_id = models.UUIDField(db_index=True)
+    alert_type = models.CharField(
+        max_length=32,
+        choices=StudentSupervisionAlertType.choices,
+    )
+    severity = models.CharField(
+        max_length=16,
+        choices=StudentSupervisionAlertSeverity.choices,
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=StudentSupervisionAlertStatus.choices,
+        default=StudentSupervisionAlertStatus.ACTIVE,
+        db_index=True,
+    )
+    rule_version = models.PositiveIntegerField(default=1)
+    deduplication_key = models.CharField(max_length=255, unique=True, db_index=True)
+    details = models.JSONField(default=dict)
+    schema_version = models.PositiveIntegerField(default=1)
+    data_classification = models.CharField(max_length=32, default="INTERNAL_EDUCATIONAL_ANALYTICS")
+    acknowledged_at = models.DateTimeField(null=True, blank=True)
+    acknowledged_by = models.UUIDField(null=True, blank=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    resolved_by = models.UUIDField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_studentsupalert_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "cohort", "student_id", "alert_type"],
+                condition=Q(status="ACTIVE"),
+                name="learning_supalert_active_dedup_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "cohort", "status", "resolved_at"], name="supalert_t_c_st_res_ix"),
+            models.Index(fields=["tenant", "student_id", "status"], name="supalert_t_stu_st_ix"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.cohort and str(self.cohort.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between StudentSupervisionAlert and Cohort.")
+        if self.status == StudentSupervisionAlertStatus.ACKNOWLEDGED:
+            if not self.acknowledged_at or not self.acknowledged_by:
+                raise ValidationError("Acknowledged alerts require acknowledged_at and acknowledged_by.")
+        if self.status == StudentSupervisionAlertStatus.RESOLVED:
+            if not self.resolved_at:
+                raise ValidationError("Resolved alerts require resolved_at timestamp.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.cohort_id}:{self.student_id}:{self.alert_type}:{self.status}"
+

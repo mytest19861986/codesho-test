@@ -35,6 +35,8 @@ from .views import (
     StudentCertificateDetailView,
     PublicCertificateVerificationView,
     StudentAchievementTimelineView,
+    MentorCohortAnalyticsView,
+    MentorCohortAlertsView,
 )
 
 urlpatterns = [
@@ -201,5 +203,22 @@ urlpatterns = [
         StudentAchievementTimelineView.as_view(),
         name="learning-student-achievements",
     ),
+    # Phase 3 VS9 Enterprise Analytics Supervision & Cohort Orchestration
+    path(
+        "mentor/cohorts/<uuid:cohort_id>/analytics/",
+        MentorCohortAnalyticsView.as_view(),
+        name="learning-mentor-cohort-analytics",
+    ),
+    path(
+        "mentor/cohorts/<uuid:cohort_id>/alerts/",
+        MentorCohortAlertsView.as_view(),
+        name="learning-mentor-cohort-alerts",
+    ),
+    path(
+        "mentor/cohorts/<uuid:cohort_id>/alerts/<uuid:alert_id>/transition/",
+        MentorCohortAlertsView.as_view(),
+        name="learning-mentor-cohort-alert-transition",
+    ),
 ]
+
 

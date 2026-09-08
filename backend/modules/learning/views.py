@@ -1290,3 +1290,174 @@ class StudentAchievementTimelineView(APIView):
             {"timeline": LearningAchievementTimelineItemSerializer(timeline_items[:50], many=True).data},
             status=200,
         )
+
+
+class MentorCohortAnalyticsView(APIView):
+    """
+    GET /api/v1/learning/mentor/cohorts/<cohort_id>/analytics/
+    Returns presentation-only aggregated analytics for a supervised cohort.
+    Enforces Pattern A: returns 404 for unassigned cohorts.
+    """
+
+    def get(self, request, cohort_id):
+        tenant = getattr(request, "tenant", None)
+        if not tenant:
+            return Response({"detail": "Tenant not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        user = getattr(request, "user", None)
+        mentor_id = getattr(request, "user_id", None) or (str(user.id) if user and user.is_authenticated else None)
+
+        if not mentor_id:
+            # Fallback to test/anonymous mentor header or fail closed
+            mentor_id = request.headers.get("X-Mentor-Id")
+            if not mentor_id:
+                return Response({"detail": "Mentor identification required."}, status=status.HTTP_404_NOT_FOUND)
+
+        is_admin = bool(user and (user.is_staff or getattr(user, "is_tenant_admin", False)))
+
+        from modules.learning.supervision import CohortSupervisionAccessService, CohortSupervisionService
+        from modules.learning.models import CohortProgressAggregate, Cohort
+
+        try:
+            cohort = CohortSupervisionAccessService.check_access(
+                tenant_id=str(tenant.id),
+                mentor_id=str(mentor_id),
+                cohort_id=str(cohort_id),
+                is_admin=is_admin,
+            )
+        except Cohort.DoesNotExist:
+            return Response({"detail": "Cohort not found or unassigned."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Fetch or compute latest aggregate projection
+        agg = CohortProgressAggregate.objects.filter(
+            tenant=tenant,
+            cohort=cohort,
+        ).first()
+
+        if not agg:
+            agg = CohortSupervisionService.refresh_cohort_progress_aggregate(
+                tenant_id=str(tenant.id),
+                cohort_id=str(cohort.id),
+            )
+
+        return Response({
+            "cohort_id": str(cohort.id),
+            "cohort_code": cohort.code,
+            "cohort_title": cohort.title,
+            "total_enrolled": agg.total_enrolled,
+            "active_students": agg.active_students,
+            "completed_students": agg.completed_students,
+            "average_progress_percentage": str(agg.average_progress_percentage),
+            "average_assessment_score": str(agg.average_assessment_score),
+            "completion_rate": str(agg.completion_rate),
+            "as_of": agg.updated_at.isoformat(),
+        }, status=status.HTTP_200_OK)
+
+
+class MentorCohortAlertsView(APIView):
+    """
+    GET /api/v1/learning/mentor/cohorts/<cohort_id>/alerts/
+    POST /api/v1/learning/mentor/cohorts/<cohort_id>/alerts/<alert_id>/transition/
+    Supervision alerts query and FSM lifecycle management.
+    """
+
+    def get(self, request, cohort_id):
+        tenant = getattr(request, "tenant", None)
+        if not tenant:
+            return Response({"detail": "Tenant not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        user = getattr(request, "user", None)
+        mentor_id = getattr(request, "user_id", None) or (str(user.id) if user and user.is_authenticated else None)
+        if not mentor_id:
+            mentor_id = request.headers.get("X-Mentor-Id")
+            if not mentor_id:
+                return Response({"detail": "Mentor identification required."}, status=status.HTTP_404_NOT_FOUND)
+
+        is_admin = bool(user and (user.is_staff or getattr(user, "is_tenant_admin", False)))
+
+        from modules.learning.supervision import CohortSupervisionAccessService
+        from modules.learning.models import StudentSupervisionAlert, Cohort
+
+        try:
+            cohort = CohortSupervisionAccessService.check_access(
+                tenant_id=str(tenant.id),
+                mentor_id=str(mentor_id),
+                cohort_id=str(cohort_id),
+                is_admin=is_admin,
+            )
+        except Cohort.DoesNotExist:
+            return Response({"detail": "Cohort not found or unassigned."}, status=status.HTTP_404_NOT_FOUND)
+
+        status_filter = request.query_params.get("status")
+        qs = StudentSupervisionAlert.objects.filter(
+            tenant=tenant,
+            cohort=cohort,
+        )
+        if status_filter:
+            qs = qs.filter(status=status_filter.upper())
+
+        qs = qs.order_by("-created_at")
+
+        data = [
+            {
+                "id": str(a.id),
+                "student_id": str(a.student_id),
+                "alert_type": a.alert_type,
+                "severity": a.severity,
+                "status": a.status,
+                "details": a.details,
+                "created_at": a.created_at.isoformat(),
+                "acknowledged_at": a.acknowledged_at.isoformat() if a.acknowledged_at else None,
+                "resolved_at": a.resolved_at.isoformat() if a.resolved_at else None,
+            }
+            for a in qs[:100]
+        ]
+        return Response({"alerts": data}, status=status.HTTP_200_OK)
+
+    def post(self, request, cohort_id, alert_id=None):
+        tenant = getattr(request, "tenant", None)
+        if not tenant:
+            return Response({"detail": "Tenant not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        user = getattr(request, "user", None)
+        mentor_id = getattr(request, "user_id", None) or (str(user.id) if user and user.is_authenticated else None)
+        if not mentor_id:
+            mentor_id = request.headers.get("X-Mentor-Id")
+            if not mentor_id:
+                return Response({"detail": "Mentor identification required."}, status=status.HTTP_404_NOT_FOUND)
+
+        is_admin = bool(user and (user.is_staff or getattr(user, "is_tenant_admin", False)))
+
+        from modules.learning.supervision import CohortSupervisionAccessService, CohortSupervisionService
+        from modules.learning.models import Cohort, StudentSupervisionAlert
+
+        try:
+            cohort = CohortSupervisionAccessService.check_access(
+                tenant_id=str(tenant.id),
+                mentor_id=str(mentor_id),
+                cohort_id=str(cohort_id),
+                is_admin=is_admin,
+            )
+        except Cohort.DoesNotExist:
+            return Response({"detail": "Cohort not found or unassigned."}, status=status.HTTP_404_NOT_FOUND)
+
+        target_status = request.data.get("status")
+        if not target_status:
+            return Response({"detail": "target 'status' is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            alert = CohortSupervisionService.transition_alert_status(
+                tenant_id=str(tenant.id),
+                alert_id=str(alert_id),
+                target_status=target_status.upper(),
+                actor_id=str(mentor_id),
+            )
+            return Response({
+                "id": str(alert.id),
+                "status": alert.status,
+                "acknowledged_at": alert.acknowledged_at.isoformat() if alert.acknowledged_at else None,
+                "resolved_at": alert.resolved_at.isoformat() if alert.resolved_at else None,
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
