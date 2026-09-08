@@ -116,6 +116,7 @@ class Course(models.Model):
         choices=PublicationState.choices,
         default=PublicationState.DRAFT,
     )
+    is_cohort_mandatory = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -1018,4 +1019,195 @@ class StudentBadgeAward(models.Model):
 
     def __str__(self) -> str:
         return f"{self.tenant_id}:{self.student_id}:{self.badge_code}:L{self.badge_level}"
+
+
+class Cohort(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="cohorts",
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="cohorts",
+    )
+    code = models.CharField(max_length=64)
+    title = models.CharField(max_length=160)
+    max_capacity = models.PositiveIntegerField(default=30)
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "course", "code"],
+                name="learning_cohort_tenant_course_code_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "course", "id"],
+                name="learning_cohort_tenant_course_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_cohort_tenant_id_uniq",
+            ),
+            models.CheckConstraint(
+                condition=~Q(code=""),
+                name="learning_cohort_code_nonempty",
+            ),
+            models.CheckConstraint(
+                condition=~Q(title=""),
+                name="learning_cohort_title_nonempty",
+            ),
+            models.CheckConstraint(
+                condition=Q(max_capacity__gt=0),
+                name="learning_cohort_capacity_positive",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "course", "is_active"], name="cohort_tenant_course_act_ix"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.course.code}:{self.code}"
+
+
+class EnrollmentStatus(models.TextChoices):
+    ENROLLED = "enrolled", "Enrolled"
+    ACTIVE = "active", "Active"
+    SUSPENDED = "suspended", "Suspended"
+    COMPLETED = "completed", "Completed"
+
+
+class CourseEnrollment(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="course_enrollments",
+    )
+    student_id = models.UUIDField(db_index=True)
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="enrollments",
+    )
+    cohort = models.ForeignKey(
+        Cohort,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="enrollments",
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=EnrollmentStatus.choices,
+        default=EnrollmentStatus.ENROLLED,
+    )
+    idempotency_key = models.CharField(max_length=255, null=True, blank=True)
+    enrolled_at = models.DateTimeField(auto_now_add=True)
+    activated_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_enrollment_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "student_id", "course"],
+                name="learning_enrollment_tenant_student_course_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "idempotency_key"],
+                condition=models.Q(idempotency_key__isnull=False),
+                name="learning_enrollment_tenant_idemp_uniq",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=EnrollmentStatus.values),
+                name="learning_enrollment_status_valid",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id", "status"], name="enroll_tenant_student_st_ix"),
+            models.Index(fields=["tenant", "cohort", "status"], name="enroll_tenant_cohort_st_ix"),
+            models.Index(fields=["tenant", "course", "status"], name="enroll_tenant_course_st_ix"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.cohort is not None:
+            if self.cohort.course_id != self.course_id:
+                raise ValidationError({"cohort": "Cohort must belong to the selected course."})
+            if self.cohort.tenant_id != self.tenant_id:
+                raise ValidationError({"cohort": "Cohort tenant must match enrollment tenant."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.student_id}:{self.course.code}:{self.status}"
+
+
+class CoursePrerequisite(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="course_prerequisites",
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="prerequisites",
+    )
+    prerequisite_course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="required_for",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_prereq_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "course", "prerequisite_course"],
+                name="learning_prereq_tenant_course_prereq_uniq",
+            ),
+            models.CheckConstraint(
+                condition=~Q(course=models.F("prerequisite_course")),
+                name="learning_prereq_no_self_reference",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "course"], name="prereq_tenant_course_ix"),
+            models.Index(fields=["tenant", "prerequisite_course"], name="prereq_tenant_reqfor_ix"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.course_id == self.prerequisite_course_id:
+            raise ValidationError({"prerequisite_course": "Course cannot be a prerequisite for itself."})
+        if self.course.tenant_id != self.tenant_id or self.prerequisite_course.tenant_id != self.tenant_id:
+            raise ValidationError("Tenant mismatch between course and prerequisite.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.course.code}<-{self.prerequisite_course.code}"
 

@@ -1,8 +1,36 @@
+"use client";
+
 import React from "react";
 import { DashboardScreen } from "@/features/dashboard/DashboardScreen";
 import type { DashboardModel } from "@/features/dashboard/dashboard.types";
 import { StreakIndicator } from "@/components/gamification/StreakIndicator";
 import { BadgeShelf, BadgeItem } from "@/components/gamification/BadgeShelf";
+import { EnrollmentCard, EnrollmentItem } from "@/components/enrollment/EnrollmentCard";
+
+const syntheticEnrollments: EnrollmentItem[] = [
+  {
+    id: "enr-1",
+    courseTitle: "برنامه‌نویسی پایتون و هوش مصنوعی",
+    courseCode: "python-core",
+    cohortTitle: "کوهورت پاییزه - کد الف",
+    cohortCode: "FALL-2026-A",
+    currentCount: 18,
+    maxCapacity: 25,
+    status: "active",
+    enrolledAt: "۱۴۰۵/۰۶/۱۵",
+  },
+  {
+    id: "enr-2",
+    courseTitle: "توسعه فرانت‌اند تعاملی وب",
+    courseCode: "web-frontend",
+    cohortTitle: "کوهورت عصرگاهی - کد ب",
+    cohortCode: "FALL-2026-B",
+    currentCount: 30,
+    maxCapacity: 30,
+    status: "enrolled",
+    enrolledAt: "۱۴۰۵/۰۶/۱۸",
+  },
+];
 
 const syntheticStudentModel: DashboardModel = {
   student: {
@@ -87,9 +115,7 @@ const syntheticBadges: BadgeItem[] = [
 
 export default function StudentDashboardPage() {
   return (
-    <div>
-      <DashboardScreen model={syntheticStudentModel} state="ready" />
-      
+    <DashboardScreen model={syntheticStudentModel} state="ready">
       {/* P3-VS4 Gamification Progression & Badges Section */}
       <section
         style={{
@@ -179,6 +205,17 @@ export default function StudentDashboardPage() {
         </div>
       </section>
 
+      {/* Phase 3 VS5 Course Enrollments & Cohorts Section */}
+      <section
+        style={{
+          maxWidth: "78rem",
+          margin: "0 auto 2rem",
+          padding: "0 1.5rem",
+        }}
+      >
+        <EnrollmentCard enrollments={syntheticEnrollments} />
+      </section>
+
       {/* Phase 3 Synthetic Media Attachments Section */}
       <section
         style={{
@@ -228,6 +265,6 @@ export default function StudentDashboardPage() {
           </div>
         </div>
       </section>
-    </div>
+    </DashboardScreen>
   );
 }

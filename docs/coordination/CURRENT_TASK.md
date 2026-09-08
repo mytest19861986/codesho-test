@@ -1,28 +1,30 @@
-# Current Task: P3-VS4-DISCOVERY
+# Current Task: P3-VS5-DISCOVERY
 
-## Active Phase 3 Vertical Slice 4 — 2026-09-08
+## Active Phase 3 Vertical Slice 5 — 2026-09-08
 
 - Status: `DISCOVERY_ACTIVE / RUNTIME_LOCKED`.
 - Branch: `codex/phase3-product-platform-foundation`.
-- Authority: `COMMANDER_P3_VS3_FINAL_DISPOSITION`.
+- Authority: `COMMANDER_P3_VS4_FINAL_DISPOSITION`.
 - Previous Slices:
   - `P3-VS1`: COMPLETE_FINAL / CLOSED.
   - `P3-VS2`: COMPLETE_FINAL / CLOSED (Commit `112fe85`).
   - `P3-VS3`: COMPLETE_FINAL_ACCEPTED / CLOSED (Commit `936f971`).
-    * NotificationItem, Dispatcher, BaseTenantTask, Celery.
-    * PostgreSQL 17 FORCE RLS (0012, 0013).
-    * NotificationDrawer RTL & WCAG 2.2 AA.
+  - `P3-VS4`: COMPLETE_FINAL_ACCEPTED / CLOSED (Commit `312a3f7`).
+    * GamificationEngine, BadgeDefinition, StudentProgressionProfile, StudentBadgeAward.
+    * PostgreSQL 17 FORCE RLS (0014, 0015).
+    * StreakIndicator & BadgeShelf RTL & WCAG 2.2 AA.
     * 100% Brave browser regression on all 6 product routes.
-- Current Invariants for P3-VS4:
+- Current Invariants for P3-VS5:
   - NO RUNTIME IMPLEMENTATION until Discovery is fully complete.
   - Required Artifacts:
-    * `docs/architecture/PHASE3_VS4_BOUNDARY_PLAN.md`
-    * `docs/coordination/PHASE3_VS4_WRITE_MANIFEST.md` (ZERO_WILDCARDS: YES, EXACT_PATHS_ONLY: YES, UNREVIEWED_PATHS: 0)
+    * `docs/architecture/PHASE3_VS5_BOUNDARY_PLAN.md`
+    * `docs/coordination/PHASE3_VS5_WRITE_MANIFEST.md` (ZERO_WILDCARDS: YES, EXACT_PATHS_ONLY: YES, UNREVIEWED_PATHS: 0)
   - Fleet Scope Reviews Required:
-    * `Qwen 3.8 Max`: PASS (Gamification domain logic, streak rules, idempotency).
-    * `GLM 5.3`: PASS (Security boundary, RLS, zero-PII policy, auditability).
-    * `Gemini 3.8`: PASS (Frontend badge shelf, streak widget, RTL, accessibility).
+    * `Qwen 3.8 Max`: Domain model, enrollment state machine, cohort capacity invariants.
+    * `GLM 5.3`: Security boundary, PostgreSQL 17 FORCE RLS, capacity race prevention, zero-PII auditability.
+    * `Gemini 3.8`: Enrollment card UX, cohort badges, RTL, accessibility.
   - Open Blockers: 0 (R3_R4 = 0).
+
 
 
 # Historical Task79A record

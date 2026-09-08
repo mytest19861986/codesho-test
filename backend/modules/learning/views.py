@@ -884,3 +884,120 @@ class StudentGamificationView(APIView):
             status=200,
         )
 
+
+class StudentEnrollmentView(APIView):
+    """
+    GET /api/v1/learning/student/enrollments/
+    Lists current student enrollments and available courses.
+    Role-aware: Student only.
+    """
+
+    def get(self, request: Request) -> Response:
+        tenant = getattr(request, "tenant", None)
+        membership = getattr(request, "membership", None)
+        if (
+            not tenant
+            or not membership
+            or not getattr(membership, "is_active", False)
+            or getattr(membership, "role", None) != "student"
+        ):
+            return Response({"code": "forbidden"}, status=403)
+
+        student_id = request.user.id
+        from .models import CourseEnrollment
+        from .serializers import CourseEnrollmentSerializer
+
+        enrollments = CourseEnrollment.objects.filter(
+            tenant=tenant,
+            student_id=student_id,
+        ).select_related("course", "cohort").order_by("-enrolled_at")
+
+        return Response(
+            {"enrollments": CourseEnrollmentSerializer(enrollments, many=True).data},
+            status=200,
+        )
+
+
+class StudentEnrollActionView(APIView):
+    """
+    POST /api/v1/learning/student/enroll/
+    Performs atomic enrollment with select_for_update cohort capacity locks.
+    Role-aware: Student only.
+    """
+
+    def post(self, request: Request) -> Response:
+        tenant = getattr(request, "tenant", None)
+        membership = getattr(request, "membership", None)
+        if (
+            not tenant
+            or not membership
+            or not getattr(membership, "is_active", False)
+            or getattr(membership, "role", None) != "student"
+        ):
+            return Response({"code": "forbidden"}, status=403)
+
+        from .serializers import StudentEnrollRequestSerializer, CourseEnrollmentSerializer
+        from .enrollment import (
+            EnrollmentEngine,
+            CohortCapacityExceededError,
+            PrerequisiteNotMetError,
+            CohortMandatoryError,
+        )
+
+        serializer = StudentEnrollRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({"code": "invalid_input", "errors": serializer.errors}, status=400)
+
+        course_id = serializer.validated_data["course_id"]
+        cohort_id = serializer.validated_data.get("cohort_id")
+        idempotency_key = serializer.validated_data.get("idempotency_key")
+        student_id = request.user.id
+
+        try:
+            enrollment = EnrollmentEngine.enroll_student(
+                tenant_id=tenant.id,
+                student_id=student_id,
+                course_id=course_id,
+                cohort_id=cohort_id,
+                idempotency_key=idempotency_key,
+            )
+            return Response(
+                {"enrollment": CourseEnrollmentSerializer(enrollment).data},
+                status=201,
+            )
+        except CohortCapacityExceededError as e:
+            return Response({"code": "cohort_capacity_exceeded", "detail": str(e)}, status=409)
+        except PrerequisiteNotMetError as e:
+            return Response({"code": "prerequisite_not_met", "detail": str(e)}, status=400)
+        except CohortMandatoryError as e:
+            return Response({"code": "cohort_mandatory", "detail": str(e)}, status=400)
+        except ValidationError as e:
+            return Response({"code": "validation_error", "detail": str(e)}, status=400)
+
+
+class CohortListView(APIView):
+    """
+    GET /api/v1/learning/courses/<course_id>/cohorts/
+    Lists available cohorts for a course with live occupied capacity.
+    """
+
+    def get(self, request: Request, course_id: UUID) -> Response:
+        tenant = getattr(request, "tenant", None)
+        membership = getattr(request, "membership", None)
+        if not tenant or not membership or not getattr(membership, "is_active", False):
+            return Response({"code": "forbidden"}, status=403)
+
+        from .models import Cohort
+        from .serializers import CohortSerializer
+
+        cohorts = Cohort.objects.filter(
+            tenant=tenant,
+            course_id=course_id,
+            is_active=True,
+        ).order_by("created_at")
+
+        return Response(
+            {"cohorts": CohortSerializer(cohorts, many=True).data},
+            status=200,
+        )
+

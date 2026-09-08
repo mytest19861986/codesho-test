@@ -17,6 +17,9 @@ from .models import (
     BadgeDefinition,
     StudentBadgeAward,
     StudentProgressionProfile,
+    Cohort,
+    CourseEnrollment,
+    CoursePrerequisite,
 )
 
 
@@ -282,4 +285,68 @@ class StudentGamificationResponseSerializer(serializers.Serializer):
     profile = StudentProgressionProfileSerializer()
     badges = StudentBadgeAwardSerializer(many=True)
     available_badges = BadgeDefinitionSerializer(many=True)
+
+
+class CohortSerializer(serializers.ModelSerializer):
+    current_enrollments_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Cohort
+        fields = [
+            "id",
+            "course",
+            "code",
+            "title",
+            "max_capacity",
+            "current_enrollments_count",
+            "start_date",
+            "end_date",
+            "is_active",
+            "created_at",
+        ]
+        read_only_fields = ["id", "current_enrollments_count", "created_at"]
+
+    def get_current_enrollments_count(self, obj: Cohort) -> int:
+        return obj.enrollments.filter(status__in=["enrolled", "active"]).count()
+
+
+class CourseEnrollmentSerializer(serializers.ModelSerializer):
+    course_title = serializers.CharField(source="course.title", read_only=True)
+    course_code = serializers.CharField(source="course.code", read_only=True)
+    cohort_title = serializers.CharField(source="cohort.title", read_only=True, allow_null=True)
+    cohort_code = serializers.CharField(source="cohort.code", read_only=True, allow_null=True)
+
+    class Meta:
+        model = CourseEnrollment
+        fields = [
+            "id",
+            "student_id",
+            "course",
+            "course_title",
+            "course_code",
+            "cohort",
+            "cohort_title",
+            "cohort_code",
+            "status",
+            "enrolled_at",
+            "activated_at",
+            "completed_at",
+        ]
+        read_only_fields = [
+            "id",
+            "student_id",
+            "course_title",
+            "course_code",
+            "cohort_title",
+            "cohort_code",
+            "enrolled_at",
+            "activated_at",
+            "completed_at",
+        ]
+
+
+class StudentEnrollRequestSerializer(serializers.Serializer):
+    course_id = serializers.UUIDField(required=True)
+    cohort_id = serializers.UUIDField(required=False, allow_null=True)
+    idempotency_key = serializers.CharField(max_length=255, required=False, allow_null=True)
 

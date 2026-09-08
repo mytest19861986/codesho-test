@@ -21,6 +21,9 @@ from .views import (
     StudentDashboardSummaryView,
     StudentFeedbackView,
     StudentGamificationView,
+    StudentEnrollmentView,
+    StudentEnrollActionView,
+    CohortListView,
     SubmissionDraftView,
     SubmissionSubmitView,
     SyntheticMediaAttachmentView,
@@ -131,6 +134,22 @@ urlpatterns = [
         "student/gamification/",
         StudentGamificationView.as_view(),
         name="learning-student-gamification",
+    ),
+    # Phase 3 VS5 Student Course Enrollment, Cohort Capacity & Progression Policies
+    path(
+        "student/enrollments/",
+        StudentEnrollmentView.as_view(),
+        name="learning-student-enrollments",
+    ),
+    path(
+        "student/enroll/",
+        StudentEnrollActionView.as_view(),
+        name="learning-student-enroll",
+    ),
+    path(
+        "courses/<uuid:course_id>/cohorts/",
+        CohortListView.as_view(),
+        name="learning-course-cohorts",
     ),
 ]
 
