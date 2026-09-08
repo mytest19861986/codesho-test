@@ -10,6 +10,9 @@ import { AssignmentSubmissionCard, AssignmentItem } from "@/components/submissio
 import { InteractivePlaygroundCard } from "@/components/assessments/InteractivePlaygroundCard";
 import { CertificateCard, CertificateData } from "@/components/certificates/CertificateCard";
 import { AchievementTimeline, TimelineItem } from "@/components/certificates/AchievementTimeline";
+import { DiscussionThreadList, DiscussionThreadItem } from "@/components/discussion/DiscussionThreadList";
+import { DiscussionThreadDetail, DiscussionCommentItem } from "@/components/discussion/DiscussionThreadDetail";
+import { DiscussionReplyComposer } from "@/components/discussion/DiscussionReplyComposer";
 
 const syntheticAssignments: AssignmentItem[] = [
   {
@@ -193,6 +196,67 @@ const syntheticBadges: BadgeItem[] = [
 ];
 
 export default function StudentDashboardPage() {
+  const [selectedThreadId, setSelectedThreadId] = React.useState<string | null>(null);
+  const [isComposerOpen, setIsComposerOpen] = React.useState(false);
+
+  const syntheticThreads: DiscussionThreadItem[] = [
+    {
+      id: "th-1",
+      title: "بهینه‌سازی مرتب‌سازی ادغامی در پایتون",
+      body: "در تمرین درس ساختارهای داده، چگونه می‌توان حافظه کمکی را به حداقل رساند؟ آیا روش درجا (in-place) برای لیست‌های پیوندی بهینه‌تر است؟",
+      authorId: "usr-stu-101",
+      status: "APPROVED",
+      isPinned: true,
+      isLocked: false,
+      repliesCount: 3,
+      scopeType: "COHORT",
+      scopeTitle: "کوهورت پاییزه - کد الف",
+      createdAt: "۱۴۰۵/۰۶/۲۵",
+    },
+    {
+      id: "th-2",
+      title: "رفع خطای بازگشت در توابع بازگشتی",
+      body: "هنگام اجرای برنامه ماشین‌حساب پایتون، با ارور RecursionError مواجه می‌شوم. مقدار حداکثر عمق بازگشت را از کجا باید تنظیم کنیم؟",
+      authorId: "usr-stu-102",
+      status: "APPROVED",
+      isPinned: false,
+      isLocked: false,
+      repliesCount: 1,
+      scopeType: "LESSON",
+      scopeTitle: "توابع و شروط در پایتون",
+      createdAt: "۱۴۰۵/۰۶/۲۶",
+    },
+  ];
+
+  const syntheticComments: DiscussionCommentItem[] = [
+    {
+      id: "com-1",
+      threadId: "th-1",
+      parentId: null,
+      authorId: "usr-mentor-01",
+      body: "برای لیست‌های پیوندی مرتب‌سازی ادغامی به صورت O(1) حافظه اضافی قابل پیاده‌سازی است زیرا نیازی به کپی آرایه‌ای نداریم و فقط اشاره‌گرها تغییر می‌کنند.",
+      status: "APPROVED",
+      isMentorEndorsed: true,
+      endorsedById: "usr-mentor-01",
+      endorsedAt: "۱۴۰۵/۰۶/۲۵",
+      createdAt: "۱۴۰۵/۰۶/۲۵",
+    },
+    {
+      id: "com-2",
+      threadId: "th-1",
+      parentId: "com-1",
+      authorId: "usr-stu-101",
+      body: "خیلی ممنون استاد! یعنی با تغییر اشاره‌گر next می‌توانیم بدون آرایه کمکی مرج را انجام دهیم؟",
+      status: "APPROVED",
+      isMentorEndorsed: false,
+      endorsedById: null,
+      endorsedAt: null,
+      createdAt: "۱۴۰۵/۰۶/۲۵",
+    },
+  ];
+
+  const activeThread = syntheticThreads.find((t) => t.id === selectedThreadId);
+
   return (
     <DashboardScreen model={syntheticStudentModel} state="ready">
       {/* P3-VS4 Gamification Progression & Badges Section */}
@@ -378,9 +442,60 @@ export default function StudentDashboardPage() {
                 تأیید اصالت داده: SYNTHETIC
               </span>
             </div>
-          </div>
         </div>
       </section>
+
+      {/* P3-VS10 Learning Community Discussion & Peer Interaction Section */}
+      <section
+        style={{
+          maxWidth: "78rem",
+          margin: "0 auto 3rem",
+          padding: "0 1.5rem",
+          direction: "rtl",
+        }}
+        aria-label="تالار گفتگو و تعاملات آموزشی دانش‌آموزان"
+      >
+        <div
+          style={{
+            background: "var(--cs-color-bg-surface, #ffffff)",
+            border: "1px solid var(--cs-color-border-subtle, #e2e8f0)",
+            borderRadius: "1rem",
+            padding: "1.5rem",
+            boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05)",
+          }}
+        >
+          {activeThread ? (
+            <DiscussionThreadDetail
+              thread={activeThread}
+              comments={syntheticComments.filter((c) => c.threadId === activeThread.id)}
+              currentUserId="usr-stu-101"
+              currentUserRole="STUDENT"
+              onAddReply={async (body, parentId) => {
+                // Synthetic reply handler
+                console.log("Adding reply:", { body, parentId });
+              }}
+              onBackToList={() => setSelectedThreadId(null)}
+            />
+          ) : (
+            <DiscussionThreadList
+              threads={syntheticThreads}
+              selectedThreadId={selectedThreadId || undefined}
+              onSelectThread={(id) => setSelectedThreadId(id)}
+              onCreateNewThread={() => setIsComposerOpen(true)}
+            />
+          )}
+        </div>
+      </section>
+
+      <DiscussionReplyComposer
+        isOpen={isComposerOpen}
+        onClose={() => setIsComposerOpen(false)}
+        onSubmit={async (title, body, scopeType) => {
+          console.log("Submitting new thread:", { title, body, scopeType });
+        }}
+        defaultScopeType="COHORT"
+        scopeTitle="کوهورت پاییزه - کد الف"
+      />
     </DashboardScreen>
   );
 }

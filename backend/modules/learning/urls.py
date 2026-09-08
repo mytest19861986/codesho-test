@@ -1,5 +1,6 @@
 from django.urls import path
 
+from . import views
 from .views import (
     AdminLearningCurriculumView,
     AdminLearningTransitionView,
@@ -218,6 +219,37 @@ urlpatterns = [
         "mentor/cohorts/<uuid:cohort_id>/alerts/<uuid:alert_id>/transition/",
         MentorCohortAlertsView.as_view(),
         name="learning-mentor-cohort-alert-transition",
+    ),
+    # Phase 3 VS10 Learning Community Discussion & Peer Interaction
+    path(
+        "discussions/threads/",
+        views.DiscussionThreadListCreateView.as_view(),
+        name="learning-discussion-threads",
+    ),
+    path(
+        "discussions/threads/<uuid:thread_id>/",
+        views.DiscussionThreadDetailView.as_view(),
+        name="learning-discussion-thread-detail",
+    ),
+    path(
+        "discussions/threads/<uuid:thread_id>/comments/",
+        views.DiscussionCommentCreateView.as_view(),
+        name="learning-discussion-comment-create",
+    ),
+    path(
+        "discussions/threads/<uuid:thread_id>/pin/",
+        views.DiscussionThreadPinView.as_view(),
+        name="learning-discussion-thread-pin",
+    ),
+    path(
+        "discussions/comments/<uuid:comment_id>/endorse/",
+        views.DiscussionCommentEndorseView.as_view(),
+        name="learning-discussion-comment-endorse",
+    ),
+    path(
+        "discussions/moderation/action/",
+        views.DiscussionModerationActionView.as_view(),
+        name="learning-discussion-moderation-action",
     ),
 ]
 

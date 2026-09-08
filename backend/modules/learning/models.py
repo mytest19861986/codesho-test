@@ -1783,3 +1783,266 @@ class StudentSupervisionAlert(models.Model):
     def __str__(self) -> str:
         return f"{self.tenant_id}:{self.cohort_id}:{self.student_id}:{self.alert_type}:{self.status}"
 
+
+class DiscussionStatus(models.TextChoices):
+    PENDING = "PENDING", "Pending Moderation"
+    APPROVED = "APPROVED", "Approved"
+    FLAGGED = "FLAGGED", "Flagged"
+    REMOVED = "REMOVED", "Removed"
+
+
+class ModerationActionType(models.TextChoices):
+    APPROVE = "APPROVE", "Approve Content"
+    FLAG = "FLAG", "Flag Content"
+    REMOVE = "REMOVE", "Remove Content"
+    RESTORE = "RESTORE", "Restore Content"
+
+
+class DiscussionThread(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="discussion_threads",
+    )
+    cohort = models.ForeignKey(
+        Cohort,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="discussion_threads",
+    )
+    lesson = models.ForeignKey(
+        Lesson,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="discussion_threads",
+    )
+    author_id = models.UUIDField(db_index=True)
+    title = models.CharField(max_length=200)
+    body = models.TextField()
+    status = models.CharField(
+        max_length=16,
+        choices=DiscussionStatus.choices,
+        default=DiscussionStatus.PENDING,
+        db_index=True,
+    )
+    is_pinned = models.BooleanField(default=False)
+    is_locked = models.BooleanField(default=False)
+    replies_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_discussionthread_tenant_id_uniq",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(cohort__isnull=False) & Q(lesson__isnull=True))
+                    | (Q(cohort__isnull=True) & Q(lesson__isnull=False))
+                ),
+                name="learning_thread_single_scope_xor",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=DiscussionStatus.values),
+                name="learning_thread_status_valid",
+            ),
+            models.CheckConstraint(
+                condition=~Q(title=""),
+                name="learning_thread_title_nonempty",
+            ),
+            models.CheckConstraint(
+                condition=~Q(body=""),
+                name="learning_thread_body_nonempty",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "cohort", "status"], name="thread_t_coh_st_ix"),
+            models.Index(fields=["tenant", "lesson", "status"], name="thread_t_les_st_ix"),
+            models.Index(fields=["tenant", "author_id", "status"], name="thread_t_auth_st_ix"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if bool(self.cohort_id) == bool(self.lesson_id):
+            raise ValidationError("Thread must be associated with exactly one of Cohort or Lesson (DB XOR).")
+        if self.cohort and str(self.cohort.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between Thread and Cohort.")
+        if self.lesson and str(self.lesson.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between Thread and Lesson.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.id}:{self.status}:{self.title[:30]}"
+
+
+class DiscussionComment(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="discussion_comments",
+    )
+    thread = models.ForeignKey(
+        DiscussionThread,
+        on_delete=models.CASCADE,
+        related_name="comments",
+    )
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="replies",
+    )
+    author_id = models.UUIDField(db_index=True)
+    body = models.TextField()
+    status = models.CharField(
+        max_length=16,
+        choices=DiscussionStatus.choices,
+        default=DiscussionStatus.PENDING,
+        db_index=True,
+    )
+    is_mentor_endorsed = models.BooleanField(default=False)
+    endorsed_by_id = models.UUIDField(null=True, blank=True)
+    endorsed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_discussioncomment_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "id", "thread"],
+                name="learning_comment_tenant_id_thread_uniq",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=DiscussionStatus.values),
+                name="learning_comment_status_valid",
+            ),
+            models.CheckConstraint(
+                condition=~Q(body=""),
+                name="learning_comment_body_nonempty",
+            ),
+            models.CheckConstraint(
+                condition=Q(parent__isnull=True) | ~Q(parent=models.F("id")),
+                name="learning_comment_prevent_self_parent",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "thread", "status"], name="comment_t_th_st_ix"),
+            models.Index(fields=["tenant", "parent", "status"], name="comment_t_pr_st_ix"),
+            models.Index(fields=["tenant", "author_id", "status"], name="comment_t_auth_st_ix"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.thread and str(self.thread.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between Comment and Thread.")
+        if self.parent_id:
+            if self.parent_id == self.id:
+                raise ValidationError("Comment cannot be its own parent.")
+            if self.parent:
+                if str(self.parent.tenant_id) != str(self.tenant_id):
+                    raise ValidationError("Tenant mismatch between Comment and Parent Comment.")
+                if self.parent.thread_id != self.thread_id:
+                    raise ValidationError("Parent comment must belong to the exact same thread.")
+        if self.is_mentor_endorsed and not self.endorsed_by_id:
+            raise ValidationError("Endorsed comment must record endorsed_by_id.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.thread_id}:{self.id}:{self.status}"
+
+
+class DiscussionModerationAction(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="discussion_moderation_actions",
+    )
+    target_thread = models.ForeignKey(
+        DiscussionThread,
+        on_delete=models.RESTRICT,
+        null=True,
+        blank=True,
+        related_name="moderation_actions",
+    )
+    target_comment = models.ForeignKey(
+        DiscussionComment,
+        on_delete=models.RESTRICT,
+        null=True,
+        blank=True,
+        related_name="moderation_actions",
+    )
+    action = models.CharField(max_length=16, choices=ModerationActionType.choices)
+    previous_status = models.CharField(max_length=16, choices=DiscussionStatus.choices, null=True, blank=True)
+    new_status = models.CharField(max_length=16, choices=DiscussionStatus.choices)
+    performed_by = models.UUIDField(db_index=True)
+    reason = models.CharField(max_length=255)
+    note = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_moderationaction_tenant_id_uniq",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(target_thread__isnull=False) & Q(target_comment__isnull=True))
+                    | (Q(target_thread__isnull=True) & Q(target_comment__isnull=False))
+                ),
+                name="learning_modaction_target_xor",
+            ),
+            models.CheckConstraint(
+                condition=Q(action__in=ModerationActionType.values),
+                name="learning_modaction_action_valid",
+            ),
+            models.CheckConstraint(
+                condition=Q(new_status__in=DiscussionStatus.values),
+                name="learning_modaction_new_status_valid",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "target_thread", "created_at"], name="modaction_t_th_cr_ix"),
+            models.Index(fields=["tenant", "target_comment", "created_at"], name="modaction_t_cm_cr_ix"),
+            models.Index(fields=["tenant", "performed_by", "created_at"], name="modaction_t_perf_cr_ix"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if bool(self.target_thread_id) == bool(self.target_comment_id):
+            raise ValidationError("Moderation action must target exactly one of thread or comment.")
+        if self.target_thread and str(self.target_thread.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between ModerationAction and TargetThread.")
+        if self.target_comment and str(self.target_comment.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between ModerationAction and TargetComment.")
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError("DiscussionModerationAction is append-only and cannot be modified.")
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("DiscussionModerationAction records are immutable audit logs and cannot be deleted.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.action}:{self.performed_by}:{self.created_at}"
+

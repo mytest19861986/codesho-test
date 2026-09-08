@@ -539,3 +539,87 @@ class LearningAchievementTimelineItemSerializer(serializers.Serializer):
     description = serializers.CharField(allow_blank=True)
     occurred_at = serializers.DateTimeField()
     metadata = serializers.DictField(default=dict)
+
+
+class DiscussionCommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import DiscussionComment
+        model = DiscussionComment
+        fields = [
+            "id",
+            "thread",
+            "parent",
+            "author_id",
+            "body",
+            "status",
+            "is_mentor_endorsed",
+            "endorsed_by_id",
+            "endorsed_at",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "author_id",
+            "status",
+            "is_mentor_endorsed",
+            "endorsed_by_id",
+            "endorsed_at",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class DiscussionThreadSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import DiscussionThread
+        model = DiscussionThread
+        fields = [
+            "id",
+            "cohort",
+            "lesson",
+            "author_id",
+            "title",
+            "body",
+            "status",
+            "is_pinned",
+            "is_locked",
+            "replies_count",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "author_id",
+            "status",
+            "is_pinned",
+            "is_locked",
+            "replies_count",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class DiscussionModerationActionSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import DiscussionModerationAction
+        model = DiscussionModerationAction
+        fields = [
+            "id",
+            "target_thread",
+            "target_comment",
+            "action",
+            "previous_status",
+            "new_status",
+            "performed_by",
+            "reason",
+            "note",
+            "created_at",
+        ]
+        read_only_fields = [
+            "id",
+            "previous_status",
+            "new_status",
+            "performed_by",
+            "created_at",
+        ]

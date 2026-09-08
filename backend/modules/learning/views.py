@@ -4,7 +4,8 @@ from typing import Protocol, cast
 from uuid import UUID
 
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import models, transaction
+from django.db.models import Q
 from django.http import HttpRequest
 from django.views.decorators.http import require_GET
 from rest_framework.request import Request
@@ -1460,4 +1461,272 @@ class MentorCohortAlertsView(APIView):
             }, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DiscussionThreadListCreateView(APIView):
+    """
+    List and create discussion threads within a cohort or lesson scope.
+    Enforces child-safety visibility tiers: peers see ONLY approved threads.
+    """
+
+    def get(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        cohort_id = request.query_params.get("cohort_id")
+        lesson_id = request.query_params.get("lesson_id")
+
+        if bool(cohort_id) == bool(lesson_id):
+            return Response({"detail": "Exactly one of cohort_id or lesson_id must be provided."}, status=400)
+
+        user = getattr(request, "user", None)
+        user_id = getattr(request, "user_id", None) or (user.id if user and user.is_authenticated else None)
+        role = _get_membership_role(request) or "STUDENT"
+
+        from modules.learning.models import DiscussionThread, DiscussionStatus
+        from modules.learning.serializers import DiscussionThreadSerializer
+
+        qs = DiscussionThread.objects.filter(tenant_id=tenant_id)
+        if cohort_id:
+            qs = qs.filter(cohort_id=cohort_id)
+        else:
+            qs = qs.filter(lesson_id=lesson_id)
+
+        # Visibility filter based on role and author
+        if role not in ["STAFF", "ADMIN", "MENTOR"]:
+            if user_id:
+                qs = qs.filter(models.Q(status=DiscussionStatus.APPROVED) | (models.Q(status=DiscussionStatus.PENDING) & models.Q(author_id=user_id)))
+            else:
+                qs = qs.filter(status=DiscussionStatus.APPROVED)
+
+        qs = qs.order_by("-is_pinned", "-created_at")
+        serializer = DiscussionThreadSerializer(qs, many=True)
+        return Response(serializer.data, status=200)
+
+    def post(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        user = getattr(request, "user", None)
+        user_id = getattr(request, "user_id", None) or (user.id if user and user.is_authenticated else None)
+        if not user_id:
+            return Response({"detail": "Authentication required."}, status=401)
+
+        role = _get_membership_role(request) or "STUDENT"
+        cohort_id = request.data.get("cohort_id")
+        lesson_id = request.data.get("lesson_id")
+        title = request.data.get("title", "")
+        body = request.data.get("body", "")
+
+        from modules.learning.discussion_service import DiscussionService
+        from modules.learning.serializers import DiscussionThreadSerializer
+        from django.core.exceptions import PermissionDenied, ValidationError
+
+        try:
+            thread = DiscussionService.create_thread(
+                tenant_id=tenant_id,
+                author_id=user_id,
+                role=role,
+                title=title,
+                body=body,
+                cohort_id=cohort_id,
+                lesson_id=lesson_id,
+            )
+            return Response(DiscussionThreadSerializer(thread).data, status=201)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+
+
+class DiscussionThreadDetailView(APIView):
+    """
+    Retrieve single discussion thread and its hierarchical comments.
+    """
+
+    def get(self, request: Request, thread_id: str) -> Response:
+        tenant_id = _tenant_id(request)
+        user = getattr(request, "user", None)
+        user_id = getattr(request, "user_id", None) or (user.id if user and user.is_authenticated else None)
+        role = _get_membership_role(request) or "STUDENT"
+
+        from modules.learning.models import DiscussionThread, DiscussionComment, DiscussionStatus
+        from modules.learning.serializers import DiscussionThreadSerializer, DiscussionCommentSerializer
+        from modules.learning.discussion_service import DiscussionAccessPolicy
+
+        thread = DiscussionThread.objects.filter(tenant_id=tenant_id, id=thread_id).first()
+        if not thread:
+            return Response({"detail": "Thread not found."}, status=404)
+
+        if not DiscussionAccessPolicy.can_view_thread(thread, user_id, role):
+            return Response({"detail": "Thread is pending review or not accessible."}, status=404)
+
+        comments_qs = DiscussionComment.objects.filter(tenant_id=tenant_id, thread_id=thread.id)
+        if role not in ["STAFF", "ADMIN", "MENTOR"]:
+            if user_id:
+                comments_qs = comments_qs.filter(
+                    models.Q(status=DiscussionStatus.APPROVED) | (models.Q(status=DiscussionStatus.PENDING) & models.Q(author_id=user_id))
+                )
+            else:
+                comments_qs = comments_qs.filter(status=DiscussionStatus.APPROVED)
+
+        comments_qs = comments_qs.order_by("created_at")
+
+        thread_data = DiscussionThreadSerializer(thread).data
+        thread_data["comments"] = DiscussionCommentSerializer(comments_qs, many=True).data
+        return Response(thread_data, status=200)
+
+
+class DiscussionCommentCreateView(APIView):
+    """
+    Add a comment or reply to an existing discussion thread.
+    """
+
+    def post(self, request: Request, thread_id: str) -> Response:
+        tenant_id = _tenant_id(request)
+        user = getattr(request, "user", None)
+        user_id = getattr(request, "user_id", None) or (user.id if user and user.is_authenticated else None)
+        if not user_id:
+            return Response({"detail": "Authentication required."}, status=401)
+
+        role = _get_membership_role(request) or "STUDENT"
+        body = request.data.get("body", "")
+        parent_id = request.data.get("parent_id")
+
+        from modules.learning.discussion_service import DiscussionService
+        from modules.learning.serializers import DiscussionCommentSerializer
+        from django.core.exceptions import PermissionDenied, ValidationError
+
+        try:
+            comment = DiscussionService.create_comment(
+                tenant_id=tenant_id,
+                author_id=user_id,
+                role=role,
+                thread_id=thread_id,
+                body=body,
+                parent_id=parent_id,
+            )
+            return Response(DiscussionCommentSerializer(comment).data, status=201)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+
+
+class DiscussionCommentEndorseView(APIView):
+    """
+    Mentor/Staff endorsement for high-quality community answers.
+    """
+
+    def post(self, request: Request, comment_id: str) -> Response:
+        tenant_id = _tenant_id(request)
+        user = getattr(request, "user", None)
+        user_id = getattr(request, "user_id", None) or (user.id if user and user.is_authenticated else None)
+        if not user_id:
+            return Response({"detail": "Authentication required."}, status=401)
+
+        role = _get_membership_role(request) or "STUDENT"
+
+        from modules.learning.discussion_service import DiscussionService
+        from modules.learning.serializers import DiscussionCommentSerializer
+        from django.core.exceptions import PermissionDenied, ValidationError
+
+        try:
+            comment = DiscussionService.endorse_comment(
+                tenant_id=tenant_id,
+                comment_id=comment_id,
+                mentor_id=user_id,
+                role=role,
+            )
+            return Response(DiscussionCommentSerializer(comment).data, status=200)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+
+
+class DiscussionThreadPinView(APIView):
+    """
+    Mentor/Staff toggle for pinning threads to top.
+    """
+
+    def post(self, request: Request, thread_id: str) -> Response:
+        tenant_id = _tenant_id(request)
+        user = getattr(request, "user", None)
+        user_id = getattr(request, "user_id", None) or (user.id if user and user.is_authenticated else None)
+        if not user_id:
+            return Response({"detail": "Authentication required."}, status=401)
+
+        role = _get_membership_role(request) or "STUDENT"
+        is_pinned = bool(request.data.get("is_pinned", True))
+
+        from modules.learning.discussion_service import DiscussionService
+        from modules.learning.serializers import DiscussionThreadSerializer
+        from django.core.exceptions import PermissionDenied, ValidationError
+
+        try:
+            thread = DiscussionService.pin_thread(
+                tenant_id=tenant_id,
+                thread_id=thread_id,
+                user_id=user_id,
+                role=role,
+                is_pinned=is_pinned,
+            )
+            return Response(DiscussionThreadSerializer(thread).data, status=200)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+
+
+class DiscussionModerationActionView(APIView):
+    """
+    Perform moderation on threads or comments (Approve, Flag, Remove, Restore).
+    Creates immutable audit trail record.
+    """
+
+    def post(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        user = getattr(request, "user", None)
+        user_id = getattr(request, "user_id", None) or (user.id if user and user.is_authenticated else None)
+        if not user_id:
+            return Response({"detail": "Authentication required."}, status=401)
+
+        role = _get_membership_role(request) or "STUDENT"
+        if role not in ["MENTOR", "STAFF", "ADMIN"]:
+            return Response({"detail": "Only staff and mentors can perform moderation."}, status=403)
+
+        thread_id = request.data.get("thread_id")
+        comment_id = request.data.get("comment_id")
+        action = request.data.get("action")
+        reason = request.data.get("reason", "Standard moderation review")
+        note = request.data.get("note", "")
+
+        from modules.learning.discussion_service import DiscussionService
+        from modules.learning.models import ModerationActionType
+        from django.core.exceptions import PermissionDenied, ValidationError
+
+        try:
+            if thread_id:
+                DiscussionService.moderate_thread(
+                    tenant_id=tenant_id,
+                    thread_id=thread_id,
+                    action=ModerationActionType(action),
+                    performed_by=user_id,
+                    reason=reason,
+                    note=note,
+                )
+            elif comment_id:
+                DiscussionService.moderate_comment(
+                    tenant_id=tenant_id,
+                    comment_id=comment_id,
+                    action=ModerationActionType(action),
+                    performed_by=user_id,
+                    reason=reason,
+                    note=note,
+                )
+            else:
+                return Response({"detail": "Either thread_id or comment_id must be provided."}, status=400)
+
+            return Response({"status": "SUCCESS", "action": action}, status=200)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+        except (ValidationError, ValueError) as e:
+            return Response({"detail": str(e)}, status=400)
 

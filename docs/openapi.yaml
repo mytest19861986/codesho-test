@@ -78,6 +78,131 @@ paths:
           description: Invalid FSM transition.
         '404':
           description: Cohort or alert not found.
+  /api/v1/learning/discussions/threads/:
+    get:
+      operationId: api_v1_learning_discussions_threads_list
+      summary: List discussion threads within cohort or lesson
+      parameters:
+      - in: query
+        name: cohort_id
+        schema:
+          type: string
+          format: uuid
+        required: false
+      - in: query
+        name: lesson_id
+        schema:
+          type: string
+          format: uuid
+        required: false
+      tags:
+      - learning-discussions
+      responses:
+        '200':
+          description: Filtered discussion threads.
+        '400':
+          description: Invalid query parameters.
+    post:
+      operationId: api_v1_learning_discussions_threads_create
+      summary: Create new discussion thread
+      tags:
+      - learning-discussions
+      responses:
+        '201':
+          description: Discussion thread created (default PENDING).
+        '400':
+          description: Invalid payload or scope violation.
+        '403':
+          description: Not enrolled in cohort or course.
+  /api/v1/learning/discussions/threads/{thread_id}/:
+    get:
+      operationId: api_v1_learning_discussions_threads_retrieve
+      summary: Retrieve thread details and comments
+      parameters:
+      - in: path
+        name: thread_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - learning-discussions
+      responses:
+        '200':
+          description: Thread details and visible comments.
+        '404':
+          description: Thread not found or inaccessible.
+  /api/v1/learning/discussions/threads/{thread_id}/comments/:
+    post:
+      operationId: api_v1_learning_discussions_threads_comments_create
+      summary: Add comment or reply to thread
+      parameters:
+      - in: path
+        name: thread_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - learning-discussions
+      responses:
+        '201':
+          description: Comment created (default PENDING).
+        '400':
+          description: Invalid comment data or self-parenting attempt.
+        '403':
+          description: Thread locked or not enrolled.
+  /api/v1/learning/discussions/threads/{thread_id}/pin/:
+    post:
+      operationId: api_v1_learning_discussions_threads_pin_create
+      summary: Pin or unpin thread (Mentor/Staff only)
+      parameters:
+      - in: path
+        name: thread_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - learning-discussions
+      responses:
+        '200':
+          description: Thread pinned state updated.
+        '403':
+          description: Only mentors and staff can pin threads.
+  /api/v1/learning/discussions/comments/{comment_id}/endorse/:
+    post:
+      operationId: api_v1_learning_discussions_comments_endorse_create
+      summary: Endorse comment as high quality answer (Mentor/Staff only)
+      parameters:
+      - in: path
+        name: comment_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - learning-discussions
+      responses:
+        '200':
+          description: Comment endorsed successfully.
+        '400':
+          description: Comment not in approved status.
+        '403':
+          description: Only mentors and staff can endorse comments.
+  /api/v1/learning/discussions/moderation/action/:
+    post:
+      operationId: api_v1_learning_discussions_moderation_action_create
+      summary: Execute moderation action and append to immutable audit log
+      tags:
+      - learning-discussions
+      responses:
+        '200':
+          description: Moderation action recorded and status updated.
+        '400':
+          description: Invalid action parameters.
+        '403':
+          description: Only mentors and staff can moderate.
   /api/v1/auth/logout/:
     post:
       operationId: api_v1_auth_logout_create
