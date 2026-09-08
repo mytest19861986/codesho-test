@@ -20,6 +20,9 @@ from .models import (
     Cohort,
     CourseEnrollment,
     CoursePrerequisite,
+    CodeAssessment,
+    CodeExecutionRun,
+    AssessmentResult,
 )
 
 
@@ -350,3 +353,189 @@ class StudentEnrollRequestSerializer(serializers.Serializer):
     cohort_id = serializers.UUIDField(required=False, allow_null=True)
     idempotency_key = serializers.CharField(max_length=255, required=False, allow_null=True)
 
+
+class CodeAssessmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CodeAssessment
+        fields = [
+            "id",
+            "lesson",
+            "language",
+            "timeout_seconds",
+            "memory_limit_mb",
+            "starter_code",
+            "testcases",
+            "testcases_hash",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "testcases_hash", "created_at", "updated_at"]
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        # Filter hidden test cases from public student view
+        request = self.context.get("request")
+        if request and getattr(request.user, "is_staff", False):
+            return ret
+        if "testcases" in ret and isinstance(ret["testcases"], list):
+            ret["testcases"] = [
+                {
+                    "id": tc.get("id"),
+                    "input": tc.get("input"),
+                    "expected_output": tc.get("expected_output") if not tc.get("is_hidden") else "[HIDDEN]",
+                    "is_hidden": tc.get("is_hidden", False),
+                    "weight": tc.get("weight", 1),
+                }
+                for tc in ret["testcases"]
+            ]
+        return ret
+
+
+class CodeExecutionRunSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CodeExecutionRun
+        fields = [
+            "id",
+            "assessment",
+            "student_id",
+            "attempt_number",
+            "submitted_code",
+            "code_hash",
+            "runtime_image_hash",
+            "status",
+            "duration_ms",
+            "memory_used_kb",
+            "stdout_log",
+            "stderr_log",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "student_id",
+            "attempt_number",
+            "code_hash",
+            "runtime_image_hash",
+            "status",
+            "duration_ms",
+            "memory_used_kb",
+            "stdout_log",
+            "stderr_log",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class AssessmentResultSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AssessmentResult
+        fields = [
+            "id",
+            "execution_run",
+            "assessment",
+            "student_id",
+            "passed_tests_count",
+            "total_tests_count",
+            "score",
+            "is_passed",
+            "is_final",
+            "created_at",
+        ]
+        read_only_fields = ["id", "is_final", "created_at"]
+
+
+class CodePlaygroundRunRequestSerializer(serializers.Serializer):
+    code = serializers.CharField(required=True, allow_blank=False)
+    language = serializers.CharField(default="python", required=False)
+
+
+class CodeSubmitAssessmentRequestSerializer(serializers.Serializer):
+    code = serializers.CharField(required=True, allow_blank=False)
+    idempotency_key = serializers.CharField(max_length=128, required=False, allow_null=True)
+
+
+
+from .models import (
+    CertificateTemplate,
+    CourseCertificate,
+    CertificateVerificationRecord,
+)
+
+
+class CertificateTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CertificateTemplate
+        fields = [
+            "id",
+            "course",
+            "version",
+            "title",
+            "description",
+            "min_score_percentage",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+
+class CourseCertificateSerializer(serializers.ModelSerializer):
+    course_title = serializers.CharField(source="course.title", read_only=True)
+    template_title = serializers.CharField(source="template.title", read_only=True)
+
+    class Meta:
+        model = CourseCertificate
+        fields = [
+            "id",
+            "course",
+            "course_title",
+            "template",
+            "template_title",
+            "student_id",
+            "completion_round",
+            "certificate_number",
+            "verification_hash",
+            "status",
+            "final_score",
+            "completion_snapshot",
+            "source_event_id",
+            "issued_at",
+            "revoked_at",
+            "revocation_reason",
+        ]
+        read_only_fields = [
+            "id",
+            "certificate_number",
+            "verification_hash",
+            "status",
+            "final_score",
+            "completion_snapshot",
+            "source_event_id",
+            "issued_at",
+            "revoked_at",
+            "revocation_reason",
+        ]
+
+
+class CertificateVerificationRecordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CertificateVerificationRecord
+        fields = [
+            "id",
+            "certificate",
+            "queried_number",
+            "result_status",
+            "queried_by_role",
+            "queried_at",
+        ]
+        read_only_fields = ["id", "queried_at"]
+
+
+class LearningAchievementTimelineItemSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    event_type = serializers.CharField()
+    title = serializers.CharField()
+    description = serializers.CharField(allow_blank=True)
+    occurred_at = serializers.DateTimeField()
+    metadata = serializers.DictField(default=dict)

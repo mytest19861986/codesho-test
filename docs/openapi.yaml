@@ -373,6 +373,53 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: Course not found.
+  /api/v1/learning/student/certificates/:
+    get:
+      operationId: api_v1_learning_student_certificates_list
+      description: Returns certificates issued to the current student.
+      summary: List student course certificates
+      tags:
+      - learning
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: List of certificates.
+        '403':
+          description: Forbidden.
+  /api/v1/learning/certificates/verify/:
+    get:
+      operationId: api_v1_learning_certificates_verify_retrieve
+      description: Public zero-PII certificate verification by certificate number.
+      summary: Verify certificate authenticity
+      parameters:
+      - in: query
+        name: number
+        schema:
+          type: string
+        description: Serial certificate number.
+        required: true
+      tags:
+      - learning
+      responses:
+        '200':
+          description: Certificate is valid.
+        '404':
+          description: Certificate is revoked or not found.
+  /api/v1/learning/student/achievements/:
+    get:
+      operationId: api_v1_learning_student_achievements_list
+      description: Returns chronological milestone achievement timeline for student.
+      summary: List student achievements timeline
+      tags:
+      - learning
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: Achievement timeline list.
+        '403':
+          description: Forbidden.
 components:
   schemas:
     AdultAgeAttestationReceipt:

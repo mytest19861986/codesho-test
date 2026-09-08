@@ -1211,3 +1211,380 @@ class CoursePrerequisite(models.Model):
     def __str__(self) -> str:
         return f"{self.tenant_id}:{self.course.code}<-{self.prerequisite_course.code}"
 
+
+class CodeAssessment(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="code_assessments",
+    )
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name="code_assessments")
+    language = models.CharField(max_length=32, default="python")
+    timeout_seconds = models.PositiveIntegerField(default=5, validators=[MinValueValidator(1)])
+    memory_limit_mb = models.PositiveIntegerField(default=256, validators=[MinValueValidator(16)])
+    starter_code = models.TextField(blank=True, default="")
+    testcases = models.JSONField(default=list)
+    testcases_hash = models.CharField(max_length=64, blank=True, db_index=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_codeassessment_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "lesson"],
+                name="learning_codeassessment_tenant_lesson_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "lesson", "is_active"], name="codeassess_t_les_act_ix"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.lesson and self.lesson.tenant_id != self.tenant_id:
+            raise ValidationError("Tenant mismatch between lesson and code assessment.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.lesson_id}:{self.language}"
+
+
+class ExecutionStatus(models.TextChoices):
+    PENDING = "pending", "Pending"
+    RUNNING = "running", "Running"
+    PASSED = "passed", "Passed"
+    FAILED = "failed", "Failed"
+    TIMED_OUT = "timed_out", "Timed Out"
+    ERROR = "error", "Error"
+
+
+class CodeExecutionRun(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="code_execution_runs",
+    )
+    assessment = models.ForeignKey(
+        CodeAssessment,
+        on_delete=models.CASCADE,
+        related_name="execution_runs",
+        null=True,
+        blank=True,
+    )
+    student_id = models.UUIDField(db_index=True)
+    attempt_number = models.PositiveIntegerField(default=1)
+    submitted_code = models.TextField()
+    code_hash = models.CharField(max_length=64, db_index=True)
+    runtime_image_hash = models.CharField(max_length=64, default="codesho-python-sandbox:sha256-standard")
+    idempotency_key = models.CharField(max_length=128, null=True, blank=True)
+    status = models.CharField(
+        max_length=16,
+        choices=ExecutionStatus.choices,
+        default=ExecutionStatus.PENDING,
+        db_index=True,
+    )
+    duration_ms = models.PositiveIntegerField(default=0)
+    memory_used_kb = models.PositiveIntegerField(default=0)
+    stdout_log = models.TextField(blank=True, default="")
+    stderr_log = models.TextField(blank=True, default="")
+    lease_expires_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_coderun_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "assessment", "student_id", "attempt_number"],
+                condition=models.Q(assessment__isnull=False),
+                name="learning_coderun_attempt_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "idempotency_key"],
+                condition=models.Q(idempotency_key__isnull=False),
+                name="learning_coderun_idemp_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id", "status"], name="coderun_t_student_st_ix"),
+            models.Index(fields=["tenant", "assessment", "status"], name="coderun_t_assess_st_ix"),
+            models.Index(fields=["status", "lease_expires_at"], name="coderun_lease_recover_ix"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.assessment and self.assessment.tenant_id != self.tenant_id:
+            raise ValidationError("Tenant mismatch between execution run and assessment.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.student_id}:attempt_{self.attempt_number}:{self.status}"
+
+
+class AssessmentResult(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="assessment_results",
+    )
+    execution_run = models.OneToOneField(
+        CodeExecutionRun,
+        on_delete=models.CASCADE,
+        related_name="result",
+    )
+    assessment = models.ForeignKey(
+        CodeAssessment,
+        on_delete=models.CASCADE,
+        related_name="results",
+    )
+    student_id = models.UUIDField(db_index=True)
+    passed_tests_count = models.PositiveIntegerField(default=0)
+    total_tests_count = models.PositiveIntegerField(default=0)
+    score = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    is_passed = models.BooleanField(default=False)
+    is_final = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_assessresult_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "assessment", "student_id"],
+                name="learning_assessresult_final_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id", "is_passed"], name="assessres_t_student_pass_ix"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.assessment and self.assessment.tenant_id != self.tenant_id:
+            raise ValidationError("Tenant mismatch between assessment result and assessment.")
+        if self.execution_run and self.execution_run.tenant_id != self.tenant_id:
+            raise ValidationError("Tenant mismatch between assessment result and execution run.")
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding and self.pk:
+            raise ValidationError("AssessmentResult is immutable after initial recording.")
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.student_id}:{self.score}"
+
+
+
+class CertificateTemplate(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="certificate_templates",
+    )
+    course = models.ForeignKey(
+        "learning.Course",
+        on_delete=models.CASCADE,
+        related_name="certificate_templates",
+    )
+    version = models.PositiveIntegerField(default=1)
+    title = models.CharField(max_length=160)
+    description = models.TextField(blank=True, default="")
+    min_score_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=70.00)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_certtemplate_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "course", "version"],
+                name="learning_certtemplate_tenant_course_ver_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "course", "is_active"], name="certtmpl_t_course_act_ix"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.course and self.course.tenant_id != self.tenant_id:
+            raise ValidationError("Tenant mismatch between CertificateTemplate and Course.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.title} (v{self.version})"
+
+
+class CourseCertificateStatus(models.TextChoices):
+    ISSUED = "ISSUED", "Issued"
+    REVOKED = "REVOKED", "Revoked"
+
+
+class CourseCertificate(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="issued_certificates",
+    )
+    course = models.ForeignKey(
+        "learning.Course",
+        on_delete=models.PROTECT,
+        related_name="issued_certificates",
+    )
+    template = models.ForeignKey(
+        CertificateTemplate,
+        on_delete=models.PROTECT,
+        related_name="issued_certificates",
+    )
+    student_id = models.UUIDField(db_index=True)
+    completion_round = models.PositiveIntegerField(default=1)
+    certificate_number = models.CharField(max_length=64, db_index=True)
+    verification_hash = models.CharField(max_length=64, db_index=True)
+    status = models.CharField(
+        max_length=16,
+        choices=CourseCertificateStatus.choices,
+        default=CourseCertificateStatus.ISSUED,
+    )
+    final_score = models.DecimalField(max_digits=5, decimal_places=2)
+    completion_snapshot = models.JSONField(default=dict)
+    source_event_id = models.UUIDField(db_index=True)
+    issued_at = models.DateTimeField(auto_now_add=True)
+    revoked_at = models.DateTimeField(null=True, blank=True)
+    revocation_reason = models.TextField(blank=True, default="")
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_coursecert_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "course", "student_id", "completion_round"],
+                name="learning_coursecert_round_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "certificate_number"],
+                name="learning_coursecert_number_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "verification_hash"],
+                name="learning_coursecert_hash_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "source_event_id"],
+                name="learning_coursecert_source_event_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "course", "student_id"],
+                condition=Q(status="ISSUED"),
+                name="idx_unique_active_certificate",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id", "status"], name="coursecert_t_stu_status_ix"),
+            models.Index(fields=["tenant", "certificate_number"], name="coursecert_t_number_ix"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.course and self.course.tenant_id != self.tenant_id:
+            raise ValidationError("Tenant mismatch between CourseCertificate and Course.")
+        if self.template and self.template.tenant_id != self.tenant_id:
+            raise ValidationError("Tenant mismatch between CourseCertificate and CertificateTemplate.")
+        if self.template and self.course and self.template.course_id != self.course_id:
+            raise ValidationError("CourseCertificate template does not belong to specified course.")
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding and self.pk:
+            orig = CourseCertificate.objects.filter(pk=self.pk).values(
+                "course_id", "template_id", "student_id", "certificate_number",
+                "verification_hash", "final_score", "source_event_id", "issued_at"
+            ).first()
+            if orig:
+                if (
+                    orig["course_id"] != self.course_id or
+                    orig["template_id"] != self.template_id or
+                    orig["student_id"] != self.student_id or
+                    orig["certificate_number"] != self.certificate_number or
+                    orig["verification_hash"] != self.verification_hash or
+                    orig["final_score"] != self.final_score or
+                    orig["source_event_id"] != self.source_event_id
+                ):
+                    raise ValidationError("Core certificate issuance fields are strictly immutable.")
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.certificate_number} ({self.status})"
+
+
+class CertificateVerificationRecord(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="certificate_verification_records",
+    )
+    certificate = models.ForeignKey(
+        CourseCertificate,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="verification_records",
+    )
+    queried_number = models.CharField(max_length=64, db_index=True)
+    result_status = models.CharField(max_length=16)  # VALID, REVOKED, NOT_FOUND, INVALID_HASH
+    queried_by_role = models.CharField(max_length=16, default="anonymous")
+    queried_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_certverif_tenant_id_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "queried_number", "queried_at"], name="certverif_t_num_date_ix"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.certificate and self.certificate.tenant_id != self.tenant_id:
+            raise ValidationError("Tenant mismatch between CertificateVerificationRecord and CourseCertificate.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.queried_number}:{self.result_status}"

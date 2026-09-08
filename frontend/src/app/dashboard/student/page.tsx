@@ -7,6 +7,9 @@ import { StreakIndicator } from "@/components/gamification/StreakIndicator";
 import { BadgeShelf, BadgeItem } from "@/components/gamification/BadgeShelf";
 import { EnrollmentCard, EnrollmentItem } from "@/components/enrollment/EnrollmentCard";
 import { AssignmentSubmissionCard, AssignmentItem } from "@/components/submissions/AssignmentSubmissionCard";
+import { InteractivePlaygroundCard } from "@/components/assessments/InteractivePlaygroundCard";
+import { CertificateCard, CertificateData } from "@/components/certificates/CertificateCard";
+import { AchievementTimeline, TimelineItem } from "@/components/certificates/AchievementTimeline";
 
 const syntheticAssignments: AssignmentItem[] = [
   {
@@ -55,6 +58,56 @@ const syntheticEnrollments: EnrollmentItem[] = [
     maxCapacity: 30,
     status: "enrolled",
     enrolledAt: "۱۴۰۵/۰۶/۱۸",
+  },
+];
+
+const syntheticCertificate: CertificateData = {
+  id: "cert-01",
+  certificateNumber: "CERT-CODESHO-2026-A8F31B9D",
+  courseTitle: "دوره جامع برنامه‌نویسی پایتون و هوش مصنوعی",
+  templateTitle: "گواهی پایان دوره مهارت‌های آکادمیک کدنویسی",
+  studentDisplayId: "STU-8821-X9",
+  finalScore: "۹۶.۵۰",
+  issuedAtPersian: "۱۸ شهریور ۱۴۰۵",
+  verificationHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  status: "ISSUED",
+};
+
+const syntheticTimeline: TimelineItem[] = [
+  {
+    id: "tl-5",
+    eventType: "CERTIFICATE_ISSUED",
+    title: "صدور رسمی گواهی پایان دوره",
+    description: "گواهی با شماره CERT-CODESHO-2026-A8F31B9D با موفقیت صادر و تایید شد.",
+    occurredAtPersian: "۱۸ شهریور ۱۴۰۵ - ساعت ۱۸:۳۰",
+  },
+  {
+    id: "tl-4",
+    eventType: "BADGE_AWARDED",
+    title: "کسب نشان استادی پایتون",
+    description: "نشان استادی به دلیل حل تمام چالش‌های الگوریتمی اعطا گردید.",
+    occurredAtPersian: "۱۶ شهریور ۱۴۰۵ - ساعت ۱۱:۰۰",
+  },
+  {
+    id: "tl-3",
+    eventType: "ASSIGNMENT_REVIEWED",
+    title: "تأیید پروژه ماشین‌حساب پایتون توسط منتور",
+    description: "نمره ۹۸٪ همراه با بازخورد تفصیلی منتور ثبت گردید.",
+    occurredAtPersian: "۱۲ شهریور ۱۴۰۵ - ساعت ۱۵:۲۰",
+  },
+  {
+    id: "tl-2",
+    eventType: "LESSON_COMPLETED",
+    title: "تکمیل درس توابع و ساختارهای داده",
+    description: "تمام تمرین‌های تعاملی با موفقیت به پایان رسید.",
+    occurredAtPersian: "۰۵ شهریور ۱۴۰۵ - ساعت ۰۹:۴۵",
+  },
+  {
+    id: "tl-1",
+    eventType: "COURSE_ENROLLED",
+    title: "شروع دوره در کوهورت پاییزه الف",
+    description: "ثبت‌نام قطعی در دوره آموزشی پایتون.",
+    occurredAtPersian: "۰۱ شهریور ۱۴۰۵ - ساعت ۱۰:۰۰",
   },
 ];
 
@@ -251,6 +304,32 @@ export default function StudentDashboardPage() {
         }}
       >
         <AssignmentSubmissionCard assignments={syntheticAssignments} />
+      </section>
+
+      {/* Phase 3 VS7 Interactive Code Playground & Automated Assessment Section */}
+      <section
+        style={{
+          maxWidth: "78rem",
+          margin: "0 auto 2rem",
+          padding: "0 1.5rem",
+        }}
+      >
+        <InteractivePlaygroundCard />
+      </section>
+
+      {/* Phase 3 VS8 Course Completion Certificate & Learning Verification Section */}
+      <section
+        style={{
+          maxWidth: "78rem",
+          margin: "0 auto 2.5rem",
+          padding: "0 1.5rem",
+        }}
+        aria-label="گواهی پایان دوره دانش‌آموز"
+      >
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "2rem", alignItems: "start" }}>
+          <CertificateCard certificate={syntheticCertificate} />
+          <AchievementTimeline items={syntheticTimeline} />
+        </div>
       </section>
 
       {/* Phase 3 Synthetic Media Attachments Section */}

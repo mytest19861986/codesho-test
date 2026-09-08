@@ -27,6 +27,14 @@ from .views import (
     SubmissionDraftView,
     SubmissionSubmitView,
     SyntheticMediaAttachmentView,
+    CodeAssessmentListView,
+    CodePlaygroundRunView,
+    CodeAssessmentSubmitView,
+    AssessmentResultListView,
+    StudentCertificateListView,
+    StudentCertificateDetailView,
+    PublicCertificateVerificationView,
+    StudentAchievementTimelineView,
 )
 
 urlpatterns = [
@@ -150,6 +158,48 @@ urlpatterns = [
         "courses/<uuid:course_id>/cohorts/",
         CohortListView.as_view(),
         name="learning-course-cohorts",
+    ),
+    # Phase 3 VS7 Advanced Assessment, Automated Evaluation & Code Playground
+    path(
+        "lessons/<uuid:lesson_id>/assessments/",
+        CodeAssessmentListView.as_view(),
+        name="learning-lesson-assessments",
+    ),
+    path(
+        "playground/run/",
+        CodePlaygroundRunView.as_view(),
+        name="learning-playground-run",
+    ),
+    path(
+        "assessments/<uuid:assessment_id>/submit/",
+        CodeAssessmentSubmitView.as_view(),
+        name="learning-assessment-submit",
+    ),
+    path(
+        "student/assessments/results/",
+        AssessmentResultListView.as_view(),
+        name="learning-student-assessment-results",
+    ),
+    # Phase 3 VS8 Course Completion Certification & Learning Verification
+    path(
+        "student/certificates/",
+        StudentCertificateListView.as_view(),
+        name="learning-student-certificates",
+    ),
+    path(
+        "student/certificates/<uuid:certificate_id>/",
+        StudentCertificateDetailView.as_view(),
+        name="learning-student-certificate-detail",
+    ),
+    path(
+        "certificates/verify/",
+        PublicCertificateVerificationView.as_view(),
+        name="learning-certificate-verify",
+    ),
+    path(
+        "student/achievements/",
+        StudentAchievementTimelineView.as_view(),
+        name="learning-student-achievements",
     ),
 ]
 

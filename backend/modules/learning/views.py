@@ -1001,3 +1001,292 @@ class CohortListView(APIView):
             status=200,
         )
 
+
+class CodeAssessmentListView(APIView):
+    """
+    GET /api/v1/learning/lessons/<lesson_id>/assessments/
+    Returns active code assessment details for a lesson.
+    """
+
+    def get(self, request: Request, lesson_id: UUID) -> Response:
+        tenant = getattr(request, "tenant", None)
+        membership = getattr(request, "membership", None)
+        if not tenant or not membership or not getattr(membership, "is_active", False):
+            return Response({"code": "forbidden"}, status=403)
+
+        from .models import CodeAssessment
+        from .serializers import CodeAssessmentSerializer
+
+        assessments = CodeAssessment.objects.filter(
+            tenant=tenant,
+            lesson_id=lesson_id,
+            is_active=True,
+        )
+        return Response(
+            {"assessments": CodeAssessmentSerializer(assessments, many=True, context={"request": request}).data},
+            status=200,
+        )
+
+
+class CodePlaygroundRunView(APIView):
+    """
+    POST /api/v1/learning/playground/run/
+    Executes code in ephemeral isolated playground sandbox without grade persistence.
+    """
+
+    def post(self, request: Request) -> Response:
+        tenant = getattr(request, "tenant", None)
+        membership = getattr(request, "membership", None)
+        if not tenant or not membership or not getattr(membership, "is_active", False):
+            return Response({"code": "forbidden"}, status=403)
+
+        from .assessments import AssessmentEngine
+        from .serializers import CodePlaygroundRunRequestSerializer
+
+        serializer = CodePlaygroundRunRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        code = serializer.validated_data["code"]
+        language = serializer.validated_data.get("language", "python")
+
+        res = AssessmentEngine.run_playground_dryrun(
+            tenant_id=tenant.id,
+            user_id=membership.user_id,
+            code=code,
+            language=language,
+        )
+        return Response(res, status=200)
+
+
+class CodeAssessmentSubmitView(APIView):
+    """
+    POST /api/v1/learning/assessments/<assessment_id>/submit/
+    Submits code for authoritative evaluation against assessment testcases.
+    """
+
+    def post(self, request: Request, assessment_id: UUID) -> Response:
+        tenant = getattr(request, "tenant", None)
+        membership = getattr(request, "membership", None)
+        if not tenant or not membership or not getattr(membership, "is_active", False):
+            return Response({"code": "forbidden"}, status=403)
+
+        from .assessments import AssessmentEngine, ConcurrencyLockError
+        from .serializers import (
+            AssessmentResultSerializer,
+            CodeExecutionRunSerializer,
+            CodeSubmitAssessmentRequestSerializer,
+        )
+
+        serializer = CodeSubmitAssessmentRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        code = serializer.validated_data["code"]
+        idempotency_key = serializer.validated_data.get("idempotency_key")
+
+        try:
+            run, result = AssessmentEngine.submit_and_evaluate_assessment(
+                tenant_id=tenant.id,
+                student_id=membership.user_id,
+                assessment_id=assessment_id,
+                code=code,
+                idempotency_key=idempotency_key,
+            )
+            return Response(
+                {
+                    "run": CodeExecutionRunSerializer(run).data,
+                    "result": AssessmentResultSerializer(result).data,
+                },
+                status=200,
+            )
+        except ConcurrencyLockError as e:
+            return Response({"code": "concurrency_lock", "detail": str(e)}, status=409)
+        except ValidationError as e:
+            return Response({"code": "validation_error", "detail": str(e)}, status=400)
+
+
+class AssessmentResultListView(APIView):
+    """
+    GET /api/v1/learning/student/assessments/results/
+    Returns student's final assessment results.
+    """
+
+    def get(self, request: Request) -> Response:
+        tenant = getattr(request, "tenant", None)
+        membership = getattr(request, "membership", None)
+        if not tenant or not membership or not getattr(membership, "is_active", False):
+            return Response({"code": "forbidden"}, status=403)
+
+        from .models import AssessmentResult
+        from .serializers import AssessmentResultSerializer
+
+        results = AssessmentResult.objects.filter(
+            tenant=tenant,
+            student_id=membership.user_id,
+        ).order_by("-created_at")
+
+        return Response(
+            {"results": AssessmentResultSerializer(results, many=True).data},
+            status=200,
+        )
+
+
+
+from .models import (
+    CertificateTemplate,
+    CourseCertificate,
+    CertificateVerificationRecord,
+)
+from .serializers import (
+    CertificateTemplateSerializer,
+    CourseCertificateSerializer,
+    CertificateVerificationRecordSerializer,
+    LearningAchievementTimelineItemSerializer,
+)
+from .certificates import (
+    CertificateIssuanceService,
+    CertificateVerificationService,
+)
+
+
+class StudentCertificateListView(APIView):
+    """
+    GET /api/v1/learning/student/certificates/
+    """
+    def get(self, request: Request) -> Response:
+        tenant = getattr(request, "tenant", None)
+        membership = getattr(request, "membership", None)
+        if not tenant or not membership or not getattr(membership, "is_active", False):
+            return Response({"code": "forbidden"}, status=403)
+
+        certs = CourseCertificate.objects.filter(
+            tenant=tenant,
+            student_id=membership.user_id,
+        ).order_by("-issued_at")
+
+        return Response(
+            {"certificates": CourseCertificateSerializer(certs, many=True).data},
+            status=200,
+        )
+
+
+class StudentCertificateDetailView(APIView):
+    """
+    GET /api/v1/learning/student/certificates/{id}/
+    """
+    def get(self, request: Request, certificate_id: str) -> Response:
+        tenant = getattr(request, "tenant", None)
+        membership = getattr(request, "membership", None)
+        if not tenant or not membership or not getattr(membership, "is_active", False):
+            return Response({"code": "forbidden"}, status=403)
+
+        cert = CourseCertificate.objects.filter(
+            tenant=tenant,
+            id=certificate_id,
+            student_id=membership.user_id,
+        ).first()
+        if not cert:
+            return Response({"code": "not_found"}, status=404)
+
+        return Response(
+            {"certificate": CourseCertificateSerializer(cert).data},
+            status=200,
+        )
+
+
+class PublicCertificateVerificationView(APIView):
+    """
+    GET /api/v1/learning/certificates/verify/?number=CERT-XXX
+    Zero PII, timing-safe verification.
+    """
+    def get(self, request: Request) -> Response:
+        tenant = getattr(request, "tenant", None)
+        if not tenant:
+            return Response({"code": "tenant_required"}, status=400)
+
+        certificate_number = request.query_params.get("number")
+        if not certificate_number:
+            return Response({"code": "number_required", "detail": "Certificate number is required."}, status=400)
+
+        role = "anonymous"
+        membership = getattr(request, "membership", None)
+        if membership and getattr(membership, "role", None):
+            role = str(membership.role)
+
+        result = CertificateVerificationService.verify_by_number(
+            tenant=tenant,
+            certificate_number=certificate_number,
+            queried_by_role=role,
+        )
+        return Response(result, status=200 if result["is_valid"] else 404)
+
+
+class StudentAchievementTimelineView(APIView):
+    """
+    GET /api/v1/learning/student/achievements/
+    Chronological milestone events for student.
+    """
+    def get(self, request: Request) -> Response:
+        tenant = getattr(request, "tenant", None)
+        membership = getattr(request, "membership", None)
+        if not tenant or not membership or not getattr(membership, "is_active", False):
+            return Response({"code": "forbidden"}, status=403)
+
+        student_id = membership.user_id
+        timeline_items = []
+
+        # 1. Issued Certificates
+        certs = CourseCertificate.objects.filter(
+            tenant=tenant,
+            student_id=student_id,
+        ).order_by("-issued_at")
+        for c in certs:
+            timeline_items.append({
+                "id": f"cert-{c.id}",
+                "event_type": "CERTIFICATE_ISSUED",
+                "title": f"گواهی پایان دوره: {c.course.title}",
+                "description": f"شماره گواهی: {c.certificate_number} با نمره نهایی {c.final_score}",
+                "occurred_at": c.issued_at,
+                "metadata": {"certificate_number": c.certificate_number, "score": str(c.final_score)},
+            })
+
+        # 2. Badges
+        from .models import StudentBadgeAward
+        badges = StudentBadgeAward.objects.filter(
+            tenant=tenant,
+            student_id=student_id,
+        ).select_related("badge_definition").order_by("-awarded_at")
+        for b in badges:
+            timeline_items.append({
+                "id": f"badge-{b.id}",
+                "event_type": "BADGE_AWARDED",
+                "title": f"کسب نشان: {b.badge_definition.title}",
+                "description": b.badge_definition.description or "",
+                "occurred_at": b.awarded_at,
+                "metadata": {"badge_slug": b.badge_definition.slug},
+            })
+
+        # 3. Passed Submissions
+        subs = Submission.objects.filter(
+            tenant=tenant,
+            student_id=student_id,
+            state="reviewed",
+        ).select_related("assignment").order_by("-reviewed_at")
+        for s in subs:
+            timeline_items.append({
+                "id": f"sub-{s.id}",
+                "event_type": "ASSIGNMENT_REVIEWED",
+                "title": f"تأیید تمرین: {s.assignment.title}",
+                "description": f"نمره کسب‌شده: {s.score or '100.00'}",
+                "occurred_at": s.reviewed_at or s.submitted_at,
+                "metadata": {"assignment_id": str(s.assignment_id)},
+            })
+
+        # Sort combined timeline DESC
+        timeline_items.sort(key=lambda x: x["occurred_at"], reverse=True)
+
+        return Response(
+            {"timeline": LearningAchievementTimelineItemSerializer(timeline_items[:50], many=True).data},
+            status=200,
+        )
