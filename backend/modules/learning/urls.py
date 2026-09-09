@@ -251,6 +251,74 @@ urlpatterns = [
         views.DiscussionModerationActionView.as_view(),
         name="learning-discussion-moderation-action",
     ),
+    # Phase 3 VS11 Learning Personalization & Adaptive Progression
+    path(
+        "personalization/profile/",
+        views.StudentProfileView.as_view(),
+        name="learning-personalization-profile",
+    ),
+    path(
+        "personalization/recommendations/",
+        views.RecommendationListView.as_view(),
+        name="learning-personalization-recommendations",
+    ),
+    path(
+        "personalization/recommendations/<uuid:recommendation_id>/action/",
+        views.RecommendationActionView.as_view(),
+        name="learning-personalization-recommendation-action",
+    ),
+    path(
+        "personalization/skills/",
+        views.SkillGraphView.as_view(),
+        name="learning-personalization-skills",
+    ),
+    # Phase 3 VS12 Learning Portfolio & Journey Narrative
+    path(
+        "portfolio/",
+        views.StudentPortfolioView.as_view(),
+        name="learning-portfolio-root",
+    ),
+    path(
+        "portfolio/guardian/<uuid:student_id>/",
+        views.ParentPortfolioView.as_view(),
+        name="learning-portfolio-guardian",
+    ),
+    path(
+        "portfolio/<uuid:portfolio_id>/artifacts/",
+        views.AchievementArtifactView.as_view(),
+        name="learning-portfolio-artifacts",
+    ),
+    path(
+        "portfolio/journey/<uuid:student_id>/",
+        views.JourneyTimelineView.as_view(),
+        name="learning-portfolio-journey",
+    ),
+    # Phase 3 VS13 Student Growth Insights & Longitudinal Learning Intelligence
+    path(
+        "insights/<uuid:student_id>/",
+        views.StudentGrowthInsightFeedView.as_view(),
+        name="learning-growth-insights-feed",
+    ),
+    path(
+        "insights/trends/<uuid:student_id>/",
+        views.StudentGrowthTrendsView.as_view(),
+        name="learning-growth-trends",
+    ),
+    path(
+        "insights/milestones/<uuid:student_id>/",
+        views.StudentMilestoneTimelineView.as_view(),
+        name="learning-growth-milestones",
+    ),
+    path(
+        "insights/recalculate/",
+        views.InsightRecalculationView.as_view(),
+        name="learning-insights-recalculate",
+    ),
+    path(
+        "insights/milestones/<uuid:milestone_id>/retract/",
+        views.MilestoneRetractionView.as_view(),
+        name="learning-milestone-retract",
+    ),
 ]
 
 

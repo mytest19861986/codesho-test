@@ -1730,3 +1730,472 @@ class DiscussionModerationActionView(APIView):
         except (ValidationError, ValueError) as e:
             return Response({"detail": str(e)}, status=400)
 
+
+# =============================================================================
+# Phase 3 VS11: Adaptive Progression and Personalization Views
+# =============================================================================
+
+class StudentProfileView(APIView):
+    """
+    GET /api/v1/learning/personalization/profile/
+    POST /api/v1/learning/personalization/profile/rebuild/
+    Retrieves or triggers deterministic rebuild of the student's learning profile.
+    """
+
+    def get(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        user = getattr(request, "user", None)
+        user_id = getattr(request, "user_id", None) or (user.id if user and user.is_authenticated else None)
+        if not user_id:
+            return Response({"detail": "Authentication required."}, status=401)
+
+        from modules.learning.models import StudentLearningProfile
+        from modules.learning.serializers import StudentLearningProfileSerializer
+        from modules.learning.personalization_service import PersonalizationService
+
+        profile = StudentLearningProfile.objects.filter(tenant_id=tenant_id, student_id=user_id).first()
+        if not profile:
+            profile = PersonalizationService.rebuild_student_profile(tenant_id=tenant_id, student_id=user_id)
+
+        serializer = StudentLearningProfileSerializer(profile)
+        return Response(serializer.data, status=200)
+
+    def post(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        user = getattr(request, "user", None)
+        user_id = getattr(request, "user_id", None) or (user.id if user and user.is_authenticated else None)
+        if not user_id:
+            return Response({"detail": "Authentication required."}, status=401)
+
+        from modules.learning.personalization_service import PersonalizationService
+        from modules.learning.serializers import StudentLearningProfileSerializer
+
+        profile = PersonalizationService.rebuild_student_profile(tenant_id=tenant_id, student_id=user_id)
+        serializer = StudentLearningProfileSerializer(profile)
+        return Response(serializer.data, status=200)
+
+
+class RecommendationListView(APIView):
+    """
+    GET /api/v1/learning/personalization/recommendations/
+    Returns active recommendations for the authenticated student.
+    """
+
+    def get(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        user = getattr(request, "user", None)
+        user_id = getattr(request, "user_id", None) or (user.id if user and user.is_authenticated else None)
+        if not user_id:
+            return Response({"detail": "Authentication required."}, status=401)
+
+        from modules.learning.models import LearningRecommendation, RecommendationStatus
+        from modules.learning.serializers import LearningRecommendationSerializer
+
+        recs = LearningRecommendation.objects.filter(
+            tenant_id=tenant_id,
+            student_id=user_id,
+            status__in=[RecommendationStatus.GENERATED, RecommendationStatus.VIEWED, RecommendationStatus.ACCEPTED],
+        ).select_related("target_skill", "target_lesson", "target_course").order_by("priority", "-created_at")
+
+        serializer = LearningRecommendationSerializer(recs, many=True)
+        return Response(serializer.data, status=200)
+
+
+class RecommendationActionView(APIView):
+    """
+    POST /api/v1/learning/personalization/recommendations/<uuid:recommendation_id>/action/
+    Action: VIEWED, ACCEPTED, DISMISSED
+    """
+
+    def post(self, request: Request, recommendation_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        user = getattr(request, "user", None)
+        user_id = getattr(request, "user_id", None) or (user.id if user and user.is_authenticated else None)
+        if not user_id:
+            return Response({"detail": "Authentication required."}, status=401)
+
+        action = request.data.get("action")
+        reason = request.data.get("reason", "")
+
+        from modules.learning.models import LearningRecommendation, TransitionActorType
+        from modules.learning.personalization_service import PersonalizationService
+        from modules.learning.serializers import LearningRecommendationSerializer
+
+        rec = LearningRecommendation.objects.filter(tenant_id=tenant_id, id=recommendation_id).first()
+        if not rec:
+            return Response({"detail": "Recommendation not found."}, status=404)
+        if str(rec.student_id) != str(user_id):
+            return Response({"detail": "Cannot modify recommendations belonging to another student."}, status=403)
+
+        try:
+            updated_rec = PersonalizationService.transition_recommendation(
+                tenant_id=tenant_id,
+                recommendation_id=recommendation_id,
+                target_status=action,
+                actor_id=user_id,
+                actor_type=TransitionActorType.STUDENT,
+                reason=reason,
+            )
+            serializer = LearningRecommendationSerializer(updated_rec)
+            return Response(serializer.data, status=200)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+
+
+class SkillGraphView(APIView):
+    """
+    GET /api/v1/learning/personalization/skills/
+    Returns the active skill definitions and dependency edges for the tenant.
+    """
+
+    def get(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        from modules.learning.models import SkillDefinition, SkillDependency
+        from modules.learning.serializers import SkillDefinitionSerializer
+
+        skills = SkillDefinition.objects.filter(tenant_id=tenant_id, is_active=True).order_by("category", "difficulty_level")
+        deps = SkillDependency.objects.filter(tenant_id=tenant_id)
+
+        skill_data = SkillDefinitionSerializer(skills, many=True).data
+        edges = [
+            {
+                "id": str(d.id),
+                "source": str(d.source_skill_id),
+                "target": str(d.target_skill_id),
+                "is_strict": d.is_strict,
+            }
+            for d in deps
+        ]
+
+        return Response({"skills": skill_data, "dependencies": edges}, status=200)
+
+
+class StudentPortfolioView(APIView):
+    """
+    GET /api/v1/learning/portfolio/
+    POST /api/v1/learning/portfolio/
+    PATCH /api/v1/learning/portfolio/visibility/
+    Student Learning Portfolio management.
+    """
+    def get(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        student_id = getattr(request.user, "id", None)
+        if not student_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.models import LearningPortfolio
+        from modules.learning.serializers import LearningPortfolioSerializer
+
+        portfolio = LearningPortfolio.objects.filter(tenant_id=tenant_id, student_id=student_id).first()
+        if not portfolio:
+            return Response({"detail": "Portfolio not found"}, status=404)
+        return Response(LearningPortfolioSerializer(portfolio).data, status=200)
+
+    def post(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        student_id = getattr(request.user, "id", None)
+        if not student_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.portfolio_service import PortfolioService
+        from modules.learning.serializers import LearningPortfolioSerializer
+
+        headline = request.data.get("headline", "")
+        summary_narrative = request.data.get("summary_narrative", "")
+        try:
+            portfolio = PortfolioService.create_or_get_portfolio(
+                tenant_id=tenant_id,
+                student_id=student_id,
+                headline=headline,
+                summary_narrative=summary_narrative,
+            )
+            return Response(LearningPortfolioSerializer(portfolio).data, status=201)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+
+
+class ParentPortfolioView(APIView):
+    """
+    GET /api/v1/learning/portfolio/guardian/<student_id>/
+    Guardian access to student portfolio, strictly guarded by active GuardianAccessGrant.
+    """
+    def get(self, request: Request, student_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        guardian_user_id = getattr(request.user, "id", None)
+        if not guardian_user_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.platform_tenant.models import GuardianAccessGrant
+        from modules.learning.models import LearningPortfolio, PortfolioVisibility
+        from modules.learning.serializers import LearningPortfolioSerializer
+
+        # Check active grant
+        grant = GuardianAccessGrant.objects.filter(
+            tenant_id=tenant_id,
+            guardian_user_id=guardian_user_id,
+            student_id=student_id,
+            status=GuardianAccessGrant.Status.ACTIVE,
+        ).first()
+
+        if not grant:
+            return Response({"detail": "Active guardian grant required to view portfolio"}, status=403)
+
+        portfolio = LearningPortfolio.objects.filter(
+            tenant_id=tenant_id,
+            student_id=student_id,
+            visibility__in=[PortfolioVisibility.GUARDIAN_SHARED, PortfolioVisibility.TENANT_PUBLIC],
+        ).first()
+
+        if not portfolio:
+            return Response({"detail": "Portfolio is private or does not exist"}, status=404)
+
+        return Response(LearningPortfolioSerializer(portfolio).data, status=200)
+
+
+class AchievementArtifactView(APIView):
+    """
+    POST /api/v1/learning/portfolio/<portfolio_id>/artifacts/
+    Attaches a verified achievement artifact.
+    """
+    def post(self, request: Request, portfolio_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        from modules.learning.portfolio_service import PortfolioService
+        from modules.learning.serializers import AchievementArtifactSerializer
+
+        artifact_type = request.data.get("artifact_type")
+        title = request.data.get("title", "")
+        reflection_notes = request.data.get("reflection_notes", "")
+        source_submission_id = request.data.get("source_submission_id")
+        source_certificate_id = request.data.get("source_certificate_id")
+        is_featured = bool(request.data.get("is_featured", False))
+
+        try:
+            artifact = PortfolioService.attach_achievement_artifact(
+                tenant_id=tenant_id,
+                portfolio_id=portfolio_id,
+                artifact_type=artifact_type,
+                title=title,
+                reflection_notes=reflection_notes,
+                source_submission_id=UUID(source_submission_id) if source_submission_id else None,
+                source_certificate_id=UUID(source_certificate_id) if source_certificate_id else None,
+                is_featured=is_featured,
+            )
+            return Response(AchievementArtifactSerializer(artifact).data, status=201)
+        except (ValidationError, ValueError) as e:
+            return Response({"detail": str(e)}, status=400)
+
+
+class JourneyTimelineView(APIView):
+    """
+    GET /api/v1/learning/portfolio/journey/<student_id>/
+    Returns the chronological journey narrative timeline for a student.
+    """
+    def get(self, request: Request, student_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        from modules.learning.models import StudentJourneyTimeline
+        from modules.learning.serializers import StudentJourneyTimelineSerializer
+
+        milestones = StudentJourneyTimeline.objects.filter(
+            tenant_id=tenant_id,
+            student_id=student_id,
+        ).order_by("-milestone_date")
+
+        return Response(StudentJourneyTimelineSerializer(milestones, many=True).data, status=200)
+
+
+# =============================================================================
+# Phase 3 VS13: Growth Insights & Longitudinal Learning Intelligence Views
+# =============================================================================
+
+class StudentGrowthInsightFeedView(APIView):
+    """
+    GET /api/v1/learning/insights/<student_id>/
+    Returns active formative insights for a student.
+    Strictly forbids peer comparison or ranking metrics.
+    """
+    def get(self, request: Request, student_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        # Reject any peer-comparison or ranking query parameters (Anti-Ranking Guard)
+        forbidden_params = {"peer", "rank", "percentile", "compare", "leaderboard", "class_average"}
+        if any(p in request.query_params for p in forbidden_params):
+            return Response(
+                {"detail": "Peer comparison and ranking queries are strictly prohibited by child protection policy."},
+                status=400,
+            )
+
+        from modules.learning.growth_insight_service import GrowthInsightService
+        if not GrowthInsightService.verify_insight_access(tenant_id, actor_id, student_id):
+            return Response({"detail": "Access denied to student growth insights."}, status=403)
+
+        from modules.learning.models import LearningInsight, InsightLifecycleStatus
+        from modules.learning.serializers import LearningInsightSerializer
+
+        insights = LearningInsight.objects.filter(
+            tenant_id=tenant_id,
+            student_id=student_id,
+            lifecycle_status=InsightLifecycleStatus.ACTIVE,
+        ).order_by("-created_at")
+
+        return Response(LearningInsightSerializer(insights, many=True).data, status=200)
+
+
+class StudentGrowthTrendsView(APIView):
+    """
+    GET /api/v1/learning/insights/trends/<student_id>/
+    Returns longitudinal competency vectors and snapshot progress.
+    """
+    def get(self, request: Request, student_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        forbidden_params = {"peer", "rank", "percentile", "compare", "leaderboard", "class_average"}
+        if any(p in request.query_params for p in forbidden_params):
+            return Response(
+                {"detail": "Peer comparison and ranking queries are strictly prohibited."},
+                status=400,
+            )
+
+        from modules.learning.growth_insight_service import GrowthInsightService
+        if not GrowthInsightService.verify_insight_access(tenant_id, actor_id, student_id):
+            return Response({"detail": "Access denied to student growth trends."}, status=403)
+
+        from modules.learning.models import StudentGrowthTrend, GrowthMetricSnapshot
+        from modules.learning.serializers import StudentGrowthTrendSerializer, GrowthMetricSnapshotSerializer
+
+        trends = StudentGrowthTrend.objects.filter(tenant_id=tenant_id, student_id=student_id)
+        snapshots = GrowthMetricSnapshot.objects.filter(
+            tenant_id=tenant_id,
+            student_id=student_id,
+        ).order_by("-snapshot_date")[:30]
+
+        return Response(
+            {
+                "trends": StudentGrowthTrendSerializer(trends, many=True).data,
+                "snapshots": GrowthMetricSnapshotSerializer(snapshots, many=True).data,
+            },
+            status=200,
+        )
+
+
+class StudentMilestoneTimelineView(APIView):
+    """
+    GET /api/v1/learning/insights/milestones/<student_id>/
+    Returns formative milestone achievements and auditable history.
+    """
+    def get(self, request: Request, student_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.growth_insight_service import GrowthInsightService
+        if not GrowthInsightService.verify_insight_access(tenant_id, actor_id, student_id):
+            return Response({"detail": "Access denied to student milestones."}, status=403)
+
+        from modules.learning.models import LearningMilestone
+        from modules.learning.serializers import LearningMilestoneSerializer
+
+        include_retracted = request.query_params.get("include_retracted", "false").lower() == "true"
+        qs = LearningMilestone.objects.filter(tenant_id=tenant_id, student_id=student_id)
+        if not include_retracted:
+            qs = qs.filter(status="ACHIEVED")
+
+        milestones = qs.order_by("-achieved_at")
+        return Response(LearningMilestoneSerializer(milestones, many=True).data, status=200)
+
+
+class InsightRecalculationView(APIView):
+    """
+    POST /api/v1/learning/insights/recalculate/
+    Triggers an idempotent deterministic derivation run under PostgreSQL advisory lock.
+    Restricted to Assigned Mentors, Staff, and Admins.
+    """
+    def post(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        student_id = request.data.get("student_id")
+        event_key = request.data.get("event_key")
+        if not student_id or not event_key:
+            return Response({"detail": "student_id and event_key are required."}, status=400)
+
+        try:
+            student_uuid = UUID(str(student_id))
+        except ValueError:
+            return Response({"detail": "Invalid student_id UUID format."}, status=400)
+
+        # Actor must not be student or guardian
+        role = _get_membership_role(request)
+        if role not in ["OWNER", "ADMIN", "STAFF", "MENTOR"]:
+            return Response({"detail": "Only staff or assigned mentors may trigger recalculation."}, status=403)
+
+        from modules.learning.growth_insight_service import GrowthInsightService
+        try:
+            calc_run = GrowthInsightService.trigger_recalculation(
+                tenant_id=tenant_id,
+                student_id=student_uuid,
+                triggered_by=actor_id,
+                event_key=str(event_key),
+            )
+            return Response(
+                {
+                    "calculation_run_id": calc_run.id,
+                    "status": calc_run.status,
+                    "metrics_computed_count": calc_run.metrics_computed_count,
+                    "completed_at": calc_run.completed_at,
+                },
+                status=200,
+            )
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+
+
+class MilestoneRetractionView(APIView):
+    """
+    PATCH /api/v1/learning/insights/milestones/<milestone_id>/retract/
+    Retracts or restores a milestone record.
+    """
+    def patch(self, request: Request, milestone_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        action = request.data.get("action", "RETRACT").upper()
+        reason = request.data.get("reason", "")
+
+        from modules.learning.growth_insight_service import GrowthInsightService
+        from modules.learning.serializers import LearningMilestoneSerializer
+
+        try:
+            if action == "RETRACT":
+                milestone = GrowthInsightService.retract_milestone(
+                    tenant_id=tenant_id,
+                    milestone_id=milestone_id,
+                    actor_user_id=actor_id,
+                    reason=reason,
+                )
+            elif action == "RESTORE":
+                milestone = GrowthInsightService.restore_milestone(
+                    tenant_id=tenant_id,
+                    milestone_id=milestone_id,
+                    actor_user_id=actor_id,
+                )
+            else:
+                return Response({"detail": "Invalid action. Must be RETRACT or RESTORE."}, status=400)
+
+            return Response(LearningMilestoneSerializer(milestone).data, status=200)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)

@@ -2046,3 +2046,1304 @@ class DiscussionModerationAction(models.Model):
     def __str__(self) -> str:
         return f"{self.tenant_id}:{self.action}:{self.performed_by}:{self.created_at}"
 
+
+# =============================================================================
+# Phase 3 VS11: Adaptive Progression and Personalization Engine Models
+# =============================================================================
+
+class SkillCategory(models.TextChoices):
+    ALGORITHMS = "ALGORITHMS", "Algorithms"
+    SYNTAX = "SYNTAX", "Syntax & Core"
+    DATA_STRUCTURES = "DATA_STRUCTURES", "Data Structures"
+    OOP = "OOP", "Object Oriented Programming"
+    PROBLEM_SOLVING = "PROBLEM_SOLVING", "Problem Solving"
+
+
+class MasteryLevel(models.TextChoices):
+    NOT_STARTED = "NOT_STARTED", "Not Started"
+    BEGINNER = "BEGINNER", "Beginner"
+    DEVELOPING = "DEVELOPING", "Developing"
+    PROFICIENT = "PROFICIENT", "Proficient"
+    MASTERED = "MASTERED", "Mastered"
+
+
+class RecommendationType(models.TextChoices):
+    REMEDIAL_PRACTICE = "REMEDIAL_PRACTICE", "Remedial Practice"
+    NEXT_CHALLENGE = "NEXT_CHALLENGE", "Next Milestone Challenge"
+    SKILL_EXPANSION = "SKILL_EXPANSION", "Skill Expansion"
+    REVISION = "REVISION", "Spaced Revision"
+
+
+class RecommendationStatus(models.TextChoices):
+    GENERATED = "GENERATED", "Generated"
+    VIEWED = "VIEWED", "Viewed"
+    ACCEPTED = "ACCEPTED", "Accepted"
+    COMPLETED = "COMPLETED", "Completed"
+    DISMISSED = "DISMISSED", "Dismissed"
+    SUPERSEDED = "SUPERSEDED", "Superseded"
+
+
+class TransitionActorType(models.TextChoices):
+    STUDENT = "STUDENT", "Student"
+    SYSTEM = "SYSTEM", "System Worker"
+    STAFF = "STAFF", "Staff/Mentor"
+
+
+class SkillDefinition(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="skill_definitions",
+    )
+    slug = models.SlugField(max_length=64)
+    title = models.CharField(max_length=160)
+    description = models.TextField(blank=True, default="")
+    category = models.CharField(max_length=64, choices=SkillCategory.choices)
+    difficulty_level = models.PositiveSmallIntegerField(default=1)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_skilldefinition_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "slug"],
+                name="learning_skilldefinition_tenant_slug_uniq",
+            ),
+            models.CheckConstraint(
+                condition=Q(difficulty_level__gte=1) & Q(difficulty_level__lte=5),
+                name="learning_skill_difficulty_range",
+            ),
+            models.CheckConstraint(
+                condition=~Q(slug=""),
+                name="learning_skill_slug_nonempty",
+            ),
+            models.CheckConstraint(
+                condition=Q(category__in=SkillCategory.values),
+                name="learning_skill_category_valid",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "category", "is_active"], name="skill_t_cat_act_ix"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if len(self.slug) < 3:
+            raise ValidationError("Skill slug must be at least 3 characters.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.slug}"
+
+
+class SkillDependency(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="skill_dependencies",
+    )
+    source_skill = models.ForeignKey(
+        SkillDefinition,
+        on_delete=models.CASCADE,
+        related_name="prerequisites",
+    )
+    target_skill = models.ForeignKey(
+        SkillDefinition,
+        on_delete=models.CASCADE,
+        related_name="dependents",
+    )
+    is_strict = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_skilldependency_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "source_skill", "target_skill"],
+                name="learning_skilldependency_edge_uniq",
+            ),
+            models.CheckConstraint(
+                condition=~Q(source_skill=models.F("target_skill")),
+                name="learning_skill_no_self_dependency",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.source_skill_id == self.target_skill_id:
+            raise ValidationError("Skill cannot depend on itself.")
+        if self.source_skill and str(self.source_skill.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between dependency and source skill.")
+        if self.target_skill and str(self.target_skill.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between dependency and target skill.")
+        if self.source_skill and not self.source_skill.is_active:
+            raise ValidationError("Cannot establish dependency with inactive source skill.")
+        if self.target_skill and not self.target_skill.is_active:
+            raise ValidationError("Cannot establish dependency with inactive target skill.")
+
+        # In-memory application cycle check
+        visited = set()
+        queue = [self.target_skill_id]
+        while queue:
+            curr = queue.pop(0)
+            if curr == self.source_skill_id:
+                raise ValidationError("Cycle detected in skill dependency graph.")
+            if curr not in visited:
+                visited.add(curr)
+                dependents = SkillDependency.objects.filter(
+                    tenant_id=self.tenant_id,
+                    source_skill_id=curr,
+                ).values_list("target_skill_id", flat=True)
+                queue.extend(dependents)
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.source_skill_id}->{self.target_skill_id}"
+
+
+class LessonSkillMapping(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="lesson_skill_mappings",
+    )
+    lesson = models.ForeignKey(
+        Lesson,
+        on_delete=models.CASCADE,
+        related_name="skill_mappings",
+    )
+    skill = models.ForeignKey(
+        SkillDefinition,
+        on_delete=models.CASCADE,
+        related_name="lesson_mappings",
+    )
+    mastery_weight = models.DecimalField(max_digits=4, decimal_places=2, default=1.00)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_lessonskill_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "lesson", "skill"],
+                name="learning_lessonskill_lesson_skill_uniq",
+            ),
+            models.CheckConstraint(
+                condition=Q(mastery_weight__gt=0.00) & Q(mastery_weight__lte=1.00),
+                name="learning_lessonskill_weight_range",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.lesson and str(self.lesson.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between LessonSkillMapping and Lesson.")
+        if self.skill and str(self.skill.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between LessonSkillMapping and SkillDefinition.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.lesson_id}:{self.skill_id}"
+
+
+class ProcessedLearningEvent(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="processed_learning_events",
+    )
+    event_id = models.UUIDField(db_index=True)
+    event_type = models.CharField(max_length=64)
+    student_id = models.UUIDField(db_index=True)
+    processed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_proc_event_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "event_id", "event_type"],
+                name="learning_proc_event_id_type_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id", "processed_at"], name="proc_event_t_st_pr_ix"),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError("ProcessedLearningEvent is append-only.")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("ProcessedLearningEvent records are immutable.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.event_type}:{self.event_id}"
+
+
+class StudentSkillProgress(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="student_skill_progresses",
+    )
+    student_id = models.UUIDField(db_index=True)
+    skill = models.ForeignKey(
+        SkillDefinition,
+        on_delete=models.CASCADE,
+        related_name="student_progresses",
+    )
+    mastery_level = models.CharField(
+        max_length=16,
+        choices=MasteryLevel.choices,
+        default=MasteryLevel.NOT_STARTED,
+    )
+    mastery_score = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    practice_count = models.PositiveIntegerField(default=0)
+    last_evaluated_at = models.DateTimeField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_studentskill_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "student_id", "skill"],
+                name="learning_studentskill_student_skill_uniq",
+            ),
+            models.CheckConstraint(
+                condition=Q(mastery_score__gte=0.00) & Q(mastery_score__lte=100.00),
+                name="learning_studentskill_score_range",
+            ),
+            models.CheckConstraint(
+                condition=Q(mastery_level__in=MasteryLevel.values),
+                name="learning_studentskill_level_valid",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id", "mastery_level"], name="studentskill_t_st_lvl_ix"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.skill and str(self.skill.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between StudentSkillProgress and SkillDefinition.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.student_id}:{self.skill_id}:{self.mastery_level}"
+
+
+class StudentLearningProfile(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="student_learning_profiles",
+    )
+    student_id = models.UUIDField(db_index=True)
+    total_skills_tracked = models.PositiveIntegerField(default=0)
+    mastered_skills_count = models.PositiveIntegerField(default=0)
+    developing_skills_count = models.PositiveIntegerField(default=0)
+    overall_competency_index = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    identified_learning_gaps = models.JSONField(default=list)
+    last_rebuilt_at = models.DateTimeField()
+    rebuild_version = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_learningprofile_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "student_id"],
+                name="learning_learningprofile_student_uniq",
+            ),
+            models.CheckConstraint(
+                condition=Q(overall_competency_index__gte=0.00) & Q(overall_competency_index__lte=100.00),
+                name="learning_profile_competency_range",
+            ),
+            models.CheckConstraint(
+                condition=Q(total_skills_tracked__gte=models.F("mastered_skills_count"))
+                & Q(total_skills_tracked__gte=models.F("developing_skills_count")),
+                name="learning_profile_counts_consistent",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.student_id}:v{self.rebuild_version}"
+
+
+class LearningRecommendation(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="learning_recommendations",
+    )
+    student_id = models.UUIDField(db_index=True)
+    target_course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="recommendations",
+    )
+    target_lesson = models.ForeignKey(
+        Lesson,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="recommendations",
+    )
+    target_skill = models.ForeignKey(
+        SkillDefinition,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="recommendations",
+    )
+    recommendation_type = models.CharField(max_length=32, choices=RecommendationType.choices)
+    status = models.CharField(
+        max_length=16,
+        choices=RecommendationStatus.choices,
+        default=RecommendationStatus.GENERATED,
+    )
+    priority = models.PositiveSmallIntegerField(default=1)
+    recommendation_reason = models.CharField(max_length=500)
+    evidence_context = models.JSONField(default=dict)
+    idempotency_key = models.CharField(max_length=255, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_recommendation_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "idempotency_key"],
+                name="learning_recommendation_idempotency_uniq",
+            ),
+            models.CheckConstraint(
+                condition=Q(priority__gte=1) & Q(priority__lte=5),
+                name="learning_rec_priority_range",
+            ),
+            models.CheckConstraint(
+                condition=Q(recommendation_type__in=RecommendationType.values),
+                name="learning_rec_type_valid",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=RecommendationStatus.values),
+                name="learning_rec_status_valid",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(target_course__isnull=False) & Q(target_lesson__isnull=True) & Q(target_skill__isnull=True))
+                    | (Q(target_course__isnull=True) & Q(target_lesson__isnull=False) & Q(target_skill__isnull=True))
+                    | (Q(target_course__isnull=True) & Q(target_lesson__isnull=True) & Q(target_skill__isnull=False))
+                ),
+                name="learning_rec_target_single_choice",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id", "status"], name="rec_t_st_stat_ix"),
+        ]
+
+    def clean(self):
+        super().clean()
+        targets = [self.target_course_id, self.target_lesson_id, self.target_skill_id]
+        if sum(1 for t in targets if t is not None) != 1:
+            raise ValidationError("Recommendation must target exactly one of course, lesson, or skill.")
+        if len(self.recommendation_reason.strip()) < 10:
+            raise ValidationError("Recommendation reason must be at least 10 characters.")
+        if not self.evidence_context or self.evidence_context == {}:
+            raise ValidationError("Evidence context cannot be empty (Explainability First).")
+        if self.target_course and str(self.target_course.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between LearningRecommendation and TargetCourse.")
+        if self.target_lesson and str(self.target_lesson.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between LearningRecommendation and TargetLesson.")
+        if self.target_skill and str(self.target_skill.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between LearningRecommendation and TargetSkill.")
+        if self.target_skill and not self.target_skill.is_active:
+            raise ValidationError("Cannot generate recommendation for inactive target skill.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.student_id}:{self.recommendation_type}:{self.status}"
+
+
+class RecommendationTransitionLog(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="recommendation_transition_logs",
+    )
+    recommendation = models.ForeignKey(
+        LearningRecommendation,
+        on_delete=models.CASCADE,
+        related_name="transition_logs",
+    )
+    from_status = models.CharField(max_length=16)
+    to_status = models.CharField(max_length=16)
+    actor_id = models.UUIDField(db_index=True)
+    actor_type = models.CharField(max_length=16, choices=TransitionActorType.choices)
+    transition_reason = models.CharField(max_length=255, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_rec_trans_log_tenant_id_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "recommendation", "created_at"], name="rec_log_t_rec_cr_ix"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.recommendation and str(self.recommendation.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between RecommendationTransitionLog and Recommendation.")
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError("RecommendationTransitionLog is append-only.")
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("RecommendationTransitionLog records are immutable audit logs and cannot be deleted.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.recommendation_id}:{self.from_status}->{self.to_status}"
+
+
+class PortfolioVisibility(models.TextChoices):
+    PRIVATE = "PRIVATE", "Private"
+    GUARDIAN_SHARED = "GUARDIAN_SHARED", "Guardian Shared"
+    TENANT_PUBLIC = "TENANT_PUBLIC", "Tenant Public"
+
+
+class PortfolioModerationStatus(models.TextChoices):
+    PENDING = "PENDING", "Pending"
+    APPROVED = "APPROVED", "Approved"
+    FLAGGED = "FLAGGED", "Flagged"
+    REMOVED = "REMOVED", "Removed"
+
+
+class ArtifactType(models.TextChoices):
+    PROJECT_CODE = "PROJECT_CODE", "Project Code"
+    CAPSTONE_SUBMISSION = "CAPSTONE_SUBMISSION", "Capstone Submission"
+    CERTIFICATE = "CERTIFICATE", "Certificate"
+    BADGE_HIGHLIGHT = "BADGE_HIGHLIGHT", "Badge Highlight"
+
+
+class ModerationActionType(models.TextChoices):
+    APPROVE = "APPROVE", "Approve"
+    UNFLAG = "UNFLAG", "Unflag"
+    FLAG = "FLAG", "Flag"
+    REMOVE = "REMOVE", "Remove"
+    RESTORE = "RESTORE", "Restore"
+    CONSENT_GRANT = "CONSENT_GRANT", "Consent Grant"
+    CONSENT_REVOKE = "CONSENT_REVOKE", "Consent Revoke"
+
+
+class LearningPortfolio(models.Model):
+    """
+    P3-VS12: Student learning portfolio root entity.
+    Enforces storytelling over ranking, fail-closed child privacy, and showcase consent gates.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="learning_portfolios",
+    )
+    student_id = models.UUIDField(db_index=True)
+    headline = models.CharField(max_length=200)
+    summary_narrative = models.TextField(blank=True, default="")
+    featured_artifact_count = models.SmallIntegerField(default=0)
+    visibility = models.CharField(
+        max_length=20,
+        choices=PortfolioVisibility.choices,
+        default=PortfolioVisibility.PRIVATE,
+    )
+    moderation_status = models.CharField(
+        max_length=20,
+        choices=PortfolioModerationStatus.choices,
+        default=PortfolioModerationStatus.PENDING,
+    )
+    public_consent_active = models.BooleanField(default=False)
+    public_consent_by = models.UUIDField(null=True, blank=True)
+    public_consent_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["tenant", "id"], name="portfolio_tenant_id_uniq"),
+            models.UniqueConstraint(fields=["tenant", "student_id"], name="portfolio_tenant_student_uniq"),
+            models.CheckConstraint(
+                condition=Q(visibility__in=PortfolioVisibility.values),
+                name="portfolio_visibility_check",
+            ),
+            models.CheckConstraint(
+                condition=Q(moderation_status__in=PortfolioModerationStatus.values),
+                name="portfolio_moderation_check",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(featured_artifact_count__gte=0),
+                name="portfolio_featured_count_check",
+            ),
+            models.CheckConstraint(
+                condition=~Q(visibility="TENANT_PUBLIC") | (Q(moderation_status="APPROVED") & Q(public_consent_active=True)),
+                name="portfolio_public_guard",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "visibility", "moderation_status"], name="idx_portfolio_showcase"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if len(self.headline.strip()) < 5:
+            raise ValidationError({"headline": "Headline must be at least 5 characters."})
+        if self.visibility == PortfolioVisibility.TENANT_PUBLIC:
+            if self.moderation_status != PortfolioModerationStatus.APPROVED or not self.public_consent_active:
+                raise ValidationError("Showcase publication requires APPROVED moderation status and active consent.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.student_id}:{self.headline[:30]}"
+
+
+class AchievementArtifact(models.Model):
+    """
+    P3-VS12: Verifiable educational artifact anchoring student achievements to evidence.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="achievement_artifacts",
+    )
+    portfolio = models.ForeignKey(
+        LearningPortfolio,
+        on_delete=models.CASCADE,
+        related_name="artifacts",
+    )
+    artifact_type = models.CharField(max_length=32, choices=ArtifactType.choices)
+    title = models.CharField(max_length=160)
+    reflection_notes = models.TextField(blank=True, default="")
+    mentor_endorsement = models.TextField(blank=True, default="")
+    mentor_user_id = models.UUIDField(null=True, blank=True)
+    source_submission = models.ForeignKey(
+        "learning.Submission",
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="achievement_artifacts",
+    )
+    source_certificate = models.ForeignKey(
+        "learning.CourseCertificate",
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="achievement_artifacts",
+    )
+    moderation_status = models.CharField(
+        max_length=20,
+        choices=PortfolioModerationStatus.choices,
+        default=PortfolioModerationStatus.PENDING,
+    )
+    is_featured = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["tenant", "id"], name="artifact_tenant_id_uniq"),
+            models.CheckConstraint(
+                condition=Q(artifact_type__in=ArtifactType.values),
+                name="artifact_type_check",
+            ),
+            models.CheckConstraint(
+                condition=Q(moderation_status__in=PortfolioModerationStatus.values),
+                name="artifact_moderation_check",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "portfolio", "is_featured"], name="idx_artifact_portfolio"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if len(self.title.strip()) < 3:
+            raise ValidationError({"title": "Title must be at least 3 characters."})
+        if self.portfolio and str(self.portfolio.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between AchievementArtifact and LearningPortfolio.")
+        if self.source_submission and self.source_certificate:
+            raise ValidationError("Artifact cannot be simultaneously linked to submission and certificate.")
+        if self.artifact_type == ArtifactType.CAPSTONE_SUBMISSION and not self.source_submission:
+            raise ValidationError({"source_submission": "CAPSTONE_SUBMISSION requires a valid source submission."})
+        if self.artifact_type == ArtifactType.CERTIFICATE and not self.source_certificate:
+            raise ValidationError({"source_certificate": "CERTIFICATE requires a valid source certificate."})
+        if self.source_submission and str(self.source_submission.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Cross-tenant source submission link rejected.")
+        if self.source_certificate and str(self.source_certificate.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Cross-tenant source certificate link rejected.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.portfolio_id}:{self.title}"
+
+
+class StudentJourneyTimeline(models.Model):
+    """
+    P3-VS12: Chronological student educational journey narrative milestones.
+    Guarantees Zero PII in metadata.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="journey_timelines",
+    )
+    student_id = models.UUIDField(db_index=True)
+    event_key = models.CharField(max_length=64)
+    event_title = models.CharField(max_length=160)
+    narrative_description = models.TextField()
+    milestone_date = models.DateField()
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["tenant", "id"], name="timeline_tenant_id_uniq"),
+            models.UniqueConstraint(fields=["tenant", "student_id", "event_key"], name="timeline_tenant_event_uniq"),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id", "milestone_date"], name="idx_timeline_chronological"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if len(self.event_title.strip()) < 3:
+            raise ValidationError({"event_title": "Event title must be at least 3 characters."})
+        if len(self.narrative_description.strip()) < 10:
+            raise ValidationError({"narrative_description": "Narrative description must be at least 10 characters."})
+        forbidden_pii = {'name', 'phone', 'email', 'avatar_url', 'national_id', 'location'}
+        if isinstance(self.metadata, dict):
+            found_pii = forbidden_pii.intersection(self.metadata.keys())
+            if found_pii:
+                raise ValidationError({"metadata": f"PII keys forbidden in journey timeline metadata: {found_pii}"})
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.student_id}:{self.event_key}"
+
+
+class PortfolioModerationAction(models.Model):
+    """
+    P3-VS12: Append-only audit ledger for content moderation and showcase consent events.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="portfolio_moderation_actions",
+    )
+    target_portfolio = models.ForeignKey(
+        LearningPortfolio,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="moderation_actions",
+    )
+    target_artifact = models.ForeignKey(
+        AchievementArtifact,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="moderation_actions",
+    )
+    actor_id = models.UUIDField(db_index=True)
+    action_type = models.CharField(max_length=32, choices=ModerationActionType.choices)
+    reason = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(action_type__in=ModerationActionType.values),
+                name="modaction_action_type_check",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "target_portfolio"], name="idx_modaction_target_port"),
+            models.Index(fields=["tenant", "target_artifact"], name="idx_modaction_target_art"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if (self.target_portfolio is None and self.target_artifact is None) or (self.target_portfolio and self.target_artifact):
+            raise ValidationError("Moderation action must target exactly one of portfolio or artifact.")
+        if self.target_portfolio and str(self.target_portfolio.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between moderation action and target portfolio.")
+        if self.target_artifact and str(self.target_artifact.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between moderation action and target artifact.")
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError("PortfolioModerationAction is append-only.")
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("PortfolioModerationAction records are immutable audit logs and cannot be deleted.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.action_type}:{self.actor_id}"
+
+
+# =============================================================================
+# P3-VS13: Longitudinal Learning Intelligence & Growth Models
+# =============================================================================
+
+class CalculationRunStatus(models.TextChoices):
+    RUNNING = "RUNNING", "Running"
+    COMPLETED = "COMPLETED", "Completed"
+    FAILED = "FAILED", "Failed"
+
+
+class GrowthMetricKey(models.TextChoices):
+    CODING_VELOCITY = "CODING_VELOCITY", "Coding Velocity"
+    CONCEPT_MASTERY = "CONCEPT_MASTERY", "Concept Mastery"
+    PROBLEM_SOLVING = "PROBLEM_SOLVING", "Problem Solving"
+    PERSISTENCE = "PERSISTENCE", "Persistence"
+    CODE_QUALITY = "CODE_QUALITY", "Code Quality"
+
+
+class TrendDirection(models.TextChoices):
+    ACCELERATING = "ACCELERATING", "Accelerating"
+    STEADY = "STEADY", "Steady"
+    DEVELOPING = "DEVELOPING", "Developing"
+    NEEDS_SUPPORT = "NEEDS_SUPPORT", "Needs Support"
+
+
+class MilestoneStatus(models.TextChoices):
+    ACHIEVED = "ACHIEVED", "Achieved"
+    RETRACTED = "RETRACTED", "Retracted"
+
+
+class InsightType(models.TextChoices):
+    COMPETENCY_GROWTH = "COMPETENCY_GROWTH", "Competency Growth"
+    STRENGTH_AREA = "STRENGTH_AREA", "Strength Area"
+    MOMENTUM_STREAK = "MOMENTUM_STREAK", "Momentum Streak"
+    FOCUS_RECOMMENDATION = "FOCUS_RECOMMENDATION", "Focus Recommendation"
+    MASTERY_MILESTONE = "MASTERY_MILESTONE", "Mastery Milestone"
+
+
+class ConfidenceLevel(models.TextChoices):
+    HIGH = "HIGH", "High"
+    MEDIUM = "MEDIUM", "Medium"
+    LOW = "LOW", "Low"
+
+
+class InsightLifecycleStatus(models.TextChoices):
+    ACTIVE = "ACTIVE", "Active"
+    SUPERSEDED = "SUPERSEDED", "Superseded"
+    RETRACTED = "RETRACTED", "Retracted"
+
+
+class GenerationEventStatus(models.TextChoices):
+    PROCESSED = "PROCESSED", "Processed"
+    REJECTED = "REJECTED", "Rejected"
+    FAILED = "FAILED", "Failed"
+
+
+class CalculationRun(models.Model):
+    """
+    Formal registry anchoring calculation runs to tenant and trigger actor.
+    Enforces referential integrity across all derived projections.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="learning_calculation_runs",
+    )
+    triggered_by = models.UUIDField(db_index=True)
+    status = models.CharField(
+        max_length=20,
+        choices=CalculationRunStatus.choices,
+        default=CalculationRunStatus.RUNNING,
+    )
+    started_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_calcrun_tenant_id_uniq",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=CalculationRunStatus.values),
+                name="learning_calcrun_status_check",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(status__in=["COMPLETED", "FAILED"]) & Q(completed_at__isnull=False)) |
+                    (Q(status="RUNNING") & Q(completed_at__isnull=True))
+                ),
+                name="learning_calcrun_completion_check",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "started_at"], name="idx_calcrun_tenant_started"),
+            models.Index(fields=["tenant", "triggered_by"], name="idx_calcrun_tenant_trigger"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.status in [CalculationRunStatus.COMPLETED, CalculationRunStatus.FAILED] and not self.completed_at:
+            raise ValidationError("Completed/Failed calculation runs must have completed_at timestamp.")
+        if self.status == CalculationRunStatus.RUNNING and self.completed_at:
+            raise ValidationError("Running calculation runs cannot have a completed_at timestamp.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.id}:{self.status}"
+
+
+class GrowthMetricSnapshot(models.Model):
+    """
+    Point-in-time snapshot of student growth across defined competencies.
+    Append-Only projection per daily snapshot date.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="learning_metric_snapshots",
+    )
+    student_id = models.UUIDField(db_index=True)
+    metric_key = models.CharField(max_length=64, choices=GrowthMetricKey.choices)
+    metric_value = models.DecimalField(max_digits=8, decimal_places=2)
+    baseline_value = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    growth_delta = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
+    calculation_run = models.ForeignKey(
+        CalculationRun,
+        on_delete=models.RESTRICT,
+        related_name="metric_snapshots",
+    )
+    snapshot_date = models.DateField()
+    metadata = models.JSONField(default=dict, blank=True)
+    recorded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_metric_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "student_id", "metric_key", "snapshot_date"],
+                name="learning_metric_daily_student_uniq",
+            ),
+            models.CheckConstraint(
+                condition=Q(metric_key__in=GrowthMetricKey.values),
+                name="learning_metric_key_check",
+            ),
+            models.CheckConstraint(
+                condition=Q(metric_value__gte=0.00) & Q(metric_value__lte=1000.00),
+                name="learning_metric_value_range",
+            ),
+            models.CheckConstraint(
+                condition=Q(baseline_value__isnull=True) | (Q(baseline_value__gte=0.00) & Q(baseline_value__lte=1000.00)),
+                name="learning_metric_baseline_range",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id", "metric_key", "snapshot_date"], name="idx_growth_metric_timeline"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if str(self.calculation_run.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between metric snapshot and calculation run.")
+        if self.baseline_value is not None:
+            self.growth_delta = self.metric_value - self.baseline_value
+        else:
+            self.growth_delta = 0.00
+        # PII Scrubbing check
+        pii_keys = {"name", "phone", "email", "national_id", "location", "avatar_url"}
+        if any(k in self.metadata for k in pii_keys):
+            raise ValidationError("Metadata contains prohibited PII fields.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.student_id}:{self.metric_key}:{self.snapshot_date}"
+
+
+class StudentGrowthTrend(models.Model):
+    """
+    Current consolidated competency vectors and longitudinal trajectory.
+    Mutable-Latest projection updated during recalculation runs.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="learning_growth_trends",
+    )
+    student_id = models.UUIDField(db_index=True)
+    competency_domain = models.CharField(max_length=64)
+    trend_direction = models.CharField(
+        max_length=32,
+        choices=TrendDirection.choices,
+        default=TrendDirection.DEVELOPING,
+    )
+    current_score = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    velocity_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    total_milestones_achieved = models.IntegerField(default=0)
+    competency_vectors = models.JSONField(default=dict, blank=True)
+    calculation_run = models.ForeignKey(
+        CalculationRun,
+        on_delete=models.RESTRICT,
+        related_name="growth_trends",
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_trend_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "student_id", "competency_domain"],
+                name="learning_trend_domain_uniq",
+            ),
+            models.CheckConstraint(
+                condition=Q(trend_direction__in=TrendDirection.values),
+                name="learning_trend_direction_check",
+            ),
+            models.CheckConstraint(
+                condition=Q(current_score__gte=0.00) & Q(current_score__lte=100.00),
+                name="learning_trend_score_range",
+            ),
+            models.CheckConstraint(
+                condition=Q(velocity_rate__gte=-100.00) & Q(velocity_rate__lte=100.00),
+                name="learning_trend_velocity_range",
+            ),
+            models.CheckConstraint(
+                condition=Q(total_milestones_achieved__gte=0),
+                name="learning_trend_milestones_non_negative",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if str(self.calculation_run.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between growth trend and calculation run.")
+        pii_keys = {"name", "phone", "email", "national_id", "location", "avatar_url"}
+        if any(k in self.competency_vectors for k in pii_keys):
+            raise ValidationError("Competency vectors contain prohibited PII fields.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.student_id}:{self.competency_domain}"
+
+
+class LearningMilestone(models.Model):
+    """
+    Formative milestones reached by student with cryptographic evidence digest.
+    Revocable via formal RETRACTED status and restorable.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="learning_milestones",
+    )
+    student_id = models.UUIDField(db_index=True)
+    milestone_code = models.CharField(max_length=64)
+    title = models.CharField(max_length=160)
+    description = models.TextField(blank=True, default="")
+    status = models.CharField(
+        max_length=20,
+        choices=MilestoneStatus.choices,
+        default=MilestoneStatus.ACHIEVED,
+    )
+    achieved_at = models.DateTimeField(auto_now_add=True)
+    retracted_at = models.DateTimeField(null=True, blank=True)
+    retraction_reason = models.TextField(null=True, blank=True)
+    source_submission = models.ForeignKey(
+        Submission,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="learning_milestones",
+    )
+    source_certificate = models.ForeignKey(
+        CourseCertificate,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="learning_milestones",
+    )
+    evidence_digest = models.CharField(max_length=64)
+    evidence_payload = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_milestone_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "student_id", "milestone_code"],
+                condition=Q(status="ACHIEVED"),
+                name="uq_milestone_active_code",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=MilestoneStatus.values),
+                name="learning_milestone_status_check",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(status="RETRACTED") & Q(retracted_at__isnull=False) & Q(retraction_reason__isnull=False)) |
+                    (Q(status="ACHIEVED") & Q(retracted_at__isnull=True) & Q(retraction_reason__isnull=True))
+                ),
+                name="learning_milestone_retraction_check",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id", "achieved_at"], name="idx_milestone_chronological"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.status == MilestoneStatus.RETRACTED:
+            if not self.retracted_at or not self.retraction_reason:
+                raise ValidationError("Retracted milestone must have retracted_at and retraction_reason.")
+        elif self.status == MilestoneStatus.ACHIEVED:
+            if self.retracted_at or self.retraction_reason:
+                raise ValidationError("Achieved milestone cannot have retraction metadata.")
+        if len(self.evidence_digest) != 64:
+            raise ValidationError("Evidence digest must be a 64-character hexadecimal SHA-256 string.")
+        pii_keys = {"name", "phone", "email", "national_id", "location", "avatar_url"}
+        if any(k in self.evidence_payload for k in pii_keys):
+            raise ValidationError("Evidence payload contains prohibited PII fields.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.student_id}:{self.milestone_code}:{self.status}"
+
+
+class LearningInsight(models.Model):
+    """
+    Qualitative personalized formative insight generated for student.
+    Lifecycle: ACTIVE -> SUPERSEDED (on re-derivation) or RETRACTED.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="learning_insights",
+    )
+    student_id = models.UUIDField(db_index=True)
+    insight_type = models.CharField(max_length=40, choices=InsightType.choices)
+    title = models.CharField(max_length=180)
+    description = models.TextField()
+    confidence_level = models.CharField(
+        max_length=16,
+        choices=ConfidenceLevel.choices,
+        default=ConfidenceLevel.MEDIUM,
+    )
+    lifecycle_status = models.CharField(
+        max_length=20,
+        choices=InsightLifecycleStatus.choices,
+        default=InsightLifecycleStatus.ACTIVE,
+    )
+    calculation_run = models.ForeignKey(
+        CalculationRun,
+        on_delete=models.RESTRICT,
+        related_name="learning_insights",
+    )
+    valid_until = models.DateTimeField(null=True, blank=True)
+    retracted_at = models.DateTimeField(null=True, blank=True)
+    retraction_reason = models.TextField(null=True, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_insight_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "student_id", "insight_type"],
+                condition=Q(lifecycle_status="ACTIVE"),
+                name="uq_insight_singleton_active",
+            ),
+            models.CheckConstraint(
+                condition=Q(insight_type__in=InsightType.values),
+                name="learning_insight_type_check",
+            ),
+            models.CheckConstraint(
+                condition=Q(confidence_level__in=ConfidenceLevel.values),
+                name="learning_insight_confidence_check",
+            ),
+            models.CheckConstraint(
+                condition=Q(lifecycle_status__in=InsightLifecycleStatus.values),
+                name="learning_insight_lifecycle_check",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(lifecycle_status="RETRACTED") & Q(retracted_at__isnull=False) & Q(retraction_reason__isnull=False)) |
+                    (Q(lifecycle_status__in=["ACTIVE", "SUPERSEDED"]) & Q(retracted_at__isnull=True) & Q(retraction_reason__isnull=True))
+                ),
+                name="learning_insight_retraction_check",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id", "created_at"], name="idx_insight_active_feed"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if str(self.calculation_run.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between insight and calculation run.")
+        if self.lifecycle_status == InsightLifecycleStatus.RETRACTED:
+            if not self.retracted_at or not self.retraction_reason:
+                raise ValidationError("Retracted insight must have retracted_at and retraction_reason.")
+        elif self.retracted_at or self.retraction_reason:
+            raise ValidationError("Active or superseded insight cannot have retraction metadata.")
+        pii_keys = {"name", "phone", "email", "national_id", "location", "avatar_url"}
+        if any(k in self.metadata for k in pii_keys):
+            raise ValidationError("Metadata contains prohibited PII fields.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.student_id}:{self.insight_type}:{self.lifecycle_status}"
+
+
+class InsightGenerationEvent(models.Model):
+    """
+    Append-Only Audit & Idempotency Log for insight derivation runs.
+    Enforces strict idempotency per event_type and event_key.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="insight_generation_events",
+    )
+    student_id = models.UUIDField(db_index=True)
+    event_type = models.CharField(max_length=64)
+    event_key = models.CharField(max_length=128)
+    calculation_run = models.ForeignKey(
+        CalculationRun,
+        on_delete=models.RESTRICT,
+        related_name="generation_events",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=GenerationEventStatus.choices,
+        default=GenerationEventStatus.PROCESSED,
+    )
+    failure_reason = models.TextField(null=True, blank=True)
+    retry_count = models.PositiveSmallIntegerField(default=0)
+    triggered_by = models.UUIDField(db_index=True)
+    payload_digest = models.CharField(max_length=64)
+    processed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="learning_genevent_tenant_id_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "student_id", "event_type", "event_key"],
+                name="learning_genevent_idempotency_uniq",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=GenerationEventStatus.values),
+                name="learning_genevent_status_check",
+            ),
+            models.CheckConstraint(
+                condition=Q(retry_count__gte=0) & Q(retry_count__lte=10),
+                name="learning_genevent_retry_check",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(status__in=["REJECTED", "FAILED"]) & Q(failure_reason__isnull=False)) |
+                    (Q(status="PROCESSED") & Q(failure_reason__isnull=True))
+                ),
+                name="learning_genevent_failure_check",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id", "calculation_run"], name="idx_genevent_audit"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if str(self.calculation_run.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between generation event and calculation run.")
+        if self.status in [GenerationEventStatus.REJECTED, GenerationEventStatus.FAILED] and not self.failure_reason:
+            raise ValidationError("Failed or rejected event must have failure_reason.")
+        if self.status == GenerationEventStatus.PROCESSED and self.failure_reason:
+            raise ValidationError("Processed event cannot have failure_reason.")
+        if len(self.payload_digest) != 64:
+            raise ValidationError("Payload digest must be a 64-character hexadecimal SHA-256 string.")
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError("InsightGenerationEvent is strictly append-only.")
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("InsightGenerationEvent records are immutable audit logs and cannot be deleted.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.student_id}:{self.event_type}:{self.event_key}:{self.status}"

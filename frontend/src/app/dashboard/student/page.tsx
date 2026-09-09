@@ -13,6 +13,10 @@ import { AchievementTimeline, TimelineItem } from "@/components/certificates/Ach
 import { DiscussionThreadList, DiscussionThreadItem } from "@/components/discussion/DiscussionThreadList";
 import { DiscussionThreadDetail, DiscussionCommentItem } from "@/components/discussion/DiscussionThreadDetail";
 import { DiscussionReplyComposer } from "@/components/discussion/DiscussionReplyComposer";
+import { AdaptiveRecommendationCard, LearningRecommendationData } from "@/components/personalization/AdaptiveRecommendationCard";
+import { StudentSkillRadar, SkillProgressItem } from "@/components/personalization/StudentSkillRadar";
+import { LearningGapAlert, LearningGap } from "@/components/personalization/LearningGapAlert";
+import { GrowthJourneyDashboard } from "@/components/growth/GrowthJourneyDashboard";
 
 const syntheticAssignments: AssignmentItem[] = [
   {
@@ -255,10 +259,130 @@ export default function StudentDashboardPage() {
     },
   ];
 
+  const syntheticRecommendations: LearningRecommendationData[] = [
+    {
+      id: "rec-1",
+      student_id: "usr-stu-101",
+      recommendation_type: "NEXT_CHALLENGE",
+      status: "GENERATED",
+      priority: 1,
+      recommendation_reason: "با توجه به تسلط عالی بر ساختار حلقه‌ها در پایتون، ورود به چالش پیاده‌سازی توابع بازگشتی پیشنهاد می‌شود.",
+      evidence_context: { prior_score: 95, skill: "loops-and-iterations" },
+      target_skill_slug: "python-recursion",
+      target_skill_title: "توابع بازگشتی در پایتون",
+      created_at: "۱۴۰۵/۰۶/۲۶",
+    },
+    {
+      id: "rec-2",
+      student_id: "usr-stu-101",
+      recommendation_type: "REMEDIAL_PRACTICE",
+      status: "GENERATED",
+      priority: 2,
+      recommendation_reason: "مهارت مدیریت خطای بازگشت نیازمند تمرین هدفمند تکمیلی برای تسلط پایدار است.",
+      evidence_context: { prior_score: 55, skill: "recursion-base-case" },
+      target_skill_slug: "recursion-base-case",
+      target_skill_title: "شرط پایه در توابع بازگشتی",
+      created_at: "۱۴۰۵/۰۶/۲۶",
+    },
+  ];
+
+  const syntheticSkills: SkillProgressItem[] = [
+    {
+      id: "sp-1",
+      skill: { id: "sk-1", slug: "python-syntax", title: "دستور زبان و متغیرهای پایتون", category: "SYNTAX", difficulty_level: 1 },
+      mastery_level: "MASTERED",
+      mastery_score: 98,
+      practice_count: 6,
+    },
+    {
+      id: "sp-2",
+      skill: { id: "sk-2", slug: "loops-and-iterations", title: "حلقه‌ها و تکرار در پایتون", category: "ALGORITHMS", difficulty_level: 2 },
+      mastery_level: "PROFICIENT",
+      mastery_score: 82,
+      practice_count: 4,
+    },
+    {
+      id: "sp-3",
+      skill: { id: "sk-3", slug: "python-recursion", title: "توابع بازگشتی و پشته فراخوانی", category: "ALGORITHMS", difficulty_level: 3 },
+      mastery_level: "DEVELOPING",
+      mastery_score: 55,
+      practice_count: 2,
+    },
+  ];
+
+  const syntheticGaps: LearningGap[] = [
+    {
+      skill_id: "sk-3",
+      skill_slug: "recursion-base-case",
+      skill_title: "شرط توقف در توابع بازگشتی",
+      severity: "MEDIUM",
+      reason: "مهارت در حال شکوفایی، نیازمند تمرین تکمیلی شرط خروج",
+    },
+  ];
+
   const activeThread = syntheticThreads.find((t) => t.id === selectedThreadId);
 
   return (
     <DashboardScreen model={syntheticStudentModel} state="ready">
+      {/* P3-VS13 Student Growth Insights & Longitudinal Learning Intelligence Section */}
+      <section
+        style={{
+          maxWidth: "78rem",
+          margin: "0 auto 2.5rem",
+          padding: "0 1.5rem",
+          direction: "rtl",
+        }}
+        aria-label="داشبورد بینش‌های رشد یادگیری و مسیر تسلط مهارتی"
+        data-testid="p3-vs13-growth-section"
+      >
+        <GrowthJourneyDashboard
+          studentName="دانش‌آموز فعال"
+          metrics={[
+            { key: "CONCEPT_MASTERY", label: "تسلط مفهومی بر کدنویسی", value: 88, delta: 12 },
+            { key: "CODING_VELOCITY", label: "سرعت و ریتم حل مسئله", value: 92, delta: 8 },
+            { key: "PROBLEM_SOLVING", label: "پایداری در دیباگ و اصلاح خطا", value: 85, delta: 15 },
+            { key: "CODE_QUALITY", label: "رعایت تمیزی و استانداردهای نحوی", value: 90, delta: 10 },
+          ]}
+          trend={{
+            domain: "FULLSTACK_FOUNDATIONS",
+            direction: "ACCELERATING",
+            score: 88.5,
+            velocity: 12.0,
+            totalMilestones: 4,
+          }}
+          insights={[
+            {
+              id: "ins-1",
+              type: "COMPETENCY_GROWTH",
+              title: "تسلط چشمگیر در مفاهیم حلقه‌ها و شروط",
+              description: "با حل تمرین‌های چالش‌برانگیز بدون ارور زمان اجرا، ریتم یادگیری روند کاملاً صعودی داشته است.",
+              confidence: "HIGH",
+            },
+            {
+              id: "ins-2",
+              type: "FOCUS_RECOMMENDATION",
+              title: "تمرکز پیشنهادی برای گام آینده",
+              description: "پیاده‌سازی توابع چندریختی در پایتون می‌تواند درک شی‌گرایی را به سطح عالی ارتقا دهد.",
+              confidence: "HIGH",
+            },
+          ]}
+          milestones={[
+            {
+              id: "ms-1",
+              code: "MS-PY-01",
+              title: "نخستین برنامه بدون خطای نحوی و اجرای صحیح در ترمینال",
+              achievedAt: "۱۴۰۵/۰۶/۱۰",
+            },
+            {
+              id: "ms-2",
+              code: "MS-PY-02",
+              title: "حل کامل چالش ساختارهای داده صف و پشته در پایتون",
+              achievedAt: "۱۴۰۵/۰۶/۱۸",
+            },
+          ]}
+        />
+      </section>
+
       {/* P3-VS4 Gamification Progression & Badges Section */}
       <section
         style={{
@@ -442,6 +566,7 @@ export default function StudentDashboardPage() {
                 تأیید اصالت داده: SYNTHETIC
               </span>
             </div>
+          </div>
         </div>
       </section>
 
@@ -484,6 +609,47 @@ export default function StudentDashboardPage() {
               onCreateNewThread={() => setIsComposerOpen(true)}
             />
           )}
+        </div>
+      </section>
+
+      {/* P3-VS11 Adaptive Progression & Personalized Recommendations Section */}
+      <section
+        style={{
+          maxWidth: "78rem",
+          margin: "0 auto 3rem",
+          padding: "0 1.5rem",
+          direction: "rtl",
+        }}
+        aria-label="موتور یادگیری تطبیقی و رادار رشد مهارتی دانش‌آموز"
+        data-testid="p3-vs11-personalization-section"
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          <LearningGapAlert gaps={syntheticGaps} />
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "1.5rem" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <h2 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#0f172a" }}>
+                پیشنهادهای هوشمند و هدفمند آموزشی
+              </h2>
+              {syntheticRecommendations.map((rec) => (
+                <AdaptiveRecommendationCard
+                  key={rec.id}
+                  recommendation={rec}
+                  onAccept={(id) => console.log("Accepted recommendation:", id)}
+                  onDismiss={(id) => console.log("Dismissed recommendation:", id)}
+                />
+              ))}
+            </div>
+
+            <div>
+              <StudentSkillRadar
+                skills={syntheticSkills}
+                competencyIndex={78.5}
+                totalSkills={3}
+                masteredCount={1}
+              />
+            </div>
+          </div>
         </div>
       </section>
 

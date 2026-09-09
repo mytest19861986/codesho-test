@@ -203,6 +203,254 @@ paths:
           description: Invalid action parameters.
         '403':
           description: Only mentors and staff can moderate.
+  /api/v1/learning/personalization/profile/:
+    get:
+      operationId: api_v1_learning_personalization_profile_retrieve
+      summary: Retrieve student learning profile and growth indicators
+      tags:
+      - learning-personalization
+      responses:
+        '200':
+          description: Student learning profile projection.
+        '401':
+          description: Authentication required.
+    post:
+      operationId: api_v1_learning_personalization_profile_rebuild
+      summary: Rebuild student learning profile deterministically
+      tags:
+      - learning-personalization
+      responses:
+        '200':
+          description: Rebuilt student learning profile.
+        '401':
+          description: Authentication required.
+  /api/v1/learning/personalization/recommendations/:
+    get:
+      operationId: api_v1_learning_personalization_recommendations_list
+      summary: List active adaptive recommendations for student
+      tags:
+      - learning-personalization
+      responses:
+        '200':
+          description: Active adaptive recommendations.
+        '401':
+          description: Authentication required.
+  /api/v1/learning/personalization/recommendations/{recommendation_id}/action/:
+    post:
+      operationId: api_v1_learning_personalization_recommendation_action_create
+      summary: Transition recommendation state along FSM lifecycle
+      parameters:
+      - in: path
+        name: recommendation_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - learning-personalization
+      responses:
+        '200':
+          description: Recommendation status transitioned.
+        '400':
+          description: Invalid transition attempt.
+        '403':
+          description: Unauthorized to modify recommendation.
+        '404':
+          description: Recommendation not found.
+  /api/v1/learning/personalization/skills/:
+    get:
+      operationId: api_v1_learning_personalization_skills_list
+      summary: Retrieve curriculum skill definitions and DAG dependency edges
+      tags:
+      - learning-personalization
+      responses:
+        '200':
+          description: Skill definitions and dependency graph.
+  /api/v1/learning/portfolio/:
+    get:
+      operationId: api_v1_learning_portfolio_retrieve
+      summary: Retrieve authenticated student learning portfolio
+      tags:
+      - learning-portfolio
+      responses:
+        '200':
+          description: Student portfolio details.
+        '401':
+          description: Authentication required.
+        '404':
+          description: Portfolio not found.
+    post:
+      operationId: api_v1_learning_portfolio_create
+      summary: Create or initialize student learning portfolio
+      tags:
+      - learning-portfolio
+      responses:
+        '201':
+          description: Portfolio created.
+        '400':
+          description: Validation error.
+        '401':
+          description: Authentication required.
+  /api/v1/learning/portfolio/guardian/{student_id}/:
+    get:
+      operationId: api_v1_learning_portfolio_guardian_retrieve
+      summary: Retrieve student portfolio under verified active guardian access grant
+      parameters:
+      - in: path
+        name: student_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - learning-portfolio
+      responses:
+        '200':
+          description: Student portfolio for authorized guardian.
+        '401':
+          description: Authentication required.
+        '403':
+          description: Active guardian access grant required.
+        '404':
+          description: Portfolio private or not found.
+  /api/v1/learning/portfolio/{portfolio_id}/artifacts/:
+    post:
+      operationId: api_v1_learning_portfolio_artifacts_create
+      summary: Attach verified educational achievement artifact to portfolio
+      parameters:
+      - in: path
+        name: portfolio_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - learning-portfolio
+      responses:
+        '201':
+          description: Artifact attached successfully.
+        '400':
+          description: Validation error or cross-tenant source link.
+  /api/v1/learning/portfolio/journey/{student_id}/:
+    get:
+      operationId: api_v1_learning_portfolio_journey_retrieve
+      summary: Retrieve chronological journey narrative timeline for student
+      parameters:
+      - in: path
+        name: student_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - learning-portfolio
+      responses:
+        '200':
+          description: Chronological journey milestones.
+  /api/v1/learning/insights/{student_id}/:
+    get:
+      operationId: api_v1_learning_growth_insights_retrieve
+      summary: Retrieve active formative growth insights for a student (zero peer comparison)
+      parameters:
+      - in: path
+        name: student_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - learning-growth-insights
+      responses:
+        '200':
+          description: Active student formative insights feed.
+        '400':
+          description: Peer comparison or ranking query parameters rejected.
+        '401':
+          description: Authentication required.
+        '403':
+          description: Access denied.
+  /api/v1/learning/insights/trends/{student_id}/:
+    get:
+      operationId: api_v1_learning_growth_trends_retrieve
+      summary: Retrieve longitudinal competency vectors and metric progress snapshots
+      parameters:
+      - in: path
+        name: student_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - learning-growth-insights
+      responses:
+        '200':
+          description: Longitudinal competency trends and snapshots.
+        '400':
+          description: Invalid request or peer ranking parameters.
+        '401':
+          description: Authentication required.
+        '403':
+          description: Access denied.
+  /api/v1/learning/insights/milestones/{student_id}/:
+    get:
+      operationId: api_v1_learning_growth_milestones_retrieve
+      summary: Retrieve formative milestones timeline
+      parameters:
+      - in: path
+        name: student_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: include_retracted
+        schema:
+          type: boolean
+        required: false
+      tags:
+      - learning-growth-insights
+      responses:
+        '200':
+          description: Formative milestones list.
+        '401':
+          description: Authentication required.
+        '403':
+          description: Access denied.
+  /api/v1/learning/insights/recalculate/:
+    post:
+      operationId: api_v1_learning_insights_recalculate_create
+      summary: Trigger idempotent longitudinal calculation under advisory lock
+      tags:
+      - learning-growth-insights
+      responses:
+        '200':
+          description: Recalculation run status and details.
+        '400':
+          description: Validation error or invalid parameters.
+        '401':
+          description: Authentication required.
+        '403':
+          description: Staff or assigned mentor authorization required.
+  /api/v1/learning/insights/milestones/{milestone_id}/retract/:
+    patch:
+      operationId: api_v1_learning_milestones_retract_update
+      summary: Retract or restore a formative milestone
+      parameters:
+      - in: path
+        name: milestone_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - learning-growth-insights
+      responses:
+        '200':
+          description: Milestone state updated.
+        '400':
+          description: Validation error.
+        '403':
+          description: Unauthorized.
   /api/v1/auth/logout/:
     post:
       operationId: api_v1_auth_logout_create

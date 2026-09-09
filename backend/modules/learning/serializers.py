@@ -623,3 +623,320 @@ class DiscussionModerationActionSerializer(serializers.ModelSerializer):
             "performed_by",
             "created_at",
         ]
+
+
+# =============================================================================
+# Phase 3 VS11: Adaptive Progression and Personalization Serializers
+# =============================================================================
+
+class SkillDefinitionSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import SkillDefinition
+        model = SkillDefinition
+        fields = [
+            "id",
+            "slug",
+            "title",
+            "description",
+            "category",
+            "difficulty_level",
+            "is_active",
+            "created_at",
+        ]
+        read_only_fields = ["id", "created_at"]
+
+
+class StudentSkillProgressSerializer(serializers.ModelSerializer):
+    skill = SkillDefinitionSerializer(read_only=True)
+
+    class Meta:
+        from .models import StudentSkillProgress
+        model = StudentSkillProgress
+        fields = [
+            "id",
+            "student_id",
+            "skill",
+            "mastery_level",
+            "mastery_score",
+            "practice_count",
+            "last_evaluated_at",
+        ]
+        read_only_fields = ["id", "last_evaluated_at"]
+
+
+class StudentLearningProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import StudentLearningProfile
+        model = StudentLearningProfile
+        fields = [
+            "id",
+            "student_id",
+            "total_skills_tracked",
+            "mastered_skills_count",
+            "developing_skills_count",
+            "overall_competency_index",
+            "identified_learning_gaps",
+            "last_rebuilt_at",
+            "rebuild_version",
+        ]
+        read_only_fields = [
+            "id",
+            "student_id",
+            "total_skills_tracked",
+            "mastered_skills_count",
+            "developing_skills_count",
+            "overall_competency_index",
+            "identified_learning_gaps",
+            "last_rebuilt_at",
+            "rebuild_version",
+        ]
+
+
+class LearningRecommendationSerializer(serializers.ModelSerializer):
+    target_skill_slug = serializers.CharField(source="target_skill.slug", read_only=True, allow_null=True)
+    target_skill_title = serializers.CharField(source="target_skill.title", read_only=True, allow_null=True)
+
+    class Meta:
+        from .models import LearningRecommendation
+        model = LearningRecommendation
+        fields = [
+            "id",
+            "student_id",
+            "target_course",
+            "target_lesson",
+            "target_skill",
+            "target_skill_slug",
+            "target_skill_title",
+            "recommendation_type",
+            "status",
+            "priority",
+            "recommendation_reason",
+            "evidence_context",
+            "idempotency_key",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "student_id",
+            "idempotency_key",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class RecommendationTransitionLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import RecommendationTransitionLog
+        model = RecommendationTransitionLog
+        fields = [
+            "id",
+            "recommendation",
+            "from_status",
+            "to_status",
+            "actor_id",
+            "actor_type",
+            "transition_reason",
+            "created_at",
+        ]
+        read_only_fields = [
+            "id",
+            "recommendation",
+            "from_status",
+            "to_status",
+            "actor_id",
+            "actor_type",
+            "transition_reason",
+            "created_at",
+        ]
+
+
+class AchievementArtifactSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import AchievementArtifact
+        model = AchievementArtifact
+        fields = [
+            "id",
+            "portfolio",
+            "artifact_type",
+            "title",
+            "reflection_notes",
+            "mentor_endorsement",
+            "mentor_user_id",
+            "source_submission",
+            "source_certificate",
+            "moderation_status",
+            "is_featured",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "mentor_endorsement",
+            "mentor_user_id",
+            "moderation_status",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class LearningPortfolioSerializer(serializers.ModelSerializer):
+    artifacts = AchievementArtifactSerializer(many=True, read_only=True)
+
+    class Meta:
+        from .models import LearningPortfolio
+        model = LearningPortfolio
+        fields = [
+            "id",
+            "student_id",
+            "headline",
+            "summary_narrative",
+            "featured_artifact_count",
+            "visibility",
+            "moderation_status",
+            "public_consent_active",
+            "public_consent_at",
+            "artifacts",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "student_id",
+            "featured_artifact_count",
+            "moderation_status",
+            "public_consent_active",
+            "public_consent_at",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class StudentJourneyTimelineSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import StudentJourneyTimeline
+        model = StudentJourneyTimeline
+        fields = [
+            "id",
+            "student_id",
+            "event_key",
+            "event_title",
+            "narrative_description",
+            "milestone_date",
+            "metadata",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "student_id", "created_at", "updated_at"]
+
+
+class GuardianAccessGrantSerializer(serializers.ModelSerializer):
+    class Meta:
+        from modules.platform_tenant.models import GuardianAccessGrant
+        model = GuardianAccessGrant
+        fields = [
+            "id",
+            "guardian_user_id",
+            "student_id",
+            "status",
+            "decided_at",
+            "revoked_at",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "status", "decided_at", "revoked_at", "created_at", "updated_at"]
+
+
+class GrowthMetricSnapshotSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import GrowthMetricSnapshot
+        model = GrowthMetricSnapshot
+        fields = [
+            "id",
+            "student_id",
+            "metric_key",
+            "metric_value",
+            "baseline_value",
+            "growth_delta",
+            "snapshot_date",
+            "metadata",
+            "recorded_at",
+        ]
+        read_only_fields = fields
+
+
+class StudentGrowthTrendSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import StudentGrowthTrend
+        model = StudentGrowthTrend
+        fields = [
+            "id",
+            "student_id",
+            "competency_domain",
+            "trend_direction",
+            "current_score",
+            "velocity_rate",
+            "total_milestones_achieved",
+            "competency_vectors",
+            "updated_at",
+        ]
+        read_only_fields = fields
+
+
+class LearningMilestoneSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import LearningMilestone
+        model = LearningMilestone
+        fields = [
+            "id",
+            "student_id",
+            "milestone_code",
+            "title",
+            "description",
+            "status",
+            "achieved_at",
+            "retracted_at",
+            "retraction_reason",
+            "evidence_digest",
+            "evidence_payload",
+            "created_at",
+        ]
+        read_only_fields = [
+            "id",
+            "student_id",
+            "achieved_at",
+            "retracted_at",
+            "evidence_digest",
+            "created_at",
+        ]
+
+
+class LearningInsightSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import LearningInsight
+        model = LearningInsight
+        fields = [
+            "id",
+            "student_id",
+            "insight_type",
+            "title",
+            "description",
+            "confidence_level",
+            "lifecycle_status",
+            "valid_until",
+            "retracted_at",
+            "retraction_reason",
+            "metadata",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "student_id",
+            "lifecycle_status",
+            "valid_until",
+            "retracted_at",
+            "retraction_reason",
+            "created_at",
+            "updated_at",
+        ]
