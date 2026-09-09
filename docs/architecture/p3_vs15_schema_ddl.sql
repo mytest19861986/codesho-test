@@ -1,8 +1,9 @@
 -- ============================================================================
 -- P3-VS15: LEARNING CONTINUITY & STUDENT SUCCESS PLANNING
 -- POSTGRESQL 17 DDL, FORCE RLS, NOBYPASSRLS & AUDIT DISCIPLINE SPECIFICATION
--- Version: v1.0-CANONICAL
+-- Version: v1.1-CANONICAL
 -- Authority: COMMANDER_P3_VS15_DISCOVERY_UNLOCK
+-- Response-Record Identity: Addressed GLM v1.0 Audit (B1, M1-M6, m1-m5)
 -- Fleet Standard GUC: app.current_tenant
 -- Session Protocol: SET LOCAL "app.current_tenant" = %s strictly inside transaction.atomic()
 -- ============================================================================
@@ -39,6 +40,8 @@ CREATE TABLE IF NOT EXISTS learning_studentsuccessplan (
         (status = 'SUPERSEDED') OR
         (status = 'ARCHIVED' AND archived_at IS NOT NULL)
     ),
+    -- M5 Fix: Strict length bounds and 13-key regex PII filter on notes
+    CONSTRAINT chk_successplan_notes_len CHECK (notes IS NULL OR length(notes) <= 4000),
     CONSTRAINT chk_successplan_notes_no_pii CHECK (
         notes IS NULL OR
         notes !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
@@ -78,12 +81,17 @@ CREATE TABLE IF NOT EXISTS learning_successactionstep (
         REFERENCES learning_studentsuccessplan(tenant_id, id) ON DELETE CASCADE,
     CONSTRAINT chk_actionstep_title_len CHECK (length(trim(title)) >= 3 AND length(title) <= 255),
     CONSTRAINT chk_actionstep_status CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'SKIPPED', 'CANCELLED')),
+    -- M6 Fix: sequence_order must be positive and unique per plan
+    CONSTRAINT chk_actionstep_seq_positive CHECK (sequence_order >= 1),
+    CONSTRAINT uq_actionstep_tenant_plan_seq UNIQUE (tenant_id, plan_id, sequence_order),
     -- Non-automated decision boundary invariant: Systems/agents can never issue authoritative mandates
     CONSTRAINT chk_step_non_authoritative CHECK (is_authoritative = FALSE),
     CONSTRAINT chk_step_completion_consistency CHECK (
         (status = 'COMPLETED' AND completed_at IS NOT NULL) OR
         (status <> 'COMPLETED' AND completed_at IS NULL)
     ),
+    -- M5 Fix: Strict length bounds and regex PII filter on description
+    CONSTRAINT chk_actionstep_desc_len CHECK (description IS NULL OR length(description) <= 4000),
     CONSTRAINT chk_actionstep_no_pii CHECK (
         description IS NULL OR
         description !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
@@ -108,6 +116,7 @@ CREATE TABLE IF NOT EXISTS learning_successtimelineevent (
     target_insight_id UUID NULL,
     target_reflection_id UUID NULL,
     target_action_step_id UUID NULL,
+    target_milestone_id UUID NULL,
     metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
 
@@ -115,8 +124,10 @@ CREATE TABLE IF NOT EXISTS learning_successtimelineevent (
     CONSTRAINT uq_learning_successtimelineevent_tenant_id UNIQUE (tenant_id, id),
     CONSTRAINT fk_timelineevent_tenant FOREIGN KEY (tenant_id)
         REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
+    -- M4 Fix: ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED prevents silent timeline purge
     CONSTRAINT fk_timelineevent_plan FOREIGN KEY (tenant_id, plan_id)
-        REFERENCES learning_studentsuccessplan(tenant_id, id) ON DELETE CASCADE,
+        REFERENCES learning_studentsuccessplan(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
     CONSTRAINT fk_timelineevent_actor FOREIGN KEY (tenant_id, actor_id)
         REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE RESTRICT,
     -- SA-2 Fix: DEFERRABLE INITIALLY DEFERRED eliminates tenant wipe cascade ordering deadlocks
@@ -132,9 +143,13 @@ CREATE TABLE IF NOT EXISTS learning_successtimelineevent (
     CONSTRAINT fk_timelineevent_target_action FOREIGN KEY (tenant_id, target_action_step_id)
         REFERENCES learning_successactionstep(tenant_id, id)
         ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
-    -- XOR Continuity Invariant: Exactly one target entity must be linked per continuity event
+    -- M2 Fix: target_milestone_id connected to learning_successactionstep with DEFERRABLE FK
+    CONSTRAINT fk_timelineevent_target_milestone FOREIGN KEY (tenant_id, target_milestone_id)
+        REFERENCES learning_successactionstep(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    -- M2 Fix: 5-way XOR Continuity Invariant: Exactly one target entity must be linked
     CONSTRAINT chk_timeline_target_xor CHECK (
-        num_nonnulls(target_goal_id, target_insight_id, target_reflection_id, target_action_step_id) = 1
+        num_nonnulls(target_goal_id, target_insight_id, target_reflection_id, target_action_step_id, target_milestone_id) = 1
     ),
     CONSTRAINT chk_timeline_event_type CHECK (
         event_type IN (
@@ -145,6 +160,25 @@ CREATE TABLE IF NOT EXISTS learning_successtimelineevent (
             'MILESTONE_PROGRESSION'
         )
     ),
+    -- M3 Fix: Exact 1-to-1 coupling between event_type and linked target
+    CONSTRAINT chk_timeline_type_target_coupling CHECK (
+        (event_type = 'GOAL_ANCHORED' AND target_goal_id IS NOT NULL) OR
+        (event_type = 'INSIGHT_CONNECTED' AND target_insight_id IS NOT NULL) OR
+        (event_type = 'REFLECTION_TIED' AND target_reflection_id IS NOT NULL) OR
+        (event_type = 'ACTION_DISPATCHED' AND target_action_step_id IS NOT NULL) OR
+        (event_type = 'MILESTONE_PROGRESSION' AND target_milestone_id IS NOT NULL)
+    ),
+    -- M5 Fix: Headline length bounds and regex PII scrubber
+    CONSTRAINT chk_timeline_headline_len CHECK (length(trim(headline)) >= 3 AND length(headline) <= 255),
+    CONSTRAINT chk_timeline_headline_no_pii CHECK (
+        headline !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
+    ),
+    -- M5 Fix: Detail length bounds and regex PII scrubber
+    CONSTRAINT chk_timeline_detail_len CHECK (detail IS NULL OR length(detail) <= 4000),
+    CONSTRAINT chk_timeline_detail_no_pii CHECK (
+        detail IS NULL OR
+        detail !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
+    ),
     -- D1 Fix: Full union blacklist array on metadata JSONB
     CONSTRAINT chk_timeline_metadata_no_pii CHECK (
         jsonb_typeof(metadata) = 'object'
@@ -152,10 +186,6 @@ CREATE TABLE IF NOT EXISTS learning_successtimelineevent (
             'name', 'phone', 'email', 'national_id', 'location', 'avatar_url', 'phone_number',
             'fingerprint', 'face_id', 'voice_sample', 'bank_account', 'iban', 'credit_card'
         ])
-    ),
-    CONSTRAINT chk_timeline_detail_no_pii CHECK (
-        detail IS NULL OR
-        detail !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
     )
 );
 
@@ -169,6 +199,8 @@ CREATE INDEX IF NOT EXISTS idx_timeline_tenant_reflection
     ON learning_successtimelineevent (tenant_id, target_reflection_id) WHERE target_reflection_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_timeline_tenant_action
     ON learning_successtimelineevent (tenant_id, target_action_step_id) WHERE target_action_step_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_milestone
+    ON learning_successtimelineevent (tenant_id, target_milestone_id) WHERE target_milestone_id IS NOT NULL;
 
 -- ----------------------------------------------------------------------------
 -- 4. SUCCESS AUDIT LOG
