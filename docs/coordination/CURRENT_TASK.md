@@ -1,21 +1,18 @@
-# Current Task: P3-VS10-DISCOVERY-PHASE
+# Current Task: P3-VS13-DISCOVERY-PHASE
 
-## Active Phase 3 Vertical Slice 10 — 2026-09-09
+## Active Phase 3 Vertical Slice 13 — 2026-09-09
 
-- Status: `RUNTIME_EXECUTION_ACTIVE / AUTHORIZED`.
+- Status: `DISCOVERY_ACTIVE / RUNTIME_LOCKED`.
 - Branch: `codex/phase3-product-platform-foundation`.
-- Authority: `COMMANDER_P3_VS10_RUNTIME_UNLOCK` (Official Runtime Unlock Directive Issued).
-- Task ID: `P3-VS10-LEARNING-COMMUNITY-DISCUSSION-AND-PEER-INTERACTION`.
-- Scope: Structured lesson/cohort discussion threads, peer Q&A interactions, mentor answer pinning/endorsement, moderation audit, and fail-closed tenant community spaces.
-- Runtime Status: `AUTHORIZED` (Triple Fleet Consensus: GEMINI PASS, GLM PASS, QWEN PASS; Commander Runtime Unlock GRANTED).
+- Authority: `COMMANDER_P3_VS13_DISCOVERY_UNLOCK: GRANTED`.
+- Directive: `COMMANDER_P3_VS13_DISCOVERY_START`.
+- Task ID: `P3-VS13-STUDENT-GROWTH-INSIGHTS-AND-LONGITUDINAL-LEARNING-INTELLIGENCE`.
+- Scope: موتور بینش‌های طولی یادگیری، تحلیل مسیر رشد و گزارش‌های هوشمند پیشرفت دانش‌آموز (Longitudinal learning intelligence, growth metric snapshots, student growth trends, event-driven derivations without student ranking).
+- Gate Status:
+  - `QWEN_DOMAIN_LOGIC_REVIEW`: PENDING
+  - `GLM_POSTGRES_RLS_SECURITY_REVIEW`: PENDING
+  - `GEMINI_UI_PSYCHOLOGY_A11Y_REVIEW`: PENDING
+  - `COMMANDER_RUNTIME_UNLOCK`: LOCKED
 - Previous Slices Status:
-  - P3-VS1: COMPLETE_FINAL
-  - P3-VS2: COMPLETE_FINAL
-  - P3-VS3: COMPLETE_FINAL
-  - P3-VS4: COMPLETE_FINAL
-  - P3-VS5: COMPLETE_FINAL
-  - P3-VS6: COMPLETE_FINAL
-  - P3-VS7: COMPLETE_FINAL
-  - P3-VS8: COMPLETE_FINAL (Committed: 765532d)
-  - P3-VS9: COMPLETE_FINAL (Committed: 954e8c6, Disposition: ACCEPTED)
+  - P3-VS1 to P3-VS12: `COMPLETE_FINAL_ACCEPTED`
 - Open Blockers: 0.
