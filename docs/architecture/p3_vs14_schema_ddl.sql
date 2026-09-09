@@ -1,7 +1,7 @@
 -- ============================================================================
 -- P3-VS14: STUDENT LEARNING OPERATIONS, REFLECTION & AI-ASSISTED GROWTH
 -- POSTGRESQL 17 DDL, FORCE RLS, NOBYPASSRLS & AUDIT DISCIPLINE SPECIFICATION
--- Version: v1.5-CANONICAL
+-- Version: v1.6-CANONICAL
 -- Authority: COMMANDER_P3_VS14_DISCOVERY_UNLOCK
 -- Fleet Standard GUC: app.current_tenant
 -- Session Protocol: SET LOCAL "app.current_tenant" = %s strictly inside transaction.atomic()
@@ -140,6 +140,7 @@ CREATE TABLE IF NOT EXISTS learning_aiassistedgrowthsuggestion (
     CONSTRAINT uq_growthsuggestion_idempotency UNIQUE (tenant_id, idempotency_key),
     CONSTRAINT chk_suggestion_status CHECK (status IN ('PENDING', 'PRESENTED', 'ACCEPTED', 'DISMISSED', 'WITHDRAWN', 'SUPERSEDED')),
     CONSTRAINT chk_suggestion_advisory_invariant CHECK (is_authoritative = FALSE),
+    CONSTRAINT chk_suggestion_evidence_context CHECK (evidence_context <> '{}'::jsonb),
     CONSTRAINT chk_suggestion_rationale_len CHECK (length(trim(rationale)) >= 15),
     -- D1 Fix: Full union blacklist array on evidence_context
     CONSTRAINT chk_suggestion_evidence_no_pii CHECK (

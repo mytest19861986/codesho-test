@@ -57,7 +57,7 @@
 
 ---
 
-## 3. Detailed Negative Proof Matrix (N1 – N26)
+## 3. Detailed Negative Proof Matrix (N1 – N27)
 
 | Test ID | Test Category | Target Condition | Expected Result & Verification Mechanism |
 |:---|:---|:---|:---|
@@ -87,3 +87,4 @@
 | **N24** | Idempotency Proof | Insert duplicate suggestion with identical `(tenant_id, idempotency_key)` | Unique constraint `uq_growthsuggestion_idempotency` violation -> DB REJECT |
 | **N25** | Anti-Ranking Proof | Request student goals or reflection dashboard with peer ranking params | API rejects query params (`rank`, `percentile`, `leaderboard`) -> 400 Bad Request |
 | **N26** | F2 Role Authorization | Student attempts to trigger AI suggestion generation endpoint | Role permission check rejects request -> 403 Forbidden |
+| **N27** | R3 Explainability Proof | Insert suggestion with `evidence_context = '{}'::jsonb` (empty JSON object) | Constraint `chk_suggestion_evidence_context` violation -> DB REJECT (Explainability First) |
