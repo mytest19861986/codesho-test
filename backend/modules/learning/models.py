@@ -3857,3 +3857,433 @@ class ReflectionAuditLog(models.Model):
     def __str__(self) -> str:
         return f"{self.tenant_id}:{self.actor_id}:{self.action}:{self.created_at}"
 
+
+# ============================================================================
+# P3-VS15: LEARNING CONTINUITY & STUDENT SUCCESS PLANNING MODELS
+# ============================================================================
+
+class SuccessPlanStatus(models.TextChoices):
+    ACTIVE = "ACTIVE", "Active"
+    PAUSED = "PAUSED", "Paused"
+    COMPLETED = "COMPLETED", "Completed"
+    SUPERSEDED = "SUPERSEDED", "Superseded"
+    ARCHIVED = "ARCHIVED", "Archived"
+
+
+class SuccessPlanTargetPeriod(models.TextChoices):
+    CURRENT_TERM = "CURRENT_TERM", "Current Term"
+    ACADEMIC_YEAR = "ACADEMIC_YEAR", "Academic Year"
+    SUMMER_INTENSIVE = "SUMMER_INTENSIVE", "Summer Intensive"
+    MONTHLY_SPRINT = "MONTHLY_SPRINT", "Monthly Sprint"
+    QUARTERLY_CYCLE = "QUARTERLY_CYCLE", "Quarterly Cycle"
+    LONG_TERM_FOUNDATION = "LONG_TERM_FOUNDATION", "Long Term Foundation"
+
+
+class SuccessActionStepStatus(models.TextChoices):
+    PENDING = "PENDING", "Pending"
+    IN_PROGRESS = "IN_PROGRESS", "In Progress"
+    COMPLETED = "COMPLETED", "Completed"
+    SKIPPED = "SKIPPED", "Skipped"
+    CANCELLED = "CANCELLED", "Cancelled"
+
+
+class SuccessTimelineEventType(models.TextChoices):
+    GOAL_ANCHORED = "GOAL_ANCHORED", "Goal Anchored"
+    INSIGHT_CONNECTED = "INSIGHT_CONNECTED", "Insight Connected"
+    REFLECTION_TIED = "REFLECTION_TIED", "Reflection Tied"
+    ACTION_DISPATCHED = "ACTION_DISPATCHED", "Action Dispatched"
+    MILESTONE_PROGRESSION = "MILESTONE_PROGRESSION", "Milestone Progression"
+    TIMELINE_EVENT_AMENDED = "TIMELINE_EVENT_AMENDED", "Timeline Event Amended"
+
+
+class SuccessAuditAction(models.TextChoices):
+    CREATE_SUCCESS_PLAN = "CREATE_SUCCESS_PLAN", "Create Success Plan"
+    PAUSE_SUCCESS_PLAN = "PAUSE_SUCCESS_PLAN", "Pause Success Plan"
+    RESUME_SUCCESS_PLAN = "RESUME_SUCCESS_PLAN", "Resume Success Plan"
+    COMPLETE_SUCCESS_PLAN = "COMPLETE_SUCCESS_PLAN", "Complete Success Plan"
+    SUPERSEDE_SUCCESS_PLAN = "SUPERSEDE_SUCCESS_PLAN", "Supersede Success Plan"
+    ARCHIVE_SUCCESS_PLAN = "ARCHIVE_SUCCESS_PLAN", "Archive Success Plan"
+    CREATE_ACTION_STEP = "CREATE_ACTION_STEP", "Create Action Step"
+    UPDATE_ACTION_STEP = "UPDATE_ACTION_STEP", "Update Action Step"
+    TRANSITION_ACTION_STEP = "TRANSITION_ACTION_STEP", "Transition Action Step"
+    APPEND_TIMELINE_EVENT = "APPEND_TIMELINE_EVENT", "Append Timeline Event"
+
+
+class LearningStudentSuccessPlan(models.Model):
+    """
+    P3-VS15: Student longitudinal success plan with Active Singleton invariant.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="student_success_plans",
+    )
+    student_id = models.UUIDField(db_index=True)
+    title = models.CharField(max_length=255)
+    target_period = models.CharField(max_length=64, choices=SuccessPlanTargetPeriod.choices)
+    status = models.CharField(max_length=32, choices=SuccessPlanStatus.choices, default=SuccessPlanStatus.ACTIVE)
+    notes = models.TextField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    paused_at = models.DateTimeField(null=True, blank=True)
+    superseded_at = models.DateTimeField(null=True, blank=True)
+    archived_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_studentsuccessplan"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_studentsuccessplan_tenant_id",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "student_id"],
+                condition=Q(status=SuccessPlanStatus.ACTIVE),
+                name="uq_successplan_student_active",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=SuccessPlanStatus.values),
+                name="chk_successplan_status",
+            ),
+            models.CheckConstraint(
+                condition=Q(target_period__in=SuccessPlanTargetPeriod.values),
+                name="chk_successplan_target_period",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(status=SuccessPlanStatus.ACTIVE) & Q(completed_at__isnull=True) & Q(paused_at__isnull=True) & Q(superseded_at__isnull=True) & Q(archived_at__isnull=True)) |
+                    (Q(status=SuccessPlanStatus.PAUSED) & Q(paused_at__isnull=False) & Q(completed_at__isnull=True) & Q(superseded_at__isnull=True) & Q(archived_at__isnull=True)) |
+                    (Q(status=SuccessPlanStatus.COMPLETED) & Q(completed_at__isnull=False) & Q(paused_at__isnull=True) & Q(superseded_at__isnull=True) & Q(archived_at__isnull=True)) |
+                    (Q(status=SuccessPlanStatus.SUPERSEDED) & Q(superseded_at__isnull=False) & Q(archived_at__isnull=True)) |
+                    (Q(status=SuccessPlanStatus.ARCHIVED) & Q(archived_at__isnull=False))
+                ),
+                name="chk_successplan_status_consistency",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id", "-created_at"], name="idx_successplan_tenant_student"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if not self.title or len(self.title.strip()) < 3:
+            raise ValidationError("Title must be at least 3 characters.")
+        if len(self.title) > 255:
+            raise ValidationError("Title cannot exceed 255 characters.")
+        if self.notes and len(self.notes) > 4000:
+            raise ValidationError("Notes cannot exceed 4000 characters.")
+        from modules.platform_tenant.models import TenantMembership
+        if self.tenant_id and self.student_id:
+            if not TenantMembership.objects.filter(tenant_id=self.tenant_id, user_id=self.student_id).exists():
+                raise ValidationError("Student must belong to the specified tenant.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.student_id}:{self.title}:{self.status}"
+
+
+class SuccessActionStep(models.Model):
+    """
+    P3-VS15: Granular, sequential action steps tied to a StudentSuccessPlan.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="success_action_steps",
+    )
+    plan = models.ForeignKey(
+        LearningStudentSuccessPlan,
+        on_delete=models.CASCADE,
+        related_name="action_steps",
+    )
+    title = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
+    status = models.CharField(max_length=32, choices=SuccessActionStepStatus.choices, default=SuccessActionStepStatus.PENDING)
+    sequence_order = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
+    is_authoritative = models.BooleanField(default=False)
+    target_date = models.DateField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_successactionstep"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_successactionstep_tenant_id",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "plan", "sequence_order"],
+                name="uq_actionstep_tenant_plan_seq",
+            ),
+            models.CheckConstraint(
+                condition=Q(sequence_order__gte=1),
+                name="chk_actionstep_seq_positive",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=SuccessActionStepStatus.values),
+                name="chk_actionstep_status",
+            ),
+            models.CheckConstraint(
+                condition=Q(is_authoritative=False),
+                name="chk_step_non_authoritative",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(status=SuccessActionStepStatus.COMPLETED) & Q(completed_at__isnull=False)) |
+                    (~Q(status=SuccessActionStepStatus.COMPLETED) & Q(completed_at__isnull=True))
+                ),
+                name="chk_step_completion_consistency",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "plan", "sequence_order"], name="idx_actionstep_tenant_plan_seq"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.is_authoritative:
+            raise ValidationError("Action steps must remain non-authoritative (is_authoritative=False).")
+        if not self.title or len(self.title.strip()) < 3:
+            raise ValidationError("Title must be at least 3 characters.")
+        if len(self.title) > 255:
+            raise ValidationError("Title cannot exceed 255 characters.")
+        if self.description and len(self.description) > 4000:
+            raise ValidationError("Description cannot exceed 4000 characters.")
+        if self.plan and str(self.plan.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Plan tenant mismatch.")
+        if self.sequence_order < 1:
+            raise ValidationError("Sequence order must be at least 1.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.plan_id}:{self.sequence_order}:{self.title}"
+
+
+class SuccessTimelineEvent(models.Model):
+    """
+    P3-VS15: Append-only longitudinal learning trail connecting goals, insights,
+    reflections, action steps, and milestones with 5-way XOR and Deferrable FK topology.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="success_timeline_events",
+    )
+    plan = models.ForeignKey(
+        LearningStudentSuccessPlan,
+        on_delete=models.DO_NOTHING,
+        related_name="timeline_events",
+    )
+    actor_id = models.UUIDField(db_index=True)
+    event_type = models.CharField(max_length=64, choices=SuccessTimelineEventType.choices)
+    headline = models.CharField(max_length=255)
+    detail = models.TextField(null=True, blank=True)
+    target_goal = models.ForeignKey(
+        StudentLearningGoal,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="timeline_events",
+    )
+    target_insight = models.ForeignKey(
+        LearningInsight,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="timeline_events",
+    )
+    target_reflection = models.ForeignKey(
+        LearningReflection,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="timeline_events",
+    )
+    target_action_step = models.ForeignKey(
+        SuccessActionStep,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="timeline_events",
+    )
+    target_milestone = models.ForeignKey(
+        LearningMilestone,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="timeline_events",
+    )
+    client_mutation_id = models.UUIDField(null=True, blank=True, db_index=True)
+    replaces_event = models.ForeignKey(
+        "self",
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="amendments",
+    )
+    metadata = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_successtimelineevent"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_successtimelineevent_tenant_id",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "client_mutation_id"],
+                condition=Q(client_mutation_id__isnull=False),
+                name="uq_timelineevent_tenant_mutation",
+            ),
+            models.CheckConstraint(
+                condition=Q(event_type__in=SuccessTimelineEventType.values),
+                name="chk_timeline_event_type",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "plan", "-created_at"], name="idx_timeline_tenant_plan_time"),
+            models.Index(fields=["tenant", "target_goal"], name="idx_timeline_tenant_goal"),
+            models.Index(fields=["tenant", "target_insight"], name="idx_timeline_tenant_insight"),
+            models.Index(fields=["tenant", "target_reflection"], name="idx_timeline_tenant_reflection"),
+            models.Index(fields=["tenant", "target_action_step"], name="idx_timeline_tenant_action"),
+            models.Index(fields=["tenant", "target_milestone"], name="idx_timeline_tenant_milestone"),
+            models.Index(fields=["tenant", "replaces_event"], name="idx_timeline_tenant_replaces"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if not self.headline or len(self.headline.strip()) < 3:
+            raise ValidationError("Headline must be at least 3 characters.")
+        if len(self.headline) > 255:
+            raise ValidationError("Headline cannot exceed 255 characters.")
+        if self.detail and len(self.detail) > 4000:
+            raise ValidationError("Detail cannot exceed 4000 characters.")
+        targets = [
+            self.target_goal,
+            self.target_insight,
+            self.target_reflection,
+            self.target_action_step,
+            self.target_milestone,
+        ]
+        non_null_count = sum(1 for t in targets if t is not None)
+        if non_null_count != 1:
+            raise ValidationError("Exactly one target entity must be linked (chk_timeline_target_xor).")
+        # 1-to-1 Type-Target coupling verification
+        if self.event_type == SuccessTimelineEventType.GOAL_ANCHORED and self.target_goal is None:
+            raise ValidationError("GOAL_ANCHORED must link target_goal.")
+        elif self.event_type == SuccessTimelineEventType.INSIGHT_CONNECTED and self.target_insight is None:
+            raise ValidationError("INSIGHT_CONNECTED must link target_insight.")
+        elif self.event_type == SuccessTimelineEventType.REFLECTION_TIED and self.target_reflection is None:
+            raise ValidationError("REFLECTION_TIED must link target_reflection.")
+        elif self.event_type == SuccessTimelineEventType.ACTION_DISPATCHED and self.target_action_step is None:
+            raise ValidationError("ACTION_DISPATCHED must link target_action_step.")
+        elif self.event_type == SuccessTimelineEventType.MILESTONE_PROGRESSION and self.target_milestone is None:
+            raise ValidationError("MILESTONE_PROGRESSION must link target_milestone.")
+        elif self.event_type == SuccessTimelineEventType.TIMELINE_EVENT_AMENDED and self.replaces_event is None:
+            raise ValidationError("TIMELINE_EVENT_AMENDED must specify replaces_event.")
+
+        for t in targets:
+            if t is not None and str(t.tenant_id) != str(self.tenant_id):
+                raise ValidationError("Target entity tenant mismatch.")
+        if self.plan and str(self.plan.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Plan tenant mismatch.")
+        if self.replaces_event and str(self.replaces_event.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Replaces event tenant mismatch.")
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError("SuccessTimelineEvent is strictly append-only.")
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("SuccessTimelineEvent records cannot be deleted.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.plan_id}:{self.event_type}:{self.headline}"
+
+
+class SuccessAuditLog(models.Model):
+    """
+    P3-VS15: Forensic append-only audit trail for StudentSuccessPlan,
+    SuccessActionStep, and SuccessTimelineEvent mutations.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="success_audit_logs",
+    )
+    actor_id = models.UUIDField(db_index=True)
+    target_plan = models.ForeignKey(
+        LearningStudentSuccessPlan,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+    )
+    target_action_step = models.ForeignKey(
+        SuccessActionStep,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+    )
+    target_timeline_event = models.ForeignKey(
+        SuccessTimelineEvent,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+    )
+    action = models.CharField(max_length=64, choices=SuccessAuditAction.choices)
+    metadata = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_successauditlog"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_successauditlog_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(action__in=SuccessAuditAction.values),
+                name="chk_successaudit_action",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "actor_id", "-created_at"], name="idx_successaudit_tenant_actor"),
+            models.Index(fields=["tenant", "target_plan"], name="idx_successaudit_tenant_plan"),
+            models.Index(fields=["tenant", "target_action_step"], name="idx_successaudit_tenant_act"),
+            models.Index(fields=["tenant", "target_timeline_event"], name="idx_successaudit_tenant_time"),
+        ]
+
+    def clean(self):
+        super().clean()
+        targets = [self.target_plan, self.target_action_step, self.target_timeline_event]
+        non_null_count = sum(1 for t in targets if t is not None)
+        if non_null_count != 1:
+            raise ValidationError("Exactly one target entity must be specified (chk_successaudit_target_xor).")
+        for t in targets:
+            if t is not None and str(t.tenant_id) != str(self.tenant_id):
+                raise ValidationError("Target entity tenant mismatch.")
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError("SuccessAuditLog is strictly append-only.")
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("SuccessAuditLog records cannot be deleted.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.actor_id}:{self.action}:{self.created_at}"
+
+

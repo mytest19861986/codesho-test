@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Protocol, cast
 from uuid import UUID
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import models, transaction
 from django.db.models import Q
 from django.http import HttpRequest
@@ -2525,4 +2525,228 @@ class MentorReflectionFeedbackCreateView(APIView):
             return Response({"detail": str(e)}, status=400)
         except PermissionDenied as e:
             return Response({"detail": str(e)}, status=403)
+
+
+# ============================================================================
+# P3-VS15: LEARNING CONTINUITY & STUDENT SUCCESS PLANNING VIEWS
+# ============================================================================
+
+class StudentSuccessPlanListCreateView(APIView):
+    """
+    GET /api/v1/learning/success-plans/
+    POST /api/v1/learning/success-plans/
+    """
+    def get(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        # Anti-Ranking Policy Guard
+        if request.query_params.get("rank") or request.query_params.get("leaderboard"):
+            return Response({"detail": "Anti-Ranking Policy: Success plans cannot be ranked or compared competitively."}, status=400)
+
+        from modules.platform_tenant.models import TenantMembership
+        from modules.learning.models import LearningStudentSuccessPlan
+        from modules.learning.serializers import LearningStudentSuccessPlanSerializer
+
+        membership = TenantMembership.objects.filter(tenant_id=tenant_id, user_id=actor_id).first()
+        if not membership:
+            return Response({"detail": "Forbidden"}, status=403)
+
+        student_param = request.query_params.get("student_id")
+        if membership.role in ["student"]:
+            target_student_id = actor_id
+        elif membership.role in ["mentor", "admin", "owner", "staff"]:
+            target_student_id = UUID(student_param) if student_param else actor_id
+        else:
+            return Response({"detail": "Forbidden"}, status=403)
+
+        plans = LearningStudentSuccessPlan.objects.filter(
+            tenant_id=tenant_id,
+            student_id=target_student_id,
+        ).order_by("-created_at")
+
+        serializer = LearningStudentSuccessPlanSerializer(plans, many=True)
+        return Response(serializer.data, status=200)
+
+    def post(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.platform_tenant.models import TenantMembership
+        from modules.learning.continuity_coordinator_service import ContinuityCoordinatorService
+        from modules.learning.serializers import LearningStudentSuccessPlanSerializer
+
+        membership = TenantMembership.objects.filter(tenant_id=tenant_id, user_id=actor_id).first()
+        if not membership:
+            return Response({"detail": "Forbidden"}, status=403)
+
+        if membership.role in ["student"]:
+            student_id = actor_id
+        else:
+            student_id = UUID(request.data.get("student_id", str(actor_id)))
+
+        title = request.data.get("title", "")
+        target_period = request.data.get("target_period", "CURRENT_TERM")
+        notes = request.data.get("notes")
+
+        try:
+            plan = ContinuityCoordinatorService.create_success_plan(
+                tenant_id=tenant_id,
+                student_id=student_id,
+                actor_id=actor_id,
+                title=title,
+                target_period=target_period,
+                notes=notes,
+            )
+            return Response(LearningStudentSuccessPlanSerializer(plan).data, status=201)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+
+
+class StudentSuccessPlanDetailTransitionView(APIView):
+    """
+    GET /api/v1/learning/success-plans/<plan_id>/
+    POST /api/v1/learning/success-plans/<plan_id>/transition/
+    """
+    def get(self, request: Request, plan_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        from modules.learning.models import LearningStudentSuccessPlan
+        from modules.learning.serializers import LearningStudentSuccessPlanSerializer
+
+        plan = LearningStudentSuccessPlan.objects.filter(tenant_id=tenant_id, id=plan_id).first()
+        if not plan:
+            return Response({"detail": "Not found"}, status=404)
+
+        return Response(LearningStudentSuccessPlanSerializer(plan).data, status=200)
+
+    def post(self, request: Request, plan_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        new_status = request.data.get("status")
+        if not new_status:
+            return Response({"detail": "status parameter is required"}, status=400)
+
+        from modules.learning.continuity_coordinator_service import ContinuityCoordinatorService
+        from modules.learning.serializers import LearningStudentSuccessPlanSerializer
+
+        try:
+            plan = ContinuityCoordinatorService.transition_plan_status(
+                tenant_id=tenant_id,
+                plan_id=plan_id,
+                actor_id=actor_id,
+                new_status=new_status,
+            )
+            return Response(LearningStudentSuccessPlanSerializer(plan).data, status=200)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+
+
+class SuccessActionStepCreateTransitionView(APIView):
+    """
+    POST /api/v1/learning/success-plans/<plan_id>/steps/
+    POST /api/v1/learning/success-steps/<step_id>/transition/
+    """
+    def post(self, request: Request, plan_id: Optional[UUID] = None, step_id: Optional[UUID] = None) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.continuity_coordinator_service import ContinuityCoordinatorService
+        from modules.learning.serializers import SuccessActionStepSerializer
+
+        if plan_id:
+            # Create Step
+            title = request.data.get("title", "")
+            description = request.data.get("description")
+            sequence_order = int(request.data.get("sequence_order", 1))
+            target_date = request.data.get("target_date")
+
+            try:
+                step = ContinuityCoordinatorService.create_action_step(
+                    tenant_id=tenant_id,
+                    plan_id=plan_id,
+                    actor_id=actor_id,
+                    title=title,
+                    description=description,
+                    sequence_order=sequence_order,
+                    target_date=target_date,
+                )
+                return Response(SuccessActionStepSerializer(step).data, status=201)
+            except ValidationError as e:
+                return Response({"detail": str(e)}, status=400)
+        elif step_id:
+            # Transition Step
+            new_status = request.data.get("status")
+            if not new_status:
+                return Response({"detail": "status required"}, status=400)
+
+            try:
+                step = ContinuityCoordinatorService.transition_step_status(
+                    tenant_id=tenant_id,
+                    step_id=step_id,
+                    actor_id=actor_id,
+                    new_status=new_status,
+                )
+                return Response(SuccessActionStepSerializer(step).data, status=200)
+            except PermissionDenied as e:
+                return Response({"detail": str(e)}, status=403)
+            except ValidationError as e:
+                return Response({"detail": str(e)}, status=400)
+        return Response({"detail": "Invalid endpoint"}, status=400)
+
+
+class SuccessTimelineEventAppendView(APIView):
+    """
+    POST /api/v1/learning/success-plans/<plan_id>/timeline/
+    """
+    def post(self, request: Request, plan_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.continuity_coordinator_service import ContinuityCoordinatorService
+        from modules.learning.serializers import SuccessTimelineEventSerializer
+
+        event_type = request.data.get("event_type")
+        headline = request.data.get("headline", "")
+        detail = request.data.get("detail")
+        target_goal_id = UUID(request.data["target_goal_id"]) if request.data.get("target_goal_id") else None
+        target_insight_id = UUID(request.data["target_insight_id"]) if request.data.get("target_insight_id") else None
+        target_reflection_id = UUID(request.data["target_reflection_id"]) if request.data.get("target_reflection_id") else None
+        target_action_step_id = UUID(request.data["target_action_step_id"]) if request.data.get("target_action_step_id") else None
+        target_milestone_id = UUID(request.data["target_milestone_id"]) if request.data.get("target_milestone_id") else None
+        replaces_event_id = UUID(request.data["replaces_event_id"]) if request.data.get("replaces_event_id") else None
+        client_mutation_id = UUID(request.data["client_mutation_id"]) if request.data.get("client_mutation_id") else None
+        metadata = request.data.get("metadata", {})
+
+        try:
+            event = ContinuityCoordinatorService.append_timeline_event(
+                tenant_id=tenant_id,
+                plan_id=plan_id,
+                actor_id=actor_id,
+                event_type=event_type,
+                headline=headline,
+                detail=detail,
+                target_goal_id=target_goal_id,
+                target_insight_id=target_insight_id,
+                target_reflection_id=target_reflection_id,
+                target_action_step_id=target_action_step_id,
+                target_milestone_id=target_milestone_id,
+                replaces_event_id=replaces_event_id,
+                client_mutation_id=client_mutation_id,
+                metadata=metadata,
+            )
+            return Response(SuccessTimelineEventSerializer(event).data, status=201)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+
 

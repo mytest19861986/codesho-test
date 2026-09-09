@@ -360,7 +360,35 @@ urlpatterns = [
         views.AIAssistedGrowthSuggestionView.as_view(),
         name="learning-suggestions-generate",
     ),
+    # Phase 3 VS15 Learning Continuity and Student Success Planning
+    path(
+        "success-plans/",
+        views.StudentSuccessPlanListCreateView.as_view(),
+        name="learning-success-plans-list-create",
+    ),
+    path(
+        "success-plans/<uuid:plan_id>/",
+        views.StudentSuccessPlanDetailTransitionView.as_view(),
+        name="learning-success-plan-detail",
+    ),
+    path(
+        "success-plans/<uuid:plan_id>/transition/",
+        views.StudentSuccessPlanDetailTransitionView.as_view(),
+        name="learning-success-plan-transition",
+    ),
+    path(
+        "success-plans/<uuid:plan_id>/steps/",
+        views.SuccessActionStepCreateTransitionView.as_view(),
+        name="learning-success-plan-steps",
+    ),
+    path(
+        "success-steps/<uuid:step_id>/transition/",
+        views.SuccessActionStepCreateTransitionView.as_view(),
+        name="learning-success-step-transition",
+    ),
+    path(
+        "success-plans/<uuid:plan_id>/timeline/",
+        views.SuccessTimelineEventAppendView.as_view(),
+        name="learning-success-plan-timeline",
+    ),
 ]
-
-
-

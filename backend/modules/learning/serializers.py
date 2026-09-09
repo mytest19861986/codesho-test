@@ -1114,3 +1114,124 @@ class ReflectionAuditLogSerializer(serializers.ModelSerializer):
             "created_at",
         ]
 
+
+# ============================================================================
+# P3-VS15: LEARNING CONTINUITY & STUDENT SUCCESS PLANNING SERIALIZERS
+# ============================================================================
+
+class SuccessActionStepSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import SuccessActionStep
+        model = SuccessActionStep
+        fields = [
+            "id",
+            "plan",
+            "title",
+            "description",
+            "status",
+            "sequence_order",
+            "is_authoritative",
+            "target_date",
+            "completed_at",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "is_authoritative",
+            "completed_at",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class SuccessTimelineEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import SuccessTimelineEvent
+        model = SuccessTimelineEvent
+        fields = [
+            "id",
+            "plan",
+            "actor_id",
+            "event_type",
+            "headline",
+            "detail",
+            "target_goal",
+            "target_insight",
+            "target_reflection",
+            "target_action_step",
+            "target_milestone",
+            "client_mutation_id",
+            "replaces_event",
+            "metadata",
+            "created_at",
+        ]
+        read_only_fields = [
+            "id",
+            "actor_id",
+            "created_at",
+        ]
+
+
+class LearningStudentSuccessPlanSerializer(serializers.ModelSerializer):
+    action_steps = SuccessActionStepSerializer(many=True, read_only=True)
+    timeline_events = SuccessTimelineEventSerializer(many=True, read_only=True)
+
+    class Meta:
+        from .models import LearningStudentSuccessPlan
+        model = LearningStudentSuccessPlan
+        fields = [
+            "id",
+            "student_id",
+            "title",
+            "target_period",
+            "status",
+            "notes",
+            "completed_at",
+            "paused_at",
+            "superseded_at",
+            "archived_at",
+            "action_steps",
+            "timeline_events",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "student_id",
+            "status",
+            "completed_at",
+            "paused_at",
+            "superseded_at",
+            "archived_at",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class SuccessAuditLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import SuccessAuditLog
+        model = SuccessAuditLog
+        fields = [
+            "id",
+            "actor_id",
+            "target_plan",
+            "target_action_step",
+            "target_timeline_event",
+            "action",
+            "metadata",
+            "created_at",
+        ]
+        read_only_fields = [
+            "id",
+            "actor_id",
+            "target_plan",
+            "target_action_step",
+            "target_timeline_event",
+            "action",
+            "metadata",
+            "created_at",
+        ]
+
+
