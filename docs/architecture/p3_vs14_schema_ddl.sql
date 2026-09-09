@@ -1,7 +1,7 @@
 -- ============================================================================
 -- P3-VS14: STUDENT LEARNING OPERATIONS, REFLECTION & AI-ASSISTED GROWTH
 -- POSTGRESQL 17 DDL, FORCE RLS, NOBYPASSRLS & AUDIT DISCIPLINE SPECIFICATION
--- Version: v1.3-CANONICAL
+-- Version: v1.5-CANONICAL
 -- Authority: COMMANDER_P3_VS14_DISCOVERY_UNLOCK
 -- Fleet Standard GUC: app.current_tenant
 -- Session Protocol: SET LOCAL "app.current_tenant" = %s strictly inside transaction.atomic()
@@ -20,12 +20,11 @@ CREATE TABLE IF NOT EXISTS learning_learningreflection (
     is_retracted BOOLEAN NOT NULL DEFAULT FALSE,
     retracted_at TIMESTAMPTZ NULL,
     retraction_reason VARCHAR(255) NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
 
     CONSTRAINT pk_learning_learningreflection PRIMARY KEY (id),
     CONSTRAINT uq_learning_learningreflection_tenant_id UNIQUE (tenant_id, id),
-    -- B4 Fix: Tenant wipe cascades
     CONSTRAINT fk_learningreflection_tenant FOREIGN KEY (tenant_id)
         REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
     CONSTRAINT fk_learningreflection_student FOREIGN KEY (tenant_id, student_id)
@@ -33,7 +32,6 @@ CREATE TABLE IF NOT EXISTS learning_learningreflection (
     CONSTRAINT chk_reflection_content_len CHECK (length(trim(content)) > 0 AND length(content) <= 10000),
     CONSTRAINT chk_reflection_prompt_type CHECK (prompt_type IN ('WEEKLY_REVIEW', 'MILESTONE_RETROSPECTIVE', 'OBSTACLE_ANALYSIS', 'FREE_REFLECTION')),
     CONSTRAINT chk_reflection_mood CHECK (mood_sentiment IN ('GROWTH_MINDSET', 'CONFIDENT', 'CHALLENGED', 'CURIOUS', 'NEUTRAL')),
-    -- F4 Fix: Retraction consistency
     CONSTRAINT chk_reflection_retraction_consistency CHECK (
         (is_retracted = FALSE AND retracted_at IS NULL AND retraction_reason IS NULL) OR
         (is_retracted = TRUE AND retracted_at IS NOT NULL AND retraction_reason IS NOT NULL)
@@ -58,17 +56,15 @@ CREATE TABLE IF NOT EXISTS learning_studentlearninggoal (
     status VARCHAR(32) NOT NULL DEFAULT 'DRAFT',
     target_date DATE NULL,
     completed_at TIMESTAMPTZ NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
 
     CONSTRAINT pk_learning_studentlearninggoal PRIMARY KEY (id),
     CONSTRAINT uq_learning_studentlearninggoal_tenant_id UNIQUE (tenant_id, id),
-    -- B4 Fix: Tenant wipe cascades
     CONSTRAINT fk_studentlearninggoal_tenant FOREIGN KEY (tenant_id)
         REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
     CONSTRAINT fk_studentlearninggoal_student FOREIGN KEY (tenant_id, student_id)
         REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE CASCADE,
-    -- B1 Fix: Column-list in ON DELETE SET NULL to preserve tenant_id!
     CONSTRAINT fk_studentlearninggoal_milestone FOREIGN KEY (tenant_id, target_milestone_id)
         REFERENCES learning_learningmilestone(tenant_id, id) ON DELETE SET NULL (target_milestone_id),
     CONSTRAINT chk_goal_status CHECK (status IN ('DRAFT', 'ACTIVE', 'ACHIEVED', 'PAUSED', 'ARCHIVED', 'SUPERSEDED')),
@@ -78,7 +74,6 @@ CREATE TABLE IF NOT EXISTS learning_studentlearninggoal (
     )
 );
 
--- Partial Unique Index: Exactly 1 ACTIVE goal per domain per student!
 CREATE UNIQUE INDEX IF NOT EXISTS uq_goal_student_domain_active 
 ON learning_studentlearninggoal (tenant_id, student_id, domain) 
 WHERE (status = 'ACTIVE');
@@ -97,8 +92,8 @@ CREATE TABLE IF NOT EXISTS learning_goalactionplan (
     status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
     due_date DATE NULL,
     completed_at TIMESTAMPTZ NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
 
     CONSTRAINT pk_learning_goalactionplan PRIMARY KEY (id),
     CONSTRAINT uq_learning_goalactionplan_tenant_id UNIQUE (tenant_id, id),
@@ -131,26 +126,28 @@ CREATE TABLE IF NOT EXISTS learning_aiassistedgrowthsuggestion (
     idempotency_key VARCHAR(128) NOT NULL,
     status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
     is_authoritative BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
 
     CONSTRAINT pk_learning_aiassistedgrowthsuggestion PRIMARY KEY (id),
     CONSTRAINT uq_learning_aiassistedgrowthsuggestion_tenant_id UNIQUE (tenant_id, id),
     CONSTRAINT fk_growthsuggestion_student FOREIGN KEY (tenant_id, student_id)
         REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE CASCADE,
-    -- B1 Fix: Column-list in ON DELETE SET NULL to preserve tenant_id!
     CONSTRAINT fk_growthsuggestion_insight FOREIGN KEY (tenant_id, source_insight_id)
         REFERENCES learning_learninginsight(tenant_id, id) ON DELETE SET NULL (source_insight_id),
     CONSTRAINT fk_growthsuggestion_run FOREIGN KEY (tenant_id, generation_run_id)
         REFERENCES learning_calculationrun(tenant_id, id) ON DELETE SET NULL (generation_run_id),
     CONSTRAINT uq_growthsuggestion_idempotency UNIQUE (tenant_id, idempotency_key),
-    -- F2 Fix: PENDING default + SUPERSEDED support
     CONSTRAINT chk_suggestion_status CHECK (status IN ('PENDING', 'PRESENTED', 'ACCEPTED', 'DISMISSED', 'WITHDRAWN', 'SUPERSEDED')),
     CONSTRAINT chk_suggestion_advisory_invariant CHECK (is_authoritative = FALSE),
-    CONSTRAINT chk_suggestion_evidence_context CHECK (evidence_context <> '{}'::jsonb),
-    -- M3 Fix: JSONB key blacklist check on evidence_context
+    CONSTRAINT chk_suggestion_rationale_len CHECK (length(trim(rationale)) >= 15),
+    -- D1 Fix: Full union blacklist array on evidence_context
     CONSTRAINT chk_suggestion_evidence_no_pii CHECK (
-        NOT (evidence_context ?| ARRAY['fingerprint', 'face_id', 'voice_sample', 'bank_account', 'iban', 'credit_card', 'national_id', 'phone_number'])
+        jsonb_typeof(evidence_context) = 'object'
+        AND NOT (evidence_context ?| ARRAY[
+            'name', 'phone', 'email', 'national_id', 'location', 'avatar_url', 'phone_number',
+            'fingerprint', 'face_id', 'voice_sample', 'bank_account', 'iban', 'credit_card'
+        ])
     ),
     CONSTRAINT chk_suggestion_provenance_digest CHECK (provenance_digest ~ '^[0-9a-f]{64}$'),
     CONSTRAINT chk_suggestion_no_pii CHECK (
@@ -160,7 +157,6 @@ CREATE TABLE IF NOT EXISTS learning_aiassistedgrowthsuggestion (
     )
 );
 
--- Partial Unique Index: Exactly 1 PRESENTED suggestion per type per student!
 CREATE UNIQUE INDEX IF NOT EXISTS uq_suggestion_presented_singleton
 ON learning_aiassistedgrowthsuggestion (tenant_id, student_id, suggestion_type)
 WHERE (status = 'PRESENTED');
@@ -179,8 +175,8 @@ CREATE TABLE IF NOT EXISTS learning_mentorreflectionfeedback (
     is_retracted BOOLEAN NOT NULL DEFAULT FALSE,
     retracted_at TIMESTAMPTZ NULL,
     retraction_reason VARCHAR(255) NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
 
     CONSTRAINT pk_learning_mentorreflectionfeedback PRIMARY KEY (id),
     CONSTRAINT uq_learning_mentorreflectionfeedback_tenant_id UNIQUE (tenant_id, id),
@@ -199,7 +195,7 @@ CREATE TABLE IF NOT EXISTS learning_mentorreflectionfeedback (
 );
 
 -- ----------------------------------------------------------------------------
--- 6. REFLECTION AUDIT LOG (Forensic Append-Only Trail - B3 Fix)
+-- 6. REFLECTION AUDIT LOG (Forensic Append-Only Trail - SA-2 & F3 Fix)
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS learning_reflectionauditlog (
     id UUID NOT NULL,
@@ -211,41 +207,57 @@ CREATE TABLE IF NOT EXISTS learning_reflectionauditlog (
     target_suggestion_id UUID NULL,
     action VARCHAR(64) NOT NULL,
     metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
 
     CONSTRAINT pk_learning_reflectionauditlog PRIMARY KEY (id),
     CONSTRAINT uq_learning_reflectionauditlog_tenant_id UNIQUE (tenant_id, id),
-    -- B4 Fix: Tenant wipe cascades
     CONSTRAINT fk_auditlog_tenant FOREIGN KEY (tenant_id)
         REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
     CONSTRAINT fk_auditlog_actor FOREIGN KEY (tenant_id, actor_id)
         REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE RESTRICT,
-    -- B3 Fix: Explicit XOR target foreign keys with RESTRICT (forensic preservation)
+    -- SA-2 Fix: DEFERRABLE INITIALLY DEFERRED eliminates tenant wipe cascade ordering sensitivity
     CONSTRAINT fk_auditlog_target_reflection FOREIGN KEY (tenant_id, target_reflection_id)
-        REFERENCES learning_learningreflection(tenant_id, id) ON DELETE RESTRICT,
+        REFERENCES learning_learningreflection(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
     CONSTRAINT fk_auditlog_target_goal FOREIGN KEY (tenant_id, target_goal_id)
-        REFERENCES learning_studentlearninggoal(tenant_id, id) ON DELETE RESTRICT,
+        REFERENCES learning_studentlearninggoal(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
     CONSTRAINT fk_auditlog_target_feedback FOREIGN KEY (tenant_id, target_feedback_id)
-        REFERENCES learning_mentorreflectionfeedback(tenant_id, id) ON DELETE RESTRICT,
+        REFERENCES learning_mentorreflectionfeedback(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
     CONSTRAINT fk_auditlog_target_suggestion FOREIGN KEY (tenant_id, target_suggestion_id)
-        REFERENCES learning_aiassistedgrowthsuggestion(tenant_id, id) ON DELETE RESTRICT,
+        REFERENCES learning_aiassistedgrowthsuggestion(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
     CONSTRAINT chk_audit_target_xor CHECK (
         num_nonnulls(target_reflection_id, target_goal_id, target_feedback_id, target_suggestion_id) = 1
     ),
+    -- F3 Fix: Synchronize audit action enum with FSM transitions
     CONSTRAINT chk_audit_action CHECK (
-        action IN ('CREATE_REFLECTION', 'RETRACT_REFLECTION', 'CREATE_GOAL', 'TRANSITION_GOAL_STATUS',
-                   'CREATE_ACTION_PLAN', 'UPDATE_ACTION_PLAN', 'GENERATE_AI_SUGGESTION',
-                   'MODERATE_AI_SUGGESTION', 'ACCEPT_AI_SUGGESTION', 'WITHDRAW_AI_SUGGESTION',
-                   'POST_MENTOR_FEEDBACK', 'RETRACT_MENTOR_FEEDBACK')
+        action IN (
+            'CREATE_REFLECTION', 'RETRACT_REFLECTION', 'RESTORE_REFLECTION',
+            'CREATE_GOAL', 'TRANSITION_GOAL_STATUS',
+            'CREATE_ACTION_PLAN', 'UPDATE_ACTION_PLAN',
+            'GENERATE_AI_SUGGESTION', 'MODERATE_AI_SUGGESTION',
+            'ACCEPT_AI_SUGGESTION', 'DISMISS_AI_SUGGESTION',
+            'SUPERSEDE_AI_SUGGESTION', 'WITHDRAW_AI_SUGGESTION',
+            'POST_MENTOR_FEEDBACK', 'RETRACT_MENTOR_FEEDBACK'
+        )
     ),
+    -- D1 Fix: Full union blacklist array on metadata
     CONSTRAINT chk_audit_metadata_no_pii CHECK (
-        NOT (metadata ?| ARRAY['fingerprint', 'face_id', 'voice_sample', 'bank_account', 'iban', 'credit_card', 'national_id', 'phone_number'])
+        jsonb_typeof(metadata) = 'object'
+        AND NOT (metadata ?| ARRAY[
+            'name', 'phone', 'email', 'national_id', 'location', 'avatar_url', 'phone_number',
+            'fingerprint', 'face_id', 'voice_sample', 'bank_account', 'iban', 'credit_card'
+        ])
     )
 );
 
 CREATE INDEX IF NOT EXISTS idx_audit_tenant_actor_time ON learning_reflectionauditlog (tenant_id, actor_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_audit_tenant_refl ON learning_reflectionauditlog (tenant_id, target_reflection_id) WHERE target_reflection_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_audit_tenant_goal ON learning_reflectionauditlog (tenant_id, target_goal_id) WHERE target_goal_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_audit_tenant_feedback ON learning_reflectionauditlog (tenant_id, target_feedback_id) WHERE target_feedback_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_audit_tenant_sugg ON learning_reflectionauditlog (tenant_id, target_suggestion_id) WHERE target_suggestion_id IS NOT NULL;
 
 -- ----------------------------------------------------------------------------
 -- 7. POSTGRESQL 17 FORCE RLS & NOBYPASSRLS MATRIX
@@ -277,6 +289,5 @@ BEGIN
     END LOOP;
 END $$;
 
--- M1 Fix: Standard fleet grantee is app_role
 REVOKE UPDATE, DELETE ON learning_reflectionauditlog FROM PUBLIC;
 REVOKE UPDATE, DELETE ON learning_reflectionauditlog FROM app_role;
