@@ -87,6 +87,10 @@ def _pagination(request: Request) -> tuple[int, int] | Response:
 
 
 def _tenant_id(request: HttpRequest) -> UUID:
+    if hasattr(request, "tenant"):
+        return request.tenant.id
+    if hasattr(request, "tenant_id"):
+        return request.tenant_id
     tenant_request = cast(_TenantRequest, request)
     return tenant_request.tenant.id
 
@@ -2199,3 +2203,326 @@ class MilestoneRetractionView(APIView):
             return Response({"detail": str(e)}, status=400)
         except PermissionDenied as e:
             return Response({"detail": str(e)}, status=403)
+
+
+# ============================================================================
+# P3-VS14: STUDENT LEARNING OPERATIONS, REFLECTION & AI-ASSISTED GROWTH VIEWS
+# ============================================================================
+
+class LearningReflectionListCreateView(APIView):
+    """
+    GET  /api/v1/learning/reflections/ - List reflections (Student owns or Mentor assigned)
+    POST /api/v1/learning/reflections/ - Create reflection (Student only)
+    """
+    def get(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.models import LearningReflection
+        from modules.learning.serializers import LearningReflectionSerializer
+
+        student_id_param = request.query_params.get("student_id")
+        target_student_id = UUID(student_id_param) if student_id_param else actor_id
+
+        # Enforce Anti-ranking: reject peer ranking query params
+        for prohibited in ["rank", "percentile", "leaderboard", "compare"]:
+            if prohibited in request.query_params:
+                return Response({"detail": "Peer ranking and comparative sorting are strictly prohibited."}, status=400)
+
+        queryset = LearningReflection.objects.filter(
+            tenant_id=tenant_id,
+            student_id=target_student_id,
+            is_retracted=False,
+        ).order_by("-created_at")
+
+        serializer = LearningReflectionSerializer(queryset, many=True)
+        return Response(serializer.data, status=200)
+
+    def post(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        prompt_type = request.data.get("prompt_type", "WEEKLY_REVIEW")
+        content = request.data.get("content", "")
+        mood_sentiment = request.data.get("mood_sentiment", "NEUTRAL")
+
+        from modules.learning.learning_operations_service import LearningOperationsService
+        from modules.learning.serializers import LearningReflectionSerializer
+
+        try:
+            reflection = LearningOperationsService.create_reflection(
+                tenant_id=tenant_id,
+                student_id=actor_id,
+                prompt_type=prompt_type,
+                content=content,
+                mood_sentiment=mood_sentiment,
+            )
+            return Response(LearningReflectionSerializer(reflection).data, status=201)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+
+
+class LearningReflectionRetractView(APIView):
+    """
+    POST /api/v1/learning/reflections/<reflection_id>/retract/
+    Retracts a previously published reflection entry with audited reason.
+    """
+    def post(self, request: Request, reflection_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        reason = request.data.get("reason", "")
+        from modules.learning.learning_operations_service import LearningOperationsService
+        from modules.learning.serializers import LearningReflectionSerializer
+
+        try:
+            reflection = LearningOperationsService.retract_reflection(
+                tenant_id=tenant_id,
+                reflection_id=reflection_id,
+                actor_id=actor_id,
+                reason=reason,
+            )
+            return Response(LearningReflectionSerializer(reflection).data, status=200)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+
+
+class StudentLearningGoalListCreateView(APIView):
+    """
+    GET  /api/v1/learning/goals/ - List goals (Student owns or Mentor assigned)
+    POST /api/v1/learning/goals/ - Create personal goal in DRAFT state
+    """
+    def get(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.models import StudentLearningGoal
+        from modules.learning.serializers import StudentLearningGoalSerializer
+
+        student_id_param = request.query_params.get("student_id")
+        target_student_id = UUID(student_id_param) if student_id_param else actor_id
+
+        # Anti-ranking check
+        for prohibited in ["rank", "percentile", "leaderboard", "compare"]:
+            if prohibited in request.query_params:
+                return Response({"detail": "Peer ranking and comparative sorting are strictly prohibited."}, status=400)
+
+        queryset = StudentLearningGoal.objects.filter(
+            tenant_id=tenant_id,
+            student_id=target_student_id,
+        ).prefetch_related("action_steps").order_by("-created_at")
+
+        serializer = StudentLearningGoalSerializer(queryset, many=True)
+        return Response(serializer.data, status=200)
+
+    def post(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        title = request.data.get("title", "")
+        domain = request.data.get("domain", "")
+        target_milestone_id = request.data.get("target_milestone_id")
+        target_date = request.data.get("target_date")
+
+        from modules.learning.learning_operations_service import LearningOperationsService
+        from modules.learning.serializers import StudentLearningGoalSerializer
+
+        try:
+            goal = LearningOperationsService.create_goal(
+                tenant_id=tenant_id,
+                student_id=actor_id,
+                title=title,
+                domain=domain,
+                target_milestone_id=UUID(target_milestone_id) if target_milestone_id else None,
+                target_date=target_date,
+            )
+            return Response(StudentLearningGoalSerializer(goal).data, status=201)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+
+
+class StudentLearningGoalTransitionView(APIView):
+    """
+    POST /api/v1/learning/goals/<goal_id>/transition/
+    Transitions a goal through the approved FSM: DRAFT -> ACTIVE -> ACHIEVED/PAUSED/ARCHIVED/SUPERSEDED
+    """
+    def post(self, request: Request, goal_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        target_status = request.data.get("target_status", "")
+        from modules.learning.learning_operations_service import LearningOperationsService
+        from modules.learning.serializers import StudentLearningGoalSerializer
+
+        try:
+            goal = LearningOperationsService.transition_goal_status(
+                tenant_id=tenant_id,
+                goal_id=goal_id,
+                actor_id=actor_id,
+                target_status=target_status,
+            )
+            return Response(StudentLearningGoalSerializer(goal).data, status=200)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+
+
+class GoalActionPlanCreateView(APIView):
+    """
+    POST /api/v1/learning/goals/<goal_id>/action-steps/
+    Adds an actionable step to a student learning goal.
+    """
+    def post(self, request: Request, goal_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        step_order = int(request.data.get("step_order", 1))
+        description = request.data.get("description", "")
+        due_date = request.data.get("due_date")
+
+        from modules.learning.learning_operations_service import LearningOperationsService
+        from modules.learning.serializers import GoalActionPlanSerializer
+
+        try:
+            step = LearningOperationsService.add_action_step(
+                tenant_id=tenant_id,
+                goal_id=goal_id,
+                step_order=step_order,
+                description=description,
+                due_date=due_date,
+            )
+            return Response(GoalActionPlanSerializer(step).data, status=201)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+
+
+class AIAssistedGrowthSuggestionView(APIView):
+    """
+    GET  /api/v1/learning/suggestions/ - List suggestions (Students see only PRESENTED; Mentors see PENDING & PRESENTED)
+    POST /api/v1/learning/suggestions/generate/ - Trigger AI suggestion (Staff/Mentor only; Students 403)
+    """
+    def get(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.models import AIAssistedGrowthSuggestion
+        from modules.learning.serializers import AIAssistedGrowthSuggestionSerializer
+        from modules.platform_tenant.models import TenantMembership
+
+        # Determine role
+        membership = TenantMembership.objects.filter(tenant_id=tenant_id, user_id=actor_id).first()
+        is_mentor_or_admin = membership and membership.role in ["mentor", "admin", "owner", "staff"]
+
+        student_id_param = request.query_params.get("student_id")
+        target_student_id = UUID(student_id_param) if student_id_param else actor_id
+
+        # Anti-ranking check
+        for prohibited in ["rank", "percentile", "leaderboard", "compare"]:
+            if prohibited in request.query_params:
+                return Response({"detail": "Peer ranking and comparative sorting are strictly prohibited."}, status=400)
+
+        queryset = AIAssistedGrowthSuggestion.objects.filter(
+            tenant_id=tenant_id,
+            student_id=target_student_id,
+        )
+
+        if not is_mentor_or_admin:
+            # Student moderation gate: PENDING suggestions are strictly filtered out
+            queryset = queryset.filter(status="PRESENTED")
+
+        queryset = queryset.order_by("-created_at")
+        serializer = AIAssistedGrowthSuggestionSerializer(queryset, many=True)
+        return Response(serializer.data, status=200)
+
+    def post(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.platform_tenant.models import TenantMembership
+        membership = TenantMembership.objects.filter(tenant_id=tenant_id, user_id=actor_id).first()
+        if not membership or membership.role not in ["mentor", "admin", "owner", "staff"]:
+            return Response({"detail": "Students are forbidden from directly generating authoritative suggestions."}, status=403)
+
+        student_id = UUID(request.data.get("student_id"))
+        suggestion_type = request.data.get("suggestion_type", "CONCEPT_REINFORCEMENT")
+        recommended_action = request.data.get("recommended_action", "")
+        rationale = request.data.get("rationale", "")
+        evidence_context = request.data.get("evidence_context", {})
+
+        from modules.learning.learning_operations_service import LearningOperationsService
+        from modules.learning.serializers import AIAssistedGrowthSuggestionSerializer
+
+        try:
+            sugg = LearningOperationsService.generate_ai_suggestion(
+                tenant_id=tenant_id,
+                student_id=student_id,
+                suggestion_type=suggestion_type,
+                recommended_action=recommended_action,
+                rationale=rationale,
+                evidence_context=evidence_context,
+            )
+            return Response(AIAssistedGrowthSuggestionSerializer(sugg).data, status=201)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+
+
+class MentorReflectionFeedbackCreateView(APIView):
+    """
+    POST /api/v1/learning/reflections/<reflection_id>/feedback/
+    Posts mentor pedagogical guidance to an assigned student reflection.
+    """
+    def post(self, request: Request, reflection_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.platform_tenant.models import TenantMembership
+        membership = TenantMembership.objects.filter(tenant_id=tenant_id, user_id=actor_id).first()
+        if not membership or membership.role not in ["mentor", "admin", "owner"]:
+            return Response({"detail": "Only authorized mentors can submit reflection feedback."}, status=403)
+
+        feedback_text = request.data.get("feedback_text", "")
+        from modules.learning.learning_operations_service import LearningOperationsService
+        from modules.learning.serializers import MentorReflectionFeedbackSerializer
+
+        try:
+            feedback = LearningOperationsService.post_mentor_feedback(
+                tenant_id=tenant_id,
+                reflection_id=reflection_id,
+                mentor_id=actor_id,
+                feedback_text=feedback_text,
+            )
+            return Response(MentorReflectionFeedbackSerializer(feedback).data, status=201)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+

@@ -940,3 +940,177 @@ class LearningInsightSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+
+# ============================================================================
+# P3-VS14: STUDENT LEARNING OPERATIONS & AI-ASSISTED REFLECTION SERIALIZERS
+# ============================================================================
+
+class LearningReflectionSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import LearningReflection
+        model = LearningReflection
+        fields = [
+            "id",
+            "student_id",
+            "prompt_type",
+            "content",
+            "mood_sentiment",
+            "is_retracted",
+            "retracted_at",
+            "retraction_reason",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "student_id",
+            "is_retracted",
+            "retracted_at",
+            "retraction_reason",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class GoalActionPlanSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import GoalActionPlan
+        model = GoalActionPlan
+        fields = [
+            "id",
+            "goal",
+            "step_order",
+            "description",
+            "status",
+            "due_date",
+            "completed_at",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "completed_at",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class StudentLearningGoalSerializer(serializers.ModelSerializer):
+    action_steps = GoalActionPlanSerializer(many=True, read_only=True)
+
+    class Meta:
+        from .models import StudentLearningGoal
+        model = StudentLearningGoal
+        fields = [
+            "id",
+            "student_id",
+            "title",
+            "domain",
+            "target_milestone",
+            "status",
+            "target_date",
+            "completed_at",
+            "action_steps",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "student_id",
+            "status",
+            "completed_at",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class AIAssistedGrowthSuggestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import AIAssistedGrowthSuggestion
+        model = AIAssistedGrowthSuggestion
+        fields = [
+            "id",
+            "student_id",
+            "source_insight",
+            "generation_run",
+            "suggestion_type",
+            "recommended_action",
+            "rationale",
+            "evidence_context",
+            "model_identifier",
+            "provenance_digest",
+            "idempotency_key",
+            "status",
+            "is_authoritative",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "student_id",
+            "source_insight",
+            "generation_run",
+            "model_identifier",
+            "provenance_digest",
+            "idempotency_key",
+            "status",
+            "is_authoritative",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class MentorReflectionFeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import MentorReflectionFeedback
+        model = MentorReflectionFeedback
+        fields = [
+            "id",
+            "reflection",
+            "mentor_id",
+            "feedback_text",
+            "is_retracted",
+            "retracted_at",
+            "retraction_reason",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "mentor_id",
+            "is_retracted",
+            "retracted_at",
+            "retraction_reason",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class ReflectionAuditLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import ReflectionAuditLog
+        model = ReflectionAuditLog
+        fields = [
+            "id",
+            "actor_id",
+            "target_reflection",
+            "target_goal",
+            "target_feedback",
+            "target_suggestion",
+            "action",
+            "metadata",
+            "created_at",
+        ]
+        read_only_fields = [
+            "id",
+            "actor_id",
+            "target_reflection",
+            "target_goal",
+            "target_feedback",
+            "target_suggestion",
+            "action",
+            "metadata",
+            "created_at",
+        ]
+

@@ -3347,3 +3347,513 @@ class InsightGenerationEvent(models.Model):
 
     def __str__(self) -> str:
         return f"{self.tenant_id}:{self.student_id}:{self.event_type}:{self.event_key}:{self.status}"
+
+
+# ============================================================================
+# P3-VS14: STUDENT LEARNING OPERATIONS, REFLECTION & AI-ASSISTED GROWTH
+# Canonical Models conforming to DDL v1.6-CANONICAL & PostgreSQL 17 Force RLS
+# ============================================================================
+
+class ReflectionPromptType(models.TextChoices):
+    WEEKLY_REVIEW = "WEEKLY_REVIEW", "Weekly Review"
+    MILESTONE_RETROSPECTIVE = "MILESTONE_RETROSPECTIVE", "Milestone Retrospective"
+    OBSTACLE_ANALYSIS = "OBSTACLE_ANALYSIS", "Obstacle Analysis"
+    FREE_REFLECTION = "FREE_REFLECTION", "Free Reflection"
+
+
+class ReflectionMoodSentiment(models.TextChoices):
+    GROWTH_MINDSET = "GROWTH_MINDSET", "Growth Mindset"
+    CONFIDENT = "CONFIDENT", "Confident"
+    CHALLENGED = "CHALLENGED", "Challenged"
+    CURIOUS = "CURIOUS", "Curious"
+    NEUTRAL = "NEUTRAL", "Neutral"
+
+
+class GoalStatus(models.TextChoices):
+    DRAFT = "DRAFT", "Draft"
+    ACTIVE = "ACTIVE", "Active"
+    ACHIEVED = "ACHIEVED", "Achieved"
+    PAUSED = "PAUSED", "Paused"
+    ARCHIVED = "ARCHIVED", "Archived"
+    SUPERSEDED = "SUPERSEDED", "Superseded"
+
+
+class ActionPlanStatus(models.TextChoices):
+    PENDING = "PENDING", "Pending"
+    IN_PROGRESS = "IN_PROGRESS", "In Progress"
+    COMPLETED = "COMPLETED", "Completed"
+    SKIPPED = "SKIPPED", "Skipped"
+
+
+class SuggestionStatus(models.TextChoices):
+    PENDING = "PENDING", "Pending (Moderation Gate)"
+    PRESENTED = "PRESENTED", "Presented to Student"
+    ACCEPTED = "ACCEPTED", "Accepted by Student"
+    DISMISSED = "DISMISSED", "Dismissed by Student"
+    WITHDRAWN = "WITHDRAWN", "Withdrawn by Mentor/System"
+    SUPERSEDED = "SUPERSEDED", "Superseded by Newer Insight"
+
+
+class ReflectionAuditAction(models.TextChoices):
+    CREATE_REFLECTION = "CREATE_REFLECTION", "Create Reflection"
+    RETRACT_REFLECTION = "RETRACT_REFLECTION", "Retract Reflection"
+    RESTORE_REFLECTION = "RESTORE_REFLECTION", "Restore Reflection"
+    CREATE_GOAL = "CREATE_GOAL", "Create Goal"
+    TRANSITION_GOAL_STATUS = "TRANSITION_GOAL_STATUS", "Transition Goal Status"
+    CREATE_ACTION_PLAN = "CREATE_ACTION_PLAN", "Create Action Plan"
+    UPDATE_ACTION_PLAN = "UPDATE_ACTION_PLAN", "Update Action Plan"
+    GENERATE_AI_SUGGESTION = "GENERATE_AI_SUGGESTION", "Generate AI Suggestion"
+    MODERATE_AI_SUGGESTION = "MODERATE_AI_SUGGESTION", "Moderate AI Suggestion"
+    ACCEPT_AI_SUGGESTION = "ACCEPT_AI_SUGGESTION", "Accept AI Suggestion"
+    DISMISS_AI_SUGGESTION = "DISMISS_AI_SUGGESTION", "Dismiss AI Suggestion"
+    SUPERSEDE_AI_SUGGESTION = "SUPERSEDE_AI_SUGGESTION", "Supersede AI Suggestion"
+    WITHDRAW_AI_SUGGESTION = "WITHDRAW_AI_SUGGESTION", "Withdraw AI Suggestion"
+    POST_MENTOR_FEEDBACK = "POST_MENTOR_FEEDBACK", "Post Mentor Feedback"
+    RETRACT_MENTOR_FEEDBACK = "RETRACT_MENTOR_FEEDBACK", "Retract Mentor Feedback"
+
+
+class LearningReflection(models.Model):
+    """
+    P3-VS14: Student qualitative learning reflection journal.
+    Immutable post-creation except for audited retraction.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="learning_reflections",
+    )
+    student_id = models.UUIDField(db_index=True)
+    prompt_type = models.CharField(max_length=32, choices=ReflectionPromptType.choices)
+    content = models.TextField()
+    mood_sentiment = models.CharField(
+        max_length=32,
+        choices=ReflectionMoodSentiment.choices,
+        default=ReflectionMoodSentiment.NEUTRAL,
+    )
+    is_retracted = models.BooleanField(default=False)
+    retracted_at = models.DateTimeField(null=True, blank=True)
+    retraction_reason = models.CharField(max_length=255, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_learningreflection_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(prompt_type__in=ReflectionPromptType.values),
+                name="chk_reflection_prompt_type",
+            ),
+            models.CheckConstraint(
+                condition=Q(mood_sentiment__in=ReflectionMoodSentiment.values),
+                name="chk_reflection_mood",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(is_retracted=False) & Q(retracted_at__isnull=True) & Q(retraction_reason__isnull=True)) |
+                    (Q(is_retracted=True) & Q(retracted_at__isnull=False) & Q(retraction_reason__isnull=False))
+                ),
+                name="chk_reflection_retraction_consistency",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id", "-created_at"], name="idx_reflection_tenant_student"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if not self.content or not self.content.strip():
+            raise ValidationError("Reflection content cannot be empty.")
+        if len(self.content) > 10000:
+            raise ValidationError("Reflection content cannot exceed 10,000 characters.")
+        from modules.platform_tenant.models import TenantMembership
+        if self.tenant_id and self.student_id:
+            if not TenantMembership.objects.filter(tenant_id=self.tenant_id, user_id=self.student_id).exists():
+                raise ValidationError("Student must belong to the specified tenant.")
+        if self.is_retracted and (not self.retracted_at or not self.retraction_reason):
+            raise ValidationError("Retracted reflection must have retracted_at and retraction_reason.")
+        if not self.is_retracted and (self.retracted_at or self.retraction_reason):
+            raise ValidationError("Active reflection cannot have retracted_at or retraction_reason.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.student_id}:{self.prompt_type}:{self.id}"
+
+
+class StudentLearningGoal(models.Model):
+    """
+    P3-VS14: Student personal learning goal lifecycle FSM.
+    Enforces active singleton per domain and formative growth principles.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="learning_goals",
+    )
+    student_id = models.UUIDField(db_index=True)
+    title = models.CharField(max_length=255)
+    domain = models.CharField(max_length=64, db_index=True)
+    target_milestone = models.ForeignKey(
+        "learning.LearningMilestone",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="targeted_goals",
+    )
+    status = models.CharField(
+        max_length=32,
+        choices=GoalStatus.choices,
+        default=GoalStatus.DRAFT,
+    )
+    target_date = models.DateField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_studentlearninggoal_tenant_id",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "student_id", "domain"],
+                condition=Q(status="ACTIVE"),
+                name="uq_goal_student_domain_active",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=GoalStatus.values),
+                name="chk_goal_status",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(status="ACHIEVED") & Q(completed_at__isnull=False)) |
+                    (~Q(status="ACHIEVED") & Q(completed_at__isnull=True))
+                ),
+                name="chk_goal_completion_consistency",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id", "status"], name="idx_goal_tenant_student_status"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if not self.title or not self.title.strip():
+            raise ValidationError("Goal title cannot be empty.")
+        if self.target_milestone and str(self.target_milestone.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Target milestone tenant must match goal tenant.")
+        if self.status == GoalStatus.ACHIEVED and not self.completed_at:
+            raise ValidationError("Achieved goal must have completed_at timestamp.")
+        if self.status != GoalStatus.ACHIEVED and self.completed_at:
+            raise ValidationError("Non-achieved goal cannot have completed_at timestamp.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.student_id}:{self.domain}:{self.status}:{self.title}"
+
+
+class GoalActionPlan(models.Model):
+    """
+    P3-VS14: Actionable sequential steps associated with a learning goal.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="goal_action_plans",
+    )
+    goal = models.ForeignKey(
+        StudentLearningGoal,
+        on_delete=models.CASCADE,
+        related_name="action_steps",
+    )
+    step_order = models.PositiveSmallIntegerField()
+    description = models.CharField(max_length=500)
+    status = models.CharField(
+        max_length=32,
+        choices=ActionPlanStatus.choices,
+        default=ActionPlanStatus.PENDING,
+    )
+    due_date = models.DateField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_goalactionplan_tenant_id",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "goal", "step_order"],
+                name="uq_goalactionplan_step",
+            ),
+            models.CheckConstraint(
+                condition=Q(step_order__gte=1),
+                name="chk_action_step_order",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=ActionPlanStatus.values),
+                name="chk_action_status",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(status="COMPLETED") & Q(completed_at__isnull=False)) |
+                    (~Q(status="COMPLETED") & Q(completed_at__isnull=True))
+                ),
+                name="chk_action_completed_consistency",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if str(self.goal.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between action plan and goal.")
+        if self.step_order < 1:
+            raise ValidationError("Step order must be >= 1.")
+        if self.status == ActionPlanStatus.COMPLETED and not self.completed_at:
+            raise ValidationError("Completed action step must have completed_at timestamp.")
+        if self.status != ActionPlanStatus.COMPLETED and self.completed_at:
+            raise ValidationError("Non-completed action step cannot have completed_at timestamp.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.goal_id}:step_{self.step_order}:{self.status}"
+
+
+class AIAssistedGrowthSuggestion(models.Model):
+    """
+    P3-VS14: Assistive, non-authoritative AI recommendation.
+    Enforces moderation gate, explainability invariant, and strict PII scrub.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="ai_growth_suggestions",
+    )
+    student_id = models.UUIDField(db_index=True)
+    source_insight = models.ForeignKey(
+        "learning.LearningInsight",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="growth_suggestions",
+    )
+    generation_run = models.ForeignKey(
+        CalculationRun,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="growth_suggestions",
+    )
+    suggestion_type = models.CharField(max_length=32)
+    recommended_action = models.CharField(max_length=500)
+    rationale = models.TextField()
+    evidence_context = models.JSONField()
+    model_identifier = models.CharField(max_length=64)
+    provenance_digest = models.CharField(max_length=64)
+    idempotency_key = models.CharField(max_length=128)
+    status = models.CharField(
+        max_length=32,
+        choices=SuggestionStatus.choices,
+        default=SuggestionStatus.PENDING,
+    )
+    is_authoritative = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_aiassistedgrowthsuggestion_tenant_id",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "idempotency_key"],
+                name="uq_growthsuggestion_idempotency",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "student_id", "suggestion_type"],
+                condition=Q(status="PRESENTED"),
+                name="uq_suggestion_presented_singleton",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=SuggestionStatus.values),
+                name="chk_suggestion_status",
+            ),
+            models.CheckConstraint(
+                condition=Q(is_authoritative=False),
+                name="chk_suggestion_advisory_invariant",
+            ),
+            models.CheckConstraint(
+                condition=~Q(evidence_context={}),
+                name="chk_suggestion_evidence_context",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id", "status"], name="idx_suggestion_student_status"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.is_authoritative:
+            raise ValidationError("AI suggestions must remain non-authoritative (is_authoritative=False).")
+        if not self.evidence_context or self.evidence_context == {}:
+            raise ValidationError("evidence_context cannot be empty (Explainability First).")
+        if not isinstance(self.evidence_context, dict):
+            raise ValidationError("evidence_context must be a JSON object.")
+        if len(self.rationale.strip()) < 15:
+            raise ValidationError("Rationale must be at least 15 characters.")
+        if len(self.provenance_digest) != 64:
+            raise ValidationError("Provenance digest must be a 64-character SHA-256 hex string.")
+        if self.source_insight and str(self.source_insight.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Source insight tenant mismatch.")
+        if self.generation_run and str(self.generation_run.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Generation run tenant mismatch.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.student_id}:{self.suggestion_type}:{self.status}"
+
+
+class MentorReflectionFeedback(models.Model):
+    """
+    P3-VS14: Interactive pedagogical guidance and formative feedback from mentor.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="mentor_feedbacks",
+    )
+    reflection = models.ForeignKey(
+        LearningReflection,
+        on_delete=models.CASCADE,
+        related_name="mentor_feedbacks",
+    )
+    mentor_id = models.UUIDField(db_index=True)
+    feedback_text = models.TextField()
+    is_retracted = models.BooleanField(default=False)
+    retracted_at = models.DateTimeField(null=True, blank=True)
+    retraction_reason = models.CharField(max_length=255, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_mentorreflectionfeedback_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(is_retracted=False) & Q(retracted_at__isnull=True) & Q(retraction_reason__isnull=True)) |
+                    (Q(is_retracted=True) & Q(retracted_at__isnull=False) & Q(retraction_reason__isnull=False))
+                ),
+                name="chk_feedback_retraction_consistency",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if not self.feedback_text or not self.feedback_text.strip():
+            raise ValidationError("Feedback text cannot be empty.")
+        if len(self.feedback_text) > 5000:
+            raise ValidationError("Feedback text cannot exceed 5000 characters.")
+        if str(self.reflection.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Tenant mismatch between feedback and reflection.")
+        if self.is_retracted and (not self.retracted_at or not self.retraction_reason):
+            raise ValidationError("Retracted feedback must specify retraction_reason and retracted_at.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:refl_{self.reflection_id}:mentor_{self.mentor_id}"
+
+
+class ReflectionAuditLog(models.Model):
+    """
+    P3-VS14: Forensic append-only audit trail with XOR polymorphic targets
+    and Deferrable FK topology (SA-2).
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="reflection_audit_logs",
+    )
+    actor_id = models.UUIDField(db_index=True)
+    target_reflection = models.ForeignKey(
+        LearningReflection,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+    )
+    target_goal = models.ForeignKey(
+        StudentLearningGoal,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+    )
+    target_feedback = models.ForeignKey(
+        MentorReflectionFeedback,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+    )
+    target_suggestion = models.ForeignKey(
+        AIAssistedGrowthSuggestion,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+    )
+    action = models.CharField(max_length=64, choices=ReflectionAuditAction.choices)
+    metadata = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_reflectionauditlog_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(action__in=ReflectionAuditAction.values),
+                name="chk_audit_action",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "actor_id", "-created_at"], name="idx_audit_tenant_actor_time"),
+            models.Index(fields=["tenant", "target_reflection"], name="idx_audit_tenant_refl"),
+            models.Index(fields=["tenant", "target_goal"], name="idx_audit_tenant_goal"),
+            models.Index(fields=["tenant", "target_feedback"], name="idx_audit_tenant_feedback"),
+            models.Index(fields=["tenant", "target_suggestion"], name="idx_audit_tenant_sugg"),
+        ]
+
+    def clean(self):
+        super().clean()
+        targets = [self.target_reflection, self.target_goal, self.target_feedback, self.target_suggestion]
+        non_null_count = sum(1 for t in targets if t is not None)
+        if non_null_count != 1:
+            raise ValidationError("Exactly one target entity must be specified (chk_audit_target_xor).")
+        for t in targets:
+            if t is not None and str(t.tenant_id) != str(self.tenant_id):
+                raise ValidationError("Target entity tenant mismatch.")
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError("ReflectionAuditLog is strictly append-only.")
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("ReflectionAuditLog records cannot be deleted.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.actor_id}:{self.action}:{self.created_at}"
+

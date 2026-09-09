@@ -319,6 +319,48 @@ urlpatterns = [
         views.MilestoneRetractionView.as_view(),
         name="learning-milestone-retract",
     ),
+    # Phase 3 VS14 Student Learning Operations, Reflection & AI-Assisted Growth
+    path(
+        "reflections/",
+        views.LearningReflectionListCreateView.as_view(),
+        name="learning-reflections-list-create",
+    ),
+    path(
+        "reflections/<uuid:reflection_id>/retract/",
+        views.LearningReflectionRetractView.as_view(),
+        name="learning-reflection-retract",
+    ),
+    path(
+        "reflections/<uuid:reflection_id>/feedback/",
+        views.MentorReflectionFeedbackCreateView.as_view(),
+        name="learning-reflection-feedback",
+    ),
+    path(
+        "goals/",
+        views.StudentLearningGoalListCreateView.as_view(),
+        name="learning-goals-list-create",
+    ),
+    path(
+        "goals/<uuid:goal_id>/transition/",
+        views.StudentLearningGoalTransitionView.as_view(),
+        name="learning-goal-transition",
+    ),
+    path(
+        "goals/<uuid:goal_id>/action-steps/",
+        views.GoalActionPlanCreateView.as_view(),
+        name="learning-goal-action-steps",
+    ),
+    path(
+        "suggestions/",
+        views.AIAssistedGrowthSuggestionView.as_view(),
+        name="learning-suggestions-list",
+    ),
+    path(
+        "suggestions/generate/",
+        views.AIAssistedGrowthSuggestionView.as_view(),
+        name="learning-suggestions-generate",
+    ),
 ]
+
 
 
