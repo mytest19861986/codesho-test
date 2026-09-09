@@ -1,25 +1,23 @@
-# Current Task: P3-VS13-RUNTIME-IMPLEMENTATION
+# Current Task: P3-VS14-DISCOVERY-PHASE
 
-## Active Phase 3 Vertical Slice 13 — 2026-09-09
+## Active Phase 3 Vertical Slice 14 — 2026-09-09
 
-- Status: `RUNTIME_IMPLEMENTATION_VERIFIED_AND_TESTED`.
+- Status: `DISCOVERY_ACTIVE`.
 - Branch: `codex/phase3-product-platform-foundation`.
-- Authority: `COMMANDER_P3_VS13_RUNTIME_UNLOCK: GRANTED`.
-- Directives: `COMMANDER_P3_VS13_RUNTIME_IMPLEMENTATION`.
-- Task ID: `P3-VS13-STUDENT-GROWTH-INSIGHTS-AND-LONGITUDINAL-LEARNING-INTELLIGENCE`.
-- Scope: موتور بینش‌های طولی یادگیری، تحلیل مسیر رشد و گزارش‌های هوشمند پیشرفت دانش‌آموز (Longitudinal learning intelligence, growth metric snapshots, student growth trends, calculation run registry, event-driven derivations without student ranking).
-- Discovery Gate Status:
-  - `QWEN_DOMAIN_LOGIC_REVIEW`: PASS (VERIFIED)
-  - `GLM_POSTGRES_RLS_SECURITY_REVIEW`: PASS (VERIFIED - v1.2 0 Blockers, 0 Majors)
-  - `GEMINI_UI_PSYCHOLOGY_A11Y_REVIEW`: PASS (VERIFIED - v1.0 UI/UX, BiDi & Accessibility Approved)
-  - `COMMANDER_RUNTIME_UNLOCK`: GRANTED (VERIFIED)
+- Authority: `COMMANDER_P3_VS14_DISCOVERY_UNLOCK: GRANTED`.
+- Task ID: `P3-VS14-STUDENT-LEARNING-OPERATIONS-AND-AI-ASSISTED-REFLECTION`.
+- Title: سیستم عملیات یادگیری دانش‌آموز، بازتاب یادگیری (Learning Reflection) و دستیار هوشمند رشد
+- Scope:
+  1. Student Reflection Engine (Learning Reflection entries, guided prompts, growth review).
+  2. Personal Learning Goals (Goal lifecycle: proposed, active, achieved, paused, cancelled).
+  3. Action Plan State Machine (Step-by-step actionable learning plans tied to formative growth).
+  4. Non-Authoritative AI Assistant (AI suggestions are assistive recommendations, never authoritative source of truth).
+  5. Multi-Tenancy & Child Safety: PostgreSQL 17 `FORCE ROW LEVEL SECURITY with NOBYPASSRLS`, composite FKs `(tenant_id, id)`, zero bare UUIDs, zero student ranking, zero raw PII.
+  6. Mentor Supervision: Scoped visibility for authorized mentors without cross-tenant or cohort leakage.
 - Previous Slices Status:
-  - P3-VS1 to P3-VS12: `COMPLETE_FINAL_ACCEPTED`
-- Implementation Progress:
-  1. Backend Domain Models: All 6 models implemented (`CalculationRun`, `GrowthMetricSnapshot`, `StudentGrowthTrend`, `LearningMilestone`, `LearningInsight`, `InsightGenerationEvent`).
-  2. Migrations: Generated schema migration `0032_phase3_vs13_growth_insights.py` and PostgreSQL 17 RLS migration `0033_phase3_vs13_growth_insights_rls.py` (`FORCE ROW LEVEL SECURITY with NOBYPASSRLS`, composite FKs, zero bare UUIDs).
-  3. Service Layer: `GrowthInsightService` implemented with `pg_advisory_xact_lock`, deterministic calculation rebuild, PII sanitization, milestone retraction & restoration.
-  4. API Layer: Added serializers, views, routes in `urls.py`, and registered in `docs/openapi.yaml`.
-  5. Test Verification: Pytest suite `tests/test_p3_vs13_growth_insights.py` (18/18 passed in 14.5s) and `tests/test_p3_vs12_portfolio.py` (40/40 passed). Total 58/58 passed.
-  6. Frontend Components: Implemented `GrowthJourneyDashboard.tsx`, `growth.module.css`, route `/dashboard/student/growth/page.tsx`, and integrated into `/dashboard/student/page.tsx`.
+  - P3-VS1 to P3-VS13: `COMPLETE_FINAL_ACCEPTED` (VS13 Accepted at commit `403a815`).
+- Discovery Review Matrix:
+  - `QWEN_DISCOVERY_REVIEW`: PENDING (Goal Lifecycle, Reflection FSM, Non-Authoritative AI boundary).
+  - `GLM_POSTGRES_RLS_REVIEW`: PENDING (PostgreSQL 17 RLS, Composite FKs, Audit Trail, Storage isolation).
+  - `GEMINI_UI_PSYCHOLOGY_REVIEW`: PENDING (Cognitive load, Growth-over-comparison, RTL BiDi, WCAG 2.2 AA).
 - Open Blockers: 0.
