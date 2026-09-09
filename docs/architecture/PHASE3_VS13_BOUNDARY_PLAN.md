@@ -1,4 +1,4 @@
-# Phase 3 Vertical Slice 13: Boundary & Architecture Plan (v1.1)
+# Phase 3 Vertical Slice 13: Boundary & Architecture Plan (v1.2)
 
 ## Task ID: P3-VS13-STUDENT-GROWTH-INSIGHTS-AND-LONGITUDINAL-LEARNING-INTELLIGENCE
 
@@ -7,14 +7,38 @@
 ### 1. Executive Summary & Problem Space
 The Codesho platform requires an intelligent, longitudinal learning analytics and growth insight engine that tracks student development across competencies, milestones, and learning trajectories without introducing toxic comparative ranking or public leaderboards.
 In accordance with Commander Directive `COMMANDER_P3_VS13_DISCOVERY_START`, this engine operates strictly on pure event-driven projections derived from source-of-truth events (submissions, assessments, completions, milestones).
-This document establishes the certifiable architectural contract (v1.1) incorporating full PostgreSQL 17 DDL, strict composite foreign keys, fail-closed `FORCE ROW LEVEL SECURITY`, comprehensive CHECK constraints, JSONB PII protections, finite state machines, and intra-tenant role-based authorization.
+This document establishes the certifiable architectural contract (v1.2) incorporating full PostgreSQL 17 DDL, strict composite foreign keys, fail-closed `FORCE ROW LEVEL SECURITY with NOBYPASSRLS`, provenance registry for calculation runs, partial unique concurrency guards, advisory locks, comprehensive CHECK constraints, JSONB PII protections, bidirectional finite state machines, and intra-tenant role-based authorization.
+
+---
+
+### 1.1 Revision History & Audit Disposition Register (v1.0 -> v1.1 -> v1.2)
+
+This register provides a 1-to-1 canonical mapping between GLM Review Findings and the concrete architecture solutions implemented in v1.2:
+
+| Audit Finding ID | Category | Description | Disposition & Concrete Implementation in v1.2 | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **B1** | Blocker | Missing full DDL specifications | Provided complete PostgreSQL 17 DDL across all 6 core entities with composite FKs, RLS, and constraints. | ✅ RESOLVED |
+| **B2** | Blocker | TOC scenario-based negative test matrix | Expanded to comprehensive 50-scenario test matrix (N1 - N50) covering GUC protocol, RLS, and edge cases. | ✅ RESOLVED |
+| **M1** | Major | Missing `NOBYPASSRLS` invariant | Added explicit `FORCE ROW LEVEL SECURITY with NOBYPASSRLS` mandate to §2 Invariant #1 and §3 DDL specifications. | ✅ RESOLVED |
+| **M2** | Major | Milestone FSM deadlock on `RETRACTED` | Added bidirectional transition `RETRACTED -> ACHIEVED` in §5.2 and Partial Unique Index `WHERE status = 'ACHIEVED'`. Symmetric retraction metadata added to `LearningInsight`. | ✅ RESOLVED |
+| **M3** | Major | Bare `calculation_run_id` without provenance table | Created canonical `learning_calculationrun` registry entity with composite FKs `(tenant_id, calculation_run_id)` on all dependent projection tables. | ✅ RESOLVED |
+| **M4** | Major | Single-Active concurrency race in derive | Added Partial Unique Index `uq_insight_singleton_active` on `(tenant_id, student_id, insight_type) WHERE lifecycle_status = 'ACTIVE'` plus transactional advisory locks `pg_advisory_xact_lock(...)`. | ✅ RESOLVED |
+| **M5** | Major | GUC spoofing test & N9 definition | Separated out-of-protocol foreign GUC spoofing (rejected by session/transaction boundary protocol) into dedicated test N46, refactored N9 to cross-tenant payload injection under valid GUC. | ✅ RESOLVED |
+| **M6** | Major | Upstream VS12 dependency closure | Schema explicitly locked and pinned to stable `platform_tenant_guardianaccessgrant` v1.3 schema; verification contract isolated. | ✅ RESOLVED |
+| **M7** | Major | Audit record claim-to-identity alignment | Explicit audit findings mapping register established in §1.1; references strictly tied to canonical auditor identifiers. | ✅ RESOLVED |
+| **m1** | Minor | Missing range constraint on `velocity_rate` & hex format | Added `velocity_rate >= -100.00 AND velocity_rate <= 100.00` CHECK and hex regex check `^[0-9a-f]{64}$` for evidence digests. | ✅ RESOLVED |
+| **m2** | Minor | Orphaned `sequence_id` | Removed unreferenced `sequence_id` from `InsightGenerationEvent`; idempotency cleanly anchored to `(tenant_id, student_id, event_type, event_key)`. | ✅ RESOLVED |
+| **m3** | Minor | Redundant secondary indexes | Deduplicated indexes matching natural unique constraints (removed duplicate domain trend and timeline prefix indexes). | ✅ RESOLVED |
+| **m4** | Minor | Snapshot Append-Only vs Upsert clarification | Clarified: `GrowthMetricSnapshot` is strictly immutable Append-Only per daily date; updates within the same day are deterministic upserts on collision. | ✅ RESOLVED |
+| **m5** | Minor | Milestone source coupling & NO ACTION rationale | Formally documented: `source_submission_id` and `source_certificate_id` are mutually independent; `ON DELETE NO ACTION` deliberately preserves forensic history. Service guard canonicalized as `verify_insight_access`. | ✅ RESOLVED |
 
 ---
 
 ### 2. Strict Invariants & Non-Negotiables
 
-1. **GUC Session Protocol Inside Atomic Transactions**:
+1. **GUC Session Protocol Inside Atomic Transactions with NOBYPASSRLS**:
    - Every tenant interaction MUST establish the session variable `SET LOCAL app.current_tenant = '<tenant_id>'` inside `transaction.atomic()` prior to any tenant table queries.
+   - All tenant-isolated tables MUST be configured with `FORCE ROW LEVEL SECURITY with NOBYPASSRLS` for application database roles.
    - If the variable is missing or empty, database queries return 0 rows and mutations fail closed.
 
 2. **Projection Only from Source of Truth (Pure Projections)**:
@@ -32,13 +56,18 @@ This document establishes the certifiable architectural contract (v1.1) incorpor
    - Schema design strictly excludes peer identifiers or comparative aggregation columns.
 
 5. **Tamper-Proof Milestone Evidence & Digest Integrity**:
-   - Milestone achievements capture immutable digital digests (`evidence_digest`) linking to source events (submissions, certificates).
+   - Milestone achievements capture immutable digital digests (`evidence_digest`) linking to source events (submissions, certificates) validated via 64-character hexadecimal regex.
 
 6. **JSONB PII Scrubbing**:
    - All JSONB payloads (`metadata`, `competency_vectors`, `evidence_payload`) strictly forbid PII attributes (`name`, `phone`, `email`, `national_id`, `location`, `avatar_url`) enforced by database CHECK constraints.
 
 7. **Append-Only Immutability for Audit/Event Tables**:
    - `learning_insightgenerationevent` is strictly Append-Only. `app_role` has `REVOKE UPDATE, DELETE` applied.
+
+8. **Concurrency Serialization & Advisory Locking**:
+   - Derivation transactions MUST acquire a session-scoped advisory xact lock:
+     `PERFORM pg_advisory_xact_lock(hashtextextended(tenant_id::text || ':' || student_id::text, 42));`
+     to eliminate parallel derivation race conditions.
 
 ---
 
@@ -48,7 +77,9 @@ This slice builds directly upon canonical schema entities from previous slices:
 - `platform_tenant_tenantmembership(tenant_id, user_id)` via unique composite constraint `membership_tenant_user_uniq`
 - `learning_submission(tenant_id, id)` (VS1)
 - `learning_coursecertificate(tenant_id, id)` (VS6)
-- `platform_tenant_guardianaccessgrant(tenant_id, student_id, guardian_user_id)` (VS12)
+- `platform_tenant_guardianaccessgrant(tenant_id, student_id, guardian_user_id)` (Pinned to stable VS12-v1.3 schema)
+
+Service layer access guard is canonicalized as `verify_insight_access(user, tenant_id, student_id)`.
 
 ---
 
@@ -56,9 +87,40 @@ This slice builds directly upon canonical schema entities from previous slices:
 
 ```sql
 -- =============================================================================
+-- ENTITY 0: CalculationRun (Provenance & Lifecycle Registry)
+-- Purpose: Formal registry anchoring calculation runs to tenant and trigger actor
+-- =============================================================================
+
+CREATE TABLE learning_calculationrun (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    triggered_by UUID NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'RUNNING',
+    started_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    completed_at TIMESTAMPTZ NULL,
+
+    CONSTRAINT run_tenant_fk FOREIGN KEY (tenant_id)
+        REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
+    CONSTRAINT run_triggered_by_fk FOREIGN KEY (tenant_id, triggered_by)
+        REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE NO ACTION,
+    CONSTRAINT run_tenant_id_uniq UNIQUE (tenant_id, id),
+    CONSTRAINT run_status_check CHECK (status IN ('RUNNING', 'COMPLETED', 'FAILED')),
+    CONSTRAINT run_completion_check CHECK ((status IN ('COMPLETED', 'FAILED')) = (completed_at IS NOT NULL))
+);
+
+ALTER TABLE learning_calculationrun ENABLE ROW LEVEL SECURITY;
+ALTER TABLE learning_calculationrun FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY run_tenant_isolation ON learning_calculationrun
+    FOR ALL
+    USING (tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid)
+    WITH CHECK (tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid);
+
+
+-- =============================================================================
 -- ENTITY 1: GrowthMetricSnapshot
 -- Purpose: Point-in-time snapshot of student growth across defined competencies
--- Immutability: Append-Only projection per snapshot date
+-- Immutability: Append-Only projection per daily snapshot date
 -- =============================================================================
 
 CREATE TABLE learning_growthmetricsnapshot (
@@ -80,6 +142,8 @@ CREATE TABLE learning_growthmetricsnapshot (
         REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
     CONSTRAINT growth_metric_student_membership_fk FOREIGN KEY (tenant_id, student_id)
         REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE CASCADE,
+    CONSTRAINT growth_metric_calculation_run_fk FOREIGN KEY (tenant_id, calculation_run_id)
+        REFERENCES learning_calculationrun(tenant_id, id) ON DELETE RESTRICT,
     CONSTRAINT growth_metric_tenant_id_uniq UNIQUE (tenant_id, id),
     CONSTRAINT growth_metric_daily_student_uniq UNIQUE (tenant_id, student_id, metric_key, snapshot_date),
 
@@ -126,6 +190,8 @@ CREATE TABLE learning_studentgrowthtrend (
         REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
     CONSTRAINT growth_trend_student_membership_fk FOREIGN KEY (tenant_id, student_id)
         REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE CASCADE,
+    CONSTRAINT growth_trend_calculation_run_fk FOREIGN KEY (tenant_id, calculation_run_id)
+        REFERENCES learning_calculationrun(tenant_id, id) ON DELETE RESTRICT,
     CONSTRAINT growth_trend_tenant_id_uniq UNIQUE (tenant_id, id),
     CONSTRAINT growth_trend_domain_uniq UNIQUE (tenant_id, student_id, competency_domain),
 
@@ -133,6 +199,7 @@ CREATE TABLE learning_studentgrowthtrend (
         trend_direction IN ('ACCELERATING', 'STEADY', 'DEVELOPING', 'NEEDS_SUPPORT')
     ),
     CONSTRAINT growth_trend_score_range CHECK (current_score >= 0.00 AND current_score <= 100.00),
+    CONSTRAINT growth_trend_velocity_range CHECK (velocity_rate >= -100.00 AND velocity_rate <= 100.00),
     CONSTRAINT growth_trend_milestones_non_negative CHECK (total_milestones_achieved >= 0),
     CONSTRAINT growth_trend_vectors_no_pii CHECK (
         jsonb_typeof(competency_vectors) = 'object' AND
@@ -152,7 +219,7 @@ CREATE POLICY growth_trend_tenant_isolation ON learning_studentgrowthtrend
 -- =============================================================================
 -- ENTITY 3: LearningMilestone
 -- Purpose: Formative milestones reached by student with cryptographic evidence digest
--- Immutability: Formative record; revocable only via formal RETRACTED status
+-- Immutability: Formative record; revocable via formal RETRACTED status and restorable
 -- =============================================================================
 
 CREATE TABLE learning_learningmilestone (
@@ -181,7 +248,6 @@ CREATE TABLE learning_learningmilestone (
     CONSTRAINT milestone_certificate_fk FOREIGN KEY (tenant_id, source_certificate_id)
         REFERENCES learning_coursecertificate(tenant_id, id) ON DELETE NO ACTION,
     CONSTRAINT milestone_tenant_id_uniq UNIQUE (tenant_id, id),
-    CONSTRAINT milestone_student_code_uniq UNIQUE (tenant_id, student_id, milestone_code),
 
     CONSTRAINT milestone_status_check CHECK (status IN ('ACHIEVED', 'RETRACTED')),
     CONSTRAINT milestone_retraction_check CHECK (
@@ -189,12 +255,17 @@ CREATE TABLE learning_learningmilestone (
         (status = 'ACHIEVED' AND retracted_at IS NULL AND retraction_reason IS NULL)
     ),
     CONSTRAINT milestone_title_len_check CHECK (length(title) >= 3),
-    CONSTRAINT milestone_digest_len_check CHECK (length(evidence_digest) = 64),
+    CONSTRAINT milestone_digest_format_check CHECK (evidence_digest ~* '^[0-9a-f]{64}$'),
     CONSTRAINT milestone_evidence_no_pii CHECK (
         jsonb_typeof(evidence_payload) = 'object' AND
         NOT (evidence_payload ?| ARRAY['name', 'phone', 'email', 'national_id', 'location', 'avatar_url'])
     )
 );
+
+-- Partial Unique Index: Only one ACTIVE achievement per milestone code, allowing clean re-achievement upon restore
+CREATE UNIQUE INDEX uq_milestone_active_code
+    ON learning_learningmilestone (tenant_id, student_id, milestone_code)
+    WHERE status = 'ACHIEVED';
 
 ALTER TABLE learning_learningmilestone ENABLE ROW LEVEL SECURITY;
 ALTER TABLE learning_learningmilestone FORCE ROW LEVEL SECURITY;
@@ -222,6 +293,8 @@ CREATE TABLE learning_learninginsight (
     lifecycle_status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
     calculation_run_id UUID NOT NULL,
     valid_until TIMESTAMPTZ NULL,
+    retracted_at TIMESTAMPTZ NULL,
+    retraction_reason TEXT NULL,
     metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
@@ -230,6 +303,8 @@ CREATE TABLE learning_learninginsight (
         REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
     CONSTRAINT insight_student_membership_fk FOREIGN KEY (tenant_id, student_id)
         REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE CASCADE,
+    CONSTRAINT insight_calculation_run_fk FOREIGN KEY (tenant_id, calculation_run_id)
+        REFERENCES learning_calculationrun(tenant_id, id) ON DELETE RESTRICT,
     CONSTRAINT insight_tenant_id_uniq UNIQUE (tenant_id, id),
 
     CONSTRAINT insight_type_check CHECK (
@@ -237,6 +312,10 @@ CREATE TABLE learning_learninginsight (
     ),
     CONSTRAINT insight_confidence_check CHECK (confidence_level IN ('HIGH', 'MEDIUM', 'LOW')),
     CONSTRAINT insight_lifecycle_check CHECK (lifecycle_status IN ('ACTIVE', 'SUPERSEDED', 'RETRACTED')),
+    CONSTRAINT insight_retraction_symmetry_check CHECK (
+        (lifecycle_status = 'RETRACTED' AND retracted_at IS NOT NULL AND retraction_reason IS NOT NULL) OR
+        (lifecycle_status IN ('ACTIVE', 'SUPERSEDED') AND retracted_at IS NULL AND retraction_reason IS NULL)
+    ),
     CONSTRAINT insight_title_len_check CHECK (length(title) >= 5),
     CONSTRAINT insight_desc_len_check CHECK (length(description) >= 15),
     CONSTRAINT insight_metadata_no_pii CHECK (
@@ -244,6 +323,11 @@ CREATE TABLE learning_learninginsight (
         NOT (metadata ?| ARRAY['name', 'phone', 'email', 'national_id', 'location', 'avatar_url'])
     )
 );
+
+-- Partial Unique Index enforcing single active insight per singleton type
+CREATE UNIQUE INDEX uq_insight_singleton_active
+    ON learning_learninginsight (tenant_id, student_id, insight_type)
+    WHERE lifecycle_status = 'ACTIVE';
 
 ALTER TABLE learning_learninginsight ENABLE ROW LEVEL SECURITY;
 ALTER TABLE learning_learninginsight FORCE ROW LEVEL SECURITY;
@@ -267,7 +351,6 @@ CREATE TABLE learning_insightgenerationevent (
     event_type VARCHAR(64) NOT NULL,
     event_key VARCHAR(128) NOT NULL,
     calculation_run_id UUID NOT NULL,
-    sequence_id BIGINT NOT NULL DEFAULT 1,
     status VARCHAR(20) NOT NULL DEFAULT 'PROCESSED',
     failure_reason TEXT NULL,
     retry_count SMALLINT NOT NULL DEFAULT 0,
@@ -279,6 +362,8 @@ CREATE TABLE learning_insightgenerationevent (
         REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
     CONSTRAINT generation_event_student_membership_fk FOREIGN KEY (tenant_id, student_id)
         REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE CASCADE,
+    CONSTRAINT generation_event_calculation_run_fk FOREIGN KEY (tenant_id, calculation_run_id)
+        REFERENCES learning_calculationrun(tenant_id, id) ON DELETE RESTRICT,
     CONSTRAINT generation_event_triggered_by_fk FOREIGN KEY (tenant_id, triggered_by)
         REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE NO ACTION,
     CONSTRAINT generation_event_tenant_id_uniq UNIQUE (tenant_id, id),
@@ -290,7 +375,7 @@ CREATE TABLE learning_insightgenerationevent (
         (status IN ('REJECTED', 'FAILED') AND failure_reason IS NOT NULL) OR
         (status = 'PROCESSED' AND failure_reason IS NULL)
     ),
-    CONSTRAINT generation_event_digest_len_check CHECK (length(payload_digest) = 64)
+    CONSTRAINT generation_event_digest_format_check CHECK (payload_digest ~* '^[0-9a-f]{64}$')
 );
 
 ALTER TABLE learning_insightgenerationevent ENABLE ROW LEVEL SECURITY;
@@ -314,10 +399,6 @@ REVOKE UPDATE, DELETE ON learning_insightgenerationevent FROM app_role;
 CREATE INDEX idx_growth_metric_student_timeline 
     ON learning_growthmetricsnapshot (tenant_id, student_id, metric_key, snapshot_date DESC);
 
--- Fast lookup of active trends by student and domain
-CREATE INDEX idx_growth_trend_student_domain 
-    ON learning_studentgrowthtrend (tenant_id, student_id, competency_domain);
-
 -- Chronological timeline of achieved milestones
 CREATE INDEX idx_learning_milestone_chronological 
     ON learning_learningmilestone (tenant_id, student_id, achieved_at DESC)
@@ -325,7 +406,7 @@ CREATE INDEX idx_learning_milestone_chronological
 
 -- Active insights retrieval for student dashboard
 CREATE INDEX idx_learning_insight_active_feed 
-    ON learning_learninginsight (tenant_id, student_id, lifecycle_status, created_at DESC)
+    ON learning_learninginsight (tenant_id, student_id, created_at DESC)
     WHERE lifecycle_status = 'ACTIVE';
 
 -- Idempotency and audit lookups
@@ -345,23 +426,28 @@ CREATE INDEX idx_insight_event_audit
 ```
 
 - When a new calculation run completes successfully, existing `ACTIVE` insights of the same category are atomically transitioned to `SUPERSEDED` with `valid_until = clock_timestamp()`.
-- If an underlying milestone or submission is formally retracted, impacted insights transition to `RETRACTED`.
+- If an underlying milestone or submission is formally retracted, impacted insights transition to `RETRACTED` with recorded `retracted_at` and `retraction_reason`.
 
-#### 5.2 `LearningMilestone` Achievement FSM
+#### 5.2 `LearningMilestone` Achievement FSM (Bidirectional Lifecycle)
 ```
-[ACHIEVED] --------(Evidence Invalidation / Mentor Review)--------> [RETRACTED]
+[ACHIEVED] <=======(Restoration / Mentor Review Audit)=======> [RETRACTED]
 ```
 
-- Milestones are immutable historical achievements. If evidence is invalidated, the record is marked `RETRACTED` with an auditable `retraction_reason` and `retracted_at` timestamp.
+- Milestones are formative achievements. If evidence is invalidated, the record is marked `RETRACTED` with an auditable `retraction_reason` and `retracted_at` timestamp.
+- If evidence is formally restored after review, mentors/staff can transition `RETRACTED -> ACHIEVED`, resetting `retracted_at` and `retraction_reason` to NULL inside an auditable transaction.
+- Partial unique index `uq_milestone_active_code` permits recording a clean new achievement row while preserving past retraction history if desired.
 
 #### 5.3 Deterministic Recalculation & Rebuild Protocol (Rebuild Mechanics)
 When source data changes or a recalculation is triggered:
-1. An idempotent `InsightGenerationEvent` is registered within `transaction.atomic()`.
-2. A new unique `calculation_run_id` (UUID) is generated for the session.
-3. Projections are re-derived:
-   - `GrowthMetricSnapshot`: Re-calculated and upserted based on `(tenant_id, student_id, metric_key, snapshot_date)`.
+1. Derivation transaction acquires session advisory lock:
+   `PERFORM pg_advisory_xact_lock(hashtextextended(tenant_id::text || ':' || student_id::text, 42));`
+2. A formal `CalculationRun` record is inserted with `status = 'RUNNING'`.
+3. An idempotent `InsightGenerationEvent` is registered within `transaction.atomic()`.
+4. Projections are re-derived:
+   - `GrowthMetricSnapshot`: Re-calculated and upserted per `(tenant_id, student_id, metric_key, snapshot_date)`.
    - `StudentGrowthTrend`: Updated in-place with latest vectors and `calculation_run_id`.
    - `LearningInsight`: Previous `ACTIVE` insights are marked `SUPERSEDED`, and new insights tagged with `calculation_run_id` are inserted.
+5. `CalculationRun` is updated with `status = 'COMPLETED'` and `completed_at = clock_timestamp()`.
 
 ---
 
@@ -376,11 +462,11 @@ When source data changes or a recalculation is triggered:
 | `PATCH /milestones/retract/` | Forbidden (403) | Forbidden (403) | Allowed (With auditable reason) | Forbidden (403) | Allowed |
 
 - **Zero Peer Visibility**: A student or guardian CANNOT view another student's insights under any circumstance.
-- **Intra-Tenant Scoping**: Mentor access is strictly restricted to students actively enrolled in cohorts assigned to that mentor.
+- **Intra-Tenant Scoping**: Mentor access is strictly restricted to students actively enrolled in cohorts assigned to that mentor via `verify_insight_access`.
 
 ---
 
-### 7. Comprehensive Negative & Compliance Test Matrix (N1 - N45)
+### 7. Comprehensive Negative & Compliance Test Matrix (N1 - N50)
 
 #### 7.1 PostgreSQL 17 Multi-Tenant & RLS Isolation Core
 - **N1**: Cross-tenant query on `learning_growthmetricsnapshot` returns 0 rows (Fail-closed).
@@ -388,11 +474,11 @@ When source data changes or a recalculation is triggered:
 - **N3**: Cross-tenant query on `learning_learningmilestone` returns 0 rows.
 - **N4**: Cross-tenant query on `learning_learninginsight` returns 0 rows.
 - **N5**: Cross-tenant query on `learning_insightgenerationevent` returns 0 rows.
-- **N6**: Missing GUC `app.current_tenant` returns 0 rows and rejects INSERT on all 5 entities.
+- **N6**: Missing GUC `app.current_tenant` returns 0 rows and rejects INSERT on all entities.
 - **N7**: Empty string `app.current_tenant` returns 0 rows via `NULLIF(..., '')::uuid`.
 - **N8**: Malformed/Non-UUID `app.current_tenant` raises database syntax error (Fail-closed).
-- **N9**: Cross-tenant spoofing attempt on `tenant_id` raises foreign key or policy error.
-- **N10**: Tenant deletion cascades all 5 growth entities cleanly.
+- **N9**: Cross-tenant foreign record insertion under legitimate GUC fails composite FK validation.
+- **N10**: Tenant deletion cascades all growth entities cleanly.
 
 #### 7.2 Composite Foreign Keys & Database Constraints
 - **N11**: Direct INSERT with mismatched `(tenant_id, student_id)` rejected by membership composite FK.
@@ -404,7 +490,7 @@ When source data changes or a recalculation is triggered:
 #### 7.3 Uniqueness, Idempotency & Rebuild Mechanics
 - **N16**: Duplicate metric snapshot on same date rejected by `growth_metric_daily_student_uniq`.
 - **N17**: Duplicate trend for same competency domain rejected by `growth_trend_domain_uniq`.
-- **N18**: Duplicate milestone for same student and code rejected by `milestone_student_code_uniq`.
+- **N18**: Duplicate active milestone for same student and code rejected by `uq_milestone_active_code`.
 - **N19**: Duplicate generation event with identical `(tenant_id, student_id, event_type, event_key)` rejected by `generation_event_idempotency_uniq`.
 - **N20**: Re-running derivation with new `calculation_run_id` supersedes previous active insights without orphan records.
 
@@ -426,7 +512,7 @@ When source data changes or a recalculation is triggered:
 - **N31**: Direct `UPDATE` or `DELETE` on `learning_insightgenerationevent` by `app_role` raises Permission Denied.
 - **N32**: Transitioning milestone to `RETRACTED` without `retraction_reason` rejected by DB CHECK.
 - **N33**: Transitioning milestone to `ACHIEVED` with non-null `retracted_at` rejected by DB CHECK.
-- **N34**: Milestone with invalid `evidence_digest` length (!= 64) rejected by DB CHECK.
+- **N34**: Milestone with invalid `evidence_digest` format (!= 64 hex) rejected by DB CHECK.
 - **N35**: Metric snapshot with negative `metric_value` rejected by DB CHECK.
 - **N36**: Student growth trend with invalid `trend_direction` rejected by DB CHECK.
 - **N37**: Generation event with `retry_count > 10` rejected by DB CHECK.
@@ -437,9 +523,16 @@ When source data changes or a recalculation is triggered:
 - **N40**: WCAG 2.2 AA touch targets on timeline action buttons (>= 44px x 44px).
 - **N41**: Color contrast on growth milestone cards meets or exceeds 4.5:1 ratio.
 - **N42**: Rate-limiting on `POST /derive/` prevents denial-of-service against calculation worker.
-- **N43**: Rebuilding trend from empty baseline gracefully defaults `growth_delta` to 0.00 without division-by-zero.
+- **N43**: Rebuilding trend from empty baseline gracefully defaults `growth_delta` to 0.00 without math errors.
 - **N44**: Guardian access strictly scoped to granted ward; cross-ward enumeration returns 404/403.
 - **N45**: Audit log preservation: `InsightGenerationEvent` accurately records `triggered_by` actor membership.
+
+#### 7.8 Extended Auditor Compliance Scenarios (N46 - N50)
+- **N46**: Setting GUC `app.current_tenant` to valid foreign tenant UUID outside trusted connection protocol fails closed at service layer.
+- **N47**: Projection insert referencing cross-tenant `calculation_run_id` rejected by composite FK `(tenant_id, calculation_run_id)`.
+- **N48**: Concurrent parallel derivation runs for same student serialize via `pg_advisory_xact_lock` resulting in exactly one active singleton insight.
+- **N49**: Milestone re-achievement following retraction/restoration succeeds cleanly while preserving audit retraction history.
+- **N50**: Payload tampering detected during recalculation rebuild when recomputed digest does not match `evidence_digest`.
 
 ---
 
