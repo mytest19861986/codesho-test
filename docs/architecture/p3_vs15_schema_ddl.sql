@@ -1,9 +1,9 @@
 -- ============================================================================
 -- P3-VS15: LEARNING CONTINUITY & STUDENT SUCCESS PLANNING
 -- POSTGRESQL 17 DDL, FORCE RLS, NOBYPASSRLS & AUDIT DISCIPLINE SPECIFICATION
--- Version: v1.1-CANONICAL
+-- Version: v1.2-CANONICAL
 -- Authority: COMMANDER_P3_VS15_DISCOVERY_UNLOCK
--- Response-Record Identity: Addressed GLM v1.0 Audit (B1, M1-M6, m1-m5)
+-- Response-Record Identity: Addressed GLM v1.1 Audit (B1, M-A, M-B, m1, m3, m4)
 -- Fleet Standard GUC: app.current_tenant
 -- Session Protocol: SET LOCAL "app.current_tenant" = %s strictly inside transaction.atomic()
 -- ============================================================================
@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS learning_studentsuccessplan (
     notes TEXT NULL,
     completed_at TIMESTAMPTZ NULL,
     paused_at TIMESTAMPTZ NULL,
+    superseded_at TIMESTAMPTZ NULL,
     archived_at TIMESTAMPTZ NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
@@ -32,12 +33,20 @@ CREATE TABLE IF NOT EXISTS learning_studentsuccessplan (
     CONSTRAINT fk_studentsuccessplan_student FOREIGN KEY (tenant_id, student_id)
         REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE CASCADE,
     CONSTRAINT chk_successplan_title_len CHECK (length(trim(title)) >= 3 AND length(title) <= 255),
+    -- m3 Fix: Strict target_period domain check
+    CONSTRAINT chk_successplan_target_period CHECK (
+        target_period IN (
+            'CURRENT_TERM', 'ACADEMIC_YEAR', 'SUMMER_INTENSIVE',
+            'MONTHLY_SPRINT', 'QUARTERLY_CYCLE', 'LONG_TERM_FOUNDATION'
+        )
+    ),
     CONSTRAINT chk_successplan_status CHECK (status IN ('ACTIVE', 'PAUSED', 'COMPLETED', 'SUPERSEDED', 'ARCHIVED')),
+    -- m1 Fix: Complete, non-overlapping status consistency invariant
     CONSTRAINT chk_successplan_status_consistency CHECK (
-        (status = 'ACTIVE' AND completed_at IS NULL AND paused_at IS NULL AND archived_at IS NULL) OR
-        (status = 'PAUSED' AND paused_at IS NOT NULL AND completed_at IS NULL) OR
-        (status = 'COMPLETED' AND completed_at IS NOT NULL) OR
-        (status = 'SUPERSEDED') OR
+        (status = 'ACTIVE' AND completed_at IS NULL AND paused_at IS NULL AND superseded_at IS NULL AND archived_at IS NULL) OR
+        (status = 'PAUSED' AND paused_at IS NOT NULL AND completed_at IS NULL AND superseded_at IS NULL AND archived_at IS NULL) OR
+        (status = 'COMPLETED' AND completed_at IS NOT NULL AND paused_at IS NULL AND superseded_at IS NULL AND archived_at IS NULL) OR
+        (status = 'SUPERSEDED' AND superseded_at IS NOT NULL AND archived_at IS NULL) OR
         (status = 'ARCHIVED' AND archived_at IS NOT NULL)
     ),
     -- M5 Fix: Strict length bounds and 13-key regex PII filter on notes
@@ -117,6 +126,8 @@ CREATE TABLE IF NOT EXISTS learning_successtimelineevent (
     target_reflection_id UUID NULL,
     target_action_step_id UUID NULL,
     target_milestone_id UUID NULL,
+    client_mutation_id UUID NULL,
+    replaces_event_id UUID NULL,
     metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
 
@@ -143,11 +154,15 @@ CREATE TABLE IF NOT EXISTS learning_successtimelineevent (
     CONSTRAINT fk_timelineevent_target_action FOREIGN KEY (tenant_id, target_action_step_id)
         REFERENCES learning_successactionstep(tenant_id, id)
         ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
-    -- M2 Fix: target_milestone_id connected to learning_successactionstep with DEFERRABLE FK
+    -- B1 Fix: Target Milestone precisely references certified VS13 learning_learningmilestone
     CONSTRAINT fk_timelineevent_target_milestone FOREIGN KEY (tenant_id, target_milestone_id)
-        REFERENCES learning_successactionstep(tenant_id, id)
+        REFERENCES learning_learningmilestone(tenant_id, id)
         ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
-    -- M2 Fix: 5-way XOR Continuity Invariant: Exactly one target entity must be linked
+    -- m4 Fix: Append-only correction link (replaces_event_id references prior timeline event in same tenant)
+    CONSTRAINT fk_timelineevent_replaces FOREIGN KEY (tenant_id, replaces_event_id)
+        REFERENCES learning_successtimelineevent(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    -- 5-way XOR Continuity Invariant: Exactly one target entity must be linked per event
     CONSTRAINT chk_timeline_target_xor CHECK (
         num_nonnulls(target_goal_id, target_insight_id, target_reflection_id, target_action_step_id, target_milestone_id) = 1
     ),
@@ -157,7 +172,8 @@ CREATE TABLE IF NOT EXISTS learning_successtimelineevent (
             'INSIGHT_CONNECTED',
             'REFLECTION_TIED',
             'ACTION_DISPATCHED',
-            'MILESTONE_PROGRESSION'
+            'MILESTONE_PROGRESSION',
+            'TIMELINE_EVENT_AMENDED'
         )
     ),
     -- M3 Fix: Exact 1-to-1 coupling between event_type and linked target
@@ -166,7 +182,8 @@ CREATE TABLE IF NOT EXISTS learning_successtimelineevent (
         (event_type = 'INSIGHT_CONNECTED' AND target_insight_id IS NOT NULL) OR
         (event_type = 'REFLECTION_TIED' AND target_reflection_id IS NOT NULL) OR
         (event_type = 'ACTION_DISPATCHED' AND target_action_step_id IS NOT NULL) OR
-        (event_type = 'MILESTONE_PROGRESSION' AND target_milestone_id IS NOT NULL)
+        (event_type = 'MILESTONE_PROGRESSION' AND target_milestone_id IS NOT NULL) OR
+        (event_type = 'TIMELINE_EVENT_AMENDED' AND replaces_event_id IS NOT NULL)
     ),
     -- M5 Fix: Headline length bounds and regex PII scrubber
     CONSTRAINT chk_timeline_headline_len CHECK (length(trim(headline)) >= 3 AND length(headline) <= 255),
@@ -189,6 +206,11 @@ CREATE TABLE IF NOT EXISTS learning_successtimelineevent (
     )
 );
 
+-- m4 Fix: Idempotent append discipline via optional client_mutation_id per tenant
+CREATE UNIQUE INDEX IF NOT EXISTS uq_timelineevent_tenant_mutation
+    ON learning_successtimelineevent (tenant_id, client_mutation_id)
+    WHERE client_mutation_id IS NOT NULL;
+
 CREATE INDEX IF NOT EXISTS idx_timeline_tenant_plan_time
     ON learning_successtimelineevent (tenant_id, plan_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_timeline_tenant_goal
@@ -201,6 +223,8 @@ CREATE INDEX IF NOT EXISTS idx_timeline_tenant_action
     ON learning_successtimelineevent (tenant_id, target_action_step_id) WHERE target_action_step_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_timeline_tenant_milestone
     ON learning_successtimelineevent (tenant_id, target_milestone_id) WHERE target_milestone_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_replaces
+    ON learning_successtimelineevent (tenant_id, replaces_event_id) WHERE replaces_event_id IS NOT NULL;
 
 -- ----------------------------------------------------------------------------
 -- 4. SUCCESS AUDIT LOG
