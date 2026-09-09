@@ -1,23 +1,31 @@
-# Current Task: P3-VS15-DISCOVERY-PHASE
+# Current Task: P3-VS15-RUNTIME-IMPLEMENTATION
 
 ## Active Phase 3 Vertical Slice 15 — 2026-09-10
 
-- Status: `DISCOVERY_ACTIVE`.
+- Status: `RUNTIME_ACTIVE` (Commander Runtime Unlock Granted).
 - Branch: `codex/phase3-product-platform-foundation`.
-- Authority: `COMMANDER_P3_VS15_DISCOVERY_UNLOCK: GRANTED`.
+- Authority: `COMMANDER_P3_VS15_RUNTIME_UNLOCK: GRANTED`.
 - Task ID: `P3-VS15-LEARNING-CONTINUITY-AND-STUDENT-SUCCESS-PLANNING`.
 - Title: موتور تداوم یادگیری، برنامه موفقیت دانش‌آموز و هماهنگی مسیر رشد
-- Scope:
-  1. Student Success Plan Domain & Action Lifecycle (Comprehensive multi-step success journey).
-  2. Continuity Coordinator: Linking `Goal` -> `Insight` -> `Reflection` -> `Next Action`.
-  3. Non-Automated Decision Boundary: System coordinates formative steps without acting as autonomous authoritative decider.
-  4. SuccessPlan Models & Timeline Events.
-  5. Multi-Tenancy & Child Safety: PostgreSQL 17 `FORCE ROW LEVEL SECURITY with NOBYPASSRLS`, composite FKs `(tenant_id, id)`, zero bare UUIDs, zero student ranking, zero raw PII.
-  6. Mentor & Parent Scoped Visibility: Mentor guidance and formative review without cross-tenant leakage.
-- Previous Slices Status:
-  - P3-VS1 to P3-VS14: `COMPLETE_FINAL_ACCEPTED` (VS14 Accepted at commit `32316e2`).
-- Discovery Review Matrix:
-  - `QWEN_DISCOVERY_REVIEW`: PENDING (Success Plan Domain, Action Lifecycle, Goal-Insight-Reflection-Action link).
-  - `GLM_POSTGRES_RLS_REVIEW`: PENDING (PostgreSQL 17 RLS, Composite FKs, Timeline Events, Audit Integrity, Zero PII).
-  - `GEMINI_UI_PSYCHOLOGY_REVIEW`: PENDING (Success journey UX, Non-punitive progress, Timeline Design, RTL BiDi, WCAG 2.2 AA).
+- Certified Discovery Baseline:
+  - Commit: `bbfce55` (DDL Baseline: `607bcac`).
+  - Triple Fleet Consensus: Unanimous PASS (`GEMINI_SCOPE: PASS`, `QWEN_SCOPE: PASS`, `GLM_SCOPE: PASS`).
+- Scope & Execution Order:
+  1. Django ORM Models (`backend/modules/learning/models.py`):
+     - `LearningStudentSuccessPlan`, `SuccessActionStep`, `SuccessTimelineEvent`, `SuccessAuditLog`.
+     - Active singleton per student (`uq_successplan_student_active`), Composite FKs, Zero Bare UUIDs, 5-way XOR (`chk_timeline_target_xor`), Type-Target Coupling (`chk_timeline_type_target_coupling`), 13-key PII Exclusion regex & JSONB arrays, Non-authoritative AI boundary (`is_authoritative = FALSE`).
+  2. Migrations:
+     - `0036`: Schema + Constraints.
+     - `0037`: PostgreSQL 17 `FORCE RLS` + `NOBYPASSRLS` + `REVOKE UPDATE, DELETE ON ... FROM app_role, PUBLIC`.
+  3. Domain Service:
+     - `ContinuityCoordinatorService` (`backend/modules/learning/continuity_coordinator_service.py`):
+     - FSM State Machines (Plan, Action Step, Timeline Append/Amended, Audit Emission).
+     - Strict permission & cohort bounds, non-authoritative AI advisory guards.
+  4. API & Serializers:
+     - DRF serializers & ViewSets registered with OpenAPI schema.
+  5. Security Test Matrix:
+     - N1 to N27 comprehensive negative test suite.
+  6. Frontend Implementation & Visual Sweep:
+     - `StudentSuccessTimeline` component + `/dashboard/student/success` page.
+     - RTL BiDi flow, WCAG 2.2 AA, touch targets >= 44px, zero-ranking design.
 - Open Blockers: 0.
