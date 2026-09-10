@@ -235,6 +235,7 @@ CREATE TABLE IF NOT EXISTS learning_coachingauditlog (
     action_type VARCHAR(64) NOT NULL,
     actor_id UUID NOT NULL,
     target_session_id UUID NULL,
+    target_note_id UUID NULL,
     target_intervention_id UUID NULL,
     target_action_id UUID NULL,
     details JSONB NOT NULL DEFAULT '{}'::jsonb,
@@ -249,6 +250,9 @@ CREATE TABLE IF NOT EXISTS learning_coachingauditlog (
     CONSTRAINT fk_coachingaudit_target_session FOREIGN KEY (tenant_id, target_session_id)
         REFERENCES learning_coachingsession(tenant_id, id)
         ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_coachingaudit_target_note FOREIGN KEY (tenant_id, target_note_id)
+        REFERENCES learning_coachingnote(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
     CONSTRAINT fk_coachingaudit_target_intervention FOREIGN KEY (tenant_id, target_intervention_id)
         REFERENCES learning_supportintervention(tenant_id, id)
         ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
@@ -256,7 +260,7 @@ CREATE TABLE IF NOT EXISTS learning_coachingauditlog (
         REFERENCES learning_followupaction(tenant_id, id)
         ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
     CONSTRAINT chk_coachingaudit_target_xor CHECK (
-        num_nonnulls(target_session_id, target_intervention_id, target_action_id) = 1
+        num_nonnulls(target_session_id, target_note_id, target_intervention_id, target_action_id) = 1
     ),
     CONSTRAINT chk_coachingaudit_action_type CHECK (
         action_type IN (
