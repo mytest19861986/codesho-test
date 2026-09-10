@@ -1235,3 +1235,162 @@ class SuccessAuditLogSerializer(serializers.ModelSerializer):
         ]
 
 
+# ============================================================================
+# P3-VS16: Coaching Sessions, Notes, Interventions, and Actions Serializers
+# ============================================================================
+
+class CoachingNoteSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import CoachingNote
+        model = CoachingNote
+        fields = [
+            "id",
+            "session",
+            "author_id",
+            "note_type",
+            "content",
+            "is_shared_with_student",
+            "created_at",
+        ]
+        read_only_fields = [
+            "id",
+            "author_id",
+            "created_at",
+        ]
+
+
+class FollowUpActionSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import FollowUpAction
+        model = FollowUpAction
+        fields = [
+            "id",
+            "intervention",
+            "session",
+            "student_id",
+            "assigned_by_id",
+            "title",
+            "status",
+            "due_date",
+            "completed_at",
+            "skipped_at",
+            "skip_reason",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "student_id",
+            "assigned_by_id",
+            "status",
+            "completed_at",
+            "skipped_at",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class SupportInterventionSerializer(serializers.ModelSerializer):
+    followup_actions = FollowUpActionSerializer(many=True, read_only=True)
+
+    class Meta:
+        from .models import SupportIntervention
+        model = SupportIntervention
+        fields = [
+            "id",
+            "student_id",
+            "mentor_id",
+            "success_plan",
+            "title",
+            "category",
+            "status",
+            "is_authoritative",
+            "rationale",
+            "student_feedback",
+            "proposed_at",
+            "acknowledged_at",
+            "declined_at",
+            "started_at",
+            "completed_at",
+            "paused_at",
+            "metadata",
+            "followup_actions",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "student_id",
+            "mentor_id",
+            "status",
+            "is_authoritative",
+            "proposed_at",
+            "acknowledged_at",
+            "declined_at",
+            "started_at",
+            "completed_at",
+            "paused_at",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class CoachingSessionSerializer(serializers.ModelSerializer):
+    notes = CoachingNoteSerializer(many=True, read_only=True)
+    followup_actions = FollowUpActionSerializer(many=True, read_only=True)
+
+    class Meta:
+        from .models import CoachingSession
+        model = CoachingSession
+        fields = [
+            "id",
+            "student_id",
+            "mentor_id",
+            "success_plan",
+            "learning_insight",
+            "title",
+            "status",
+            "scheduled_at",
+            "started_at",
+            "completed_at",
+            "cancelled_at",
+            "cancellation_reason",
+            "summary",
+            "metadata",
+            "notes",
+            "followup_actions",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "student_id",
+            "mentor_id",
+            "status",
+            "started_at",
+            "completed_at",
+            "cancelled_at",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class CoachingAuditLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import CoachingAuditLog
+        model = CoachingAuditLog
+        fields = [
+            "id",
+            "action_type",
+            "actor_id",
+            "target_session",
+            "target_note",
+            "target_intervention",
+            "target_action",
+            "details",
+            "created_at",
+        ]
+        read_only_fields = fields
+
+
+

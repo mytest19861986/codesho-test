@@ -2750,3 +2750,390 @@ class SuccessTimelineEventAppendView(APIView):
             return Response({"detail": str(e)}, status=400)
 
 
+# ============================================================================
+# P3-VS16: Coaching Sessions, Interventions, Notes, and Actions API Views
+# ============================================================================
+
+class CoachingSessionListCreateView(APIView):
+    """
+    GET  /api/v1/learning/coaching-sessions/
+    POST /api/v1/learning/coaching-sessions/
+    """
+    def get(self, request: Request) -> Response:
+        # Strict Anti-Ranking Policy check (N19)
+        if any(k.lower() in ("rank", "leaderboard", "order_by_score", "compare") for k in request.query_params.keys()):
+            return Response({"detail": "Anti-Ranking Policy: Comparative ranking and leaderboards are prohibited."}, status=400)
+
+        tenant_id = _tenant_id(request)
+        user_id = getattr(request.user, "id", None)
+        if not user_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.models import CoachingSession
+        from modules.learning.serializers import CoachingSessionSerializer
+
+        role = _get_membership_role(request) or "STUDENT"
+        student_param = request.query_params.get("student_id")
+
+        qs = CoachingSession.objects.filter(tenant_id=tenant_id)
+        if role == "STUDENT":
+            qs = qs.filter(student_id=user_id)
+        elif role in ("MENTOR", "INSTRUCTOR"):
+            if student_param:
+                # Cross-cohort check: Verify mentor has active membership/cohort
+                qs = qs.filter(mentor_id=user_id, student_id=student_param)
+            else:
+                qs = qs.filter(mentor_id=user_id)
+
+        sessions = qs.order_by("-scheduled_at")[:50]
+        return Response(CoachingSessionSerializer(sessions, many=True).data, status=200)
+
+    def post(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.coaching_coordinator_service import CoachingCoordinatorService
+        from modules.learning.serializers import CoachingSessionSerializer
+        from django.core.exceptions import ValidationError
+
+        student_id = request.data.get("student_id")
+        mentor_id = request.data.get("mentor_id") or actor_id
+        title = request.data.get("title")
+        scheduled_at = request.data.get("scheduled_at")
+        success_plan_id = request.data.get("success_plan_id")
+        learning_insight_id = request.data.get("learning_insight_id")
+        metadata = request.data.get("metadata", {})
+
+        if not student_id or not title or not scheduled_at:
+            return Response({"detail": "student_id, title, and scheduled_at are required"}, status=400)
+
+        try:
+            session = CoachingCoordinatorService.schedule_session(
+                tenant_id=tenant_id,
+                actor_id=actor_id,
+                student_id=UUID(student_id),
+                mentor_id=UUID(mentor_id),
+                title=title,
+                scheduled_at=scheduled_at,
+                success_plan_id=UUID(success_plan_id) if success_plan_id else None,
+                learning_insight_id=UUID(learning_insight_id) if learning_insight_id else None,
+                metadata=metadata,
+            )
+            return Response(CoachingSessionSerializer(session).data, status=201)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+
+
+class CoachingSessionTransitionView(APIView):
+    """
+    POST /api/v1/learning/coaching-sessions/<session_id>/transition/
+    Actions: START, COMPLETE, CANCEL
+    """
+    def post(self, request: Request, session_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.coaching_coordinator_service import CoachingCoordinatorService
+        from modules.learning.serializers import CoachingSessionSerializer
+        from django.core.exceptions import ValidationError, PermissionDenied
+
+        action = request.data.get("action", "").upper()
+
+        try:
+            if action == "START":
+                session = CoachingCoordinatorService.start_session(
+                    tenant_id=tenant_id,
+                    session_id=session_id,
+                    actor_id=actor_id,
+                )
+            elif action == "COMPLETE":
+                summary = request.data.get("summary")
+                session = CoachingCoordinatorService.complete_session(
+                    tenant_id=tenant_id,
+                    session_id=session_id,
+                    actor_id=actor_id,
+                    summary=summary,
+                )
+            elif action == "CANCEL":
+                reason = request.data.get("cancellation_reason")
+                if not reason:
+                    return Response({"detail": "cancellation_reason required"}, status=400)
+                session = CoachingCoordinatorService.cancel_session(
+                    tenant_id=tenant_id,
+                    session_id=session_id,
+                    actor_id=actor_id,
+                    cancellation_reason=reason,
+                )
+            else:
+                return Response({"detail": f"Unknown transition action '{action}'"}, status=400)
+
+            return Response(CoachingSessionSerializer(session).data, status=200)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+
+
+class CoachingNoteCreateView(APIView):
+    """
+    POST /api/v1/learning/coaching-sessions/<session_id>/notes/
+    """
+    def post(self, request: Request, session_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        author_id = getattr(request.user, "id", None)
+        if not author_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.coaching_coordinator_service import CoachingCoordinatorService
+        from modules.learning.serializers import CoachingNoteSerializer
+        from django.core.exceptions import ValidationError
+
+        note_type = request.data.get("note_type", "OBSERVATION")
+        content = request.data.get("content", "")
+        is_shared = request.data.get("is_shared_with_student", True)
+
+        try:
+            note = CoachingCoordinatorService.add_note(
+                tenant_id=tenant_id,
+                session_id=session_id,
+                author_id=author_id,
+                note_type=note_type,
+                content=content,
+                is_shared_with_student=is_shared,
+            )
+            return Response(CoachingNoteSerializer(note).data, status=201)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+
+
+class SupportInterventionListCreateView(APIView):
+    """
+    GET  /api/v1/learning/support-interventions/
+    POST /api/v1/learning/support-interventions/
+    """
+    def get(self, request: Request) -> Response:
+        # Strict Anti-Ranking Policy check (N19)
+        if any(k.lower() in ("rank", "leaderboard", "compare") for k in request.query_params.keys()):
+            return Response({"detail": "Anti-Ranking Policy: Comparative ranking and leaderboards are prohibited."}, status=400)
+
+        tenant_id = _tenant_id(request)
+        user_id = getattr(request.user, "id", None)
+        if not user_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.models import SupportIntervention
+        from modules.learning.serializers import SupportInterventionSerializer
+
+        role = _get_membership_role(request) or "STUDENT"
+        student_param = request.query_params.get("student_id")
+
+        qs = SupportIntervention.objects.filter(tenant_id=tenant_id)
+        if role == "STUDENT":
+            qs = qs.filter(student_id=user_id)
+        elif role in ("MENTOR", "INSTRUCTOR"):
+            if student_param:
+                qs = qs.filter(mentor_id=user_id, student_id=student_param)
+            else:
+                qs = qs.filter(mentor_id=user_id)
+
+        interventions = qs.order_by("-created_at")[:50]
+        return Response(SupportInterventionSerializer(interventions, many=True).data, status=200)
+
+    def post(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.coaching_coordinator_service import CoachingCoordinatorService
+        from modules.learning.serializers import SupportInterventionSerializer
+        from django.core.exceptions import ValidationError
+
+        student_id = request.data.get("student_id")
+        title = request.data.get("title")
+        category = request.data.get("category", "ACADEMIC_SCAFFOLDING")
+        rationale = request.data.get("rationale")
+        success_plan_id = request.data.get("success_plan_id")
+        metadata = request.data.get("metadata", {})
+
+        if not student_id or not title or not rationale:
+            return Response({"detail": "student_id, title, and rationale are required"}, status=400)
+
+        try:
+            intervention = CoachingCoordinatorService.propose_intervention(
+                tenant_id=tenant_id,
+                mentor_id=actor_id,
+                student_id=UUID(student_id),
+                title=title,
+                category=category,
+                rationale=rationale,
+                success_plan_id=UUID(success_plan_id) if success_plan_id else None,
+                metadata=metadata,
+            )
+            return Response(SupportInterventionSerializer(intervention).data, status=201)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+
+
+class SupportInterventionTransitionView(APIView):
+    """
+    POST /api/v1/learning/support-interventions/<intervention_id>/transition/
+    Actions: ACCEPT, DECLINE, START, COMPLETE
+    """
+    def post(self, request: Request, intervention_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.coaching_coordinator_service import CoachingCoordinatorService
+        from modules.learning.serializers import SupportInterventionSerializer
+        from django.core.exceptions import ValidationError, PermissionDenied
+
+        action = request.data.get("action", "").upper()
+        feedback = request.data.get("student_feedback")
+
+        try:
+            if action == "ACCEPT":
+                intervention = CoachingCoordinatorService.accept_intervention(
+                    tenant_id=tenant_id,
+                    intervention_id=intervention_id,
+                    student_id=actor_id,
+                    feedback=feedback,
+                )
+            elif action == "DECLINE":
+                intervention = CoachingCoordinatorService.decline_intervention(
+                    tenant_id=tenant_id,
+                    intervention_id=intervention_id,
+                    student_id=actor_id,
+                    feedback=feedback,
+                )
+            elif action == "START":
+                intervention = CoachingCoordinatorService.start_intervention(
+                    tenant_id=tenant_id,
+                    intervention_id=intervention_id,
+                    actor_id=actor_id,
+                )
+            elif action == "COMPLETE":
+                intervention = CoachingCoordinatorService.complete_intervention(
+                    tenant_id=tenant_id,
+                    intervention_id=intervention_id,
+                    actor_id=actor_id,
+                )
+            else:
+                return Response({"detail": f"Unknown transition action '{action}'"}, status=400)
+
+            return Response(SupportInterventionSerializer(intervention).data, status=200)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+
+
+class FollowUpActionListCreateView(APIView):
+    """
+    GET  /api/v1/learning/followup-actions/
+    POST /api/v1/learning/followup-actions/
+    """
+    def get(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        user_id = getattr(request.user, "id", None)
+        if not user_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.models import FollowUpAction
+        from modules.learning.serializers import FollowUpActionSerializer
+
+        role = _get_membership_role(request) or "STUDENT"
+        qs = FollowUpAction.objects.filter(tenant_id=tenant_id)
+        if role == "STUDENT":
+            qs = qs.filter(student_id=user_id)
+        elif role in ("MENTOR", "INSTRUCTOR"):
+            qs = qs.filter(assigned_by_id=user_id)
+
+        actions = qs.order_by("due_date")[:50]
+        return Response(FollowUpActionSerializer(actions, many=True).data, status=200)
+
+    def post(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.coaching_coordinator_service import CoachingCoordinatorService
+        from modules.learning.serializers import FollowUpActionSerializer
+        from django.core.exceptions import ValidationError
+
+        student_id = request.data.get("student_id")
+        title = request.data.get("title")
+        due_date = request.data.get("due_date")
+        intervention_id = request.data.get("intervention_id")
+        session_id = request.data.get("session_id")
+
+        if not student_id or not title or not due_date:
+            return Response({"detail": "student_id, title, and due_date are required"}, status=400)
+
+        try:
+            action = CoachingCoordinatorService.assign_action(
+                tenant_id=tenant_id,
+                assigned_by_id=actor_id,
+                student_id=UUID(student_id),
+                title=title,
+                due_date=due_date,
+                intervention_id=UUID(intervention_id) if intervention_id else None,
+                session_id=UUID(session_id) if session_id else None,
+            )
+            return Response(FollowUpActionSerializer(action).data, status=201)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+
+
+class FollowUpActionTransitionView(APIView):
+    """
+    POST /api/v1/learning/followup-actions/<action_id>/transition/
+    Actions: COMPLETE, SKIP
+    """
+    def post(self, request: Request, action_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.coaching_coordinator_service import CoachingCoordinatorService
+        from modules.learning.serializers import FollowUpActionSerializer
+        from django.core.exceptions import ValidationError, PermissionDenied
+
+        transition_type = request.data.get("action", "").upper()
+
+        try:
+            if transition_type == "COMPLETE":
+                action = CoachingCoordinatorService.complete_action(
+                    tenant_id=tenant_id,
+                    action_id=action_id,
+                    actor_id=actor_id,
+                )
+            elif transition_type == "SKIP":
+                skip_reason = request.data.get("skip_reason")
+                if not skip_reason:
+                    return Response({"detail": "skip_reason required"}, status=400)
+                action = CoachingCoordinatorService.skip_action(
+                    tenant_id=tenant_id,
+                    action_id=action_id,
+                    student_id=actor_id,
+                    skip_reason=skip_reason,
+                )
+            else:
+                return Response({"detail": f"Unknown transition action '{transition_type}'"}, status=400)
+
+            return Response(FollowUpActionSerializer(action).data, status=200)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+
+
+

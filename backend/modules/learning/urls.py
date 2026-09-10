@@ -391,4 +391,40 @@ urlpatterns = [
         views.SuccessTimelineEventAppendView.as_view(),
         name="learning-success-plan-timeline",
     ),
+    # Phase 3 VS16 Mentor-Student Success Coaching & Intervention Workflow
+    path(
+        "coaching-sessions/",
+        views.CoachingSessionListCreateView.as_view(),
+        name="learning-coaching-sessions-list-create",
+    ),
+    path(
+        "coaching-sessions/<uuid:session_id>/transition/",
+        views.CoachingSessionTransitionView.as_view(),
+        name="learning-coaching-session-transition",
+    ),
+    path(
+        "coaching-sessions/<uuid:session_id>/notes/",
+        views.CoachingNoteCreateView.as_view(),
+        name="learning-coaching-note-create",
+    ),
+    path(
+        "support-interventions/",
+        views.SupportInterventionListCreateView.as_view(),
+        name="learning-support-interventions-list-create",
+    ),
+    path(
+        "support-interventions/<uuid:intervention_id>/transition/",
+        views.SupportInterventionTransitionView.as_view(),
+        name="learning-support-intervention-transition",
+    ),
+    path(
+        "followup-actions/",
+        views.FollowUpActionListCreateView.as_view(),
+        name="learning-followup-actions-list-create",
+    ),
+    path(
+        "followup-actions/<uuid:action_id>/transition/",
+        views.FollowUpActionTransitionView.as_view(),
+        name="learning-followup-action-transition",
+    ),
 ]
