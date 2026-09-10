@@ -1,9 +1,11 @@
-# P3-VS16 Boundary Plan, DDL & Proof Matrix (v1.0)
+# P3-VS16 Boundary Plan, DDL & Proof Matrix (v1.1-CANONICAL)
 
 ## Vertical Slice Identifier
 - Task ID: `P3-VS16-MENTOR-STUDENT-SUCCESS-COACHING-AND-INTERVENTION-WORKFLOW`
 - Branch: `codex/phase3-product-platform-foundation`
 - Authority: `COMMANDER_P3_VS16_DISCOVERY_UNLOCK`
+- Response-Record Identity: Addressed GLM v1.0 Audit Findings (B1–B5, M1–M6)
+- Certified Commit: `c058eff`
 - Fleet Standard GUC: `app.current_tenant`
 - Session Protocol: `SET LOCAL "app.current_tenant" = %s` strictly inside `transaction.atomic()`
 
@@ -11,12 +13,11 @@
 
 ## 1. §2.1 Prerequisites & Upstream Dependencies
 - P3-VS1 to P3-VS15 Certified:
-  - `learning_studentsuccessplan(tenant_id, id)`: Certified in P3-VS15 with active singleton (`uq_successplan_student_active`). Referenced by `fk_coaching_success_plan`.
-  - `learning_learninginsight(tenant_id, id)`: Certified in P3-VS13 with partial unique singleton index. Referenced by `fk_coaching_learning_insight`.
-  - `learning_studentlearninggoal(tenant_id, id)`: Certified with active singleton per domain and max 5 active goals. Referenced by `fk_coaching_goal`.
-  - `learning_learningreflection(tenant_id, id)`: Certified immutable reflection journal. Referenced by `fk_coaching_reflection`.
-  - `learning_successtimelineevent(tenant_id, id)`: Certified in P3-VS15 with 5-way XOR targets and append-only compensation.
-  - All foreign keys strictly enforce composite tenant scoping `(tenant_id, target_id)`. Zero bare UUID foreign keys.
+  - `platform_tenant_tenant(id)`: Certified multi-tenant root.
+  - `platform_tenant_tenantmembership(tenant_id, user_id)`: Certified composite tenant membership for student, mentor, and author scoping.
+  - `learning_studentsuccessplan(tenant_id, id)`: Certified in P3-VS15 with active singleton (`uq_successplan_student_active`). Referenced by `fk_coachingsession_plan` and `fk_supportintervention_plan` via `ON DELETE SET NULL`.
+  - `learning_learninginsight(tenant_id, id)`: Certified in P3-VS13 with partial unique singleton index. Referenced by `fk_coachingsession_insight` via `ON DELETE SET NULL`.
+  - All foreign keys strictly enforce composite tenant scoping `(tenant_id, target_id)`. Exactly zero bare UUID foreign keys.
 
 ---
 
@@ -31,7 +32,7 @@
 | `SCHEDULED` | `CANCEL_SESSION` | `CANCELLED` | Mentor, Student | Non-punitive cancellation; reason logged | Sets `cancelled_at`; Emits `CANCEL_SESSION` audit log |
 | `IN_PROGRESS` | `COMPLETE_SESSION` | `COMPLETED` | Mentor | `completed_at = clock_timestamp()`; mandatory coaching summary present | Sets `completed_at`; Appends timeline progression |
 
-### 2.2 SupportIntervention FSM Matrix
+### 2.2 SupportIntervention FSM Matrix (Learner Agency First)
 | Initial State | Event / Trigger | Target State | Permitted Actors | Guard Conditions & Invariants | Side Effects / Audit Action |
 |:---|:---|:---|:---|:---|:---|
 | `[INIT]` | `PROPOSE_INTERVENTION` | `PROPOSED` | Mentor, Staff | Non-punitive supportive rationale; `is_authoritative = FALSE`; no disciplinary actions | Inserts intervention; Emits `PROPOSE_INTERVENTION` audit log |
@@ -73,24 +74,24 @@
 | **N4** | Cross-Tenant Student Linkage| Insert coaching session pointing to student from Tenant B | Composite FK violation -> DB REJECT |
 | **N5** | Cross-Tenant Plan Leakage | Insert intervention pointing to success plan from Tenant B | Composite FK violation -> DB REJECT |
 | **N6** | Anti-Automated Decider | Create intervention marked `is_authoritative = TRUE` | Constraint `chk_intervention_non_authoritative` -> DB REJECT |
-| **N7** | Anti-Punitive Rationale | Insert intervention with punitive flag or disciplinary category | Constraint `chk_intervention_category_supportive` -> DB REJECT |
+| **N7** | Anti-Punitive Rationale | Insert intervention with punitive category | Constraint `chk_intervention_category_supportive` -> DB REJECT |
 | **N8** | Mandatory Agency Invariant | System or mentor attempts to force `ACCEPTED` state without student | Service FSM permission check -> 403 Forbidden / DB REJECT |
 | **N9** | Append-Only Audit Log | Attempt `UPDATE` or `DELETE` on `learning_coachingauditlog` | Permission Denied / DB Revoke -> DB REJECT |
 | **N10** | Append-Only Note Invariant | Attempt `UPDATE` or `DELETE` on finalized `learning_coachingnote` | Permission Denied / DB Revoke -> DB REJECT |
-| **N11** | Deferrable FK Topology | Delete coaching session with child notes and audit records | `ON DELETE NO ACTION DEFERRABLE` blocks purge -> DB REJECT |
+| **N11** | Deferrable FK Topology | Delete coaching session with child audit records | `ON DELETE NO ACTION DEFERRABLE` blocks purge -> DB REJECT |
 | **N12** | Text Length Bounds | Insert coaching note exceeding 4000 characters | Constraint `chk_coachingnote_content_len` -> DB REJECT |
 | **N13** | Headline Bounds | Insert intervention title < 3 or > 255 chars | Constraint `chk_intervention_title_len` -> DB REJECT |
-| **N14** | PII Blacklist Regex | Insert coaching note containing phone number or credit card | Constraint `chk_coachingnote_no_pii` -> DB REJECT |
+| **N14** | PII Blacklist Regex | Insert coaching note or summary containing phone number or credit card | Constraint `chk_coachingnote_content_no_pii` -> DB REJECT |
 | **N15** | PII Blacklist JSONB | Inject `{"national_id": "0012345678"}` into intervention metadata | Constraint `chk_intervention_metadata_no_pii` (`?\|`) -> DB REJECT |
 | **N16** | PII Blacklist Audit Log | Inject `{"iban": "IR123456..."}` into coaching audit metadata | Constraint `chk_coachingaudit_metadata_no_pii` (`?\|`) -> DB REJECT |
 | **N17** | FSM Illegal Direct Jump | Transition intervention from `PROPOSED` directly to `COMPLETED` | FSM Guard rejects invalid transition -> 400 Bad Request |
-| **N18** | Completion Consistency | Set intervention `status='COMPLETED'` with `completed_at=NULL` | Constraint `chk_intervention_completion_consistency` -> DB REJECT |
+| **N18** | Completion Consistency | Set intervention `status='COMPLETED'` with `completed_at=NULL` | Constraint `chk_intervention_status_time_consistency` -> DB REJECT |
 | **N19** | Anti-Ranking Policy | Query coaching sessions with `?rank=true` or leaderboard params | REST API returns 400 Bad Request (Anti-Ranking Policy) |
 | **N20** | Cross-Cohort Mentor Guard | Mentor queries coaching session of student in unassigned cohort | Service permission check returns 403 Forbidden |
-| **N21** | Concurrency Advisory Lock | Concurrent conflicting state updates on same intervention | `pg_advisory_xact_lock` serializes transactions safely -> PASS |
-| **N22** | Session Time Consistency | `started_at > completed_at` in coaching session | Constraint `chk_session_time_consistency` -> DB REJECT |
-| **N23** | Action Due Date Bounds | Insert follow-up action with due date in past on creation | Constraint `chk_action_due_date_future` -> DB REJECT |
-| **N24** | Tenant Wipe Clean Cascade | Delete tenant entity via `platform_tenant_tenant` cascade | Deferrable FK topology cascades cleanly without deadlock -> DB PASS |
+| **N21** | Concurrency Advisory Lock | Concurrent conflicting state updates on same intervention | `pg_advisory_xact_lock(hashtext('intervention' \|\| id::text))` -> PASS |
+| **N22** | Session Time Consistency | `started_at > completed_at` in coaching session | Constraint `chk_coachingsession_status_time_consistency` -> DB REJECT |
+| **N23** | Action Origin Exact XOR | Insert follow-up action with both intervention_id AND session_id set | Constraint `chk_followupaction_origin_exact_xor` -> DB REJECT |
+| **N24** | Tenant Wipe Clean Cascade | Delete tenant entity via `platform_tenant_tenant` cascade | FK `ON DELETE CASCADE` cascades cleanly -> DB PASS |
 | **N25** | Empty String GUC Fail-Closed| Query tables with `SET LOCAL app.current_tenant = ''` | Empty set / 0 rows (Fail-Closed) |
 | **N26** | Malformed GUC String | Query tables with malicious string in `app.current_tenant` | Safe type cast error or fail-closed -> DB PASS |
 | **N27** | Zero Bare UUIDs | Inspect all foreign keys across all 5 new tables | Zero foreign keys with single column UUID -> 100% PASS |
