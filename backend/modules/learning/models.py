@@ -4287,3 +4287,515 @@ class SuccessAuditLog(models.Model):
         return f"{self.tenant_id}:{self.actor_id}:{self.action}:{self.created_at}"
 
 
+# ============================================================================
+# P3-VS16: Mentor-Student Success Coaching & Intervention Workflow Models
+# ============================================================================
+
+class CoachingSessionStatus(models.TextChoices):
+    SCHEDULED = "SCHEDULED", "Scheduled"
+    IN_PROGRESS = "IN_PROGRESS", "In Progress"
+    COMPLETED = "COMPLETED", "Completed"
+    CANCELLED = "CANCELLED", "Cancelled"
+
+
+class CoachingNoteType(models.TextChoices):
+    OBSERVATION = "OBSERVATION", "Observation"
+    STRENGTH = "STRENGTH", "Strength"
+    GROWTH_OPPORTUNITY = "GROWTH_OPPORTUNITY", "Growth Opportunity"
+    ACTION_ITEM = "ACTION_ITEM", "Action Item"
+    SUMMARY = "SUMMARY", "Summary"
+
+
+class SupportInterventionCategory(models.TextChoices):
+    ACADEMIC_SCAFFOLDING = "ACADEMIC_SCAFFOLDING", "Academic Scaffolding"
+    RESOURCE_RECOMMENDATION = "RESOURCE_RECOMMENDATION", "Resource Recommendation"
+    STUDY_STRATEGY = "STUDY_STRATEGY", "Study Strategy"
+    PACING_ADJUSTMENT = "PACING_ADJUSTMENT", "Pacing Adjustment"
+    PEER_STUDY_CONNECTION = "PEER_STUDY_CONNECTION", "Peer Study Connection"
+
+
+class SupportInterventionStatus(models.TextChoices):
+    PROPOSED = "PROPOSED", "Proposed"
+    ACCEPTED = "ACCEPTED", "Accepted"
+    DECLINED = "DECLINED", "Declined"
+    ACTIVE = "ACTIVE", "Active"
+    PAUSED = "PAUSED", "Paused"
+    COMPLETED = "COMPLETED", "Completed"
+
+
+class FollowUpActionStatus(models.TextChoices):
+    PENDING = "PENDING", "Pending"
+    IN_PROGRESS = "IN_PROGRESS", "In Progress"
+    COMPLETED = "COMPLETED", "Completed"
+    SKIPPED = "SKIPPED", "Skipped"
+
+
+class CoachingAuditAction(models.TextChoices):
+    SCHEDULE_SESSION = "SCHEDULE_SESSION", "Schedule Session"
+    START_SESSION = "START_SESSION", "Start Session"
+    RESCHEDULE_SESSION = "RESCHEDULE_SESSION", "Reschedule Session"
+    CANCEL_SESSION = "CANCEL_SESSION", "Cancel Session"
+    COMPLETE_SESSION = "COMPLETE_SESSION", "Complete Session"
+    CREATE_NOTE = "CREATE_NOTE", "Create Note"
+    PROPOSE_INTERVENTION = "PROPOSE_INTERVENTION", "Propose Intervention"
+    ACCEPT_INTERVENTION = "ACCEPT_INTERVENTION", "Accept Intervention"
+    DECLINE_INTERVENTION = "DECLINE_INTERVENTION", "Decline Intervention"
+    START_INTERVENTION = "START_INTERVENTION", "Start Intervention"
+    PAUSE_INTERVENTION = "PAUSE_INTERVENTION", "Pause Intervention"
+    RESUME_INTERVENTION = "RESUME_INTERVENTION", "Resume Intervention"
+    COMPLETE_INTERVENTION = "COMPLETE_INTERVENTION", "Complete Intervention"
+    ASSIGN_ACTION = "ASSIGN_ACTION", "Assign Action"
+    START_ACTION = "START_ACTION", "Start Action"
+    COMPLETE_ACTION = "COMPLETE_ACTION", "Complete Action"
+    SKIP_ACTION = "SKIP_ACTION", "Skip Action"
+
+
+class CoachingSession(models.Model):
+    """
+    P3-VS16: Scheduled coaching session between a student and assigned mentor.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="coaching_sessions",
+    )
+    student_id = models.UUIDField(db_index=True)
+    mentor_id = models.UUIDField(db_index=True)
+    success_plan = models.ForeignKey(
+        LearningStudentSuccessPlan,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="coaching_sessions",
+    )
+    learning_insight = models.ForeignKey(
+        LearningInsight,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="coaching_sessions",
+    )
+    title = models.CharField(max_length=255)
+    status = models.CharField(
+        max_length=32,
+        choices=CoachingSessionStatus.choices,
+        default=CoachingSessionStatus.SCHEDULED,
+    )
+    scheduled_at = models.DateTimeField()
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    cancellation_reason = models.CharField(max_length=1000, null=True, blank=True)
+    summary = models.TextField(null=True, blank=True)
+    metadata = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_coachingsession"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_coachingsession_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=CoachingSessionStatus.values),
+                name="chk_coachingsession_status",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id", "-scheduled_at"], name="idx_coachingsession_stud_time"),
+            models.Index(fields=["tenant", "mentor_id", "-scheduled_at"], name="idx_coachingsession_ment_time"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if not self.title or len(self.title.strip()) < 3:
+            raise ValidationError("Title must be at least 3 characters.")
+        if len(self.title) > 255:
+            raise ValidationError("Title cannot exceed 255 characters.")
+        if self.summary:
+            if len(self.summary.strip()) < 5:
+                raise ValidationError("Summary must be at least 5 characters.")
+            if len(self.summary) > 4000:
+                raise ValidationError("Summary cannot exceed 4000 characters.")
+        if self.success_plan and str(self.success_plan.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Success plan tenant mismatch.")
+        if self.learning_insight and str(self.learning_insight.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Learning insight tenant mismatch.")
+
+        # Status & Time consistency check
+        if self.status == CoachingSessionStatus.SCHEDULED:
+            if self.started_at or self.completed_at or self.cancelled_at or self.cancellation_reason:
+                raise ValidationError("Scheduled session cannot have start, completion, or cancellation timestamps.")
+        elif self.status == CoachingSessionStatus.IN_PROGRESS:
+            if not self.started_at or self.completed_at or self.cancelled_at:
+                raise ValidationError("In-progress session must have started_at and cannot be completed or cancelled.")
+        elif self.status == CoachingSessionStatus.COMPLETED:
+            if not self.started_at or not self.completed_at or self.cancelled_at:
+                raise ValidationError("Completed session must have started_at and completed_at, and cannot be cancelled.")
+            if self.started_at > self.completed_at:
+                raise ValidationError("started_at must be before or equal to completed_at.")
+        elif self.status == CoachingSessionStatus.CANCELLED:
+            if not self.cancelled_at or not self.cancellation_reason or self.completed_at:
+                raise ValidationError("Cancelled session must have cancelled_at and cancellation_reason, and cannot be completed.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.id}:{self.status}:{self.title}"
+
+
+class CoachingNote(models.Model):
+    """
+    P3-VS16: Qualitative mentor coaching note (strictly append-only).
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="coaching_notes",
+    )
+    session = models.ForeignKey(
+        CoachingSession,
+        on_delete=models.CASCADE,
+        related_name="notes",
+    )
+    author_id = models.UUIDField(db_index=True)
+    note_type = models.CharField(
+        max_length=32,
+        choices=CoachingNoteType.choices,
+        default=CoachingNoteType.OBSERVATION,
+    )
+    content = models.TextField()
+    is_shared_with_student = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_coachingnote"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_coachingnote_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(note_type__in=CoachingNoteType.values),
+                name="chk_coachingnote_type",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "session", "created_at"], name="idx_coachingnote_session_time"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if not self.content or len(self.content.strip()) < 3:
+            raise ValidationError("Content must be at least 3 characters.")
+        if len(self.content) > 4000:
+            raise ValidationError("Content cannot exceed 4000 characters.")
+        if self.session and str(self.session.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Session tenant mismatch.")
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError("CoachingNote is strictly append-only.")
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("CoachingNote records cannot be deleted.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.session_id}:{self.note_type}"
+
+
+class SupportIntervention(models.Model):
+    """
+    P3-VS16: Learner Agency First supportive intervention proposed to student.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="support_interventions",
+    )
+    student_id = models.UUIDField(db_index=True)
+    mentor_id = models.UUIDField(db_index=True)
+    success_plan = models.ForeignKey(
+        LearningStudentSuccessPlan,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="support_interventions",
+    )
+    title = models.CharField(max_length=255)
+    category = models.CharField(
+        max_length=64,
+        choices=SupportInterventionCategory.choices,
+        default=SupportInterventionCategory.ACADEMIC_SCAFFOLDING,
+    )
+    status = models.CharField(
+        max_length=32,
+        choices=SupportInterventionStatus.choices,
+        default=SupportInterventionStatus.PROPOSED,
+    )
+    is_authoritative = models.BooleanField(default=False)
+    rationale = models.TextField()
+    student_feedback = models.TextField(null=True, blank=True)
+    proposed_at = models.DateTimeField(auto_now_add=True)
+    acknowledged_at = models.DateTimeField(null=True, blank=True)
+    declined_at = models.DateTimeField(null=True, blank=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    paused_at = models.DateTimeField(null=True, blank=True)
+    metadata = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_supportintervention"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_supportintervention_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=SupportInterventionStatus.values),
+                name="chk_intervention_status",
+            ),
+            models.CheckConstraint(
+                condition=Q(category__in=SupportInterventionCategory.values),
+                name="chk_intervention_category_supportive",
+            ),
+            models.CheckConstraint(
+                condition=Q(is_authoritative=False),
+                name="chk_intervention_non_authoritative",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id", "status"], name="idx_intervention_stud_status"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.is_authoritative is not False:
+            raise ValidationError("Interventions must strictly respect learner agency (is_authoritative = False).")
+        if not self.title or len(self.title.strip()) < 3:
+            raise ValidationError("Title must be at least 3 characters.")
+        if len(self.title) > 255:
+            raise ValidationError("Title cannot exceed 255 characters.")
+        if not self.rationale or len(self.rationale.strip()) < 10:
+            raise ValidationError("Rationale must be at least 10 characters.")
+        if len(self.rationale) > 4000:
+            raise ValidationError("Rationale cannot exceed 4000 characters.")
+        if self.student_feedback:
+            if len(self.student_feedback.strip()) < 2:
+                raise ValidationError("Student feedback must be at least 2 characters.")
+            if len(self.student_feedback) > 2000:
+                raise ValidationError("Student feedback cannot exceed 2000 characters.")
+        if self.success_plan and str(self.success_plan.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Success plan tenant mismatch.")
+
+        # FSM Consistency
+        if self.status == SupportInterventionStatus.PROPOSED:
+            if self.acknowledged_at or self.declined_at or self.started_at or self.completed_at or self.paused_at:
+                raise ValidationError("Proposed intervention cannot have lifecycle timestamps.")
+        elif self.status == SupportInterventionStatus.ACCEPTED:
+            if not self.acknowledged_at or self.declined_at or self.completed_at:
+                raise ValidationError("Accepted intervention must have acknowledged_at and cannot be declined or completed.")
+        elif self.status == SupportInterventionStatus.DECLINED:
+            if not self.declined_at or self.acknowledged_at or self.started_at or self.completed_at:
+                raise ValidationError("Declined intervention must have declined_at and cannot be acknowledged, started, or completed.")
+        elif self.status == SupportInterventionStatus.ACTIVE:
+            if not self.acknowledged_at or not self.started_at or self.declined_at or self.completed_at or self.paused_at:
+                raise ValidationError("Active intervention must be acknowledged and started, not paused, declined, or completed.")
+        elif self.status == SupportInterventionStatus.PAUSED:
+            if not self.acknowledged_at or not self.started_at or not self.paused_at or self.completed_at:
+                raise ValidationError("Paused intervention must have acknowledged_at, started_at, paused_at, and cannot be completed.")
+        elif self.status == SupportInterventionStatus.COMPLETED:
+            if not self.acknowledged_at or not self.started_at or not self.completed_at:
+                raise ValidationError("Completed intervention must have acknowledged_at, started_at, and completed_at.")
+            if self.started_at > self.completed_at:
+                raise ValidationError("started_at must be before or equal to completed_at.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.student_id}:{self.status}:{self.title}"
+
+
+class FollowUpAction(models.Model):
+    """
+    P3-VS16: Actionable step linked to an intervention or session with exact origin XOR.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="coaching_followup_actions",
+    )
+    intervention = models.ForeignKey(
+        SupportIntervention,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="followup_actions",
+    )
+    session = models.ForeignKey(
+        CoachingSession,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="followup_actions",
+    )
+    student_id = models.UUIDField(db_index=True)
+    assigned_by_id = models.UUIDField(db_index=True)
+    title = models.CharField(max_length=255)
+    status = models.CharField(
+        max_length=32,
+        choices=FollowUpActionStatus.choices,
+        default=FollowUpActionStatus.PENDING,
+    )
+    due_date = models.DateTimeField()
+    completed_at = models.DateTimeField(null=True, blank=True)
+    skipped_at = models.DateTimeField(null=True, blank=True)
+    skip_reason = models.CharField(max_length=1000, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_followupaction"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_followupaction_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=FollowUpActionStatus.values),
+                name="chk_followupaction_status",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id", "due_date"], name="idx_followupaction_stud_due"),
+        ]
+
+    def clean(self):
+        super().clean()
+        origins = [self.intervention, self.session]
+        non_null_count = sum(1 for o in origins if o is not None)
+        if non_null_count != 1:
+            raise ValidationError("FollowUpAction must originate from exactly one source: either an intervention or a session.")
+
+        if not self.title or len(self.title.strip()) < 3:
+            raise ValidationError("Title must be at least 3 characters.")
+        if len(self.title) > 255:
+            raise ValidationError("Title cannot exceed 255 characters.")
+
+        if self.intervention and str(self.intervention.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Intervention tenant mismatch.")
+        if self.session and str(self.session.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Session tenant mismatch.")
+
+        if self.status in (FollowUpActionStatus.PENDING, FollowUpActionStatus.IN_PROGRESS):
+            if self.completed_at or self.skipped_at or self.skip_reason:
+                raise ValidationError("Pending or In-progress action cannot have completed_at, skipped_at, or skip_reason.")
+        elif self.status == FollowUpActionStatus.COMPLETED:
+            if not self.completed_at or self.skipped_at:
+                raise ValidationError("Completed action must have completed_at and cannot be skipped.")
+        elif self.status == FollowUpActionStatus.SKIPPED:
+            if not self.skipped_at or not self.skip_reason or self.completed_at:
+                raise ValidationError("Skipped action must have skipped_at and skip_reason, and cannot be completed.")
+            if len(self.skip_reason.strip()) < 3:
+                raise ValidationError("Skip reason must be at least 3 characters.")
+            if len(self.skip_reason) > 1000:
+                raise ValidationError("Skip reason cannot exceed 1000 characters.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.student_id}:{self.status}:{self.title}"
+
+
+class CoachingAuditLog(models.Model):
+    """
+    P3-VS16: Forensic append-only audit trail for coaching sessions, notes,
+    interventions, and follow-up actions with 4-way XOR targets.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="coaching_audit_logs",
+    )
+    action_type = models.CharField(max_length=64, choices=CoachingAuditAction.choices)
+    actor_id = models.UUIDField(db_index=True)
+    target_session = models.ForeignKey(
+        CoachingSession,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+    )
+    target_note = models.ForeignKey(
+        CoachingNote,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+    )
+    target_intervention = models.ForeignKey(
+        SupportIntervention,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+    )
+    target_action = models.ForeignKey(
+        FollowUpAction,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+    )
+    details = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_coachingauditlog"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_coachingauditlog_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(action_type__in=CoachingAuditAction.values),
+                name="chk_coachingaudit_action_type",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "actor_id", "-created_at"], name="idx_coachingaudit_actor_time"),
+            models.Index(fields=["tenant", "target_session"], name="idx_coachingaudit_session"),
+            models.Index(fields=["tenant", "target_note"], name="idx_coachingaudit_note"),
+            models.Index(fields=["tenant", "target_intervention"], name="idx_coachingaudit_interv"),
+            models.Index(fields=["tenant", "target_action"], name="idx_coachingaudit_action"),
+        ]
+
+    def clean(self):
+        super().clean()
+        targets = [self.target_session, self.target_note, self.target_intervention, self.target_action]
+        non_null_count = sum(1 for t in targets if t is not None)
+        if non_null_count != 1:
+            raise ValidationError("Exactly one target entity must be specified (chk_coachingaudit_target_xor).")
+        for t in targets:
+            if t is not None and str(t.tenant_id) != str(self.tenant_id):
+                raise ValidationError("Target entity tenant mismatch.")
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError("CoachingAuditLog is strictly append-only.")
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("CoachingAuditLog records cannot be deleted.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.actor_id}:{self.action_type}:{self.created_at}"
+
+
+
