@@ -1,8 +1,8 @@
 -- ============================================================================
 -- P3-MACRO-EPIC-23-25: CURRICULUM AUTHORING, EDITORIAL & RELEASE READINESS
 -- POSTGRESQL 17 DDL, FORCE RLS, NOBYPASSRLS & COMPOSITE FK SPECIFICATION
--- Version: v1.0-CANONICAL
--- Authority: COMMANDER_P3_MACRO_EPIC_23_25_DISCOVERY_DIRECTIVE
+-- Version: v1.1-CANONICAL-CLAUDE-HARDENED
+-- Authority: COMMANDER_P3_MACRO_EPIC_23_25_DISCOVERY_DIRECTIVE & CLAUDE_SECURITY_AUDIT
 -- Fleet Standard GUC: app.current_tenant
 -- Session Protocol: SET LOCAL "app.current_tenant" = %s strictly inside transaction.atomic()
 -- Hard Invariants Enforced:
@@ -216,6 +216,11 @@ CREATE TABLE IF NOT EXISTS learning_changeapprovalrecord (
     CONSTRAINT chk_changeapproval_verdict CHECK (approval_verdict IN ('APPROVED', 'CONDITIONALLY_APPROVED'))
 );
 
+CREATE INDEX IF NOT EXISTS idx_changeapproval_tenant_changeset
+    ON learning_changeapprovalrecord (tenant_id, change_set_id);
+CREATE INDEX IF NOT EXISTS idx_changeapproval_tenant_approver
+    ON learning_changeapprovalrecord (tenant_id, approver_id);
+
 -- ----------------------------------------------------------------------------
 -- 2. P3-VS24: LEARNING ASSESSMENT BLUEPRINT & RUBRIC GOVERNANCE
 -- ----------------------------------------------------------------------------
@@ -353,6 +358,11 @@ CREATE TABLE IF NOT EXISTS learning_rubricreviewrecord (
         ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
     CONSTRAINT chk_rubricreview_verdict CHECK (verdict IN ('APPROVED', 'REVISION_REQUESTED'))
 );
+
+CREATE INDEX IF NOT EXISTS idx_rubricreview_tenant_rubric
+    ON learning_rubricreviewrecord (tenant_id, rubric_id);
+CREATE INDEX IF NOT EXISTS idx_rubricreview_tenant_reviewer
+    ON learning_rubricreviewrecord (tenant_id, reviewer_id);
 
 -- ----------------------------------------------------------------------------
 -- 3. P3-VS25: RELEASE READINESS, CHANGE IMPACT & PROGRAM ROLLFORWARD
@@ -496,6 +506,15 @@ CREATE TABLE IF NOT EXISTS learning_releaseexceptionrecord (
     )
 );
 
+CREATE INDEX IF NOT EXISTS idx_releaseexception_tenant_gate
+    ON learning_releaseexceptionrecord (tenant_id, gate_id);
+CREATE INDEX IF NOT EXISTS idx_releaseexception_tenant_grantor
+    ON learning_releaseexceptionrecord (tenant_id, granted_by_id);
+CREATE INDEX IF NOT EXISTS idx_migrationdecision_tenant_plan
+    ON learning_curriculummigrationdecision (tenant_id, plan_id);
+CREATE INDEX IF NOT EXISTS idx_migrationdecision_tenant_decider
+    ON learning_curriculummigrationdecision (tenant_id, decided_by_id);
+
 -- ----------------------------------------------------------------------------
 -- 4. ROW LEVEL SECURITY (RLS) & ACCESS CONTROL REVOCATION
 -- ----------------------------------------------------------------------------
@@ -538,7 +557,26 @@ BEGIN
     END LOOP;
 END $$;
 
--- Revoke mutation rights on append-only and immutable audit tables
+-- Ensure connection roles operate under strict NOBYPASSRLS and least privilege
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'codesho_runtime') THEN
+        ALTER ROLE codesho_runtime NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE;
+        REVOKE UPDATE, DELETE ON learning_changeapprovalrecord FROM codesho_runtime;
+        REVOKE UPDATE, DELETE ON learning_rubricreviewrecord FROM codesho_runtime;
+        REVOKE UPDATE, DELETE ON learning_releaseexceptionrecord FROM codesho_runtime;
+        REVOKE UPDATE, DELETE ON learning_curriculumchangeimpact FROM codesho_runtime;
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'app_role') THEN
+        ALTER ROLE app_role NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE;
+        REVOKE UPDATE, DELETE ON learning_changeapprovalrecord FROM app_role;
+        REVOKE UPDATE, DELETE ON learning_rubricreviewrecord FROM app_role;
+        REVOKE UPDATE, DELETE ON learning_releaseexceptionrecord FROM app_role;
+        REVOKE UPDATE, DELETE ON learning_curriculumchangeimpact FROM app_role;
+    END IF;
+END $$;
+
+-- Revoke mutation rights on append-only and immutable audit tables from PUBLIC
 REVOKE UPDATE, DELETE ON learning_changeapprovalrecord FROM PUBLIC;
 REVOKE UPDATE, DELETE ON learning_rubricreviewrecord FROM PUBLIC;
 REVOKE UPDATE, DELETE ON learning_releaseexceptionrecord FROM PUBLIC;
