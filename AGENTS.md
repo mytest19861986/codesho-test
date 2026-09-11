@@ -74,3 +74,11 @@
 - Use the existing shared Brave session first through `127.0.0.1:9222`.
   Preserve it; never close the browser or shared session for automation,
   cleanup, or recovery. Reuse existing authenticated AI conversations whenever possible. Commander may decide technical browser-automation recovery actions, but must not expose credentials, bypass authentication, evade provider safeguards, or destroy user browser data.
+
+## Permanent 3-Minute Auto-Schedule Invariant
+
+- At the start of every session/chat on this repository, automatically activate and ensure running the 3-minute schedule (`/schedule */3 * * * *`).
+- The prompt for this recurring schedule must always be:
+  "بررسی وضعیت پروژه: اگر کار در حال اجرا یا پاسخگو است اقدامی نکن. اگر در حالت سکوت، بیکاری یا توقف است، ادامه اجرای هدف فعال پروژه را از آخرین وضعیت معتبر پیگیری کن و کار را از سر بگیر؛ وضعیت واقعی مخزن و تست‌ها را بررسی کن و موفقیت را جعل نکن. تا زمانی که فرمانده صریحا اعلام توقف نکرده ادامه بده و در صورت اتمام کار از فرمانده تقاضای تسک جدید کن."
+- Execute continuously without stopping unless Commander explicitly issues a stop command (`توقف` / `پایان`).
+

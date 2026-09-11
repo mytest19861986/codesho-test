@@ -13,7 +13,7 @@
 ## 2. Integrated Slices Architecture & Domain Boundaries
 
 ### 2.1. Prerequisites, Upstream Foundation & Dependencies
-- Upstream Task Pin: `P3-VS16-MENTOR-STUDENT-SUCCESS-COACHING-AND-INTERVENTION-WORKFLOW` (Certified with Complete Acceptance: `4992219`, `QWEN_FINAL: PASS`, `GLM_FINAL: PASS`, `GEMINI_UI_FINAL: PASS`).
+- Upstream Task Pin: `P3-VS16-MENTOR-STUDENT-SUCCESS-COACHING-AND-INTERVENTION-WORKFLOW` (VS16 upstream: models and tables verified in live schema, GLM certification pending CHANGES_REQUIRED).
 - Shared Models & Dependencies:
   - `learning_coachingsession`: Target of `fk_supportqueue_session` (VS16 upstream).
   - `learning_supportintervention`: Target of `fk_supportqueue_intervention` (VS16 upstream).

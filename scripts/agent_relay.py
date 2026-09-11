@@ -10,7 +10,7 @@ import websockets
 TAB_URLS = {
     "Commander": "6a9ba3d5-2e30-83ed-8ea0-50e530b06de0",
     "Qwen": "9c6c740b-026d-47b5-b89b-86ff710c88c5",
-    "GLM": "bfa1f3bb-e349-4ce2-ae67-3a52eaf6aea5",
+    "GLM": "9f991b15-8706-4092-b6c6-d8b194644063",
     "Gemini": "gemini.google.com/app"
 }
 
