@@ -427,4 +427,56 @@ urlpatterns = [
         views.FollowUpActionTransitionView.as_view(),
         name="learning-followup-action-transition",
     ),
+    # Phase 3 Macro Epic 17-19 Mentor Operations & Program Success Support
+    path(
+        "mentor/caseload/",
+        views.MentorCaseloadView.as_view(),
+        name="learning-mentor-caseload",
+    ),
+    path(
+        "mentor/caseload/<uuid:assignment_id>/unassign/",
+        views.MentorCaseloadUnassignView.as_view(),
+        name="learning-mentor-caseload-unassign",
+    ),
+    path(
+        "mentor/support-queue/",
+        views.MentorSupportQueueView.as_view(),
+        name="learning-mentor-support-queue",
+    ),
+    path(
+        "mentor/support-queue/<uuid:item_id>/resolve/",
+        views.MentorSupportQueueResolveView.as_view(),
+        name="learning-mentor-support-queue-resolve",
+    ),
+    path(
+        "mentor/check-ins/",
+        views.MentorCheckInListCreateView.as_view(),
+        name="learning-mentor-checkins-list-create",
+    ),
+    path(
+        "mentor/check-ins/<uuid:checkin_id>/transition/",
+        views.MentorCheckInTransitionView.as_view(),
+        name="learning-mentor-checkin-transition",
+    ),
+    path(
+        "mentor/commitments/",
+        views.MentorCommitmentListCreateView.as_view(),
+        name="learning-mentor-commitments-list-create",
+    ),
+    path(
+        "mentor/commitments/<uuid:commitment_id>/complete/",
+        views.MentorCommitmentCompleteView.as_view(),
+        name="learning-mentor-commitment-complete",
+    ),
+    path(
+        "mentor/program-analytics/",
+        views.MentorProgramAnalyticsView.as_view(),
+        name="learning-mentor-program-analytics",
+    ),
+    path(
+        "mentor/program-analytics/refresh/",
+        views.MentorProgramAnalyticsView.as_view(),
+        name="learning-mentor-program-analytics-refresh",
+    ),
 ]
+

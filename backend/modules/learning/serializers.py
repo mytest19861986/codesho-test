@@ -1393,4 +1393,138 @@ class CoachingAuditLogSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+# =============================================================================
+# P3-MACRO-EPIC-17-19: SERIALIZERS
+# =============================================================================
 
+class MentorCaseloadAssignmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import MentorCaseloadAssignment
+        model = MentorCaseloadAssignment
+        fields = [
+            "id",
+            "mentor_id",
+            "student_id",
+            "is_active",
+            "capacity_weight",
+            "assigned_at",
+            "unassigned_at",
+            "unassignment_reason",
+            "metadata",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "assigned_at", "created_at", "updated_at"]
+
+
+class SupportQueueItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import SupportQueueItem
+        model = SupportQueueItem
+        fields = [
+            "id",
+            "mentor_id",
+            "student_id",
+            "source_intervention",
+            "source_session",
+            "urgency_level",
+            "queue_status",
+            "due_date",
+            "resolved_at",
+            "resolution_notes",
+            "metadata",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "resolved_at", "created_at", "updated_at"]
+
+
+class FollowUpCommitmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import FollowUpCommitment
+        model = FollowUpCommitment
+        fields = [
+            "id",
+            "checkin",
+            "owner_role",
+            "title",
+            "due_date",
+            "is_completed",
+            "completed_at",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "completed_at", "created_at", "updated_at"]
+
+
+class LearningCheckInSerializer(serializers.ModelSerializer):
+    commitments = FollowUpCommitmentSerializer(many=True, read_only=True)
+
+    class Meta:
+        from .models import LearningCheckIn
+        model = LearningCheckIn
+        fields = [
+            "id",
+            "mentor_id",
+            "student_id",
+            "caseload_assignment",
+            "status",
+            "scheduled_start",
+            "actual_start",
+            "actual_end",
+            "rescheduled_from",
+            "meeting_link",
+            "notes",
+            "student_acknowledged",
+            "acknowledged_at",
+            "metadata",
+            "commitments",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "actual_start",
+            "actual_end",
+            "acknowledged_at",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class ProgramSupportAggregateSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import ProgramSupportAggregate
+        model = ProgramSupportAggregate
+        fields = [
+            "id",
+            "period_start",
+            "period_end",
+            "total_assigned_students",
+            "total_active_interventions",
+            "total_completed_checkins",
+            "average_response_time_hours",
+            "support_coverage_ratio",
+            "is_authoritative",
+            "aggregated_at",
+        ]
+        read_only_fields = fields
+
+
+class MentorOperationsAuditLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import MentorOperationsAuditLog
+        model = MentorOperationsAuditLog
+        fields = [
+            "id",
+            "action_type",
+            "actor_id",
+            "target_caseload",
+            "target_queue_item",
+            "target_checkin",
+            "target_commitment",
+            "target_aggregate",
+            "details",
+            "created_at",
+        ]
+        read_only_fields = fields

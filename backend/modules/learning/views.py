@@ -3136,4 +3136,503 @@ class FollowUpActionTransitionView(APIView):
             return Response({"detail": str(e)}, status=403)
 
 
+# ==============================================================================
+# P3-MACRO-EPIC-17-19: Mentor Operations & Program Success Support Views
+# ==============================================================================
+
+class MentorCaseloadView(APIView):
+    """
+    GET  /api/v1/learning/mentor/caseload/
+    POST /api/v1/learning/mentor/caseload/
+    """
+    def get(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        user_id = getattr(request.user, "id", None)
+        if not user_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.models import MentorCaseloadAssignment
+        from modules.learning.serializers import MentorCaseloadAssignmentSerializer
+
+        role = _get_membership_role(request) or "MENTOR"
+        qs = MentorCaseloadAssignment.objects.filter(tenant_id=tenant_id)
+        if role in ("MENTOR", "INSTRUCTOR"):
+            qs = qs.filter(mentor_id=user_id)
+        elif role == "STUDENT":
+            qs = qs.filter(student_id=user_id, is_active=True)
+
+        assignments = qs.order_by("-assigned_at")[:100]
+        return Response(MentorCaseloadAssignmentSerializer(assignments, many=True).data, status=200)
+
+    def post(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        role = _get_membership_role(request) or "ADMIN"
+        if role not in ("ADMIN", "OWNER", "STAFF"):
+            return Response({"detail": "Only administrators can assign caseload"}, status=403)
+
+        from modules.learning.mentor_operations_service import MentorOperationsService
+        from modules.learning.serializers import MentorCaseloadAssignmentSerializer
+        from decimal import Decimal
+
+        mentor_id = request.data.get("mentor_id")
+        student_id = request.data.get("student_id")
+        capacity_weight = request.data.get("capacity_weight", "1.00")
+        metadata = request.data.get("metadata", {})
+
+        if not mentor_id or not student_id:
+            return Response({"detail": "mentor_id and student_id are required"}, status=400)
+
+        try:
+            assignment = MentorOperationsService.assign_caseload(
+                tenant_id=tenant_id,
+                mentor_id=UUID(str(mentor_id)),
+                student_id=UUID(str(student_id)),
+                capacity_weight=Decimal(str(capacity_weight)),
+                metadata=metadata,
+                actor_id=actor_id,
+            )
+            return Response(MentorCaseloadAssignmentSerializer(assignment).data, status=201)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+
+
+class MentorCaseloadUnassignView(APIView):
+    """
+    POST /api/v1/learning/mentor/caseload/<assignment_id>/unassign/
+    """
+    def post(self, request: Request, assignment_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        role = _get_membership_role(request) or "ADMIN"
+        if role not in ("ADMIN", "OWNER", "STAFF"):
+            return Response({"detail": "Only administrators can unassign caseload"}, status=403)
+
+        from modules.learning.mentor_operations_service import MentorOperationsService
+        from modules.learning.serializers import MentorCaseloadAssignmentSerializer
+
+        reason = request.data.get("reason", "Administrative unassignment")
+
+        try:
+            assignment = MentorOperationsService.unassign_caseload(
+                tenant_id=tenant_id,
+                assignment_id=assignment_id,
+                reason=reason,
+                actor_id=actor_id,
+            )
+            return Response(MentorCaseloadAssignmentSerializer(assignment).data, status=200)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+
+
+class MentorSupportQueueView(APIView):
+    """
+    GET  /api/v1/learning/mentor/support-queue/
+    POST /api/v1/learning/mentor/support-queue/
+    """
+    def get(self, request: Request) -> Response:
+        # Anti-ranking guard (N8)
+        for param in request.query_params:
+            if any(forbidden in param.lower() for forbidden in ["rank", "leaderboard", "percentile", "score"]):
+                return Response(
+                    {"code": "ranking_queries_prohibited", "detail": "Student ranking and psychological scores are strictly prohibited."},
+                    status=400,
+                )
+
+        tenant_id = _tenant_id(request)
+        user_id = getattr(request.user, "id", None)
+        if not user_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        role = _get_membership_role(request) or "MENTOR"
+        if role == "STUDENT":
+            return Response({"detail": "Students cannot access internal support queue"}, status=403)
+
+        from modules.learning.models import SupportQueueItem
+        from modules.learning.serializers import SupportQueueItemSerializer
+
+        qs = SupportQueueItem.objects.filter(tenant_id=tenant_id)
+        if role in ("MENTOR", "INSTRUCTOR"):
+            qs = qs.filter(mentor_id=user_id)
+
+        status_filter = request.query_params.get("status")
+        if status_filter:
+            qs = qs.filter(queue_status=status_filter.upper())
+
+        items = qs.order_by("due_date", "-created_at")[:100]
+        return Response(SupportQueueItemSerializer(items, many=True).data, status=200)
+
+    def post(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        role = _get_membership_role(request) or "MENTOR"
+        if role not in ("ADMIN", "OWNER", "STAFF", "MENTOR", "INSTRUCTOR"):
+            return Response({"detail": "Unauthorized"}, status=403)
+
+        from modules.learning.mentor_operations_service import MentorOperationsService
+        from modules.learning.serializers import SupportQueueItemSerializer
+
+        mentor_id = request.data.get("mentor_id")
+        student_id = request.data.get("student_id")
+        source_intervention_id = request.data.get("source_intervention_id")
+        source_session_id = request.data.get("source_session_id")
+        urgency_level = request.data.get("urgency_level", "MEDIUM")
+        due_date = request.data.get("due_date")
+        metadata = request.data.get("metadata", {})
+
+        if not mentor_id or not student_id or not due_date:
+            return Response({"detail": "mentor_id, student_id, and due_date are required"}, status=400)
+
+        try:
+            item = MentorOperationsService.enqueue_support_item(
+                tenant_id=tenant_id,
+                mentor_id=UUID(str(mentor_id)),
+                student_id=UUID(str(student_id)),
+                source_intervention_id=UUID(str(source_intervention_id)) if source_intervention_id else None,
+                source_session_id=UUID(str(source_session_id)) if source_session_id else None,
+                urgency_level=urgency_level,
+                due_date=due_date,
+                metadata=metadata,
+                actor_id=actor_id,
+            )
+            return Response(SupportQueueItemSerializer(item).data, status=201)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+
+
+class MentorSupportQueueResolveView(APIView):
+    """
+    POST /api/v1/learning/mentor/support-queue/<item_id>/resolve/
+    """
+    def post(self, request: Request, item_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        role = _get_membership_role(request) or "MENTOR"
+        if role == "STUDENT":
+            return Response({"detail": "Students cannot resolve support queue items"}, status=403)
+
+        from modules.learning.mentor_operations_service import MentorOperationsService
+        from modules.learning.serializers import SupportQueueItemSerializer
+
+        resolution_notes = request.data.get("resolution_notes", "")
+        if not resolution_notes:
+            return Response({"detail": "resolution_notes are required"}, status=400)
+
+        dismiss = request.data.get("dismiss", False)
+
+        try:
+            item = MentorOperationsService.resolve_queue_item(
+                tenant_id=tenant_id,
+                queue_item_id=item_id,
+                resolution_notes=resolution_notes,
+                dismiss=dismiss,
+                actor_id=actor_id,
+            )
+            return Response(SupportQueueItemSerializer(item).data, status=200)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+
+
+class MentorCheckInListCreateView(APIView):
+    """
+    GET  /api/v1/learning/mentor/check-ins/
+    POST /api/v1/learning/mentor/check-ins/
+    """
+    def get(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        user_id = getattr(request.user, "id", None)
+        if not user_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.models import LearningCheckIn
+        from modules.learning.serializers import LearningCheckInSerializer
+
+        role = _get_membership_role(request) or "MENTOR"
+        qs = LearningCheckIn.objects.filter(tenant_id=tenant_id).prefetch_related("commitments")
+        if role in ("MENTOR", "INSTRUCTOR"):
+            qs = qs.filter(mentor_id=user_id)
+        elif role == "STUDENT":
+            qs = qs.filter(student_id=user_id)
+
+        status_filter = request.query_params.get("status")
+        if status_filter:
+            qs = qs.filter(status=status_filter.upper())
+
+        checkins = qs.order_by("-scheduled_start")[:100]
+        return Response(LearningCheckInSerializer(checkins, many=True).data, status=200)
+
+    def post(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        role = _get_membership_role(request) or "MENTOR"
+        if role not in ("ADMIN", "OWNER", "STAFF", "MENTOR", "INSTRUCTOR"):
+            return Response({"detail": "Unauthorized"}, status=403)
+
+        from modules.learning.mentor_operations_service import MentorOperationsService
+        from modules.learning.serializers import LearningCheckInSerializer
+
+        mentor_id = request.data.get("mentor_id") or actor_id
+        student_id = request.data.get("student_id")
+        scheduled_start = request.data.get("scheduled_start")
+        meeting_link = request.data.get("meeting_link", "")
+        notes = request.data.get("notes", "")
+        metadata = request.data.get("metadata", {})
+
+        if not student_id or not scheduled_start:
+            return Response({"detail": "student_id and scheduled_start are required"}, status=400)
+
+        try:
+            checkin = MentorOperationsService.schedule_checkin(
+                tenant_id=tenant_id,
+                mentor_id=UUID(str(mentor_id)),
+                student_id=UUID(str(student_id)),
+                scheduled_start=scheduled_start,
+                meeting_link=meeting_link,
+                notes=notes,
+                metadata=metadata,
+                actor_id=actor_id,
+            )
+            return Response(LearningCheckInSerializer(checkin).data, status=201)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+
+
+class MentorCheckInTransitionView(APIView):
+    """
+    POST /api/v1/learning/mentor/check-ins/<checkin_id>/transition/
+    Actions: START, COMPLETE, RESCHEDULE, CANCEL, ACKNOWLEDGE
+    """
+    def post(self, request: Request, checkin_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.mentor_operations_service import MentorOperationsService
+        from modules.learning.serializers import LearningCheckInSerializer
+
+        action = request.data.get("action", "").upper()
+
+        try:
+            if action == "START":
+                checkin = MentorOperationsService.start_checkin(
+                    tenant_id=tenant_id,
+                    checkin_id=checkin_id,
+                    actor_id=actor_id,
+                )
+            elif action == "COMPLETE":
+                notes = request.data.get("notes")
+                checkin = MentorOperationsService.complete_checkin(
+                    tenant_id=tenant_id,
+                    checkin_id=checkin_id,
+                    notes=notes,
+                    actor_id=actor_id,
+                )
+            elif action == "RESCHEDULE":
+                new_start = request.data.get("new_scheduled_start")
+                if not new_start:
+                    return Response({"detail": "new_scheduled_start is required"}, status=400)
+                checkin = MentorOperationsService.reschedule_checkin(
+                    tenant_id=tenant_id,
+                    checkin_id=checkin_id,
+                    new_scheduled_start=new_start,
+                    actor_id=actor_id,
+                )
+            elif action == "CANCEL":
+                reason = request.data.get("reason", "Cancelled")
+                checkin = MentorOperationsService.cancel_checkin(
+                    tenant_id=tenant_id,
+                    checkin_id=checkin_id,
+                    reason=reason,
+                    actor_id=actor_id,
+                )
+            elif action == "ACKNOWLEDGE":
+                checkin = MentorOperationsService.acknowledge_checkin(
+                    tenant_id=tenant_id,
+                    checkin_id=checkin_id,
+                    student_id=actor_id,
+                )
+            else:
+                return Response({"detail": f"Unknown action '{action}'"}, status=400)
+
+            return Response(LearningCheckInSerializer(checkin).data, status=200)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+
+
+class MentorCommitmentListCreateView(APIView):
+    """
+    GET  /api/v1/learning/mentor/commitments/
+    POST /api/v1/learning/mentor/commitments/
+    """
+    def get(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        user_id = getattr(request.user, "id", None)
+        if not user_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.models import FollowUpCommitment
+        from modules.learning.serializers import FollowUpCommitmentSerializer
+
+        checkin_id = request.query_params.get("checkin_id")
+        qs = FollowUpCommitment.objects.filter(tenant_id=tenant_id)
+        if checkin_id:
+            qs = qs.filter(checkin_id=UUID(checkin_id))
+
+        commitments = qs.order_by("due_date")[:100]
+        return Response(FollowUpCommitmentSerializer(commitments, many=True).data, status=200)
+
+    def post(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.mentor_operations_service import MentorOperationsService
+        from modules.learning.serializers import FollowUpCommitmentSerializer
+
+        checkin_id = request.data.get("checkin_id")
+        owner_role = request.data.get("owner_role", "MENTOR").upper()
+        title = request.data.get("title")
+        due_date = request.data.get("due_date")
+
+        if not checkin_id or not title or not due_date:
+            return Response({"detail": "checkin_id, title, and due_date are required"}, status=400)
+
+        try:
+            commitment = MentorOperationsService.create_commitment(
+                tenant_id=tenant_id,
+                checkin_id=UUID(str(checkin_id)),
+                owner_role=owner_role,
+                title=title,
+                due_date=due_date,
+                actor_id=actor_id,
+            )
+            return Response(FollowUpCommitmentSerializer(commitment).data, status=201)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+
+
+class MentorCommitmentCompleteView(APIView):
+    """
+    POST /api/v1/learning/mentor/commitments/<commitment_id>/complete/
+    """
+    def post(self, request: Request, commitment_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        from modules.learning.mentor_operations_service import MentorOperationsService
+        from modules.learning.serializers import FollowUpCommitmentSerializer
+
+        try:
+            commitment = MentorOperationsService.complete_commitment(
+                tenant_id=tenant_id,
+                commitment_id=commitment_id,
+                actor_id=actor_id,
+            )
+            return Response(FollowUpCommitmentSerializer(commitment).data, status=200)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+
+
+class MentorProgramAnalyticsView(APIView):
+    """
+    GET  /api/v1/learning/mentor/program-analytics/
+    POST /api/v1/learning/mentor/program-analytics/refresh/
+    """
+    def get(self, request: Request) -> Response:
+        # Anti-ranking guard (N8)
+        for param in request.query_params:
+            if any(forbidden in param.lower() for forbidden in ["rank", "leaderboard", "percentile", "score"]):
+                return Response(
+                    {"code": "ranking_queries_prohibited", "detail": "Student ranking and psychological scores are strictly prohibited."},
+                    status=400,
+                )
+
+        tenant_id = _tenant_id(request)
+        user_id = getattr(request.user, "id", None)
+        if not user_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        role = _get_membership_role(request) or "MENTOR"
+        if role == "STUDENT":
+            return Response({"detail": "Students cannot access program analytics"}, status=403)
+
+        from modules.learning.models import ProgramSupportAggregate
+        from modules.learning.serializers import ProgramSupportAggregateSerializer
+
+        aggregates = ProgramSupportAggregate.objects.filter(tenant_id=tenant_id).order_by("-period_end")[:20]
+        return Response(ProgramSupportAggregateSerializer(aggregates, many=True).data, status=200)
+
+    def post(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        if not actor_id:
+            return Response({"detail": "Authentication required"}, status=401)
+
+        role = _get_membership_role(request) or "ADMIN"
+        if role not in ("ADMIN", "OWNER", "STAFF"):
+            return Response({"detail": "Only administrators can trigger program aggregate refresh"}, status=403)
+
+        from modules.learning.mentor_operations_service import MentorOperationsService
+        from modules.learning.serializers import ProgramSupportAggregateSerializer
+        from django.utils import timezone
+        import datetime
+
+        period_start = request.data.get("period_start")
+        period_end = request.data.get("period_end")
+
+        if not period_start or not period_end:
+            now = timezone.now()
+            period_end = now
+            period_start = now - datetime.timedelta(days=30)
+
+        try:
+            aggregate = MentorOperationsService.compute_program_support_aggregate(
+                tenant_id=tenant_id,
+                period_start=period_start,
+                period_end=period_end,
+                actor_id=actor_id,
+            )
+            return Response(ProgramSupportAggregateSerializer(aggregate).data, status=201)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+
+
+
 

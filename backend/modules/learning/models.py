@@ -4798,4 +4798,521 @@ class CoachingAuditLog(models.Model):
         return f"{self.tenant_id}:{self.actor_id}:{self.action_type}:{self.created_at}"
 
 
+# =============================================================================
+# P3-MACRO-EPIC-17-19: MENTOR OPERATIONS, LEARNING CONTINUITY & PROGRAM SUCCESS
+# Sub-Slices: P3-VS17, P3-VS18, P3-VS19
+# Canonical DDL: v1.2-CANONICAL
+# =============================================================================
 
+class SupportQueueUrgency(models.TextChoices):
+    LOW = "LOW", "Low"
+    NORMAL = "NORMAL", "Normal"
+    HIGH = "HIGH", "High"
+    CRITICAL = "CRITICAL", "Critical"
+
+
+class SupportQueueStatus(models.TextChoices):
+    PENDING = "PENDING", "Pending"
+    IN_REVIEW = "IN_REVIEW", "In Review"
+    RESOLVED = "RESOLVED", "Resolved"
+    DISMISSED = "DISMISSED", "Dismissed"
+
+
+class LearningCheckInStatus(models.TextChoices):
+    SCHEDULED = "SCHEDULED", "Scheduled"
+    IN_PROGRESS = "IN_PROGRESS", "In Progress"
+    COMPLETED = "COMPLETED", "Completed"
+    RESCHEDULED = "RESCHEDULED", "Rescheduled"
+    CANCELLED = "CANCELLED", "Cancelled"
+
+
+class FollowUpCommitmentOwnerRole(models.TextChoices):
+    MENTOR = "MENTOR", "Mentor"
+    STUDENT = "STUDENT", "Student"
+
+
+class MentorOperationsAuditAction(models.TextChoices):
+    ASSIGN_CASELOAD = "ASSIGN_CASELOAD", "Assign Caseload"
+    UNASSIGN_CASELOAD = "UNASSIGN_CASELOAD", "Unassign Caseload"
+    QUEUE_ITEM_PENDING = "QUEUE_ITEM_PENDING", "Queue Item Pending"
+    QUEUE_ITEM_IN_REVIEW = "QUEUE_ITEM_IN_REVIEW", "Queue Item In Review"
+    QUEUE_ITEM_RESOLVED = "QUEUE_ITEM_RESOLVED", "Queue Item Resolved"
+    QUEUE_ITEM_DISMISSED = "QUEUE_ITEM_DISMISSED", "Queue Item Dismissed"
+    SCHEDULE_CHECKIN = "SCHEDULE_CHECKIN", "Schedule Check-in"
+    START_CHECKIN = "START_CHECKIN", "Start Check-in"
+    COMPLETE_CHECKIN = "COMPLETE_CHECKIN", "Complete Check-in"
+    RESCHEDULE_CHECKIN = "RESCHEDULE_CHECKIN", "Reschedule Check-in"
+    CANCEL_CHECKIN = "CANCEL_CHECKIN", "Cancel Check-in"
+    CREATE_COMMITMENT = "CREATE_COMMITMENT", "Create Commitment"
+    COMPLETE_COMMITMENT = "COMPLETE_COMMITMENT", "Complete Commitment"
+    GENERATE_SUPPORT_AGGREGATE = "GENERATE_SUPPORT_AGGREGATE", "Generate Support Aggregate"
+
+
+class MentorCaseloadAssignment(models.Model):
+    """
+    P3-VS17: Mapping of student to mentor with capacity weighting and lifecycle.
+    Enforces partial uniqueness for active student assignments per tenant.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="mentor_caseload_assignments",
+    )
+    mentor_id = models.UUIDField(db_index=True)
+    student_id = models.UUIDField(db_index=True)
+    is_active = models.BooleanField(default=True)
+    capacity_weight = models.DecimalField(max_digits=3, decimal_places=2, default=1.00)
+    assigned_at = models.DateTimeField(auto_now_add=True)
+    unassigned_at = models.DateTimeField(null=True, blank=True)
+    unassignment_reason = models.CharField(max_length=1000, null=True, blank=True)
+    metadata = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_mentorcaseloadassignment"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_mentorcaseload_tenant_id",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "student_id"],
+                condition=Q(is_active=True),
+                name="uq_mentorcaseload_active_student",
+            ),
+            models.CheckConstraint(
+                condition=Q(capacity_weight__gte=0.10) & Q(capacity_weight__lte=5.00),
+                name="chk_mentorcaseload_weight",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(is_active=True) & Q(unassigned_at__isnull=True) & Q(unassignment_reason__isnull=True)) |
+                    (Q(is_active=False) & Q(unassigned_at__isnull=False) & Q(assigned_at__lte=models.F("unassigned_at")))
+                ),
+                name="chk_mentorcaseload_unassigned_order",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "mentor_id", "is_active"], name="idx_mentorcaseload_mentor_act"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.is_active:
+            if self.unassigned_at or self.unassignment_reason:
+                raise ValidationError("Active caseload assignment cannot have unassigned_at or unassignment_reason.")
+        else:
+            if not self.unassigned_at:
+                raise ValidationError("Inactive caseload assignment must specify unassigned_at.")
+            if self.assigned_at and self.unassigned_at and self.assigned_at > self.unassigned_at:
+                raise ValidationError("assigned_at must be before or equal to unassigned_at.")
+            if self.unassignment_reason and len(self.unassignment_reason.strip()) < 3:
+                raise ValidationError("Unassignment reason must be at least 3 characters.")
+        if self.capacity_weight < 0.10 or self.capacity_weight > 5.00:
+            raise ValidationError("Capacity weight must be between 0.10 and 5.00.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.mentor_id}->{self.student_id}:{self.is_active}"
+
+
+class SupportQueueItem(models.Model):
+    """
+    P3-VS17: Operational queue for mentor actions (due date, urgency, resolution notes).
+    Anti-Ranking: Urgency is strictly operational, never a behavioral risk score.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="support_queue_items",
+    )
+    mentor_id = models.UUIDField(db_index=True)
+    student_id = models.UUIDField(db_index=True)
+    source_intervention = models.ForeignKey(
+        SupportIntervention,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="queue_items",
+    )
+    source_session = models.ForeignKey(
+        CoachingSession,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="queue_items",
+    )
+    urgency_level = models.CharField(
+        max_length=32,
+        choices=SupportQueueUrgency.choices,
+        default=SupportQueueUrgency.NORMAL,
+    )
+    queue_status = models.CharField(
+        max_length=32,
+        choices=SupportQueueStatus.choices,
+        default=SupportQueueStatus.PENDING,
+    )
+    due_date = models.DateTimeField()
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    resolution_notes = models.TextField(null=True, blank=True)
+    metadata = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_supportqueueitem"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_supportqueueitem_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(source_intervention__isnull=False) | Q(source_session__isnull=False),
+                name="chk_supportqueue_origin_at_least_one",
+            ),
+            models.CheckConstraint(
+                condition=Q(urgency_level__in=SupportQueueUrgency.values),
+                name="chk_supportqueue_urgency",
+            ),
+            models.CheckConstraint(
+                condition=Q(queue_status__in=SupportQueueStatus.values),
+                name="chk_supportqueue_status",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(queue_status__in=[SupportQueueStatus.PENDING, SupportQueueStatus.IN_REVIEW]) & Q(resolved_at__isnull=True) & Q(resolution_notes__isnull=True)) |
+                    (Q(queue_status__in=[SupportQueueStatus.RESOLVED, SupportQueueStatus.DISMISSED]) & Q(resolved_at__isnull=False))
+                ),
+                name="chk_supportqueue_resolved_order",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "mentor_id", "queue_status", "due_date"], name="idx_supportqueue_mentor_stat"),
+            models.Index(fields=["tenant", "student_id"], name="idx_supportqueue_student"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if not self.source_intervention and not self.source_session:
+            raise ValidationError("Support queue item must have at least one origin: source_intervention or source_session.")
+        if self.source_intervention and str(self.source_intervention.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Source intervention tenant mismatch.")
+        if self.source_session and str(self.source_session.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Source session tenant mismatch.")
+        if self.queue_status in (SupportQueueStatus.PENDING, SupportQueueStatus.IN_REVIEW):
+            if self.resolved_at or self.resolution_notes:
+                raise ValidationError("Pending or In-review queue items cannot have resolved_at or resolution_notes.")
+        elif self.queue_status in (SupportQueueStatus.RESOLVED, SupportQueueStatus.DISMISSED):
+            if not self.resolved_at:
+                raise ValidationError("Resolved or dismissed queue item must specify resolved_at.")
+            if self.resolution_notes and len(self.resolution_notes.strip()) < 5:
+                raise ValidationError("Resolution notes must be at least 5 characters.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.mentor_id}:{self.queue_status}:{self.urgency_level}"
+
+
+class LearningCheckIn(models.Model):
+    """
+    P3-VS18: Structured check-in sessions with status, scheduled timing, actual timing,
+    and voluntary learner acknowledgement.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="learning_checkins",
+    )
+    mentor_id = models.UUIDField(db_index=True)
+    student_id = models.UUIDField(db_index=True)
+    caseload_assignment = models.ForeignKey(
+        MentorCaseloadAssignment,
+        on_delete=models.CASCADE,
+        related_name="checkins",
+    )
+    status = models.CharField(
+        max_length=32,
+        choices=LearningCheckInStatus.choices,
+        default=LearningCheckInStatus.SCHEDULED,
+    )
+    scheduled_start = models.DateTimeField()
+    actual_start = models.DateTimeField(null=True, blank=True)
+    actual_end = models.DateTimeField(null=True, blank=True)
+    rescheduled_from = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="rescheduled_to",
+    )
+    meeting_link = models.CharField(max_length=500, null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
+    student_acknowledged = models.BooleanField(default=False)
+    acknowledged_at = models.DateTimeField(null=True, blank=True)
+    metadata = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_learningcheckin"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_learningcheckin_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=LearningCheckInStatus.values),
+                name="chk_checkin_status",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(actual_start__isnull=True) | Q(actual_end__isnull=True) | Q(actual_start__lte=models.F("actual_end"))) &
+                    (Q(actual_start__isnull=True) | Q(scheduled_start__lte=models.F("actual_start")))
+                ),
+                name="chk_checkin_timing_order",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(student_acknowledged=False) & Q(acknowledged_at__isnull=True)) |
+                    (Q(student_acknowledged=True) & Q(acknowledged_at__isnull=False))
+                ),
+                name="chk_checkin_acknowledgement",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "mentor_id", "scheduled_start"], name="idx_checkin_mentor_sched"),
+            models.Index(fields=["tenant", "student_id", "scheduled_start"], name="idx_checkin_student_sched"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.caseload_assignment and str(self.caseload_assignment.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Caseload assignment tenant mismatch.")
+        if self.rescheduled_from and str(self.rescheduled_from.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Rescheduled from check-in tenant mismatch.")
+        if self.actual_start and self.actual_end and self.actual_start > self.actual_end:
+            raise ValidationError("actual_start must be before or equal to actual_end.")
+        if self.actual_start and self.scheduled_start and self.actual_start < self.scheduled_start:
+            raise ValidationError("actual_start cannot precede scheduled_start.")
+        if self.student_acknowledged and not self.acknowledged_at:
+            raise ValidationError("acknowledged_at must be provided when student_acknowledged is True.")
+        if not self.student_acknowledged and self.acknowledged_at:
+            raise ValidationError("acknowledged_at must be null when student_acknowledged is False.")
+        if self.notes and len(self.notes.strip()) < 5:
+            raise ValidationError("Notes must be at least 5 characters.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.mentor_id}:{self.student_id}:{self.status}:{self.scheduled_start}"
+
+
+class FollowUpCommitment(models.Model):
+    """
+    P3-VS18: Mutual commitments resulting from a learning check-in.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="followup_commitments",
+    )
+    checkin = models.ForeignKey(
+        LearningCheckIn,
+        on_delete=models.CASCADE,
+        related_name="commitments",
+    )
+    owner_role = models.CharField(
+        max_length=16,
+        choices=FollowUpCommitmentOwnerRole.choices,
+    )
+    title = models.CharField(max_length=255)
+    due_date = models.DateTimeField()
+    is_completed = models.BooleanField(default=False)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_followupcommitment"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_followupcommitment_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(owner_role__in=FollowUpCommitmentOwnerRole.values),
+                name="chk_commitment_owner",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(is_completed=False) & Q(completed_at__isnull=True)) |
+                    (Q(is_completed=True) & Q(completed_at__isnull=False))
+                ),
+                name="chk_commitment_completed_order",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "checkin", "due_date"], name="idx_commitment_checkin_due"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.checkin and str(self.checkin.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Checkin tenant mismatch.")
+        if not self.title or len(self.title.strip()) < 3:
+            raise ValidationError("Title must be at least 3 characters.")
+        if self.is_completed and not self.completed_at:
+            raise ValidationError("completed_at must be provided when commitment is completed.")
+        if not self.is_completed and self.completed_at:
+            raise ValidationError("completed_at must be null when commitment is not completed.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.owner_role}:{self.is_completed}:{self.title}"
+
+
+class ProgramSupportAggregate(models.Model):
+    """
+    P3-VS19: Periodic aggregate analytics for program support effectiveness.
+    Strict Invariant: Non-authoritative (chk_supportagg_non_authoritative).
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="program_support_aggregates",
+    )
+    period_start = models.DateTimeField()
+    period_end = models.DateTimeField()
+    total_assigned_students = models.IntegerField(default=0)
+    total_active_interventions = models.IntegerField(default=0)
+    total_completed_checkins = models.IntegerField(default=0)
+    average_response_time_hours = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
+    support_coverage_ratio = models.DecimalField(max_digits=4, decimal_places=3, default=0.000)
+    is_authoritative = models.BooleanField(default=False)
+    aggregated_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_programsupportaggregate"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_programsupportaggregate_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(is_authoritative=False),
+                name="chk_supportagg_non_authoritative",
+            ),
+            models.CheckConstraint(
+                condition=Q(period_start__lte=models.F("period_end")),
+                name="chk_supportagg_period_order",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "-period_start", "-period_end"], name="idx_supportagg_period"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.is_authoritative:
+            raise ValidationError("ProgramSupportAggregate is strictly non-authoritative (is_authoritative must be False).")
+        if self.period_start and self.period_end and self.period_start > self.period_end:
+            raise ValidationError("period_start must be before or equal to period_end.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.period_start}->{self.period_end}:cov={self.support_coverage_ratio}"
+
+
+class MentorOperationsAuditLog(models.Model):
+    """
+    P3-MACRO-EPIC-17-19: Forensic append-only audit trail for caseload assignments,
+    support queue actions, check-ins, commitments, and aggregates with exact 5-way XOR.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="mentor_operations_audit_logs",
+    )
+    action_type = models.CharField(max_length=64, choices=MentorOperationsAuditAction.choices)
+    actor_id = models.UUIDField(db_index=True)
+    target_caseload = models.ForeignKey(
+        MentorCaseloadAssignment,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+    )
+    target_queue_item = models.ForeignKey(
+        SupportQueueItem,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+    )
+    target_checkin = models.ForeignKey(
+        LearningCheckIn,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+    )
+    target_commitment = models.ForeignKey(
+        FollowUpCommitment,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+    )
+    target_aggregate = models.ForeignKey(
+        ProgramSupportAggregate,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+    )
+    details = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_mentoroperationsauditlog"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_mentoropsaudit_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(action_type__in=MentorOperationsAuditAction.values),
+                name="chk_mentoropsaudit_action_type",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "actor_id", "-created_at"], name="idx_mentoropsaudit_actor_time"),
+            models.Index(fields=["tenant", "target_caseload"], condition=Q(target_caseload__isnull=False), name="idx_mentoropsaudit_caseload"),
+            models.Index(fields=["tenant", "target_queue_item"], condition=Q(target_queue_item__isnull=False), name="idx_mentoropsaudit_queue"),
+            models.Index(fields=["tenant", "target_checkin"], condition=Q(target_checkin__isnull=False), name="idx_mentoropsaudit_checkin"),
+            models.Index(fields=["tenant", "target_commitment"], condition=Q(target_commitment__isnull=False), name="idx_mentoropsaudit_commit"),
+            models.Index(fields=["tenant", "target_aggregate"], condition=Q(target_aggregate__isnull=False), name="idx_mentoropsaudit_agg"),
+        ]
+
+    def clean(self):
+        super().clean()
+        targets = [self.target_caseload, self.target_queue_item, self.target_checkin, self.target_commitment, self.target_aggregate]
+        non_null_count = sum(1 for t in targets if t is not None)
+        if non_null_count != 1:
+            raise ValidationError("Exactly one target entity must be specified for MentorOperationsAuditLog.")
+        for t in targets:
+            if t is not None and str(t.tenant_id) != str(self.tenant_id):
+                raise ValidationError("Target entity tenant mismatch.")
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError("MentorOperationsAuditLog is strictly append-only.")
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("MentorOperationsAuditLog records cannot be deleted.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.actor_id}:{self.action_type}:{self.created_at}"
