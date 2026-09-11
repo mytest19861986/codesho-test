@@ -495,7 +495,62 @@ CREATE TABLE IF NOT EXISTS learning_control_attestation_audit (
 );
 
 -- ------------------------------------------------------------------------------
--- 4. ROW LEVEL SECURITY (RLS) & AUDIT REVOCATION GUARDS
+-- 4. STRATEGIC COVERAGE INDEXES (P3-MACRO-EPIC-26-28)
+-- ------------------------------------------------------------------------------
+
+CREATE INDEX IF NOT EXISTS idx_staff_assignment_tenant_user_active
+    ON learning_staff_access_assignment (tenant_id, user_id, is_active);
+
+CREATE INDEX IF NOT EXISTS idx_delegated_admin_scope_tenant_assignment
+    ON learning_delegated_admin_scope (tenant_id, assignment_id);
+
+CREATE INDEX IF NOT EXISTS idx_privileged_permission_grant_tenant_user_status
+    ON learning_privileged_permission_grant (tenant_id, user_id, status);
+
+CREATE INDEX IF NOT EXISTS idx_access_review_campaign_tenant_status
+    ON learning_access_review_campaign (tenant_id, status);
+
+CREATE INDEX IF NOT EXISTS idx_access_review_decision_tenant_campaign_reviewer
+    ON learning_access_review_decision (tenant_id, campaign_id, reviewer_id);
+
+CREATE INDEX IF NOT EXISTS idx_privileged_action_audit_tenant_actor_created
+    ON learning_privileged_action_audit (tenant_id, actor_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_data_retention_policy_tenant_active
+    ON learning_data_retention_policy (tenant_id, is_active);
+
+CREATE INDEX IF NOT EXISTS idx_retention_policy_version_tenant_policy
+    ON learning_retention_policy_version (tenant_id, policy_id, version_number DESC);
+
+CREATE INDEX IF NOT EXISTS idx_legal_hold_tenant_status
+    ON learning_legal_hold (tenant_id, status);
+
+CREATE INDEX IF NOT EXISTS idx_legal_hold_scope_tenant_hold
+    ON learning_legal_hold_scope (tenant_id, hold_id);
+
+CREATE INDEX IF NOT EXISTS idx_data_disposition_record_tenant_status
+    ON learning_data_disposition_record (tenant_id, status);
+
+CREATE INDEX IF NOT EXISTS idx_disposition_audit_log_tenant_actor_created
+    ON learning_disposition_audit_log (tenant_id, actor_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_readiness_control_tenant_category
+    ON learning_readiness_control (tenant_id, control_category);
+
+CREATE INDEX IF NOT EXISTS idx_readiness_assessment_run_tenant_status
+    ON learning_readiness_assessment_run (tenant_id, status);
+
+CREATE INDEX IF NOT EXISTS idx_readiness_finding_tenant_severity_status
+    ON learning_readiness_finding (tenant_id, severity, status);
+
+CREATE INDEX IF NOT EXISTS idx_pilot_readiness_gate_tenant_status
+    ON learning_pilot_readiness_gate (tenant_id, status);
+
+CREATE INDEX IF NOT EXISTS idx_control_attestation_audit_tenant_gate
+    ON learning_control_attestation_audit (tenant_id, gate_id, created_at DESC);
+
+-- ------------------------------------------------------------------------------
+-- 5. ROW LEVEL SECURITY (RLS) & AUDIT REVOCATION GUARDS
 -- ------------------------------------------------------------------------------
 
 DO $$
@@ -529,7 +584,7 @@ BEGIN
         EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY;', tbl);
         EXECUTE format('DROP POLICY IF EXISTS tenant_isolation_policy ON %I;', tbl);
         EXECUTE format(
-            'CREATE POLICY tenant_isolation_policy ON %I FOR ALL USING (tenant_id = NULLIF(current_setting(''app.current_tenant'', true), '''')::uuid);',
+            'CREATE POLICY tenant_isolation_policy ON %I FOR ALL USING (tenant_id = NULLIF(current_setting(''app.current_tenant'', true), '''')::uuid) WITH CHECK (tenant_id = NULLIF(current_setting(''app.current_tenant'', true), '''')::uuid);',
             tbl
         );
     END LOOP;
@@ -540,5 +595,15 @@ REVOKE UPDATE, DELETE ON learning_privileged_action_audit FROM PUBLIC;
 REVOKE UPDATE, DELETE ON learning_disposition_audit_log FROM PUBLIC;
 REVOKE UPDATE, DELETE ON learning_control_attestation_audit FROM PUBLIC;
 REVOKE UPDATE, DELETE ON learning_readiness_evidence FROM PUBLIC;
+
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'app_role') THEN
+        REVOKE UPDATE, DELETE ON learning_privileged_action_audit FROM app_role;
+        REVOKE UPDATE, DELETE ON learning_disposition_audit_log FROM app_role;
+        REVOKE UPDATE, DELETE ON learning_control_attestation_audit FROM app_role;
+        REVOKE UPDATE, DELETE ON learning_readiness_evidence FROM app_role;
+    END IF;
+END $$;
 
 COMMIT;
