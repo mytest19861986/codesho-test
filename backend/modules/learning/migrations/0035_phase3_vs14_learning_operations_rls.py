@@ -238,7 +238,7 @@ BEGIN
         ALTER TABLE learning_learningreflection
             ADD CONSTRAINT chk_reflection_no_pii
             CHECK (
-                content !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
+                content !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
             );
     END IF;
 
@@ -246,7 +246,7 @@ BEGIN
         ALTER TABLE learning_mentorreflectionfeedback
             ADD CONSTRAINT chk_feedback_no_pii
             CHECK (
-                feedback_text !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
+                feedback_text !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
             );
     END IF;
 
