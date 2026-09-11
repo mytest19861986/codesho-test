@@ -1,0 +1,978 @@
+فرمان رسمی و کامل مجدداً صادر می‌شود. با توجه به اجماع سه‌گانه قطعی Discovery، نبود Blocker، تثبیت Boundary Plan و DDL نسخه v1.2-CANONICAL و فعال بودن MACRO_FAST_ENTERPRISE, بسته کلان 17–19 وارد Runtime می‌شود.
+
+Edit
+
+TYPE:
+COMMANDER_P3_MACRO_EPIC_17_19_RUNTIME_UNLOCK
+
+PROJECT:
+Codesho / SSD
+
+PHASE:
+3 — Product & Platform Foundation
+
+TASK_ID:
+P3-MACRO-EPIC-17-19-MENTOR-OPERATIONS-AND-PROGRAM-SUCCESS
+
+STATUS:
+RUNTIME_AUTHORIZED_CONCURRENT_EXECUTION
+
+EXECUTION_MODE:
+MACRO_FAST_ENTERPRISE
+
+TARGET_WORKTREE:
+phase1-engineering-readiness
+
+TARGET_BRANCH:
+codex/phase3-product-platform-foundation
+
+DISCOVERY_BASELINE:
+40805bb
+
+DISCOVERY_STATUS:
+COMPLETE_FINAL_ACCEPTED
+
+QWEN_EPIC_DISCOVERY:
+PASS
+
+QWEN_BLOCKERS:
+0
+
+GEMINI_EPIC_DISCOVERY:
+PASS
+
+GEMINI_BLOCKERS:
+0
+
+GLM_EPIC_DISCOVERY:
+PASS
+
+GLM_BLOCKERS:
+0
+
+R3_R4:
+0
+
+COMMANDER_P3_MACRO_EPIC_17_19_RUNTIME_UNLOCK:
+GRANTED
+
+==================================================
+
+EXECUTION AUTHORITY
+==================================================
+
+P3-VS17 + P3-VS18 + P3-VS19 SHALL execute as ONE integrated Runtime package.
+
+Separate Runtime unlocks for VS17 / VS18 / VS19 are NOT required.
+
+Separate routine Commander checkpoints are DISABLED.
+
+R0-R2:
+AUTO_REMEDIATE
+
+Commander escalation only for:
+
+R3/R4
+
+material architecture contradiction
+
+weakening RLS / tenant isolation
+
+child-safety or privacy violation
+
+real PII
+
+significant expansion outside approved Macro Manifest
+
+merge / release / production authority
+
+Implement all six approved models:
+
+MentorCaseloadAssignment
+
+SupportQueueItem
+
+LearningCheckIn
+
+FollowUpCommitment
+
+ProgramSupportAggregate
+
+MentorOperationsAuditLog
+
+Exact relationships, constraints and enums SHALL follow:
+
+docs/architecture/P3_MACRO_EPIC_17_19_BOUNDARY_PLAN.md
+
+and:
+
+docs/architecture/p3_macro_epic_17_19_schema_ddl.sql
+
+Do not introduce competing equivalent entities.
+
+Recommended dependency chain:
+
+MentorCaseloadAssignment
+↓
+SupportQueueItem
+↓
+LearningCheckIn
+↓
+FollowUpCommitment
+↓
+ProgramSupportAggregate
+↓
+Mentor Operations Workspace
+
+MentorOperationsAuditLog and transactional Outbox span all applicable domain mutations.
+
+All tenant-owned tables require:
+
+RLS_ENABLED:
+TRUE
+
+FORCE_RLS:
+TRUE
+
+NOBYPASSRLS:
+TRUE
+
+MISSING_TENANT_CONTEXT:
+FAIL_CLOSED
+
+CROSS_TENANT_ACCESS:
+DENY
+
+ZERO_BARE_UUIDS:
+TRUE
+
+All tenant-owned references must preserve relational tenant identity:
+
+(tenant_id, target_id)
+
+Composite FK closure approved by GLM is mandatory.
+
+Mentor access must be derived only from authorized assignment boundaries.
+
+Required:
+
+UNASSIGNED_STUDENT_ACCESS:
+DENY
+
+UNAUTHORIZED_COHORT_ACCESS:
+DENY
+
+CROSS_TENANT_ACCESS:
+DENY
+
+Aggregates and queue projections SHALL NOT broaden mentor permissions.
+
+SupportQueueItem is operational workflow state.
+
+It SHALL NOT become:
+
+student ranking
+
+behavioral risk score
+
+psychological score
+
+peer percentile
+
+black-box priority
+
+Allowed deterministic queue inputs may include:
+
+due date
+
+unresolved follow-up
+
+explicit workflow state
+
+approved mentor priority
+
+pending commitment
+
+Required:
+
+QUEUE_PRIORITY:
+EXPLAINABLE
+
+AI_PRIORITY_AUTHORITY:
+0
+
+Implement exact FSM from Boundary Plan v1.2-CANONICAL.
+
+Required:
+
+VALID_TRANSITION:
+ALLOW
+
+INVALID_TRANSITION:
+REJECT
+
+ILLEGAL_TERMINAL_MUTATION:
+REJECT
+
+REPLAY:
+IDEMPOTENT
+
+ACTOR_AUTHORIZATION:
+ENFORCED
+
+FSM enforcement SHALL exist in the domain/service layer and where required at DB level.
+
+Frontend state alone is never authoritative.
+
+FollowUpCommitment must preserve:
+
+explicit ownership
+
+due-time semantics
+
+learner agency
+
+completion consistency
+
+reschedule/cancel semantics
+
+auditable lifecycle
+
+Prohibited:
+
+FORCED_STUDENT_ACKNOWLEDGEMENT
+
+AUTOMATED_PUNITIVE_ESCALATION
+
+SILENT_COMPLETION
+
+Reuse the existing Codesho durable Outbox.
+
+Do NOT create another event transport subsystem.
+
+Where domain events apply:
+
+BUSINESS_MUTATION
++
+OUTBOX_WRITE
+
+must occur atomically.
+
+Required:
+
+IDEMPOTENT_EVENT_DISPATCH:
+TRUE
+
+Potential events may include approved forms of:
+
+CHECKIN_SCHEDULED
+
+CHECKIN_UPDATED
+
+FOLLOWUP_CREATED
+
+FOLLOWUP_DUE
+
+FOLLOWUP_COMPLETED
+
+SUPPORT_QUEUE_UPDATED
+
+Exact event taxonomy must follow repository conventions.
+
+ProgramSupportAggregate is DERIVED STATE.
+
+It SHALL NOT become canonical student state.
+
+Permitted operational metrics include:
+
+open support count
+
+check-in completion
+
+follow-up completion
+
+support coverage
+
+mentor workload
+
+operational response/follow-up duration
+
+cohort/program workflow trends
+
+Prohibited:
+
+STUDENT_LEADERBOARD:
+0
+
+PEER_PERCENTILE:
+0
+
+BEST_WORST_STUDENT:
+0
+
+DISCIPLINARY_SCORE:
+0
+
+PSYCHOLOGICAL_CLASSIFICATION:
+0
+
+MentorOperationsAuditLog must remain:
+
+APPEND_ONLY
+
+Database-level enforcement:
+
+REVOKE UPDATE
+REVOKE DELETE
+
+Approved DEFERRABLE / NO ACTION topology must be preserved.
+
+Application API must expose no direct mutation/delete path for protected audit records.
+
+The approved 21-key PII blacklist is mandatory.
+
+Required:
+
+REAL_PII:
+0
+
+PII_IN_METADATA:
+0
+
+PII_IN_AUDIT:
+0
+
+The entire Macro Epic remains SYNTHETIC-ONLY.
+
+Still prohibited:
+
+real child data
+
+real guardian activation
+
+real guardian consent flows
+
+real SMS/email provider activation
+
+payment
+
+production credentials
+
+production deployment
+
+Implement:
+
+mentor_operations_service.py
+
+Responsibilities include:
+
+mentor assignment authorization
+
+caseload orchestration
+
+queue lifecycle
+
+check-in FSM
+
+follow-up FSM
+
+concurrency and idempotency
+
+Outbox integration
+
+aggregate refresh coordination
+
+Keep HTTP concerns outside domain logic.
+
+Implement DRF contract for:
+
+mentor caseload
+
+support queue
+
+learning check-ins
+
+follow-up commitments
+
+program support analytics
+
+Use the EXISTING versioned API convention.
+
+Expected canonical prefix:
+
+/api/v1/learning/mentor/...
+
+Do NOT create a parallel unversioned root unless repository truth proves that the current canonical convention differs.
+
+Permanent invariant:
+
+RUNTIME API
+OPENAPI
+
+FRONTEND CONTRACT
+
+Must include:
+
+UNAUTHENTICATED:
+DENY
+
+WRONG_ROLE:
+DENY
+
+UNASSIGNED_MENTOR:
+DENY
+
+UNAUTHORIZED_COHORT:
+DENY
+
+CROSS_TENANT:
+DENY
+
+MISSING_TENANT_CONTEXT:
+FAIL_CLOSED
+
+INVALID_FSM_TRANSITION:
+REJECT
+
+ANTI_RANKING_QUERY:
+REJECT
+
+The complete canonical matrix:
+
+N1-N33
+
+is a hard acceptance gate.
+
+Required final result:
+
+NEGATIVE_MATRIX_N1_N33:
+PASS
+
+Do not replace with a smaller happy-path test suite.
+
+Build ONE coherent responsive mentor operations workspace.
+
+Primary capability areas:
+
+Caseload
+
+Support Queue
+
+Check-in Schedule
+
+Follow-up Commitments
+
+Program Success Metrics
+
+Design principles:
+
+LOW_COGNITIVE_LOAD
+
+SUPPORTIVE_LANGUAGE
+
+NO_PUNITIVE_VISUALS
+
+NO_RANKING
+
+CLEAR_NEXT_ACTION
+
+RTL_NATIVE
+
+BIDI_SAFE
+
+WCAG_2_2_AA
+
+Touch targets:
+
+= 44x44px
+
+If student-facing check-in / follow-up surfaces are included, they must make clear:
+
+what action exists
+
+who initiated it
+
+current state
+
+relevant due date
+
+available learner action
+
+Support must never be visually presented as punishment.
+
+LEARNER_AGENCY:
+REQUIRED
+
+During Runtime, Antigravity tests only:
+
+changed routes
+
+directly affected routes
+
+critical interaction flows
+
+Do not run full-project visual regression after every minor change.
+
+Before final Macro acceptance, Antigravity performs the full closure sweep required by current project governance.
+
+Report:
+
+ROUTES_DISCOVERED:
+X
+
+ROUTES_EXECUTED:
+X
+
+UNTESTED_EXECUTABLE_ROUTES:
+0
+
+Required viewports:
+
+Desktop:
+1440x900
+
+Mobile:
+390x844
+
+Applicable states:
+
+Normal
+
+Loading
+
+Empty
+
+Error
+
+Forbidden
+
+API success
+
+API failure
+
+refresh/session failure
+
+responsive behavior
+
+RTL/BiDi
+
+real interactions
+
+Required:
+
+CONSOLE_ERRORS:
+0
+
+UNEXPECTED_NETWORK_ERRORS:
+0
+
+Discovery PASS does NOT replace final UI verification.
+
+At Macro closure, Gemini must inspect CURRENT implementation screenshots.
+
+Required:
+
+GEMINI_UI_FINAL:
+PASS
+
+GEMINI_UI_BLOCKERS:
+0
+
+Review:
+
+typography
+
+visual hierarchy
+
+color psychology
+
+cognitive load
+
+accessibility
+
+mobile responsiveness
+
+RTL/BiDi
+
+mentor workflow clarity
+
+learner agency
+
+anti-ranking presentation
+
+ONE integrated Qwen final review covers VS17+VS18+VS19.
+
+Required review:
+
+domain boundaries
+
+queue semantics
+
+check-in FSM
+
+follow-up FSM
+
+idempotency
+
+mentor authorization
+
+learner agency
+
+aggregate non-authority
+
+anti-ranking
+
+N1-N33
+
+Required verdict:
+
+QWEN_EPIC_FINAL:
+PASS
+
+QWEN_BLOCKERS:
+0
+
+ONE integrated GLM final review covers the final schema/runtime state.
+
+Required review:
+
+migrations
+
+FORCE RLS
+
+NOBYPASSRLS
+
+Composite FK closure
+
+DEFERRABLE topology
+
+append-only audit
+
+PII constraints
+
+concurrency
+
+aggregate integrity
+
+cross-tenant negative tests
+
+Required:
+
+GLM_EPIC_FINAL:
+PASS
+
+GLM_BLOCKERS:
+0
+
+Permanent Employer policy remains active.
+
+Use:
+
+temp/fleet_exchange/P3-MACRO-EPIC-17-19/qwen/
+
+temp/fleet_exchange/P3-MACRO-EPIC-17-19/glm/
+
+temp/fleet_exchange/P3-MACRO-EPIC-17-19/gemini/
+
+Required flow:
+
+prepare
+→ PII/secret scrub
+→ commit
+→ push
+→ immutable Commit-SHA RAW URL preferred
+→ Commander transfer precheck
+→ parallel agent dispatch
+
+RAW_AGENT_RESPONSE_IN_REPO:
+0
+
+TEMP_FINAL_DIFF:
+NONE
+
+The single Macro Write Manifest is authoritative.
+
+Required:
+
+ZERO_WILDCARDS:
+YES
+
+UNDECLARED_RUNTIME_PATHS:
+0
+
+UNREVIEWED_PATHS:
+0
+
+Small R0-R2 exact-path additions inside the already-approved Macro boundary may be recorded and handled autonomously.
+
+Material scope expansion:
+ESCALATE
+
+During development:
+
+Focused gates only.
+
+At final Macro closure:
+
+Ruff / project lint gates
+
+formatting
+
+Django check
+
+migration consistency/drift
+
+relevant backend regression
+
+N1-N33
+
+RLS isolation
+
+concurrency tests
+
+idempotency tests
+
+API/OpenAPI parity
+
+frontend lint
+
+frontend typecheck
+
+frontend build
+
+Antigravity closure regression
+
+Do not run expensive full validation repeatedly after trivial edits.
+
+Authorized:
+
+implementation commits
+
+migration commits
+
+test/evidence commits
+
+fast-forward push to authorized Phase 3 branch
+
+Not authorized:
+
+direct main
+
+force push
+
+history rewrite
+
+Ready for Review
+
+merge
+
+auto-merge
+
+release
+
+production deployment
+
+P3-MACRO-EPIC-17-19 can close only when:
+
+VS17:
+PASS
+
+VS18:
+PASS
+
+VS19:
+PASS
+
+MODELS:
+PASS
+
+MIGRATIONS:
+PASS
+
+SERVICES:
+PASS
+
+FSMS:
+PASS
+
+MENTOR_AUTHORIZATION:
+PASS
+
+LEARNER_AGENCY:
+PASS
+
+OUTBOX:
+PASS
+
+IDEMPOTENCY:
+PASS
+
+CONCURRENCY:
+PASS
+
+RLS:
+PASS
+
+FORCE_RLS:
+PASS
+
+NOBYPASSRLS:
+PASS
+
+COMPOSITE_FK:
+PASS
+
+DEFERRABLE_FKS:
+PASS
+
+AUDIT_APPEND_ONLY:
+PASS
+
+PII_GUARDS:
+PASS
+
+ANTI_RANKING:
+PASS
+
+AI_DECISION_AUTHORITY:
+0
+
+CROSS_TENANT_LEAKAGE:
+0
+
+REAL_PII:
+0
+
+API:
+PASS
+
+OPENAPI:
+PASS
+
+NEGATIVE_MATRIX_N1_N33:
+PASS
+
+FRONTEND:
+PASS
+
+ANTIGRAVITY_BROWSER:
+PASS
+
+UNTESTED_EXECUTABLE_ROUTES:
+0
+
+GEMINI_UI_FINAL:
+PASS
+
+QWEN_EPIC_FINAL:
+PASS
+
+GLM_EPIC_FINAL:
+PASS
+
+MANIFEST_COMPLIANCE:
+PASS
+
+TEMP_FINAL_DIFF:
+NONE
+
+R3_R4:
+0
+
+OPEN_BLOCKERS:
+0
+
+Do NOT submit separate VS17 / VS18 / VS19 completion requests.
+
+The next routine Commander checkpoint is:
+
+TYPE:
+P3_MACRO_EPIC_17_19_FINAL_REPORT
+
+Minimum required fields:
+
+BASE_SHA:
+IMPLEMENTATION_HEAD:
+EVIDENCE_HEAD:
+
+VS17_STATUS:
+VS18_STATUS:
+VS19_STATUS:
+
+MODELS:
+MIGRATIONS:
+SERVICES:
+OUTBOX:
+FSM:
+MENTOR_AUTHORIZATION:
+LEARNER_AGENCY:
+IDEMPOTENCY:
+CONCURRENCY:
+
+RLS:
+FORCE_RLS:
+NOBYPASSRLS:
+COMPOSITE_FK:
+DEFERRABLE_FKS:
+AUDIT_APPEND_ONLY:
+PII_GUARDS:
+ANTI_RANKING:
+
+API:
+OPENAPI:
+N1_N33:
+BACKEND_TESTS:
+FRONTEND_GATES:
+
+ROUTES_DISCOVERED:
+ROUTES_EXECUTED:
+UNTESTED_EXECUTABLE_ROUTES:
+ANTIGRAVITY_BROWSER:
+DESKTOP:
+MOBILE:
+SCREENSHOT_EVIDENCE:
+
+GEMINI_UI_FINAL:
+QWEN_EPIC_FINAL:
+GLM_EPIC_FINAL:
+
+CONSOLE_ERRORS:
+NETWORK_ERRORS:
+CROSS_TENANT_LEAKAGE:
+REAL_PII:
+
+MANIFEST_COMPLIANCE:
+TEMP_FINAL_DIFF:
+R3_R4:
+OPEN_BLOCKERS:
+COMMANDER_DECISION_REQUIRED:
+
+P3-MACRO-EPIC-17-19_DISCOVERY:
+CLOSED_COMPLETE
+
+COMMANDER_P3_MACRO_EPIC_17_19_RUNTIME_UNLOCK:
+GRANTED
+
+P3-MACRO-EPIC-17-19_RUNTIME:
+ACTIVE
+
+CONCURRENT_EXECUTION:
+AUTHORIZED
+
+R0_R2_AUTONOMY:
+ENABLED
+
+MICRO_SLICE_COMMANDER_CHECKPOINTS:
+DISABLED
+
+BEGIN_IMPLEMENTATION:
+VS17 + VS18 + VS19
+
+NEXT_ROUTINE_COMMANDER_CHECKPOINT:
+P3_MACRO_EPIC_17_19_FINAL_REPORT
+
+END_DIRECTIVE
+
+وضعیت رسمی اکنون: P3-MACRO-EPIC-17-19 = RUNTIME_ACTIVE.
+
+Codex باید هر سه اسلایس را در همین Runtime واحد جلو ببرد و تا گزارش نهایی کل Epic برای تأییدهای روتین به فرمانده برنگردد؛ فقط R3/R4 یا نقض واقعی مرز امنیتی/معماری استثناست.
