@@ -5316,3 +5316,2177 @@ class MentorOperationsAuditLog(models.Model):
 
     def __str__(self) -> str:
         return f"{self.tenant_id}:{self.actor_id}:{self.action_type}:{self.created_at}"
+
+
+
+
+# =============================================================================
+# P3-MACRO-EPIC-20-22: CURRICULUM DELIVERY & PROGRAM OPERATIONS
+# Sub-Slices: P3-VS20, P3-VS21, P3-VS22
+# Canonical DDL: v1.1-CANONICAL
+# Models (15):
+#   VS20: CurriculumVersion, CourseRelease, ModuleReleaseSnapshot,
+#         LessonReleaseSnapshot, ReleaseApprovalRecord, CurriculumReleaseAuditLog
+#   VS21: CohortSchedule, LearningSession, SessionOccurrence,
+#         SessionAttendanceState, SessionChangeRecord
+#   VS22: ProgramDeliveryAggregate, CurriculumReleaseCoverage,
+#         CohortScheduleHealth, DeliveryExceptionQueue
+# =============================================================================
+
+import re
+
+PROHIBITED_PII_KEYS_20_22 = {
+    "name", "phone", "email", "national_id", "location", "avatar_url",
+    "phone_number", "mobile", "fingerprint", "face_id", "voice_sample",
+    "bank_account", "iban", "credit_card", "card_number", "cvv",
+    "password", "token", "secret", "ssn", "address"
+}
+
+PII_REGEX_20_22 = re.compile(
+    r'(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)',
+    re.IGNORECASE
+)
+
+def _validate_pii_text_field(val: str, field_name: str, max_len: int = 4000) -> None:
+    if not val:
+        return
+    if len(val) > max_len:
+        raise ValidationError(f"{field_name} exceeds max length of {max_len} characters.")
+    if PII_REGEX_20_22.search(val):
+        raise ValidationError(f"PII detected in {field_name}.")
+
+def _validate_pii_jsonb_field(val: dict, field_name: str) -> None:
+    if val is None:
+        return
+    if not isinstance(val, dict):
+        raise ValidationError(f"{field_name} must be a valid JSON object.")
+    bad_keys = set(val.keys()) & PROHIBITED_PII_KEYS_20_22
+    if bad_keys:
+        raise ValidationError(f"Prohibited PII keys in {field_name}: {bad_keys}")
+
+
+# -----------------------------------------------------------------------------
+# 1. P3-VS20: CURRICULUM VERSIONING & RELEASE GOVERNANCE
+# -----------------------------------------------------------------------------
+
+class CurriculumVersionStatus(models.TextChoices):
+    DRAFT = "DRAFT", "Draft"
+    REVIEW = "REVIEW", "Review"
+    APPROVED = "APPROVED", "Approved"
+    PUBLISHED = "PUBLISHED", "Published"
+    RETIRED = "RETIRED", "Retired"
+
+
+class CurriculumReleaseApprovalDecision(models.TextChoices):
+    APPROVED = "APPROVED", "Approved"
+    REJECTED = "REJECTED", "Rejected"
+    CHANGES_REQUESTED = "CHANGES_REQUESTED", "Changes Requested"
+
+
+class CurriculumReleaseAuditAction(models.TextChoices):
+    VERSION_CREATED = "VERSION_CREATED", "Version Created"
+    VERSION_SUBMITTED = "VERSION_SUBMITTED", "Version Submitted"
+    VERSION_APPROVED = "VERSION_APPROVED", "Version Approved"
+    VERSION_REJECTED = "VERSION_REJECTED", "Version Rejected"
+    VERSION_PUBLISHED = "VERSION_PUBLISHED", "Version Published"
+    VERSION_RETIRED = "VERSION_RETIRED", "Version Retired"
+    RELEASE_CREATED = "RELEASE_CREATED", "Release Created"
+    RELEASE_ACTIVATED = "RELEASE_ACTIVATED", "Release Activated"
+    RELEASE_DEACTIVATED = "RELEASE_DEACTIVATED", "Release Deactivated"
+
+
+class CurriculumVersion(models.Model):
+    """
+    P3-VS20: Immutable semantic curriculum versioning with FSM governance.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="curriculum_versions",
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.RESTRICT,
+        related_name="curriculum_versions",
+    )
+    semver_major = models.IntegerField()
+    semver_minor = models.IntegerField()
+    semver_patch = models.IntegerField()
+    version_tag = models.CharField(max_length=32)
+    status = models.CharField(
+        max_length=32,
+        choices=CurriculumVersionStatus.choices,
+        default=CurriculumVersionStatus.DRAFT,
+    )
+    created_by_id = models.UUIDField(null=True, blank=True)
+    approved_by_id = models.UUIDField(null=True, blank=True)
+    published_at = models.DateTimeField(null=True, blank=True)
+    metadata = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_curriculumversion"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_curriculumversion_tenant_id",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "course", "semver_major", "semver_minor", "semver_patch"],
+                name="uq_curriculum_version_tenant_semver",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=CurriculumVersionStatus.values),
+                name="chk_curriculum_version_status",
+            ),
+            models.CheckConstraint(
+                condition=Q(semver_major__gte=0) & Q(semver_minor__gte=0) & Q(semver_patch__gte=0),
+                name="chk_curriculum_semver_nonnegative",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(status=CurriculumVersionStatus.PUBLISHED) & Q(published_at__isnull=False)) |
+                    (~Q(status=CurriculumVersionStatus.PUBLISHED) & Q(published_at__isnull=True))
+                ),
+                name="chk_curriculumversion_published_consistency",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "course", "status"], name="idx_curriculumversion_t_c_s"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.course and str(self.course.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Course tenant mismatch.")
+        if self.semver_major < 0 or self.semver_minor < 0 or self.semver_patch < 0:
+            raise ValidationError("Semver numbers must be non-negative integers.")
+        if self.status == CurriculumVersionStatus.PUBLISHED and not self.published_at:
+            raise ValidationError("Published version must have published_at timestamp.")
+        if self.status != CurriculumVersionStatus.PUBLISHED and self.published_at:
+            raise ValidationError("Non-published version cannot have published_at timestamp.")
+        _validate_pii_jsonb_field(self.metadata, "metadata")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.course_id}:{self.semver_major}.{self.semver_minor}.{self.semver_patch}:{self.status}"
+
+
+class CourseRelease(models.Model):
+    """
+    P3-VS20: Mapping of an approved curriculum version to course delivery.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="course_releases",
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.RESTRICT,
+        related_name="releases",
+    )
+    curriculum_version = models.ForeignKey(
+        CurriculumVersion,
+        on_delete=models.RESTRICT,
+        related_name="releases",
+    )
+    release_title = models.CharField(max_length=255)
+    release_notes = models.TextField(default="")
+    is_active_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_courserelease"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_courserelease_tenant_id",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "course", "is_active_default"], name="idx_courserelease_t_c_a"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.course and str(self.course.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Course tenant mismatch.")
+        if self.curriculum_version and str(self.curriculum_version.tenant_id) != str(self.tenant_id):
+            raise ValidationError("CurriculumVersion tenant mismatch.")
+        _validate_pii_text_field(self.release_title, "release_title", 255)
+        _validate_pii_text_field(self.release_notes, "release_notes", 4000)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.course_id}:{self.release_title}:active={self.is_active_default}"
+
+
+class ModuleReleaseSnapshot(models.Model):
+    """
+    P3-VS20: Immutable frozen snapshot of module hierarchy and content.
+    Snapshot provenance exemption: source_module_id is unconstrained by design.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="module_release_snapshots",
+    )
+    curriculum_version = models.ForeignKey(
+        CurriculumVersion,
+        on_delete=models.RESTRICT,
+        related_name="module_snapshots",
+    )
+    source_module_id = models.UUIDField(db_index=True)
+    title = models.CharField(max_length=255)
+    order_index = models.IntegerField(default=0)
+    snapshot_payload = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_modulereleasesnapshot"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_modulereleasesnapshot_tenant_id",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "curriculum_version", "order_index"], name="idx_modulereleasesnap_v_o"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.curriculum_version and str(self.curriculum_version.tenant_id) != str(self.tenant_id):
+            raise ValidationError("CurriculumVersion tenant mismatch.")
+        _validate_pii_text_field(self.title, "title", 255)
+        _validate_pii_jsonb_field(self.snapshot_payload, "snapshot_payload")
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError("ModuleReleaseSnapshot is strictly immutable.")
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("ModuleReleaseSnapshot cannot be deleted.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.curriculum_version_id}:{self.order_index}:{self.title}"
+
+
+class LessonReleaseSnapshot(models.Model):
+    """
+    P3-VS20: Immutable frozen snapshot of lesson content hash and delivery payload.
+    Snapshot provenance exemption: source_lesson_id is unconstrained by design.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="lesson_release_snapshots",
+    )
+    module_snapshot = models.ForeignKey(
+        ModuleReleaseSnapshot,
+        on_delete=models.RESTRICT,
+        related_name="lesson_snapshots",
+    )
+    source_lesson_id = models.UUIDField(db_index=True)
+    title = models.CharField(max_length=255)
+    order_index = models.IntegerField(default=0)
+    content_hash = models.CharField(max_length=64)
+    snapshot_payload = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_lessonreleasesnapshot"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_lessonreleasesnapshot_tenant_id",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "module_snapshot", "order_index"], name="idx_lessonreleasesnap_m_o"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.module_snapshot and str(self.module_snapshot.tenant_id) != str(self.tenant_id):
+            raise ValidationError("ModuleReleaseSnapshot tenant mismatch.")
+        _validate_pii_text_field(self.title, "title", 255)
+        _validate_pii_jsonb_field(self.snapshot_payload, "snapshot_payload")
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError("LessonReleaseSnapshot is strictly immutable.")
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("LessonReleaseSnapshot cannot be deleted.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.module_snapshot_id}:{self.order_index}:{self.title}"
+
+
+class ReleaseApprovalRecord(models.Model):
+    """
+    P3-VS20: Formal curriculum release approval audit record (Append-Only).
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="release_approvals",
+    )
+    curriculum_version = models.ForeignKey(
+        CurriculumVersion,
+        on_delete=models.RESTRICT,
+        related_name="approvals",
+    )
+    reviewer_id = models.UUIDField(db_index=True)
+    decision = models.CharField(max_length=32, choices=CurriculumReleaseApprovalDecision.choices)
+    review_comments = models.TextField(default="")
+    reviewed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_releaseapprovalrecord"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_releaseapprovalrecord_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(decision__in=CurriculumReleaseApprovalDecision.values),
+                name="chk_releaseapproval_decision",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "curriculum_version", "-reviewed_at"], name="idx_releaseapproval_t_v_t"),
+        ]
+
+    def clean(self):
+        super().clean()
+        try:
+            if self.curriculum_version and str(self.curriculum_version.tenant_id) != str(self.tenant_id):
+                raise ValidationError("CurriculumVersion tenant mismatch.")
+        except Exception:
+            pass
+        _validate_pii_text_field(self.review_comments, "review_comments", 4000)
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError("ReleaseApprovalRecord is strictly append-only.")
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("ReleaseApprovalRecord cannot be deleted.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.curriculum_version_id}:{self.reviewer_id}:{self.decision}"
+
+
+class CurriculumReleaseAuditLog(models.Model):
+    """
+    P3-VS20: Forensic append-only audit trail for curriculum governance.
+    Strict Invariant: Exact XOR between curriculum_version and course_release.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="curriculum_audit_logs",
+    )
+    curriculum_version = models.ForeignKey(
+        CurriculumVersion,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+    )
+    course_release = models.ForeignKey(
+        CourseRelease,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+    )
+    actor_id = models.UUIDField(db_index=True)
+    action = models.CharField(max_length=64)
+    previous_state = models.CharField(max_length=32, null=True, blank=True)
+    new_state = models.CharField(max_length=32, null=True, blank=True)
+    details = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_curriculumreleaseauditlog"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_curriculumreleaseauditlog_tenant_id",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "actor_id", "-created_at"], name="idx_curraudit_tenant_actor"),
+            models.Index(fields=["tenant", "curriculum_version"], condition=Q(curriculum_version__isnull=False), name="idx_curraudit_version"),
+            models.Index(fields=["tenant", "course_release"], condition=Q(course_release__isnull=False), name="idx_curraudit_release"),
+        ]
+
+    def clean(self):
+        super().clean()
+        targets = [self.curriculum_version, self.course_release]
+        non_null_count = sum(1 for t in targets if t is not None)
+        if non_null_count != 1:
+            raise ValidationError("Exactly one target entity must be set (num_nonnulls = 1).")
+        for t in targets:
+            if t is not None and str(t.tenant_id) != str(self.tenant_id):
+                raise ValidationError("Target entity tenant mismatch.")
+        _validate_pii_jsonb_field(self.details, "details")
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError("CurriculumReleaseAuditLog is strictly append-only.")
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("CurriculumReleaseAuditLog cannot be deleted.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.actor_id}:{self.action}:{self.created_at}"
+
+
+# -----------------------------------------------------------------------------
+# 2. P3-VS21: COHORT SCHEDULE & LEARNING SESSION ORCHESTRATION
+# -----------------------------------------------------------------------------
+
+class LearningSessionStatus(models.TextChoices):
+    SCHEDULED = "SCHEDULED", "Scheduled"
+    IN_SESSION = "IN_SESSION", "In Session"
+    COMPLETED = "COMPLETED", "Completed"
+    RESCHEDULED = "RESCHEDULED", "Rescheduled"
+    CANCELLED = "CANCELLED", "Cancelled"
+
+
+class SessionOccurrenceStatus(models.TextChoices):
+    PENDING = "PENDING", "Pending"
+    CONDUCTED = "CONDUCTED", "Conducted"
+    MISSED = "MISSED", "Missed"
+    SUBSTITUTE_CONDUCTED = "SUBSTITUTE_CONDUCTED", "Substitute Conducted"
+
+
+class SessionAttendanceStatus(models.TextChoices):
+    PRESENT = "PRESENT", "Present"
+    ABSENT = "ABSENT", "Absent"
+    EXCUSED = "EXCUSED", "Excused"
+    LATE = "LATE", "Late"
+
+
+class SessionChangeType(models.TextChoices):
+    RESCHEDULED = "RESCHEDULED", "Rescheduled"
+    CANCELLED = "CANCELLED", "Cancelled"
+    MENTOR_REASSIGNED = "MENTOR_REASSIGNED", "Mentor Reassigned"
+    TOPIC_UPDATED = "TOPIC_UPDATED", "Topic Updated"
+
+
+class CohortSchedule(models.Model):
+    """
+    P3-VS21: Delivery schedule for a cohort linked to a specific CourseRelease.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="cohort_schedules",
+    )
+    cohort = models.ForeignKey(
+        Cohort,
+        on_delete=models.RESTRICT,
+        related_name="schedules",
+    )
+    course_release = models.ForeignKey(
+        CourseRelease,
+        on_delete=models.RESTRICT,
+        related_name="cohort_schedules",
+    )
+    schedule_title = models.CharField(max_length=255)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    recurrence_rule = models.CharField(max_length=128, default="WEEKLY")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_cohortschedule"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_cohortschedule_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(start_date__lte=models.F("end_date")),
+                name="chk_cohortschedule_dates_order",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "cohort", "is_active"], name="idx_cohortsched_t_c_a"),
+        ]
+
+    def clean(self):
+        super().clean()
+        try:
+            if self.cohort and str(self.cohort.tenant_id) != str(self.tenant_id):
+                raise ValidationError("Cohort tenant mismatch.")
+        except Exception:
+            pass
+        try:
+            if self.course_release and str(self.course_release.tenant_id) != str(self.tenant_id):
+                raise ValidationError("CourseRelease tenant mismatch.")
+        except Exception:
+            pass
+        if self.start_date and self.end_date and self.start_date > self.end_date:
+            raise ValidationError("start_date must be before or equal to end_date.")
+        _validate_pii_text_field(self.schedule_title, "schedule_title", 255)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.cohort_id}:{self.schedule_title}:active={self.is_active}"
+
+
+class LearningSession(models.Model):
+    """
+    P3-VS21: Orchestrated session instances scheduled for delivery.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="learning_sessions",
+    )
+    cohort_schedule = models.ForeignKey(
+        CohortSchedule,
+        on_delete=models.RESTRICT,
+        related_name="sessions",
+    )
+    session_title = models.CharField(max_length=255)
+    session_order = models.IntegerField(default=1)
+    lesson_snapshot = models.ForeignKey(
+        LessonReleaseSnapshot,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="sessions",
+    )
+    assigned_mentor_id = models.UUIDField(null=True, blank=True)
+    scheduled_start = models.DateTimeField()
+    scheduled_end = models.DateTimeField()
+    status = models.CharField(
+        max_length=32,
+        choices=LearningSessionStatus.choices,
+        default=LearningSessionStatus.SCHEDULED,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_learningsession"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_learningsession_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=LearningSessionStatus.values),
+                name="chk_learningsession_status",
+            ),
+            models.CheckConstraint(
+                condition=Q(scheduled_start__lt=models.F("scheduled_end")),
+                name="chk_learningsession_timing_order",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "cohort_schedule", "scheduled_start"], name="idx_learnsession_sched_time"),
+            models.Index(fields=["tenant", "assigned_mentor_id", "status"], name="idx_learnsession_mentor_stat"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.cohort_schedule and str(self.cohort_schedule.tenant_id) != str(self.tenant_id):
+            raise ValidationError("CohortSchedule tenant mismatch.")
+        if self.lesson_snapshot and str(self.lesson_snapshot.tenant_id) != str(self.tenant_id):
+            raise ValidationError("LessonReleaseSnapshot tenant mismatch.")
+        if self.scheduled_start and self.scheduled_end and self.scheduled_start >= self.scheduled_end:
+            raise ValidationError("scheduled_start must be strictly before scheduled_end.")
+        _validate_pii_text_field(self.session_title, "session_title", 255)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.cohort_schedule_id}:{self.session_title}:{self.status}"
+
+
+class SessionOccurrence(models.Model):
+    """
+    P3-VS21: Operational execution record of a learning session occurrence.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="session_occurrences",
+    )
+    learning_session = models.ForeignKey(
+        LearningSession,
+        on_delete=models.CASCADE,
+        related_name="occurrences",
+    )
+    actual_start = models.DateTimeField(null=True, blank=True)
+    actual_end = models.DateTimeField(null=True, blank=True)
+    occurrence_status = models.CharField(
+        max_length=32,
+        choices=SessionOccurrenceStatus.choices,
+        default=SessionOccurrenceStatus.PENDING,
+    )
+    attendance_count = models.IntegerField(default=0)
+    operational_notes = models.TextField(default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_sessionoccurrence"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_sessionoccurrence_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(occurrence_status__in=SessionOccurrenceStatus.values),
+                name="chk_sessionoccurrence_status",
+            ),
+            models.CheckConstraint(
+                condition=Q(actual_start__isnull=True) | Q(actual_end__isnull=True) | Q(actual_start__lte=models.F("actual_end")),
+                name="chk_session_timing_order",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "learning_session", "actual_start"], name="idx_sessoccur_t_s_a"),
+        ]
+
+    def clean(self):
+        super().clean()
+        try:
+            if self.learning_session and str(self.learning_session.tenant_id) != str(self.tenant_id):
+                raise ValidationError("LearningSession tenant mismatch.")
+        except Exception:
+            pass
+        if self.actual_start and self.actual_end and self.actual_start > self.actual_end:
+            raise ValidationError("actual_start must be before or equal to actual_end.")
+        _validate_pii_text_field(self.operational_notes, "operational_notes", 4000)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.learning_session_id}:{self.occurrence_status}"
+
+
+class SessionAttendanceState(models.Model):
+    """
+    P3-VS21: Synthetic session attendance record (strictly non-punitive, anti-ranking).
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="session_attendance_records",
+    )
+    session_occurrence = models.ForeignKey(
+        SessionOccurrence,
+        on_delete=models.CASCADE,
+        related_name="attendance_records",
+    )
+    student_id = models.UUIDField(db_index=True)
+    status = models.CharField(
+        max_length=32,
+        choices=SessionAttendanceStatus.choices,
+        default=SessionAttendanceStatus.PRESENT,
+    )
+    recorded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_sessionattendancestate"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_sessionattendancestate_tenant_id",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "session_occurrence", "student_id"],
+                name="uq_session_attendance_student",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=SessionAttendanceStatus.values),
+                name="chk_sessionattendance_status",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "student_id", "status"], name="idx_sessattendance_t_s_s"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.session_occurrence and str(self.session_occurrence.tenant_id) != str(self.tenant_id):
+            raise ValidationError("SessionOccurrence tenant mismatch.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.session_occurrence_id}:{self.student_id}:{self.status}"
+
+
+class SessionChangeRecord(models.Model):
+    """
+    P3-VS21: Append-only audit trail for session rescheduling and cancellation.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="session_change_records",
+    )
+    learning_session = models.ForeignKey(
+        LearningSession,
+        on_delete=models.CASCADE,
+        related_name="change_records",
+    )
+    changed_by_id = models.UUIDField(db_index=True)
+    change_type = models.CharField(max_length=32, choices=SessionChangeType.choices)
+    original_start = models.DateTimeField(null=True, blank=True)
+    new_start = models.DateTimeField(null=True, blank=True)
+    reason = models.TextField(default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_sessionchangerecord"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_sessionchangerecord_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(change_type__in=SessionChangeType.values),
+                name="chk_sessionchange_type",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "learning_session", "-created_at"], name="idx_sesschange_t_s_c"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.learning_session and str(self.learning_session.tenant_id) != str(self.tenant_id):
+            raise ValidationError("LearningSession tenant mismatch.")
+        _validate_pii_text_field(self.reason, "reason", 2000)
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError("SessionChangeRecord is strictly append-only.")
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("SessionChangeRecord cannot be deleted.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.learning_session_id}:{self.change_type}:{self.created_at}"
+
+
+# -----------------------------------------------------------------------------
+# 3. P3-VS22: PROGRAM DELIVERY QUALITY & OPERATIONS CONTROL CENTER
+# -----------------------------------------------------------------------------
+
+class CohortScheduleHealthStatus(models.TextChoices):
+    ON_TRACK = "ON_TRACK", "On Track"
+    ATTENTION_NEEDED = "ATTENTION_NEEDED", "Attention Needed"
+    AT_RISK = "AT_RISK", "At Risk"
+    CRITICAL_DELAY = "CRITICAL_DELAY", "Critical Delay"
+
+
+class DeliveryExceptionSeverity(models.TextChoices):
+    LOW = "LOW", "Low"
+    MEDIUM = "MEDIUM", "Medium"
+    HIGH = "HIGH", "High"
+    CRITICAL = "CRITICAL", "Critical"
+
+
+class DeliveryExceptionStatus(models.TextChoices):
+    OPEN = "OPEN", "Open"
+    INVESTIGATING = "INVESTIGATING", "Investigating"
+    RESOLVED = "RESOLVED", "Resolved"
+    IGNORED = "IGNORED", "Ignored"
+
+
+class ProgramDeliveryAggregate(models.Model):
+    """
+    P3-VS22: Non-authoritative delivery progress aggregate.
+    Strict Invariant: is_authoritative MUST be False. Zero student ranking.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="delivery_aggregates",
+    )
+    cohort = models.ForeignKey(
+        Cohort,
+        on_delete=models.CASCADE,
+        related_name="delivery_aggregates",
+    )
+    total_sessions = models.IntegerField(default=0)
+    completed_sessions = models.IntegerField(default=0)
+    cancelled_sessions = models.IntegerField(default=0)
+    rescheduled_sessions = models.IntegerField(default=0)
+    active_release_version = models.CharField(max_length=32, default="")
+    is_authoritative = models.BooleanField(default=False)
+    computed_at = models.DateTimeField(auto_now_add=True)
+    metadata = models.JSONField(default=dict)
+
+    class Meta:
+        db_table = "learning_programdeliveryaggregate"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_programdeliveryaggregate_tenant_id",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "cohort"],
+                name="uq_deliveryagg_cohort",
+            ),
+            models.CheckConstraint(
+                condition=Q(is_authoritative=False),
+                name="chk_deliveryagg_non_authoritative",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "-computed_at"], name="idx_deliveryagg_t_c"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.is_authoritative:
+            raise ValidationError("ProgramDeliveryAggregate is strictly non-authoritative.")
+        if self.cohort and str(self.cohort.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Cohort tenant mismatch.")
+        _validate_pii_jsonb_field(self.metadata, "metadata")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.cohort_id}:done={self.completed_sessions}/{self.total_sessions}"
+
+
+class CurriculumReleaseCoverage(models.Model):
+    """
+    P3-VS22: Adoption projection of curriculum releases across cohorts.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="release_coverages",
+    )
+    curriculum_version = models.ForeignKey(
+        CurriculumVersion,
+        on_delete=models.CASCADE,
+        related_name="coverages",
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="release_coverages",
+    )
+    cohorts_adopted_count = models.IntegerField(default=0)
+    active_learners_count = models.IntegerField(default=0)
+    computed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_curriculumreleasecoverage"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_curriculumreleasecoverage_tenant_id",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "curriculum_version"],
+                name="uq_releasecoverage_version",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "course"], name="idx_currcov_t_course"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.curriculum_version and str(self.curriculum_version.tenant_id) != str(self.tenant_id):
+            raise ValidationError("CurriculumVersion tenant mismatch.")
+        if self.course and str(self.course.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Course tenant mismatch.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.curriculum_version_id}:cohorts={self.cohorts_adopted_count}"
+
+
+class CohortScheduleHealth(models.Model):
+    """
+    P3-VS22: Health and delivery exception projection for cohort schedules.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="cohort_health_projections",
+    )
+    cohort_schedule = models.ForeignKey(
+        CohortSchedule,
+        on_delete=models.CASCADE,
+        related_name="health_projections",
+    )
+    health_status = models.CharField(
+        max_length=32,
+        choices=CohortScheduleHealthStatus.choices,
+        default=CohortScheduleHealthStatus.ON_TRACK,
+    )
+    pending_sessions_count = models.IntegerField(default=0)
+    delayed_sessions_count = models.IntegerField(default=0)
+    missed_occurrences_count = models.IntegerField(default=0)
+    computed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_cohortschedulehealth"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_cohortschedulehealth_tenant_id",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "cohort_schedule"],
+                name="uq_cohortschedulehealth_schedule",
+            ),
+            models.CheckConstraint(
+                condition=Q(health_status__in=CohortScheduleHealthStatus.values),
+                name="chk_cohortschedulehealth_status",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "health_status"], name="idx_schedhealth_t_status"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.cohort_schedule and str(self.cohort_schedule.tenant_id) != str(self.tenant_id):
+            raise ValidationError("CohortSchedule tenant mismatch.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.cohort_schedule_id}:{self.health_status}"
+
+
+class DeliveryExceptionQueue(models.Model):
+    """
+    P3-VS22: Operational exception tracking queue for curriculum delivery interruptions.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="delivery_exceptions",
+    )
+    cohort = models.ForeignKey(
+        Cohort,
+        on_delete=models.RESTRICT,
+        related_name="delivery_exceptions",
+    )
+    learning_session = models.ForeignKey(
+        LearningSession,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="delivery_exceptions",
+    )
+    exception_type = models.CharField(max_length=64)
+    severity = models.CharField(
+        max_length=32,
+        choices=DeliveryExceptionSeverity.choices,
+        default=DeliveryExceptionSeverity.MEDIUM,
+    )
+    status = models.CharField(
+        max_length=32,
+        choices=DeliveryExceptionStatus.choices,
+        default=DeliveryExceptionStatus.OPEN,
+    )
+    description = models.TextField()
+    resolved_by_id = models.UUIDField(null=True, blank=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_deliveryexceptionqueue"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_deliveryexceptionqueue_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(severity__in=DeliveryExceptionSeverity.values),
+                name="chk_deliveryexception_severity",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=DeliveryExceptionStatus.values),
+                name="chk_deliveryexception_status",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(status__in=[DeliveryExceptionStatus.OPEN, DeliveryExceptionStatus.INVESTIGATING]) & Q(resolved_at__isnull=True) & Q(resolved_by_id__isnull=True)) |
+                    (Q(status__in=[DeliveryExceptionStatus.RESOLVED, DeliveryExceptionStatus.IGNORED]) & Q(resolved_at__isnull=False))
+                ),
+                name="chk_deliveryexception_resolved_order",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "status", "severity", "-created_at"], name="idx_delexcept_t_s_s_c"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.cohort and str(self.cohort.tenant_id) != str(self.tenant_id):
+            raise ValidationError("Cohort tenant mismatch.")
+        if self.learning_session and str(self.learning_session.tenant_id) != str(self.tenant_id):
+            raise ValidationError("LearningSession tenant mismatch.")
+        if self.status in [DeliveryExceptionStatus.OPEN, DeliveryExceptionStatus.INVESTIGATING]:
+            if self.resolved_at or self.resolved_by_id:
+                raise ValidationError("Open or investigating exception cannot have resolved_at or resolved_by_id.")
+        elif self.status in [DeliveryExceptionStatus.RESOLVED, DeliveryExceptionStatus.IGNORED]:
+            if not self.resolved_at:
+                raise ValidationError("Resolved or ignored exception must have resolved_at timestamp.")
+        _validate_pii_text_field(self.description, "description", 4000)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.cohort_id}:{self.exception_type}:{self.status}"
+
+
+# =============================================================================
+# P3-MACRO-EPIC-23-25: CURRICULUM AUTHORING, QUALITY & RELEASE OPERATIONS
+# Sub-Slices: P3-VS23, P3-VS24, P3-VS25
+# Canonical DDL: v1.1-CANONICAL-CLAUDE-HARDENED
+# Models (19):
+#   VS23: CurriculumDraftWorkspace, ContentChangeSet, EditorialReview,
+#         ReviewComment, ReviewResolution, AuthorAssignment, ChangeApprovalRecord
+#   VS24: AssessmentBlueprint, LearningObjectiveMapping, RubricDefinition,
+#         RubricCriterion, AssessmentReleaseBinding, RubricReviewRecord
+#   VS25: CurriculumChangeImpact, ReleaseReadinessCheck, ReleaseReadinessGate,
+#         CohortRollforwardPlan, CurriculumMigrationDecision, ReleaseExceptionRecord
+# =============================================================================
+
+class CurriculumDraftWorkspaceStatus(models.TextChoices):
+    ACTIVE = "ACTIVE", "Active"
+    SUBMITTED = "SUBMITTED", "Submitted"
+    ARCHIVED = "ARCHIVED", "Archived"
+
+
+class ContentChangeSetStatus(models.TextChoices):
+    DRAFT = "DRAFT", "Draft"
+    IN_REVIEW = "IN_REVIEW", "In Review"
+    CHANGES_REQUESTED = "CHANGES_REQUESTED", "Changes Requested"
+    APPROVED = "APPROVED", "Approved"
+    MERGED_TO_RELEASE = "MERGED_TO_RELEASE", "Merged to Release"
+
+
+class EditorialReviewDecision(models.TextChoices):
+    PENDING = "PENDING", "Pending"
+    UNDER_REVIEW = "UNDER_REVIEW", "Under Review"
+    CHANGES_REQUESTED = "CHANGES_REQUESTED", "Changes Requested"
+    APPROVED = "APPROVED", "Approved"
+    REJECTED = "REJECTED", "Rejected"
+
+
+class ReviewResolutionStatus(models.TextChoices):
+    RESOLVED = "RESOLVED", "Resolved"
+    WAIVED = "WAIVED", "Waived"
+    DEFERRED = "DEFERRED", "Deferred"
+
+
+class AuthorAssignmentRole(models.TextChoices):
+    PRIMARY_AUTHOR = "PRIMARY_AUTHOR", "Primary Author"
+    CONTRIBUTOR = "CONTRIBUTOR", "Contributor"
+    CURATOR = "CURATOR", "Curator"
+
+
+class ChangeApprovalVerdict(models.TextChoices):
+    APPROVED = "APPROVED", "Approved"
+    CONDITIONALLY_APPROVED = "CONDITIONALLY_APPROVED", "Conditionally Approved"
+
+
+class AssessmentBlueprintStatus(models.TextChoices):
+    ACTIVE = "ACTIVE", "Active"
+    DRAFT = "DRAFT", "Draft"
+    SUPERSEDED = "SUPERSEDED", "Superseded"
+    RETIRED = "RETIRED", "Retired"
+
+
+class BloomTaxonomyLevel(models.TextChoices):
+    REMEMBER = "REMEMBER", "Remember"
+    UNDERSTAND = "UNDERSTAND", "Understand"
+    APPLY = "APPLY", "Apply"
+    ANALYZE = "ANALYZE", "Analyze"
+    EVALUATE = "EVALUATE", "Evaluate"
+    CREATE = "CREATE", "Create"
+
+
+class RubricDefinitionStatus(models.TextChoices):
+    DRAFT = "DRAFT", "Draft"
+    ACTIVE = "ACTIVE", "Active"
+    SUPERSEDED = "SUPERSEDED", "Superseded"
+    RETIRED = "RETIRED", "Retired"
+
+
+class RubricReviewVerdict(models.TextChoices):
+    APPROVED = "APPROVED", "Approved"
+    REVISION_REQUESTED = "REVISION_REQUESTED", "Revision Requested"
+
+
+class CurriculumChangeImpactLevel(models.TextChoices):
+    PATCH = "PATCH", "Patch"
+    MINOR = "MINOR", "Minor"
+    MAJOR = "MAJOR", "Major"
+    BREAKING = "BREAKING", "Breaking"
+
+
+class ReleaseReadinessStatus(models.TextChoices):
+    PENDING = "PENDING", "Pending"
+    PASSED = "PASSED", "Passed"
+    FAILED = "FAILED", "Failed"
+    WAIVED = "WAIVED", "Waived"
+
+
+class CohortRollforwardMode(models.TextChoices):
+    FUTURE_MODULES_ONLY = "FUTURE_MODULES_ONLY", "Future Modules Only"
+    NEXT_COHORT_ONLY = "NEXT_COHORT_ONLY", "Next Cohort Only"
+    EXPLICIT_APPROVAL_REQUIRED = "EXPLICIT_APPROVAL_REQUIRED", "Explicit Approval Required"
+
+
+class CohortRollforwardStatus(models.TextChoices):
+    DRAFT = "DRAFT", "Draft"
+    APPROVED = "APPROVED", "Approved"
+    APPLIED = "APPLIED", "Applied"
+    CANCELLED = "CANCELLED", "Cancelled"
+
+
+class CurriculumMigrationDecisionChoice(models.TextChoices):
+    PROCEED = "PROCEED", "Proceed"
+    HALT = "HALT", "Halt"
+    EXCEPTION_REQUIRED = "EXCEPTION_REQUIRED", "Exception Required"
+
+
+# -----------------------------------------------------------------------------
+# 1. P3-VS23: CURRICULUM AUTHORING & EDITORIAL WORKFLOW
+# -----------------------------------------------------------------------------
+
+class CurriculumDraftWorkspace(models.Model):
+    """
+    P3-VS23: Draft authoring workspace bound to course and base curriculum version.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="curriculum_draft_workspaces",
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.RESTRICT,
+        related_name="draft_workspaces",
+    )
+    base_version = models.ForeignKey(
+        CurriculumVersion,
+        on_delete=models.RESTRICT,
+        related_name="derived_workspaces",
+    )
+    workspace_title = models.CharField(max_length=255)
+    status = models.CharField(
+        max_length=32,
+        choices=CurriculumDraftWorkspaceStatus.choices,
+        default=CurriculumDraftWorkspaceStatus.ACTIVE,
+    )
+    created_by_id = models.UUIDField(null=True, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_curriculumdraftworkspace"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_curriculumdraftworkspace_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=CurriculumDraftWorkspaceStatus.values),
+                name="chk_draftworkspace_status",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "course", "status"], name="idx_draftws_t_c_s"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if hasattr(self, "course") and self.course is not None:
+            if str(self.course.tenant_id) != str(self.tenant_id):
+                raise ValidationError("Course tenant mismatch.")
+        if hasattr(self, "base_version") and self.base_version is not None:
+            if str(self.base_version.tenant_id) != str(self.tenant_id):
+                raise ValidationError("Base CurriculumVersion tenant mismatch.")
+        _validate_pii_jsonb_field(self.metadata, "metadata")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.workspace_title}:{self.status}"
+
+
+class ContentChangeSet(models.Model):
+    """
+    P3-VS23: Structured batch of content changes with editorial FSM.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="content_change_sets",
+    )
+    workspace = models.ForeignKey(
+        CurriculumDraftWorkspace,
+        on_delete=models.CASCADE,
+        related_name="change_sets",
+    )
+    title = models.CharField(max_length=255)
+    change_summary = models.TextField(default="", blank=True)
+    status = models.CharField(
+        max_length=32,
+        choices=ContentChangeSetStatus.choices,
+        default=ContentChangeSetStatus.DRAFT,
+    )
+    author_id = models.UUIDField(null=True, blank=True)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_contentchangeset"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_contentchangeset_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=ContentChangeSetStatus.values),
+                name="chk_contentchangeset_status",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "workspace", "status"], name="idx_cchangeset_t_w_s"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if hasattr(self, "workspace") and self.workspace is not None:
+            if str(self.workspace.tenant_id) != str(self.tenant_id):
+                raise ValidationError("CurriculumDraftWorkspace tenant mismatch.")
+        _validate_pii_text_field(self.change_summary, "change_summary", 5000)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.title}:{self.status}"
+
+
+class EditorialReview(models.Model):
+    """
+    P3-VS23: Formal peer review record enforcing separation of duties.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="editorial_reviews",
+    )
+    change_set = models.ForeignKey(
+        ContentChangeSet,
+        on_delete=models.CASCADE,
+        related_name="editorial_reviews",
+    )
+    reviewer_id = models.UUIDField(null=True, blank=True)
+    decision = models.CharField(
+        max_length=32,
+        choices=EditorialReviewDecision.choices,
+        default=EditorialReviewDecision.PENDING,
+    )
+    review_notes = models.TextField(default="", blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_editorialreview"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_editorialreview_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(decision__in=EditorialReviewDecision.values),
+                name="chk_editorialreview_decision",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "change_set", "decision"], name="idx_edreview_t_cs_d"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if hasattr(self, "change_set") and self.change_set is not None:
+            if str(self.change_set.tenant_id) != str(self.tenant_id):
+                raise ValidationError("ContentChangeSet tenant mismatch.")
+        _validate_pii_text_field(self.review_notes, "review_notes", 5000)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.change_set_id}:{self.decision}"
+
+
+class ReviewComment(models.Model):
+    """
+    P3-VS23: Targeted editorial comment on draft curriculum entities.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="review_comments",
+    )
+    review = models.ForeignKey(
+        EditorialReview,
+        on_delete=models.CASCADE,
+        related_name="comments",
+    )
+    author_id = models.UUIDField(null=True, blank=True)
+    comment_text = models.TextField()
+    target_entity = models.CharField(max_length=64)
+    target_entity_id = models.UUIDField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_reviewcomment"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_reviewcomment_tenant_id",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "review", "-created_at"], name="idx_revcomment_t_r_c"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if hasattr(self, "review") and self.review is not None:
+            if str(self.review.tenant_id) != str(self.tenant_id):
+                raise ValidationError("EditorialReview tenant mismatch.")
+        _validate_pii_text_field(self.comment_text, "comment_text", 3000)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.target_entity}:{self.target_entity_id}"
+
+
+class ReviewResolution(models.Model):
+    """
+    P3-VS23: Official resolution record sign-off on review feedback.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="review_resolutions",
+    )
+    review = models.ForeignKey(
+        EditorialReview,
+        on_delete=models.CASCADE,
+        related_name="resolutions",
+    )
+    resolver_id = models.UUIDField(null=True, blank=True)
+    resolution_status = models.CharField(
+        max_length=32,
+        choices=ReviewResolutionStatus.choices,
+        default=ReviewResolutionStatus.RESOLVED,
+    )
+    resolution_notes = models.TextField(default="", blank=True)
+    resolved_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_reviewresolution"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_reviewresolution_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(resolution_status__in=ReviewResolutionStatus.values),
+                name="chk_reviewresolution_status",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if hasattr(self, "review") and self.review is not None:
+            if str(self.review.tenant_id) != str(self.tenant_id):
+                raise ValidationError("EditorialReview tenant mismatch.")
+        _validate_pii_text_field(self.resolution_notes, "resolution_notes", 3000)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.review_id}:{self.resolution_status}"
+
+
+class AuthorAssignment(models.Model):
+    """
+    P3-VS23: Author assignment to curriculum draft workspaces.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="author_assignments",
+    )
+    workspace = models.ForeignKey(
+        CurriculumDraftWorkspace,
+        on_delete=models.CASCADE,
+        related_name="assignments",
+    )
+    author_id = models.UUIDField(null=True, blank=True)
+    assigned_role = models.CharField(
+        max_length=32,
+        choices=AuthorAssignmentRole.choices,
+        default=AuthorAssignmentRole.PRIMARY_AUTHOR,
+    )
+    assigned_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_authorassignment"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_authorassignment_tenant_id",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "workspace", "author_id"],
+                name="uq_authorassignment_workspace_author",
+            ),
+            models.CheckConstraint(
+                condition=Q(assigned_role__in=AuthorAssignmentRole.values),
+                name="chk_authorassignment_role",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if hasattr(self, "workspace") and self.workspace is not None:
+            if str(self.workspace.tenant_id) != str(self.tenant_id):
+                raise ValidationError("CurriculumDraftWorkspace tenant mismatch.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.workspace_id}:{self.author_id}:{self.assigned_role}"
+
+
+class ChangeApprovalRecord(models.Model):
+    """
+    P3-VS23: Cryptographically hashed immutable audit trail of content change set approvals.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="change_approval_records",
+    )
+    change_set = models.ForeignKey(
+        ContentChangeSet,
+        on_delete=models.RESTRICT,
+        related_name="approvals",
+    )
+    approver_id = models.UUIDField(null=True, blank=True)
+    approval_verdict = models.CharField(
+        max_length=32,
+        choices=ChangeApprovalVerdict.choices,
+    )
+    approval_hash = models.CharField(max_length=64)
+    justification = models.TextField(default="", blank=True)
+    approved_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_changeapprovalrecord"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_changeapprovalrecord_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(approval_verdict__in=ChangeApprovalVerdict.values),
+                name="chk_changeapproval_verdict",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "change_set"], name="idx_changeappr_t_cs"),
+            models.Index(fields=["tenant", "approver_id"], name="idx_changeappr_t_a"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if hasattr(self, "change_set") and self.change_set is not None:
+            if str(self.change_set.tenant_id) != str(self.tenant_id):
+                raise ValidationError("ContentChangeSet tenant mismatch.")
+        _validate_pii_text_field(self.justification, "justification", 3000)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.change_set_id}:{self.approval_verdict}"
+
+
+# -----------------------------------------------------------------------------
+# 2. P3-VS24: LEARNING ASSESSMENT BLUEPRINT & RUBRIC GOVERNANCE
+# -----------------------------------------------------------------------------
+
+class AssessmentBlueprint(models.Model):
+    """
+    P3-VS24: Course-level assessment blueprint defining evaluation architecture.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="assessment_blueprints",
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.RESTRICT,
+        related_name="assessment_blueprints",
+    )
+    blueprint_title = models.CharField(max_length=255)
+    version_tag = models.CharField(max_length=32, default="v1.0")
+    status = models.CharField(
+        max_length=32,
+        choices=AssessmentBlueprintStatus.choices,
+        default=AssessmentBlueprintStatus.ACTIVE,
+    )
+    pedagogical_intent = models.TextField(default="", blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_assessmentblueprint"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_assessmentblueprint_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=AssessmentBlueprintStatus.values),
+                name="chk_assessmentblueprint_status",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "course", "status"], name="idx_assessbp_t_c_s"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if hasattr(self, "course") and self.course is not None:
+            if str(self.course.tenant_id) != str(self.tenant_id):
+                raise ValidationError("Course tenant mismatch.")
+        _validate_pii_text_field(self.pedagogical_intent, "pedagogical_intent", 4000)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.blueprint_title}:{self.version_tag}"
+
+
+class LearningObjectiveMapping(models.Model):
+    """
+    P3-VS24: Objective alignment mapping to Bloom's taxonomy and weight.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="learning_objective_mappings",
+    )
+    blueprint = models.ForeignKey(
+        AssessmentBlueprint,
+        on_delete=models.CASCADE,
+        related_name="objective_mappings",
+    )
+    objective_code = models.CharField(max_length=64)
+    title = models.CharField(max_length=255)
+    bloom_taxonomy_level = models.CharField(
+        max_length=32,
+        choices=BloomTaxonomyLevel.choices,
+        default=BloomTaxonomyLevel.APPLY,
+    )
+    weight_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=10.00)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_learningobjectivemapping"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_learningobjectivemapping_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(weight_percentage__gt=0) & Q(weight_percentage__lte=100.00),
+                name="chk_objectivemapping_weight",
+            ),
+            models.CheckConstraint(
+                condition=Q(bloom_taxonomy_level__in=BloomTaxonomyLevel.values),
+                name="chk_objectivemapping_taxonomy",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if hasattr(self, "blueprint") and self.blueprint is not None:
+            if str(self.blueprint.tenant_id) != str(self.tenant_id):
+                raise ValidationError("AssessmentBlueprint tenant mismatch.")
+        _validate_pii_text_field(self.title, "title", 255)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.objective_code}:{self.bloom_taxonomy_level}"
+
+
+class RubricDefinition(models.Model):
+    """
+    P3-VS24: Pure qualitative evaluation standards with strict anti-ranking invariant.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="rubric_definitions",
+    )
+    blueprint = models.ForeignKey(
+        AssessmentBlueprint,
+        on_delete=models.RESTRICT,
+        related_name="rubrics",
+    )
+    rubric_title = models.CharField(max_length=255)
+    scale_type = models.CharField(max_length=32, default="QUALITATIVE_STANDARD")
+    status = models.CharField(
+        max_length=32,
+        choices=RubricDefinitionStatus.choices,
+        default=RubricDefinitionStatus.DRAFT,
+    )
+    is_anti_ranking_compliant = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_rubricdefinition"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_rubricdefinition_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=RubricDefinitionStatus.values),
+                name="chk_rubricdefinition_status",
+            ),
+            models.CheckConstraint(
+                condition=Q(is_anti_ranking_compliant=True),
+                name="chk_rubric_anti_ranking",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "blueprint", "status"], name="idx_rubricdef_t_bp_s"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if hasattr(self, "blueprint") and self.blueprint is not None:
+            if str(self.blueprint.tenant_id) != str(self.tenant_id):
+                raise ValidationError("AssessmentBlueprint tenant mismatch.")
+        if not self.is_anti_ranking_compliant:
+            raise ValidationError("RubricDefinition must enforce is_anti_ranking_compliant=True.")
+        _validate_pii_text_field(self.rubric_title, "rubric_title", 255)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.rubric_title}:{self.status}"
+
+
+class RubricCriterion(models.Model):
+    """
+    P3-VS24: Granular evaluation criterion with qualitative mastery levels.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="rubric_criteria",
+    )
+    rubric = models.ForeignKey(
+        RubricDefinition,
+        on_delete=models.CASCADE,
+        related_name="criteria",
+    )
+    criterion_title = models.CharField(max_length=255)
+    description = models.TextField(default="", blank=True)
+    weight_percentage = models.DecimalField(max_digits=5, decimal_places=2)
+    evaluation_levels = models.JSONField(default=list, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_rubriccriterion"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_rubriccriterion_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(weight_percentage__gt=0) & Q(weight_percentage__lte=100.00),
+                name="chk_rubriccriterion_weight",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if hasattr(self, "rubric") and self.rubric is not None:
+            if str(self.rubric.tenant_id) != str(self.tenant_id):
+                raise ValidationError("RubricDefinition tenant mismatch.")
+        _validate_pii_text_field(self.description, "description", 4000)
+        if not isinstance(self.evaluation_levels, list):
+            raise ValidationError("evaluation_levels must be a list.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.criterion_title}:{self.weight_percentage}%"
+
+
+class AssessmentReleaseBinding(models.Model):
+    """
+    P3-VS24: Immutable binding between CourseRelease, AssessmentBlueprint, and RubricDefinition.
+    Guarantees historical evaluation records remain permanently linked to the exact version.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="assessment_release_bindings",
+    )
+    course_release = models.ForeignKey(
+        CourseRelease,
+        on_delete=models.RESTRICT,
+        related_name="assessment_bindings",
+    )
+    blueprint = models.ForeignKey(
+        AssessmentBlueprint,
+        on_delete=models.RESTRICT,
+        related_name="release_bindings",
+    )
+    rubric = models.ForeignKey(
+        RubricDefinition,
+        on_delete=models.RESTRICT,
+        related_name="release_bindings",
+    )
+    is_authoritative = models.BooleanField(default=True)
+    bound_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_assessmentreleasebinding"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_assessmentreleasebinding_tenant_id",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "course_release", "blueprint"],
+                name="uq_binding_release_blueprint",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if hasattr(self, "course_release") and self.course_release is not None:
+            if str(self.course_release.tenant_id) != str(self.tenant_id):
+                raise ValidationError("CourseRelease tenant mismatch.")
+        if hasattr(self, "blueprint") and self.blueprint is not None:
+            if str(self.blueprint.tenant_id) != str(self.tenant_id):
+                raise ValidationError("AssessmentBlueprint tenant mismatch.")
+        if hasattr(self, "rubric") and self.rubric is not None:
+            if str(self.rubric.tenant_id) != str(self.tenant_id):
+                raise ValidationError("RubricDefinition tenant mismatch.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.course_release_id}:{self.blueprint_id}"
+
+
+class RubricReviewRecord(models.Model):
+    """
+    P3-VS24: Immutable audit trail of pedagogical rubric reviews.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="rubric_review_records",
+    )
+    rubric = models.ForeignKey(
+        RubricDefinition,
+        on_delete=models.RESTRICT,
+        related_name="reviews",
+    )
+    reviewer_id = models.UUIDField(null=True, blank=True)
+    verdict = models.CharField(
+        max_length=32,
+        choices=RubricReviewVerdict.choices,
+    )
+    pedagogical_notes = models.TextField(default="", blank=True)
+    reviewed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_rubricreviewrecord"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_rubricreviewrecord_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(verdict__in=RubricReviewVerdict.values),
+                name="chk_rubricreview_verdict",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "rubric"], name="idx_rubricrev_t_r"),
+            models.Index(fields=["tenant", "reviewer_id"], name="idx_rubricrev_t_rev"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if hasattr(self, "rubric") and self.rubric is not None:
+            if str(self.rubric.tenant_id) != str(self.tenant_id):
+                raise ValidationError("RubricDefinition tenant mismatch.")
+        _validate_pii_text_field(self.pedagogical_notes, "pedagogical_notes", 3000)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.rubric_id}:{self.verdict}"
+
+
+# -----------------------------------------------------------------------------
+# 3. P3-VS25: RELEASE READINESS, CHANGE IMPACT & PROGRAM ROLLFORWARD
+# -----------------------------------------------------------------------------
+
+class CurriculumChangeImpact(models.Model):
+    """
+    P3-VS25: Immutable record of curriculum version change impact analysis.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="curriculum_change_impacts",
+    )
+    source_version = models.ForeignKey(
+        CurriculumVersion,
+        on_delete=models.RESTRICT,
+        related_name="source_impact_analyses",
+    )
+    target_version = models.ForeignKey(
+        CurriculumVersion,
+        on_delete=models.RESTRICT,
+        related_name="target_impact_analyses",
+    )
+    impact_level = models.CharField(
+        max_length=32,
+        choices=CurriculumChangeImpactLevel.choices,
+        default=CurriculumChangeImpactLevel.MINOR,
+    )
+    breaking_changes_detected = models.BooleanField(default=False)
+    affected_cohorts_count = models.IntegerField(default=0)
+    impact_details = models.JSONField(default=dict, blank=True)
+    analyzed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_curriculumchangeimpact"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_curriculumchangeimpact_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(impact_level__in=CurriculumChangeImpactLevel.values),
+                name="chk_changeimpact_level",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if hasattr(self, "source_version") and self.source_version is not None:
+            if str(self.source_version.tenant_id) != str(self.tenant_id):
+                raise ValidationError("Source CurriculumVersion tenant mismatch.")
+        if hasattr(self, "target_version") and self.target_version is not None:
+            if str(self.target_version.tenant_id) != str(self.tenant_id):
+                raise ValidationError("Target CurriculumVersion tenant mismatch.")
+        _validate_pii_jsonb_field(self.impact_details, "impact_details")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.source_version_id}->{self.target_version_id}:{self.impact_level}"
+
+
+class ReleaseReadinessCheck(models.Model):
+    """
+    P3-VS25: Automated readiness checks evaluated on a curriculum version.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="release_readiness_checks",
+    )
+    curriculum_version = models.ForeignKey(
+        CurriculumVersion,
+        on_delete=models.CASCADE,
+        related_name="readiness_checks",
+    )
+    check_name = models.CharField(max_length=128)
+    category = models.CharField(max_length=64, default="EDITORIAL")
+    status = models.CharField(
+        max_length=32,
+        choices=ReleaseReadinessStatus.choices,
+        default=ReleaseReadinessStatus.PENDING,
+    )
+    check_output = models.TextField(default="", blank=True)
+    evaluated_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_releasereadinesscheck"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_releasereadinesscheck_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=ReleaseReadinessStatus.values),
+                name="chk_readinesscheck_status",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if hasattr(self, "curriculum_version") and self.curriculum_version is not None:
+            if str(self.curriculum_version.tenant_id) != str(self.tenant_id):
+                raise ValidationError("CurriculumVersion tenant mismatch.")
+        _validate_pii_text_field(self.check_output, "check_output", 4000)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.curriculum_version_id}:{self.check_name}:{self.status}"
+
+
+class ReleaseReadinessGate(models.Model):
+    """
+    P3-VS25: Policy enforcement gate controlling progression of release to deployment.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="release_readiness_gates",
+    )
+    curriculum_version = models.ForeignKey(
+        CurriculumVersion,
+        on_delete=models.CASCADE,
+        related_name="readiness_gates",
+    )
+    gate_name = models.CharField(max_length=128)
+    is_blocking = models.BooleanField(default=True)
+    verdict = models.CharField(
+        max_length=32,
+        choices=ReleaseReadinessStatus.choices,
+        default=ReleaseReadinessStatus.PENDING,
+    )
+    evaluated_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_releasereadinessgate"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_releasereadinessgate_tenant_id",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "curriculum_version", "gate_name"],
+                name="uq_gate_version_name",
+            ),
+            models.CheckConstraint(
+                condition=Q(verdict__in=ReleaseReadinessStatus.values),
+                name="chk_readinessgate_verdict",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if hasattr(self, "curriculum_version") and self.curriculum_version is not None:
+            if str(self.curriculum_version.tenant_id) != str(self.tenant_id):
+                raise ValidationError("CurriculumVersion tenant mismatch.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.curriculum_version_id}:{self.gate_name}:{self.verdict}"
+
+
+class CohortRollforwardPlan(models.Model):
+    """
+    P3-VS25: Forward-looking cohort migration plan preventing silent historical rebind.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="cohort_rollforward_plans",
+    )
+    cohort_schedule = models.ForeignKey(
+        CohortSchedule,
+        on_delete=models.RESTRICT,
+        related_name="rollforward_plans",
+    )
+    target_release = models.ForeignKey(
+        CourseRelease,
+        on_delete=models.RESTRICT,
+        related_name="rollforward_plans",
+    )
+    rollforward_mode = models.CharField(
+        max_length=32,
+        choices=CohortRollforwardMode.choices,
+        default=CohortRollforwardMode.FUTURE_MODULES_ONLY,
+    )
+    status = models.CharField(
+        max_length=32,
+        choices=CohortRollforwardStatus.choices,
+        default=CohortRollforwardStatus.DRAFT,
+    )
+    scheduled_effective_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_cohortrollforwardplan"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_cohortrollforwardplan_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(rollforward_mode__in=CohortRollforwardMode.values),
+                name="chk_cohortrollforward_mode",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=CohortRollforwardStatus.values),
+                name="chk_cohortrollforward_status",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if hasattr(self, "cohort_schedule") and self.cohort_schedule is not None:
+            if str(self.cohort_schedule.tenant_id) != str(self.tenant_id):
+                raise ValidationError("CohortSchedule tenant mismatch.")
+        if hasattr(self, "target_release") and self.target_release is not None:
+            if str(self.target_release.tenant_id) != str(self.tenant_id):
+                raise ValidationError("Target CourseRelease tenant mismatch.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.cohort_schedule_id}->{self.target_release_id}:{self.status}"
+
+
+class CurriculumMigrationDecision(models.Model):
+    """
+    P3-VS25: Formal transition decision authorizing or halting rollforward execution.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="curriculum_migration_decisions",
+    )
+    plan = models.ForeignKey(
+        CohortRollforwardPlan,
+        on_delete=models.RESTRICT,
+        related_name="migration_decisions",
+    )
+    decided_by_id = models.UUIDField(null=True, blank=True)
+    decision = models.CharField(
+        max_length=32,
+        choices=CurriculumMigrationDecisionChoice.choices,
+    )
+    justification = models.TextField(default="", blank=True)
+    decided_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_curriculummigrationdecision"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_curriculummigrationdecision_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(decision__in=CurriculumMigrationDecisionChoice.values),
+                name="chk_migrationdecision_decision",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "plan"], name="idx_migdecision_t_p"),
+            models.Index(fields=["tenant", "decided_by_id"], name="idx_migdecision_t_d"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if hasattr(self, "plan") and self.plan is not None:
+            if str(self.plan.tenant_id) != str(self.tenant_id):
+                raise ValidationError("CohortRollforwardPlan tenant mismatch.")
+        _validate_pii_text_field(self.justification, "justification", 3000)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.plan_id}:{self.decision}"
+
+
+class ReleaseExceptionRecord(models.Model):
+    """
+    P3-VS25: Immutable audit record of granted readiness gate waivers.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="release_exception_records",
+    )
+    gate = models.ForeignKey(
+        ReleaseReadinessGate,
+        on_delete=models.RESTRICT,
+        related_name="exceptions",
+    )
+    granted_by_id = models.UUIDField(null=True, blank=True)
+    exception_reason = models.TextField()
+    granted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_releaseexceptionrecord"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_releaseexceptionrecord_tenant_id",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "gate"], name="idx_relexcept_t_g"),
+            models.Index(fields=["tenant", "granted_by_id"], name="idx_relexcept_t_grantor"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if hasattr(self, "gate") and self.gate is not None:
+            if str(self.gate.tenant_id) != str(self.tenant_id):
+                raise ValidationError("ReleaseReadinessGate tenant mismatch.")
+        if len(self.exception_reason.strip()) < 10:
+            raise ValidationError("exception_reason must be at least 10 characters.")
+        _validate_pii_text_field(self.exception_reason, "exception_reason", 3000)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.gate_id}:{self.granted_by_id}"

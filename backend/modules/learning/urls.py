@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import authoring_views, views
 from .views import (
     AdminLearningCurriculumView,
     AdminLearningTransitionView,
@@ -478,5 +478,88 @@ urlpatterns = [
         views.MentorProgramAnalyticsView.as_view(),
         name="learning-mentor-program-analytics-refresh",
     ),
-]
 
+    # Phase 3 Macro Epic 20-22 Curriculum Delivery & Program Operations
+    path(
+        "curriculum/versions/",
+        views.CurriculumVersionListCreateView.as_view(),
+        name="learning-curriculum-versions",
+    ),
+    path(
+        "curriculum/versions/<uuid:version_id>/publish/",
+        views.CurriculumVersionPublishView.as_view(),
+        name="learning-curriculum-version-publish",
+    ),
+    path(
+        "cohorts/<uuid:cohort_id>/schedules/",
+        views.CohortScheduleListCreateView.as_view(),
+        name="learning-cohort-schedules",
+    ),
+    path(
+        "sessions/<uuid:session_id>/reschedule/",
+        views.LearningSessionRescheduleView.as_view(),
+        name="learning-session-reschedule",
+    ),
+    path(
+        "operations/delivery-overview/",
+        views.ProgramDeliveryOverviewView.as_view(),
+        name="learning-delivery-overview",
+    ),
+    path(
+        "operations/exceptions/",
+        views.DeliveryExceptionQueueView.as_view(),
+        name="learning-delivery-exceptions",
+    ),
+
+    # Phase 3 Macro Epic 23-25 Curriculum Authoring, Quality & Release Operations
+    path(
+        "authoring/workspaces/",
+        authoring_views.CurriculumDraftWorkspaceView.as_view(),
+        name="learning-authoring-workspaces",
+    ),
+    path(
+        "authoring/changesets/",
+        authoring_views.ContentChangeSetView.as_view(),
+        name="learning-authoring-changesets",
+    ),
+    path(
+        "authoring/changesets/<uuid:pk>/submit/",
+        authoring_views.SubmitChangeSetView.as_view(),
+        name="learning-authoring-changeset-submit",
+    ),
+    path(
+        "authoring/changesets/<uuid:pk>/decision/",
+        authoring_views.EditorialDecisionView.as_view(),
+        name="learning-authoring-changeset-decision",
+    ),
+    path(
+        "authoring/blueprints/",
+        authoring_views.AssessmentBlueprintView.as_view(),
+        name="learning-authoring-blueprints",
+    ),
+    path(
+        "authoring/rubrics/",
+        authoring_views.RubricDefinitionView.as_view(),
+        name="learning-authoring-rubrics",
+    ),
+    path(
+        "authoring/bindings/",
+        authoring_views.AssessmentReleaseBindingView.as_view(),
+        name="learning-authoring-bindings",
+    ),
+    path(
+        "readiness/versions/<uuid:version_id>/evaluate/",
+        authoring_views.ReleaseReadinessEvaluateView.as_view(),
+        name="learning-readiness-evaluate",
+    ),
+    path(
+        "readiness/gates/<uuid:gate_id>/waive/",
+        authoring_views.ReleaseExceptionGrantView.as_view(),
+        name="learning-readiness-gate-waive",
+    ),
+    path(
+        "readiness/rollforward-plans/",
+        authoring_views.CohortRollforwardPlanView.as_view(),
+        name="learning-rollforward-plans",
+    ),
+]

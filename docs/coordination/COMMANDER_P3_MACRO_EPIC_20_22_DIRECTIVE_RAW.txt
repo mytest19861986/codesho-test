@@ -1,0 +1,460 @@
+سلام و احترام. گزارش اتمام P3-MACRO-EPIC-17-19 دریافت شد. از نظر پیاده‌سازی گزارش‌شده، بسته کلان به نقطه Closure رسیده است؛ اما برای ثبت رسمی COMPLETE_FINAL_ACCEPTED هنوز چند فیلد نهایی که در Directive قبلی اجباری بودند صریحاً در گزارش شما نیامده‌اند: QWEN_EPIC_FINAL، GLM_EPIC_FINAL، GEMINI_UI_FINAL، نتیجه واقعی N1-N33، شمار Routeهای کشف/اجراشده، UNTESTED_EXECUTABLE_ROUTES=0 و TEMP_FINAL_DIFF=NONE.
+
+برای اینکه پروژه دوباره فرسایشی نشود، پروژه را متوقف نمی‌کنم. Closure 17–19 فقط به یک Evidence Record کوتاه نیاز دارد و همزمان بسته کلان بعدی Unlock می‌شود.
+
+Edit
+
+TYPE:
+COMMANDER_MACRO_DELIVERY_CONTINUATION
+
+PROJECT:
+Codesho / SSD
+
+MODE:
+MACRO_FAST_ENTERPRISE
+
+TASK_ID:
+P3-MACRO-EPIC-17-19-MENTOR-OPERATIONS-AND-PROGRAM-SUCCESS
+
+IMPLEMENTATION_STATUS:
+TECHNICALLY_COMPLETE_REPORTED
+
+IMPLEMENTATION_COMMITS:
+
+c2dfb4e
+
+638b645
+
+FINAL_REPORT:
+docs/coordination/P3_MACRO_EPIC_17_19_FINAL_REPORT.md
+
+FINAL_ACCEPTANCE:
+PENDING_EVIDENCE_RECORD_ONLY
+
+NO_CODE_CHANGE_REQUIRED:
+TRUE
+
+NO_DISCOVERY_RERUN:
+TRUE
+
+NO_RUNTIME_RERUN:
+TRUE
+
+NO_NEW_FLEET_REVIEW_REQUIRED_IF_ALREADY_COMPLETED:
+TRUE
+
+Required closure record only:
+
+TYPE:
+P3_MACRO_EPIC_17_19_CLOSURE_RECORD
+
+N1_N33:
+PASS
+
+BACKEND_TESTS:
+<actual result>
+
+QWEN_EPIC_FINAL:
+PASS
+
+QWEN_BLOCKERS:
+0
+
+GLM_EPIC_FINAL:
+PASS
+
+GLM_BLOCKERS:
+0
+
+GEMINI_UI_FINAL:
+PASS
+
+GEMINI_UI_BLOCKERS:
+0
+
+ROUTES_DISCOVERED:
+X
+
+ROUTES_EXECUTED:
+X
+
+UNTESTED_EXECUTABLE_ROUTES:
+0
+
+ANTIGRAVITY_BROWSER:
+PASS
+
+DESKTOP:
+PASS
+
+MOBILE:
+PASS
+
+CONSOLE_ERRORS:
+0
+
+NETWORK_ERRORS:
+0
+
+CROSS_TENANT_LEAKAGE:
+0
+
+REAL_PII:
+0
+
+MANIFEST_COMPLIANCE:
+PASS
+
+TEMP_FINAL_DIFF:
+NONE
+
+OPEN_BLOCKERS:
+0
+
+If these are the actual already-obtained results:
+
+COMMANDER_P3_MACRO_EPIC_17_19_FINAL_ACCEPTANCE:
+COMPLETE_FINAL_ACCEPTED
+
+may be recorded directly.
+
+No additional Commander checkpoint is required merely to restate those existing results.
+
+COMMANDER_P3_MACRO_EPIC_20_22_DISCOVERY_UNLOCK:
+GRANTED
+
+EPIC_ID:
+P3-MACRO-EPIC-20-22-CURRICULUM-DELIVERY-AND-PROGRAM-OPERATIONS
+
+FA_TITLE:
+حاکمیت برنامه آموزشی، انتشار محتوای درسی و عملیات اجرای دوره
+
+PURPOSE:
+
+Move Codesho from learner/mentor workflow maturity toward a controlled,
+enterprise-grade curriculum delivery and program operations layer.
+
+TASK_ID:
+P3-VS20-CURRICULUM-VERSIONING-AND-RELEASE-GOVERNANCE
+
+TITLE:
+Curriculum Versioning & Release Governance
+
+PURPOSE:
+
+Introduce controlled lifecycle/versioning for educational curriculum without mutating historical learner evidence.
+
+Discovery targets:
+
+CurriculumVersion
+
+CourseRelease
+
+ModuleReleaseSnapshot
+
+LessonReleaseSnapshot
+
+ReleaseApprovalRecord
+
+curriculum release audit
+
+Required principles:
+
+DRAFT
+→ REVIEW
+→ APPROVED
+→ PUBLISHED
+→ RETIRED
+
+Hard invariants:
+
+PUBLISHED_VERSION_MUTATION:
+PROHIBITED
+
+HISTORICAL_SUBMISSION_REBIND:
+PROHIBITED
+
+SILENT_CONTENT_REPLACEMENT:
+PROHIBITED
+
+RELEASE_AUDIT:
+APPEND_ONLY
+
+Existing student evidence must continue referencing the version actually experienced.
+
+TASK_ID:
+P3-VS21-COHORT-SCHEDULE-AND-LEARNING-SESSION-ORCHESTRATION
+
+TITLE:
+Cohort Schedule & Learning Session Orchestration
+
+PURPOSE:
+
+Create the operational scheduling layer for cohort learning delivery.
+
+Discovery targets:
+
+LearningSession
+
+CohortSchedule
+
+SessionOccurrence
+
+SessionAttendanceState
+
+SessionChangeRecord
+
+Capabilities:
+
+deterministic cohort schedules
+
+reschedule/cancel lifecycle
+
+mentor assignment validation
+
+course/cohort linkage
+
+session status lifecycle
+
+notification/outbox integration
+
+synthetic attendance state where allowed
+
+Hard boundaries:
+
+NO REAL CALENDAR PROVIDER
+
+NO REAL SMS / EMAIL PROVIDER
+
+NO REAL CHILD ATTENDANCE DATA
+
+NO AUTOMATED PUNITIVE ABSENCE ACTION
+
+TASK_ID:
+P3-VS22-PROGRAM-DELIVERY-QUALITY-AND-OPERATIONS-CONTROL-CENTER
+
+TITLE:
+Program Delivery Quality & Operations Control Center
+
+PURPOSE:
+
+Provide admin/authorized program operators with operational visibility into curriculum release, cohort delivery and session health.
+
+Potential derived projections:
+
+ProgramDeliveryAggregate
+
+CurriculumReleaseCoverage
+
+CohortScheduleHealth
+
+SessionCompletionAggregate
+
+DeliveryExceptionQueue
+
+Permitted analytics:
+
+unpublished curriculum gaps
+
+schedule completeness
+
+delayed/cancelled sessions
+
+delivery coverage
+
+operational exceptions
+
+mentor/session workload
+
+Prohibited:
+
+STUDENT_RANKING:
+0
+
+STUDENT_RISK_SCORE:
+0
+
+PSYCHOLOGICAL_PROFILING:
+0
+
+BEHAVIORAL_SCORING:
+0
+
+AUTOMATED_HIGH_STAKES_ACTION:
+0
+
+Canonical flow:
+
+Curriculum Source
+↓
+Immutable Release Version
+↓
+Cohort Delivery Schedule
+↓
+Learning Session
+↓
+Operational Events
+↓
+Derived Program Delivery Projection
+
+Historical learner evidence must never silently migrate to a newer curriculum release.
+
+Create ONE combined package:
+
+docs/architecture/P3_MACRO_EPIC_20_22_BOUNDARY_PLAN.md
+
+docs/architecture/p3_macro_epic_20_22_schema_ddl.sql
+
+docs/coordination/P3_MACRO_EPIC_20_22_WRITE_MANIFEST.md
+
+docs/coordination/P3_MACRO_EPIC_20_22_DISCOVERY_DOSSIER.md
+
+Discovery should cover all three VSs together.
+
+Run in parallel.
+
+QWEN:
+
+release lifecycle
+
+curriculum version invariants
+
+schedule/session FSM
+
+historical evidence integrity
+
+idempotency
+
+domain boundaries
+
+GLM:
+
+PostgreSQL 17
+
+RLS/FORCE RLS/NOBYPASSRLS
+
+composite FKs
+
+immutable version topology
+
+append-only audits
+
+concurrency
+
+release uniqueness
+
+tenant isolation
+
+Gemini:
+
+curriculum/program operator UX
+
+scheduling UX
+
+mentor operational UX
+
+RTL/BiDi
+
+WCAG 2.2 AA
+
+responsive desktop/mobile
+
+cognitive load
+
+visual hierarchy
+
+Use:
+
+temp/fleet_exchange/P3-MACRO-EPIC-20-22/qwen/
+
+temp/fleet_exchange/P3-MACRO-EPIC-20-22/glm/
+
+temp/fleet_exchange/P3-MACRO-EPIC-20-22/gemini/
+
+Required:
+
+SCRUB
+→ COMMIT
+→ PUSH
+→ COMMIT-SHA RAW URL
+→ COMMANDER TRANSFER PRECHECK
+→ PARALLEL DISPATCH
+
+Do NOT return with:
+
+VS20 discovery separately
+VS21 discovery separately
+VS22 discovery separately
+
+Next routine Commander checkpoint:
+
+TYPE:
+P3_MACRO_EPIC_20_22_DISCOVERY_AND_RUNTIME_UNLOCK_REQUEST
+
+After Runtime unlock:
+
+implement VS20 + VS21 + VS22 as one integrated package.
+
+FORCE_RLS:
+REQUIRED
+
+NOBYPASSRLS:
+REQUIRED
+
+ZERO_BARE_UUID:
+REQUIRED
+
+ZERO_REAL_PII:
+REQUIRED
+
+FAIL_CLOSED_TENANT:
+REQUIRED
+
+APPEND_ONLY_AUDIT:
+REQUIRED
+
+HISTORICAL_EVIDENCE_IMMUTABILITY:
+REQUIRED
+
+ANTIGRAVITY_UI_GATE:
+REQUIRED
+
+GEMINI_FINAL_UI_PASS:
+REQUIRED
+
+Still prohibited:
+
+real child data
+
+real guardian onboarding
+
+payment
+
+production providers
+
+production deployment
+
+autonomous AI mentor
+
+RAG runtime
+
+high-stakes automated student decisions
+
+P3-MACRO-EPIC-17-19:
+PENDING_SHORT_CLOSURE_RECORD
+
+P3-MACRO-EPIC-20-22:
+DISCOVERY_UNLOCKED
+
+PARALLEL_PROGRESS:
+AUTHORIZED
+
+MICRO_SLICE_MODE:
+DISABLED
+
+NEXT_ROUTINE_COMMANDER_CHECKPOINT:
+P3_MACRO_EPIC_20_22_DISCOVERY_AND_RUNTIME_UNLOCK_REQUEST
+
+END_DIRECTIVE
+
+پس از اینجا Codex نباید برای VS20، VS21 و VS22 جداگانه گزارش بیاورد. یک Discovery بزرگ، یک Fleet Review موازی، یک Runtime Unlock و سپس یک پیاده‌سازی یکپارچه انجام شود. این همان مدل بزرگ‌گامی است که برای کم‌کردن فرسایش پروژه تعیین کردیم.

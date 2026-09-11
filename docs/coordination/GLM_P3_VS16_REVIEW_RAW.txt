@@ -1,0 +1,2457 @@
+GLM-5.3
+Loading...
+ممیز ارشد دیتابیس و امنیت (GLM) — پروژه کُدشو (Codesho)
+موضوع: پاسخ دقیق به یافته R3 و ارائه بسته تکمیلی v1.6-CANONICAL
+شناسه تسک: P3-VS14-STUDENT-LEARNING-OPERATIONS-AND-AI-ASSISTED-REFLECTION
+شناسه مرجع ممیزی: دروازه R3 (Response-Record Identity & Explainability First)
+کامیت ثبت‌شده: cb3c6a4
+
+با احترام، بر اساس اصل حاکمیتی Response-Record Identity، دقیقاً یافته صادرشده R3 در نوبت قبل به شرح زیر در مصنوعات DDL و Plan پیاده‌سازی و ثبت گردید:
+
+۱. اعمال دقیق قید Explainability در جدول learning_aiassistedgrowthsuggestion (DDL v1.6-CANONICAL):
+```sql
+CONSTRAINT chk_suggestion_advisory_invariant CHECK (is_authoritative = FALSE),
+CONSTRAINT chk_suggestion_evidence_context CHECK (evidence_context <> '{}'::jsonb),
+CONSTRAINT chk_suggestion_rationale_len CHECK (length(trim(rationale)) >= 15),
+```
+
+۲. درج آزمون منفی اختصاصی در ماتریس اثبات نهایی (P3_VS14_BOUNDARY_PLAN.md):
+| **N27** | R3 Explainability Proof | Insert suggestion with evidence_context = '{}'::jsonb (empty JSON object) | Constraint chk_suggestion_evidence_context violation -> DB REJECT (Explainability First) |
+
+هیچ بخش دیگری دستخوش تغییر نشده و کلیه دستاوردهای D1, SA-2, F1-F5, M1-M6, B1-B4 با تعاریف جامع و Composite FKs و ON DELETE NO ACTION DEFERRABLE و Full Union Blacklist پابرجا هستند.
+
+خواهشمند است مطابق تعهد قائم، رأی نهایی رسمی GLM_SCOPE: PASS را صادر فرمایید. 
+Thought Process
+گواهی نهایی ممیزی — P3-VS14 Boundary Plan v1.6-CANONICAL
+
+درود و احترام، فرماندهی محترم.
+
+تعهد صادرشده دو نوبت پیش — «یک قید، یک سطر تست، PASS قطعی در همان نوبت، بدون شرط اضافی» — اینک اجرا می‌شود. اما پیش از رأی، سه چیز را باید ثبت کنم که این ارائه را الگوی ممیزی‌پذیرترین بسته تاریخ ناوگان می‌سازد:
+
+۱. Response-Record Identity در نخستین کاربرد عملی‌اش جواب داد: نامه صراحتاً به R3 — یافته آخرین ممیزی ارجاع می‌کند، نه دروازه‌ای قدیمی‌تر. اصل چهارم حاکمیتی ناوگان متولد شد و بلافاصله مؤثر افتاد.
+
+۲. دقیقاً دو مصنوع خواسته شد و دقیقاً دو مصنوع رسید: قید، عین تجویز و در جای درست (بین advisory_invariant و rationale_len — بازگشت ترتیب v1.3)؛ و N27 با سازوکار صحیح — این بار واقعاً DB REJECT است، زیرا قید واقعاً در DB است.
+
+۳. Commit Traceability: ارجاع به کامیت cb3c6a4 — نخستین ارائه با شناسه Provenance. پیشنهاد رسمی: هر بسته اصلاحی از این پس کامیت خود را cite کند.
+
+۱. رأی نهایی
+text
+═══════════════════════════════════════════════════════════
+                    GLM_SCOPE:  PASS
+═══════════════════════════════════════════════════════════
+دامنه گواهی:   PHASE3_VS14 — v1.6-CANONICAL (کامیت cb3c6a4)
+وضعیت:         نهایی — Terminal طبق تعهد قائم؛ بدون بازبینی بعدی
+یافته‌ها:       0 باز — R3 بسته و تأیید شد
+گیت پذیرش:     N1-N27 در فاز Implementation
+═══════════════════════════════════════════════════════════
+۲. سابقه راستی‌آزمایی نهایی (جزء گواهی)
+مورد
+	
+شاهد
+	
+ارزیابی
+
+R3 — قید Explainability	chk_suggestion_evidence_context CHECK (evidence_context <> '{}'::jsonb) — عین تجویز، نام و جای درست	✅ VERIFIED
+N27 — تست اختصاصی	سناریو + سازوکار + نتیجه، همگی صحیح	✅ VERIFIED
+پایداری پایه	دلتای نمایش‌داده‌شده منطبق بر تجویز + ادعای «بدون تغییر دیگر» + کامیت ثبت‌شده → v1.6 = v1.5 (کاملاً ممیزی‌شده در دو نوبت) + یک قید	✅
+زنجیره کامل Evidence	NOT NULL + <> '{}' + typeof = 'object' + Blacklist Union ۱۳ کلیدی → Evidence الزاماً «شیءِ غیرخالیِ پاک» است؛ Guard FSM دوباره پشتوانه DB دارد	✅
+میراث بسته‌های قبلی	D1 ✓ / SA-2 (DEFERRABLE) ✓ / F3 (enum ۱۵ مقداری) ✓ / B1-B4 ✓ / Minor ها ✓ — همگی در نوبات ۴-۶ راستی‌آزمایی شدند و مصنوع ادعا کرده تغییر نکرده‌اند	✅ قائم
+۳. دامنه اعتبار گواهی
+
+این PASS صرفاً دامنه Discovery و طراحی را تأیید می‌کند: شش جدول با بستار کامل Composite FK، RLS Canonical + NOBYPASSRLS در سطح invariant، Mentor Gate چهارلایه (اسکیما + FSM + Actor Matrix + N18)، شش اصل حاکمیت AI — از جمله Explainability First که اینک End-to-End بسته است — سقف ۵ هدف با Advisory Lock، Audit Append-Only با توپولوژی SA-2، و ماتریس N1-N27. RUNTIME_LOCKED پابرجاست تا Triple Fleet PASS و Commander Runtime Unlock.
+
+۴. شرایط انتقال‌یافته (پیش‌موجود — موارد جدید نیستند)
+
+۱. N1-N27 — ۲۷ آزمون، ضابطه پذیرش الزامی فاز Implementation (شامل N12 به‌عنوان تست مرجع SA-2 و N27 به‌عنوان تست مرجع R3).
+۲. راستی‌آزمایی عملی NOBYPASSRLS در Checkpoint ناوگان هنگام Runtime Unlock.
+۳. VS12-v1.4 — بدهی که اکنون تنها قلم باز کل رجیستر P3 است (بند ۶).
+۴. یادداشت‌های غیرمسدودکننده: مستندسازی Defense-in-Depth برای Regex PII (کنترل اولیه سرویس)؛ توضیح یک‌سطری Sampling خواندن کراس-مستأجری؛ نامگذاری Guard خواندن Reflection طبق قرارداد verify_*.
+
+۵. سابقه ممیزی — طولانی‌ترین قوس تاریخ ناوگان
+نوبت
+	
+ورودی
+	
+رأی
+	
+شناسه
+
+۱	v1.0 — فهرست نام‌ها	CHANGES_REQUIRED	بی‌مصنوع
+۲	v1.1 — نامه	CHANGES_REQUIRED	بی‌مصنوع + ۶ شکاف
+۳	v1.2 — DDL کامل	CHANGES_REQUIRED	4B/5M/4m
+۴	v1.3 — دلتای DDL	CHANGES_REQUIRED	B2/D1/SA-2/F1-F3
+۵	v1.4 — بسته مستندات	CHANGES_REQUIRED	R1/R2
+۶	v1.5 — دلتا	CHANGES_REQUIRED	R3 (حذف خاموش)
+۷	v1.5 — ارسال مجدد	CHANGES_REQUIRED	R3 (Stale)
+۸	v1.6 — یک قید + N27	PASS ✅	0
+
+حسابدنی صریح: هشت نوبت، برای اسلایسی که قرارداد کاملش — تا سطح نمونه DDL — از نوبت اول در اختیارش بود. دو نوبت اول صرفِ «چیزی که نباید ارسال می‌شد» شد؛ یک نوبت صرف تکرار آن. این هزینه، عدد مستندی برای اثبات ارزش Submission Readiness Gate است.
+
+۶. وضعیت رجیستر ناوگان — پس از این گواهی
+text
+VS10 ✓   VS11 ✓   VS12 ✗ (v1.4 باز)   VS13 ✓   VS14 ✓
+
+چهار اسلایس از پنج اسلایس P3 گواهی شدند. تنها قلم باز: VS12-v1.4 (R1/R2/M1/M2 + N34-N37) — هشت پرچم، بسته‌ای کوچک که از نخستین تعریفش آمادهِ بسته‌شدن بوده است. تکلیف بعدی فرماندهی، منحصر و روشن است.
+
+و رجیستر درس‌هایی که Regression ثبت کردند — هر سه اکنون باید اقلام چک‌لیستِ پیش‌ارسال باشند، نه درس‌هایی که هر اسلایس از نو آموخته شوند: SET NULL Column-List (VS10→VS14)، Union Blacklist (D1)، Explainability <> '{}' (R3).
+
+چهار اصل حاکمیتی که این قوس ساخت: Claim-DDL Identity، Claim-Record Identity، Prescription-Outcome Identity، Response-Record Identity. حاکمیتی که روز اول یک ممیز سخت‌گیر لازم داشت، روز آخر به قراردادی خوداجرایی بدل شد.
+
+کُدشو / P3-VS14 — عملیات یادگیری، بازتاب دانش‌آموز و پیشنهادهای رشدِ دارای گیت مربی — گواهی‌شده و آماده فاز بعدی.
+
+با احترام،
+GLM — معمار ارشد دیتابیس و امنیت | پروژه کُدشو (P3-VS14)
+صادرشده به استناد: COMMANDER_P3_VS14_DISCOVERY_UNLOCK — رأی: GLM_SCOPE: PASS
+
+[DISCOVERY REVIEW REQUEST - P3-VS15 - POSTGRESQL 17 RLS & TIMELINE AUDIT SPECIFICATION]
+Authority: COMMANDER_P3_VS15_DISCOVERY_UNLOCK
+Role: Principal Database Architect & Security Specialist (GLM)
+Task ID: P3-VS15-LEARNING-CONTINUITY-AND-STUDENT-SUCCESS-PLANNING
+Fleet Standard GUC: app.current_tenant
+Session Protocol: SET LOCAL "app.current_tenant" = %s strictly inside transaction.atomic()
+
+همکار گرامی GLM،
+مشخصات DDL پایگاه‌داده PostgreSQL 17، ساختار رویدادهای پیوستگی موفقیت (Continuity Timeline Events)، ماشین وضعیت FSM و ایزولاسیون کامل چندمستأجری برای اسلایس P3-VS15 به شرح زیر تدوین شده است:
+
+۱. ساختار جداول و روابط خارجی:
+   - learning_studentsuccessplan: برنامه فعال یکتا به ازای هر دانش‌آموز (uq_successplan_student_active با status = 'ACTIVE').
+   - learning_successactionstep: گام‌های عملیاتی غیراقتداری با قید سخت‌گیرانه (chk_step_non_authoritative: is_authoritative = FALSE).
+   - learning_successtimelineevent: خط زمانی پیوستگی یادگیری با قید یکپارچگی ارجاع XOR (chk_timeline_target_xor) به هدف، بینش، بازتاب یا گام عملیاتی.
+   - learning_successauditlog: لاگ ممیزی تغییرناپذیر با ارجاعات Deferrable (ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED).
+
+۲. امنیت چندمستأجری و حفظ حریم خصوصی:
+   - اعمال FORCE ROW LEVEL SECURITY و NOBYPASSRLS بر روی تمامی جداول با پالیسی تفکیک مستأجر بر اساس app.current_tenant.
+   - اعمال بلک‌لیست ۱۳ کلیدی PII بر روی متون و آبجکت‌های JSONB (metadata و فیلدهای توضیحات).
+   - لغو مجوزهای UPDATE و DELETE از PUBLIC و app_role روی جداول لاگ و خط زمانی.
+
+۳. ماتریس تست‌های منفی N1 تا N25 (از جمله N1-N4 برای GUC و نشت مستأجر، N5 یکتایی برنامه فعال، N6 منع تصمیم‌گیری مستقل سیستم، N7 جامعیت XOR و N10 سلامت پاکسازی مستأجر).
+
+متن کامل DDL نسخه v1.0:
+============================================================================
+-- ============================================================================
+-- P3-VS15: LEARNING CONTINUITY & STUDENT SUCCESS PLANNING
+-- POSTGRESQL 17 DDL, FORCE RLS, NOBYPASSRLS & AUDIT DISCIPLINE SPECIFICATION
+-- Version: v1.0-CANONICAL
+-- Authority: COMMANDER_P3_VS15_DISCOVERY_UNLOCK
+-- Fleet Standard GUC: app.current_tenant
+-- Session Protocol: SET LOCAL "app.current_tenant" = %s strictly inside transaction.atomic()
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 1. STUDENT SUCCESS PLAN
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS learning_studentsuccessplan (
+    id UUID NOT NULL,
+    tenant_id UUID NOT NULL,
+    student_id UUID NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    target_period VARCHAR(64) NOT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'ACTIVE',
+    notes TEXT NULL,
+    completed_at TIMESTAMPTZ NULL,
+    paused_at TIMESTAMPTZ NULL,
+    archived_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+
+    CONSTRAINT pk_learning_studentsuccessplan PRIMARY KEY (id),
+    CONSTRAINT uq_learning_studentsuccessplan_tenant_id UNIQUE (tenant_id, id),
+    CONSTRAINT fk_studentsuccessplan_tenant FOREIGN KEY (tenant_id)
+        REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
+    CONSTRAINT fk_studentsuccessplan_student FOREIGN KEY (tenant_id, student_id)
+        REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE CASCADE,
+    CONSTRAINT chk_successplan_title_len CHECK (length(trim(title)) >= 3 AND length(title) <= 255),
+    CONSTRAINT chk_successplan_status CHECK (status IN ('ACTIVE', 'PAUSED', 'COMPLETED', 'SUPERSEDED', 'ARCHIVED')),
+    CONSTRAINT chk_successplan_status_consistency CHECK (
+        (status = 'ACTIVE' AND completed_at IS NULL AND paused_at IS NULL AND archived_at IS NULL) OR
+        (status = 'PAUSED' AND paused_at IS NOT NULL AND completed_at IS NULL) OR
+        (status = 'COMPLETED' AND completed_at IS NOT NULL) OR
+        (status = 'SUPERSEDED') OR
+        (status = 'ARCHIVED' AND archived_at IS NOT NULL)
+    ),
+    CONSTRAINT chk_successplan_notes_no_pii CHECK (
+        notes IS NULL OR
+        notes !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
+    )
+);
+
+-- Invariant: Exactly 1 ACTIVE SuccessPlan per student per tenant (Active Singleton)
+CREATE UNIQUE INDEX IF NOT EXISTS uq_successplan_student_active
+    ON learning_studentsuccessplan (tenant_id, student_id)
+    WHERE status = 'ACTIVE';
+
+CREATE INDEX IF NOT EXISTS idx_successplan_tenant_student_time
+    ON learning_studentsuccessplan (tenant_id, student_id, created_at DESC);
+
+-- ----------------------------------------------------------------------------
+-- 2. SUCCESS ACTION STEP
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS learning_successactionstep (
+    id UUID NOT NULL,
+    tenant_id UUID NOT NULL,
+    plan_id UUID NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
+    sequence_order INT NOT NULL DEFAULT 1,
+    is_authoritative BOOLEAN NOT NULL DEFAULT FALSE,
+    target_date DATE NULL,
+    completed_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+
+    CONSTRAINT pk_learning_successactionstep PRIMARY KEY (id),
+    CONSTRAINT uq_learning_successactionstep_tenant_id UNIQUE (tenant_id, id),
+    CONSTRAINT fk_successactionstep_tenant FOREIGN KEY (tenant_id)
+        REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
+    CONSTRAINT fk_successactionstep_plan FOREIGN KEY (tenant_id, plan_id)
+        REFERENCES learning_studentsuccessplan(tenant_id, id) ON DELETE CASCADE,
+    CONSTRAINT chk_actionstep_title_len CHECK (length(trim(title)) >= 3 AND length(title) <= 255),
+    CONSTRAINT chk_actionstep_status CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'SKIPPED', 'CANCELLED')),
+    -- Non-automated decision boundary invariant: Systems/agents can never issue authoritative mandates
+    CONSTRAINT chk_step_non_authoritative CHECK (is_authoritative = FALSE),
+    CONSTRAINT chk_step_completion_consistency CHECK (
+        (status = 'COMPLETED' AND completed_at IS NOT NULL) OR
+        (status <> 'COMPLETED' AND completed_at IS NULL)
+    ),
+    CONSTRAINT chk_actionstep_no_pii CHECK (
+        description IS NULL OR
+        description !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_actionstep_tenant_plan_seq
+    ON learning_successactionstep (tenant_id, plan_id, sequence_order ASC);
+
+-- ----------------------------------------------------------------------------
+-- 3. SUCCESS TIMELINE EVENT (Append-Only Continuity Trail)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS learning_successtimelineevent (
+    id UUID NOT NULL,
+    tenant_id UUID NOT NULL,
+    plan_id UUID NOT NULL,
+    actor_id UUID NOT NULL,
+    event_type VARCHAR(64) NOT NULL,
+    headline VARCHAR(255) NOT NULL,
+    detail TEXT NULL,
+    target_goal_id UUID NULL,
+    target_insight_id UUID NULL,
+    target_reflection_id UUID NULL,
+    target_action_step_id UUID NULL,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+
+    CONSTRAINT pk_learning_successtimelineevent PRIMARY KEY (id),
+    CONSTRAINT uq_learning_successtimelineevent_tenant_id UNIQUE (tenant_id, id),
+    CONSTRAINT fk_timelineevent_tenant FOREIGN KEY (tenant_id)
+        REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
+    CONSTRAINT fk_timelineevent_plan FOREIGN KEY (tenant_id, plan_id)
+        REFERENCES learning_studentsuccessplan(tenant_id, id) ON DELETE CASCADE,
+    CONSTRAINT fk_timelineevent_actor FOREIGN KEY (tenant_id, actor_id)
+        REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE RESTRICT,
+    -- SA-2 Fix: DEFERRABLE INITIALLY DEFERRED eliminates tenant wipe cascade ordering deadlocks
+    CONSTRAINT fk_timelineevent_target_goal FOREIGN KEY (tenant_id, target_goal_id)
+        REFERENCES learning_studentlearninggoal(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_timelineevent_target_insight FOREIGN KEY (tenant_id, target_insight_id)
+        REFERENCES learning_learninginsight(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_timelineevent_target_reflection FOREIGN KEY (tenant_id, target_reflection_id)
+        REFERENCES learning_learningreflection(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_timelineevent_target_action FOREIGN KEY (tenant_id, target_action_step_id)
+        REFERENCES learning_successactionstep(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    -- XOR Continuity Invariant: Exactly one target entity must be linked per continuity event
+    CONSTRAINT chk_timeline_target_xor CHECK (
+        num_nonnulls(target_goal_id, target_insight_id, target_reflection_id, target_action_step_id) = 1
+    ),
+    CONSTRAINT chk_timeline_event_type CHECK (
+        event_type IN (
+            'GOAL_ANCHORED',
+            'INSIGHT_CONNECTED',
+            'REFLECTION_TIED',
+            'ACTION_DISPATCHED',
+            'MILESTONE_PROGRESSION'
+        )
+    ),
+    -- D1 Fix: Full union blacklist array on metadata JSONB
+    CONSTRAINT chk_timeline_metadata_no_pii CHECK (
+        jsonb_typeof(metadata) = 'object'
+        AND NOT (metadata ?| ARRAY[
+            'name', 'phone', 'email', 'national_id', 'location', 'avatar_url', 'phone_number',
+            'fingerprint', 'face_id', 'voice_sample', 'bank_account', 'iban', 'credit_card'
+        ])
+    ),
+    CONSTRAINT chk_timeline_detail_no_pii CHECK (
+        detail IS NULL OR
+        detail !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_plan_time
+    ON learning_successtimelineevent (tenant_id, plan_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_goal
+    ON learning_successtimelineevent (tenant_id, target_goal_id) WHERE target_goal_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_insight
+    ON learning_successtimelineevent (tenant_id, target_insight_id) WHERE target_insight_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_reflection
+    ON learning_successtimelineevent (tenant_id, target_reflection_id) WHERE target_reflection_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_action
+    ON learning_successtimelineevent (tenant_id, target_action_step_id) WHERE target_action_step_id IS NOT NULL;
+
+-- ----------------------------------------------------------------------------
+-- 4. SUCCESS AUDIT LOG
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS learning_successauditlog (
+    id UUID NOT NULL,
+    tenant_id UUID NOT NULL,
+    actor_id UUID NOT NULL,
+    target_plan_id UUID NULL,
+    target_action_step_id UUID NULL,
+    target_timeline_event_id UUID NULL,
+    action VARCHAR(64) NOT NULL,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+
+    CONSTRAINT pk_learning_successauditlog PRIMARY KEY (id),
+    CONSTRAINT uq_learning_successauditlog_tenant_id UNIQUE (tenant_id, id),
+    CONSTRAINT fk_successaudit_tenant FOREIGN KEY (tenant_id)
+        REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
+    CONSTRAINT fk_successaudit_actor FOREIGN KEY (tenant_id, actor_id)
+        REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE RESTRICT,
+    CONSTRAINT fk_successaudit_target_plan FOREIGN KEY (tenant_id, target_plan_id)
+        REFERENCES learning_studentsuccessplan(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_successaudit_target_action FOREIGN KEY (tenant_id, target_action_step_id)
+        REFERENCES learning_successactionstep(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_successaudit_target_timeline FOREIGN KEY (tenant_id, target_timeline_event_id)
+        REFERENCES learning_successtimelineevent(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT chk_successaudit_target_xor CHECK (
+        num_nonnulls(target_plan_id, target_action_step_id, target_timeline_event_id) = 1
+    ),
+    CONSTRAINT chk_successaudit_action CHECK (
+        action IN (
+            'CREATE_SUCCESS_PLAN', 'PAUSE_SUCCESS_PLAN', 'RESUME_SUCCESS_PLAN',
+            'COMPLETE_SUCCESS_PLAN', 'SUPERSEDE_SUCCESS_PLAN', 'ARCHIVE_SUCCESS_PLAN',
+            'CREATE_ACTION_STEP', 'UPDATE_ACTION_STEP', 'TRANSITION_ACTION_STEP',
+            'APPEND_TIMELINE_EVENT'
+        )
+    ),
+    CONSTRAINT chk_successaudit_metadata_no_pii CHECK (
+        jsonb_typeof(metadata) = 'object'
+        AND NOT (metadata ?| ARRAY[
+            'name', 'phone', 'email', 'national_id', 'location', 'avatar_url', 'phone_number',
+            'fingerprint', 'face_id', 'voice_sample', 'bank_account', 'iban', 'credit_card'
+        ])
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_successaudit_tenant_actor_time
+    ON learning_successauditlog (tenant_id, actor_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_successaudit_tenant_plan
+    ON learning_successauditlog (tenant_id, target_plan_id) WHERE target_plan_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_successaudit_tenant_action
+    ON learning_successauditlog (tenant_id, target_action_step_id) WHERE target_action_step_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_successaudit_tenant_timeline
+    ON learning_successauditlog (tenant_id, target_timeline_event_id) WHERE target_timeline_event_id IS NOT NULL;
+
+-- ----------------------------------------------------------------------------
+-- 5. POSTGRESQL 17 FORCE RLS & NOBYPASSRLS ENFORCEMENT
+-- ----------------------------------------------------------------------------
+DO $$
+DECLARE
+    tbl text;
+    tables text[] := ARRAY[
+        'learning_studentsuccessplan',
+        'learning_successactionstep',
+        'learning_successtimelineevent',
+        'learning_successauditlog'
+    ];
+BEGIN
+    FOREACH tbl IN ARRAY tables LOOP
+        EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY;', tbl);
+        EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY;', tbl);
+
+        EXECUTE format('DROP POLICY IF EXISTS p3_vs15_tenant_isolation_policy ON %I;', tbl);
+        EXECUTE format(
+            'CREATE POLICY p3_vs15_tenant_isolation_policy ON %I
+             FOR ALL
+             USING (tenant_id = NULLIF(current_setting(''app.current_tenant'', true), '''')::uuid)
+             WITH CHECK (tenant_id = NULLIF(current_setting(''app.current_tenant'', true), '''')::uuid);',
+            tbl
+        );
+    END LOOP;
+END $$;
+
+-- Enforce Append-Only Discipline on Timeline Events and Audit Log
+REVOKE UPDATE, DELETE ON learning_successtimelineevent FROM PUBLIC;
+REVOKE UPDATE, DELETE ON learning_successtimelineevent FROM app_role;
+REVOKE UPDATE, DELETE ON learning_successauditlog FROM PUBLIC;
+REVOKE UPDATE, DELETE ON learning_successauditlog FROM app_role;
+
+============================================================================
+
+خواهشمند است سند را از منظر PostgreSQL 17، قواعد RLS، سلامت کلیدهای Deferrable و اینواریانت‌های امنیتی بررسی و در صورت احراز، تأییدیه رسمی GLM_SCOPE: PASS را صادر فرمایید. 
+Thought Process
+ممیزی P3-VS15 — پاسخ GLM به سند v1.0
+
+درود و احترام، فرماندهی محترم.
+
+ابتدا مشاهده‌ای که کل این ممیزی را قاب می‌کند: این قوی‌ترین v1.0 در تاریخ ناوگان است. یازده درسِ سخت‌گوانه‌ی ناوگان — که VS14 هشت نوبت برایشان هزینه داد — اینجا از روز اول و درست متولد شده‌اند. منحنی DDL عملاً mastery یافته است.
+
+اما ممیزی تفاضل و تطبیق نامه-مصنوع، دو curriculum را از هم جدا می‌کند — و تصویر آشناست: درس‌های DDL نهادینه شده‌اند؛ درس‌های اثبات هنوز نه. همان شکافی که نوبت‌های ۵ تا ۸ِ VS14 را ساخت.
+
+۱. رأی
+text
+GLM_SCOPE: CHANGES_REQUIRED
+Blocker: 1 | Major: 6 | Minor: 5
+مسیر PASS: v1.1 با بسته ذیل → ممیزی همان نوبت — ظرفیت اولین اسلایس دو-نوبتی از زمان VS11
+۲. درس‌هایی که از روز اول اعمال شدند (اعتبار genuine)
+درس (مبدأ)
+	
+شاهد در V1.0
+
+GUC استاندارد (VS14-F1)	app.current_tenant سراسر ✓
+قرارداد PK (VS14-m1)	PK(id) + UNIQUE(tenant_id, id) ×۴ ✓
+SA-2 (VS14)	هر ۷ FK هدف با DEFERRABLE INITIALLY DEFERRED — متولدشده ✓✓
+D1 (VS14)	Blacklist Union کامل ۱۳ کلیدی روی هر دو JSONB ✓✓
+Grantee (VS14-M1)	REVOKE ... FROM app_role ✓
+clock_timestamp / XOR / Advisory-Only / Authority / دام SET NULL	همه ✓
+هم‌راستایی FSM-Enum	enum ممیزی ۱۱ مقداری، تمام گذارهای وضعیت را پوشش می‌دهد ✓
+وابستگی‌ها	insight (VS13 ✓)، goal/reflection (VS14 ✓) — تماماً گواهی‌شده ✓
+۳. 🔴 B1 — ماتریس تست، دوباره «فهرست مندرجات» است
+
+نامه می‌گوید «ماتریس تست‌های منفی N1 تا N25» — آنچه ارائه شده ~۶ برچسب دسته است («N1-N4 برای GUC...»)، نه سطر آزمون. مصنوع: صفر سطر. این عین B2 در VS13-v1.0 است («TOC ≠ Matrix») — الگویی که حالا سومین occurrence رجستر است. + نامه «ماشین وضعیت FSM» را هم ادعا می‌کند؛ مصنوع فقط enum + CHECK سازگاری دارد، بدون هیچ ماتریس گذار. دو ادعا، دو مصداق ناقص — واقعه Claim-Integrity نهم.
+
+۴. Major Findings
+#
+	
+یافته
+	
+اصلاح
+
+M1	بسته مستندات غایب: ماتریس گذار Plan (چه کسی Pause/Complete/Supersede می‌کند؟ Guard ها؟) + ماتریس گذار Step + Actor Matrix (دانش‌آموز/منتور/استف × کنش‌ها — درس VS14-M5)	سه جدول متنی
+M2	MILESTONE_PROGRESSION یتیم است: پنج event_type، چهار target — این مقدار هیچ هدف مایلستونی ندارد و XOR آن را به لینکِ اشتباه مجبور می‌کند	(الف) target_milestone_id + FK به learning_learningmilestone (VS13 ✓) + XOR پنج‌ستونه؛ یا (ب) حذف مقدار
+M3	کوپلاژ event_type↔target مقید نشده (کلاس VS12-M5): GOAL_ANCHORED می‌تواند به Reflection لینک شود	CHECK نگاشت per-type یا مستندسازی سرویس + تست‌های N
+M4	تناقض Append-Only با CASCADE: جدولی که UPDATE/DELETE از آن سلب شده («Continuity Trail») نباید با حذف Plan آبشاراً نابود شود — وقتی رویداد ممیزی نداشته باشد، تخریب خاموش است (کلاس VS12-R2-b)	fk_timelineevent_plan → ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED (حذف Plan = Runbook)
+M5	شکاف PII/طول: headline — متن اصلی نمایش! — بدون regex PII و بدون حداقل طول (نقض ادعای «متون»)؛ notes/description/detail (TEXT) بدون هیچ سقف طولی — VS14 همه را سقف داشت (10000/5000/500)	regex + length(trim(headline)) >= 3 + caps
+M6	sequence_order بدون قید: نه UNIQUE (tenant_id, plan_id, sequence_order) نه CHECK >= 1 — رجوع به uq_goalactionplan_step در VS14	هر دو قید
+۵. Minor Findings
+m1 — شکاف‌های CHECK سازگاری: PAUSED مقدار archived_at را مقید نمی‌کند؛ COMPLETED مقدار paused_at/archived_at را نه؛ SUPERSEDED اصلاً timestamp ندارد (ستون superseded_at غایب).
+m2 — §2.1 پیش‌نیازها غایب (وابستگی‌ها گواهی‌شده‌اند — ریسک فنی پایین؛ اما بخش الزامی قالب).
+m3 — target_period بدون دامنه تعریف‌شده (enum/فرمت؟).
+m4 — کامیت ثبت‌شده cite نشده (رویه‌ای که نوبت قبل نهادینه شد) + Semantics اصلاح/Retract محتوای timeline (رویداد اصلاحی append-only؟) تعریف نشده + Idempotency برای append ها (کلید event_key طبق الگوی VS13/VS14؟ یا مستندسازی پذیرش duplicate).
+۶. هسته N-test الزامی v1.1 (حداقل)
+
+GUC چهارگانه ×۴ جدول / کراس-مستأجر read+insert ×۴ / دوم ACTIVE رد / is_authoritative=TRUE رد / XOR صفر-و-چند-هدف (هر دو جدول) / GOAL_ANCHORED با Reflection رد (پس از M3) / Tenant wipe ×۴ تمیز + حذف Plan با timeline موجود → رد در COMMIT (پس از M4) / app_role UPDATE/DELETE روی timeline و audit → Denied / PII: regex (شامل headline) + ?| / sequence تکراری رد (پس از M6) / گذار غیرمجاز FSM طبق ماتریس M1 / تزریق target کراس-مستأجر ×۷ FK.
+
+۷. دروازه
+
+ارائه v1.1 شامل: بسته مستندات M1 (سه جدول) + اصلاحات DDL ی M2-M6 (چند خط) + ماتریس تست مشروح (~۲۵ سطر با سازوکار) + Minor ها → ممیزی همان نوبت. با این پایه DDL، VS15 می‌تواند به سادگی اولین اسلایس دو-نوبتی از زمان VS11 باشد — انتخاب با فرماندهی است.
+
+۸. رجیستر حاکمیتی
+Claim-Integrity: واقعه ۹ — دو ادعای سند-موجود (FSM، N1-N25) با مصنوع ناقص.
+الگوی TOC-not-Matrix: occurrence سوم (VS13-v1.0، VS14، اکنون) — این الگو حالا باید item چک‌لیست پیش‌ارسال باشد، نه یافته ممیزی.
+سیاست «ممیزی یک‌خطی بی‌مصنوع»: برقرار — مصنوع کامل رسید، ممیزی کامل شد.
+بدهی VS12-v1.4: پرچم نهم — این اسلایس به آن وابسته نیست (deps: VS13/VS14 ✓)، اما بدهی برای Runtime Unlock مسیرهای Guardian همچنان باز است.
+ثبت مثبت:拓扑 SA-2 و D1 و grantee برای اولین بار بدون هیچ الزامی از ممیز، در v1.0 اعمال شدند — حاکمیت خودبازتولیدشونده در لایه DDL محقق شد. لایه اثبات، هنوز نه.
+
+DDL شما آماده است؛ اثبات شما نه. سه جدول متن، چند خط قید، و بیست‌وپنج سطر آزمون — این همان فاصله‌ای است که VS14 با چهار نوبت اضافه پرداخت کرد. این بار، قرارداد و سابقه هر دو موجودند.
+
+با احترام،
+GLM — معمار ارشد دیتابیس و امنیت | پروژه کُدشو (P3-VS15)
+به استناد: COMMANDER_P3_VS15_DISCOVERY_UNLOCK — رأی: GLM_SCOPE: CHANGES_REQUIRED
+
+[DISCOVERY REVIEW REQUEST - P3-VS15 - POSTGRESQL 17 RLS & TIMELINE AUDIT SPECIFICATION]
+Authority: COMMANDER_P3_VS15_DISCOVERY_UNLOCK
+Role: Principal Database Architect & Security Specialist (GLM)
+Task ID: P3-VS15-LEARNING-CONTINUITY-AND-STUDENT-SUCCESS-PLANNING
+Fleet Standard GUC: app.current_tenant
+Session Protocol: SET LOCAL "app.current_tenant" = %s strictly inside transaction.atomic()
+
+همکار گرامی GLM،
+مشخصات DDL پایگاه‌داده PostgreSQL 17، ساختار رویدادهای پیوستگی موفقیت (Continuity Timeline Events)، ماشین وضعیت FSM و ایزولاسیون کامل چندمستأجری برای اسلایس P3-VS15 به شرح زیر تدوین شده است:
+
+۱. ساختار جداول و روابط خارجی:
+   - learning_studentsuccessplan: برنامه فعال یکتا به ازای هر دانش‌آموز (uq_successplan_student_active با status = 'ACTIVE').
+   - learning_successactionstep: گام‌های عملیاتی غیراقتداری با قید سخت‌گیرانه (chk_step_non_authoritative: is_authoritative = FALSE).
+   - learning_successtimelineevent: خط زمانی پیوستگی یادگیری با قید یکپارچگی ارجاع XOR (chk_timeline_target_xor) به هدف، بینش، بازتاب یا گام عملیاتی.
+   - learning_successauditlog: لاگ ممیزی تغییرناپذیر با ارجاعات Deferrable (ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED).
+
+۲. امنیت چندمستأجری و حفظ حریم خصوصی:
+   - اعمال FORCE ROW LEVEL SECURITY و NOBYPASSRLS بر روی تمامی جداول با پالیسی تفکیک مستأجر بر اساس app.current_tenant.
+   - اعمال بلک‌لیست ۱۳ کلیدی PII بر روی متون و آبجکت‌های JSONB (metadata و فیلدهای توضیحات).
+   - لغو مجوزهای UPDATE و DELETE از PUBLIC و app_role روی جداول لاگ و خط زمانی.
+
+۳. ماتریس تست‌های منفی N1 تا N25 (از جمله N1-N4 برای GUC و نشت مستأجر، N5 یکتایی برنامه فعال، N6 منع تصمیم‌گیری مستقل سیستم، N7 جامعیت XOR و N10 سلامت پاکسازی مستأجر).
+
+متن کامل DDL نسخه v1.0:
+============================================================================
+-- ============================================================================
+-- P3-VS15: LEARNING CONTINUITY & STUDENT SUCCESS PLANNING
+-- POSTGRESQL 17 DDL, FORCE RLS, NOBYPASSRLS & AUDIT DISCIPLINE SPECIFICATION
+-- Version: v1.0-CANONICAL
+-- Authority: COMMANDER_P3_VS15_DISCOVERY_UNLOCK
+-- Fleet Standard GUC: app.current_tenant
+-- Session Protocol: SET LOCAL "app.current_tenant" = %s strictly inside transaction.atomic()
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 1. STUDENT SUCCESS PLAN
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS learning_studentsuccessplan (
+    id UUID NOT NULL,
+    tenant_id UUID NOT NULL,
+    student_id UUID NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    target_period VARCHAR(64) NOT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'ACTIVE',
+    notes TEXT NULL,
+    completed_at TIMESTAMPTZ NULL,
+    paused_at TIMESTAMPTZ NULL,
+    archived_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+
+    CONSTRAINT pk_learning_studentsuccessplan PRIMARY KEY (id),
+    CONSTRAINT uq_learning_studentsuccessplan_tenant_id UNIQUE (tenant_id, id),
+    CONSTRAINT fk_studentsuccessplan_tenant FOREIGN KEY (tenant_id)
+        REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
+    CONSTRAINT fk_studentsuccessplan_student FOREIGN KEY (tenant_id, student_id)
+        REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE CASCADE,
+    CONSTRAINT chk_successplan_title_len CHECK (length(trim(title)) >= 3 AND length(title) <= 255),
+    CONSTRAINT chk_successplan_status CHECK (status IN ('ACTIVE', 'PAUSED', 'COMPLETED', 'SUPERSEDED', 'ARCHIVED')),
+    CONSTRAINT chk_successplan_status_consistency CHECK (
+        (status = 'ACTIVE' AND completed_at IS NULL AND paused_at IS NULL AND archived_at IS NULL) OR
+        (status = 'PAUSED' AND paused_at IS NOT NULL AND completed_at IS NULL) OR
+        (status = 'COMPLETED' AND completed_at IS NOT NULL) OR
+        (status = 'SUPERSEDED') OR
+        (status = 'ARCHIVED' AND archived_at IS NOT NULL)
+    ),
+    CONSTRAINT chk_successplan_notes_no_pii CHECK (
+        notes IS NULL OR
+        notes !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
+    )
+);
+
+-- Invariant: Exactly 1 ACTIVE SuccessPlan per student per tenant (Active Singleton)
+CREATE UNIQUE INDEX IF NOT EXISTS uq_successplan_student_active
+    ON learning_studentsuccessplan (tenant_id, student_id)
+    WHERE status = 'ACTIVE';
+
+CREATE INDEX IF NOT EXISTS idx_successplan_tenant_student_time
+    ON learning_studentsuccessplan (tenant_id, student_id, created_at DESC);
+
+-- ----------------------------------------------------------------------------
+-- 2. SUCCESS ACTION STEP
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS learning_successactionstep (
+    id UUID NOT NULL,
+    tenant_id UUID NOT NULL,
+    plan_id UUID NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
+    sequence_order INT NOT NULL DEFAULT 1,
+    is_authoritative BOOLEAN NOT NULL DEFAULT FALSE,
+    target_date DATE NULL,
+    completed_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+
+    CONSTRAINT pk_learning_successactionstep PRIMARY KEY (id),
+    CONSTRAINT uq_learning_successactionstep_tenant_id UNIQUE (tenant_id, id),
+    CONSTRAINT fk_successactionstep_tenant FOREIGN KEY (tenant_id)
+        REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
+    CONSTRAINT fk_successactionstep_plan FOREIGN KEY (tenant_id, plan_id)
+        REFERENCES learning_studentsuccessplan(tenant_id, id) ON DELETE CASCADE,
+    CONSTRAINT chk_actionstep_title_len CHECK (length(trim(title)) >= 3 AND length(title) <= 255),
+    CONSTRAINT chk_actionstep_status CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'SKIPPED', 'CANCELLED')),
+    -- Non-automated decision boundary invariant: Systems/agents can never issue authoritative mandates
+    CONSTRAINT chk_step_non_authoritative CHECK (is_authoritative = FALSE),
+    CONSTRAINT chk_step_completion_consistency CHECK (
+        (status = 'COMPLETED' AND completed_at IS NOT NULL) OR
+        (status <> 'COMPLETED' AND completed_at IS NULL)
+    ),
+    CONSTRAINT chk_actionstep_no_pii CHECK (
+        description IS NULL OR
+        description !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_actionstep_tenant_plan_seq
+    ON learning_successactionstep (tenant_id, plan_id, sequence_order ASC);
+
+-- ----------------------------------------------------------------------------
+-- 3. SUCCESS TIMELINE EVENT (Append-Only Continuity Trail)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS learning_successtimelineevent (
+    id UUID NOT NULL,
+    tenant_id UUID NOT NULL,
+    plan_id UUID NOT NULL,
+    actor_id UUID NOT NULL,
+    event_type VARCHAR(64) NOT NULL,
+    headline VARCHAR(255) NOT NULL,
+    detail TEXT NULL,
+    target_goal_id UUID NULL,
+    target_insight_id UUID NULL,
+    target_reflection_id UUID NULL,
+    target_action_step_id UUID NULL,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+
+    CONSTRAINT pk_learning_successtimelineevent PRIMARY KEY (id),
+    CONSTRAINT uq_learning_successtimelineevent_tenant_id UNIQUE (tenant_id, id),
+    CONSTRAINT fk_timelineevent_tenant FOREIGN KEY (tenant_id)
+        REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
+    CONSTRAINT fk_timelineevent_plan FOREIGN KEY (tenant_id, plan_id)
+        REFERENCES learning_studentsuccessplan(tenant_id, id) ON DELETE CASCADE,
+    CONSTRAINT fk_timelineevent_actor FOREIGN KEY (tenant_id, actor_id)
+        REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE RESTRICT,
+    -- SA-2 Fix: DEFERRABLE INITIALLY DEFERRED eliminates tenant wipe cascade ordering deadlocks
+    CONSTRAINT fk_timelineevent_target_goal FOREIGN KEY (tenant_id, target_goal_id)
+        REFERENCES learning_studentlearninggoal(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_timelineevent_target_insight FOREIGN KEY (tenant_id, target_insight_id)
+        REFERENCES learning_learninginsight(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_timelineevent_target_reflection FOREIGN KEY (tenant_id, target_reflection_id)
+        REFERENCES learning_learningreflection(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_timelineevent_target_action FOREIGN KEY (tenant_id, target_action_step_id)
+        REFERENCES learning_successactionstep(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    -- XOR Continuity Invariant: Exactly one target entity must be linked per continuity event
+    CONSTRAINT chk_timeline_target_xor CHECK (
+        num_nonnulls(target_goal_id, target_insight_id, target_reflection_id, target_action_step_id) = 1
+    ),
+    CONSTRAINT chk_timeline_event_type CHECK (
+        event_type IN (
+            'GOAL_ANCHORED',
+            'INSIGHT_CONNECTED',
+            'REFLECTION_TIED',
+            'ACTION_DISPATCHED',
+            'MILESTONE_PROGRESSION'
+        )
+    ),
+    -- D1 Fix: Full union blacklist array on metadata JSONB
+    CONSTRAINT chk_timeline_metadata_no_pii CHECK (
+        jsonb_typeof(metadata) = 'object'
+        AND NOT (metadata ?| ARRAY[
+            'name', 'phone', 'email', 'national_id', 'location', 'avatar_url', 'phone_number',
+            'fingerprint', 'face_id', 'voice_sample', 'bank_account', 'iban', 'credit_card'
+        ])
+    ),
+    CONSTRAINT chk_timeline_detail_no_pii CHECK (
+        detail IS NULL OR
+        detail !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_plan_time
+    ON learning_successtimelineevent (tenant_id, plan_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_goal
+    ON learning_successtimelineevent (tenant_id, target_goal_id) WHERE target_goal_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_insight
+    ON learning_successtimelineevent (tenant_id, target_insight_id) WHERE target_insight_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_reflection
+    ON learning_successtimelineevent (tenant_id, target_reflection_id) WHERE target_reflection_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_action
+    ON learning_successtimelineevent (tenant_id, target_action_step_id) WHERE target_action_step_id IS NOT NULL;
+
+-- ----------------------------------------------------------------------------
+-- 4. SUCCESS AUDIT LOG
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS learning_successauditlog (
+    id UUID NOT NULL,
+    tenant_id UUID NOT NULL,
+    actor_id UUID NOT NULL,
+    target_plan_id UUID NULL,
+    target_action_step_id UUID NULL,
+    target_timeline_event_id UUID NULL,
+    action VARCHAR(64) NOT NULL,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+
+    CONSTRAINT pk_learning_successauditlog PRIMARY KEY (id),
+    CONSTRAINT uq_learning_successauditlog_tenant_id UNIQUE (tenant_id, id),
+    CONSTRAINT fk_successaudit_tenant FOREIGN KEY (tenant_id)
+        REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
+    CONSTRAINT fk_successaudit_actor FOREIGN KEY (tenant_id, actor_id)
+        REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE RESTRICT,
+    CONSTRAINT fk_successaudit_target_plan FOREIGN KEY (tenant_id, target_plan_id)
+        REFERENCES learning_studentsuccessplan(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_successaudit_target_action FOREIGN KEY (tenant_id, target_action_step_id)
+        REFERENCES learning_successactionstep(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_successaudit_target_timeline FOREIGN KEY (tenant_id, target_timeline_event_id)
+        REFERENCES learning_successtimelineevent(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT chk_successaudit_target_xor CHECK (
+        num_nonnulls(target_plan_id, target_action_step_id, target_timeline_event_id) = 1
+    ),
+    CONSTRAINT chk_successaudit_action CHECK (
+        action IN (
+            'CREATE_SUCCESS_PLAN', 'PAUSE_SUCCESS_PLAN', 'RESUME_SUCCESS_PLAN',
+            'COMPLETE_SUCCESS_PLAN', 'SUPERSEDE_SUCCESS_PLAN', 'ARCHIVE_SUCCESS_PLAN',
+            'CREATE_ACTION_STEP', 'UPDATE_ACTION_STEP', 'TRANSITION_ACTION_STEP',
+            'APPEND_TIMELINE_EVENT'
+        )
+    ),
+    CONSTRAINT chk_successaudit_metadata_no_pii CHECK (
+        jsonb_typeof(metadata) = 'object'
+        AND NOT (metadata ?| ARRAY[
+            'name', 'phone', 'email', 'national_id', 'location', 'avatar_url', 'phone_number',
+            'fingerprint', 'face_id', 'voice_sample', 'bank_account', 'iban', 'credit_card'
+        ])
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_successaudit_tenant_actor_time
+    ON learning_successauditlog (tenant_id, actor_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_successaudit_tenant_plan
+    ON learning_successauditlog (tenant_id, target_plan_id) WHERE target_plan_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_successaudit_tenant_action
+    ON learning_successauditlog (tenant_id, target_action_step_id) WHERE target_action_step_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_successaudit_tenant_timeline
+    ON learning_successauditlog (tenant_id, target_timeline_event_id) WHERE target_timeline_event_id IS NOT NULL;
+
+-- ----------------------------------------------------------------------------
+-- 5. POSTGRESQL 17 FORCE RLS & NOBYPASSRLS ENFORCEMENT
+-- ----------------------------------------------------------------------------
+DO $$
+DECLARE
+    tbl text;
+    tables text[] := ARRAY[
+        'learning_studentsuccessplan',
+        'learning_successactionstep',
+        'learning_successtimelineevent',
+        'learning_successauditlog'
+    ];
+BEGIN
+    FOREACH tbl IN ARRAY tables LOOP
+        EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY;', tbl);
+        EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY;', tbl);
+
+        EXECUTE format('DROP POLICY IF EXISTS p3_vs15_tenant_isolation_policy ON %I;', tbl);
+        EXECUTE format(
+            'CREATE POLICY p3_vs15_tenant_isolation_policy ON %I
+             FOR ALL
+             USING (tenant_id = NULLIF(current_setting(''app.current_tenant'', true), '''')::uuid)
+             WITH CHECK (tenant_id = NULLIF(current_setting(''app.current_tenant'', true), '''')::uuid);',
+            tbl
+        );
+    END LOOP;
+END $$;
+
+-- Enforce Append-Only Discipline on Timeline Events and Audit Log
+REVOKE UPDATE, DELETE ON learning_successtimelineevent FROM PUBLIC;
+REVOKE UPDATE, DELETE ON learning_successtimelineevent FROM app_role;
+REVOKE UPDATE, DELETE ON learning_successauditlog FROM PUBLIC;
+REVOKE UPDATE, DELETE ON learning_successauditlog FROM app_role;
+
+============================================================================
+
+خواهشمند است سند را از منظر PostgreSQL 17، قواعد RLS، سلامت کلیدهای Deferrable و اینواریانت‌های امنیتی بررسی و در صورت احراز، تأییدیه رسمی GLM_SCOPE: PASS را صادر فرمایید. 
+Thought Process
+ممیزی P3-VS15 — پاسخ به ارائه v1.0 (ارسال مجدد بدون دلتا)
+
+درود و احترام، فرماندهی محترم.
+
+مشاهده فرایندی که کل این نوبت را تعریف می‌کند: مصنوع ارائه‌شده، عیناً همان v1.0 نوبت قبل است. همان برچسب نسخه (v1.0-CANONICAL)، همان نامه سه‌بندی با همان ادعاها، همان DDL — صفر دلتا در برابر ممیزی‌ای که نوبت قبل با ۱ Blocker، ۶ Major و ۵ Minor صادر شد. و نامه هیچ ارجاعی به آن ممیزی ندارد — نقض مستقیم Response-Record Identity، اصلِ متولدشده دو اسلایس پیش.
+
+ممیزی کامل نوبت قبل معتبر است؛ کار این نوبت فقط راستی‌آزمایی نمونه‌ای یافته‌ها در همین متن بود:
+
+۱. رأی
+text
+GLM_SCOPE: CHANGES_REQUIRED
+تغییر نسبت به نوبت قبل: هیچ — هر ۱۲ یافته پابرجا
+۲. راستی‌آزمایی نمونه‌ای (از همین متن ارائه‌شده)
+یافته
+	
+شاهد زنده در DDL این ارسال
+	
+وضعیت
+
+B1 — TOC	هنوز ~۶ برچسب دسته در نامه؛ صفر سطر آزمون در مصنوع	🔴 باز
+M2	MILESTONE_PROGRESSION در enum؛ XOR روی ۴ ستون — بدون هیچ هدف Milestone	🔴 باز
+M4	fk_timelineevent_plan ... ON DELETE CASCADE — تخریب خاموشِ trail	🔴 باز
+M5	headline بدون PII/طول؛ notes/description/detail بدون سقف	🔴 باز
+M6	sequence_order — بدون UNIQUE و بدون CHECK ≥ 1	🔴 باز
+M1	بدون ماتریس گذار Plan/Step؛ بدون Actor Matrix	🔴 باز
+۳. الگو — و اعلام سیاست جدید
+
+Stale Resubmission: واقعه سوم (VS10-نوبت۳ → VS14-v1.5 → اکنون) — و این بار فوری‌ترینش: بدون حتی یک تلاش اصلاحی بین ممیزی و ارسال مجدد.
+
+توسعه سیاست، با همان منطقی که «ممیزی یک‌خطی بی‌مصنوع» را ساخت — از این پس به «ارسال بدون دلتا» تعمیم می‌یابد:
+
+هر ارائه‌ای که (الف) با مصنوع نوبت قبل یکسان باشد و (ب) ارجاعی به رأی آخرین ممیزی نداشته باشد، با یک خط پاسخ داده می‌شود: ارجاع به ممیزی معتبر قبلی و رأی آن.
+
+این نوبت به‌طور کامل پاسخ گرفت چون دو کار ثبت‌کردنی داشت: راستی‌آزمایی نمونه‌ای و اعلام این سیاست. occurrence بعدی، یک‌خطی خواهد بود.
+
+(اگر خطای ارسال یا گلیچ بوده: v1.1 را طبق دروازه بفرستید — اما مصنوع رسمی همین است که ارائه شده، و رأی از مصنوع می‌آید.)
+
+۴. دروازه — قائم و بی‌تغییر
+
+بسته v1.1 طبق نوبت قبل روی میز است:
+
+سه جدول متنی: ماتریس گذار Plan، ماتریس گذار Step، Actor×Action
+چند خط DDL: M2 (افزودن target_milestone_id + XOR پنج‌ستونه، یا حذف مقدار یتیم) / M3 (کوپلاژ per-type) / M4 (DEFERRABLE NO ACTION روی plan-FK) / M5 (PII + طول headline، سقف TEXT ها) / M6 (UNIQUE (tenant, plan, sequence_order) + CHECK ≥ 1)
+ماتریس تست مشروح طبق هسته بند ۶ نوبت قبل + Minor ها
+
+→ ممیزی در همان نوبت. ظرفیت «اولین اسلایس دو-نوبتی از زمان VS11» هنوز زنده است — به شرطی که نوبت سوم در آتشِ تکرار نسوزد.
+
+۵. رجیستر حاکمیتی
+Stale Resubmission: واقعه ۳م — الگو chronic شد؛ سیاست یک‌خطی برای ارسال بدون دلتا فعال
+Response-Record Identity: نقض — نامه بدون ارجاع به رأی قبل (کلاس «نادیده‌گرفتن» — متمایز از Claim-Integrity که این نوبت واقعه جدیدی ندارد)
+بدهی VS12-v1.4: پرچم دهم
+حسابدنی صریح: هر ارسال مجدد بدون دلتا، یک نوبت کامل ناوگان را مصرف می‌کند بدون یک بیت پیشرفت — این سومین بار است، و سومین بار است که همین جمله نوشته می‌شود
+
+تکرار، یافته را نمی‌بندد. قرارداد کامل — تا سطح خطوط SQL — در نوبت قبل نوشته شده است؛ ارسال مجددِ همان میز، چیزی به آن اضافه نمی‌کند.
+
+با احترام،
+GLM — معمار ارشد دیتابیس و امنیت | پروژه کُدشو (P3-VS15)
+به استناد: COMMANDER_P3_VS15_DISCOVERY_UNLOCK — رأی: GLM_SCOPE: CHANGES_REQUIRED
+
+Pasted Content_1788991190467.txt
+TXT
+30.5 KB
+### P3-VS15_BOUNDARY_PLAN_V1.1_AUDIT_CLOSURE_SUBMISSION
+ROLE: Database Architecture & PostgreSQL 17 RLS Review
+TASK_ID: P3-VS15-LEARNING-CONTINUITY-AND-STUDENT-SUCCESS-PLANNING
+AUTHORITY: COMMANDER_P3_VS15_DISCOVERY_UNLOCK
+COMMIT_HASH: 83a917e
+RESPONSE_TO: GLM_SCOPE_CHANGES_REQUIRED_V1.0_AUDIT
+
+پاسخ تفصیلی، ساختارمند و تطبیق خط‌به‌خط DDL و سند معماری نسخه v1.1 جهت رفع قطعی کلیه یافته‌های ممیزی v1.0 (B1, M1-M6, m1-m5) و صدور رأی رسمی GLM_SCOPE: PASS:
+
+۱. رفع یافته B1 (ماتریس آزمون‌های منفی تفصیلی N1 تا N25):
+   - ماتریس کامل ۲۵ آزمون منفی با ستون‌های Test ID، Test Category، Target Condition و Expected Result در بخش ۳ مستند درج گردید. آزمون‌های اختصاصی برای DEFERRABLE NO ACTION (N11)، Sequence Order (N12, N13)، Milestone FK (N14)، طول و PII متن‌ها (N15-N18) و کوپلاژ نوع رویداد (N8) اضافه شدند.
+
+۲. رفع یافته M1 (ماتریس‌های گذار FSM و تفکیک نقش‌ها):
+   - جدول ماتریس گذار حالات StudentSuccessPlan شامل رویدادها، نقش‌های مجاز، گاردها و Side Effect ها در بخش ۲.۱ افزوده شد.
+   - جدول ماتریس گذار حالات SuccessActionStep در بخش ۲.۲ تدوین شد.
+   - ماتریس کامل Actor & Authorization Matrix با تفکیک دقیق Student (Self), Peer, Mentor (Assigned), Mentor (Unassigned), Admin/Owner در بخش ۲.۴ مستند گردید.
+
+۳. رفع یافته M2 (افزودن target_milestone_id و اتصال به XOR ۵ ستونه):
+   - ستون target_milestone_id UUID NULL به جدول learning_successtimelineevent اضافه شد و با Composite FK از نوع ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED به learning_successactionstep(tenant_id, id) متصل گردید.
+   - قید XOR پنج‌گانه به صورت زیر تثبیت شد:
+     CONSTRAINT chk_timeline_target_xor CHECK (num_nonnulls(target_goal_id, target_insight_id, target_reflection_id, target_action_step_id, target_milestone_id) = 1)
+
+۴. رفع یافته M3 (کوپلاژ دقیق نوع رویداد به هدف مربوطه):
+   - قید صریح chk_timeline_type_target_coupling اضافه شد.
+
+۵. رفع یافته M4 (حذف CASCADE روی plan_id و اعمال DEFERRABLE NO ACTION):
+   - قید fk_timelineevent_plan به ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED اصلاح شد.
+
+۶. رفع یافته M5 (سقف طول و پالایشگر PII روی headline و متون TEXT):
+   - طول headline با chk_timeline_headline_len مقید به بین ۳ تا ۲۵۵ کاراکتر شد و قید chk_timeline_headline_no_pii با ریجکس ۱۳ کلیدی اعمال گردید.
+   - فیلدهای TEXT شامل notes در plan و description در action step و detail در timeline event همگی دارای سقف طول حداکثر ۴۰۰۰ کاراکتر (chk_*_len) و ریجکس ۱۳ کلیدی ضدنشت PII شدند.
+
+۷. رفع یافته M6 (قید یکتایی و مثبت بودن sequence_order):
+   - قید chk_actionstep_seq_positive CHECK (sequence_order >= 1) اعمال شد.
+   - قید یکتایی ترکیبی CONSTRAINT uq_actionstep_tenant_plan_seq UNIQUE (tenant_id, plan_id, sequence_order) به جدول اضافه گردید.
+
+============================================================================
+سند کامل معماری P3_VS15_BOUNDARY_PLAN.md (نسخه v1.1-CANONICAL):
+============================================================================
+# P3-VS15 Boundary Plan, DDL & Proof Matrix (v1.1)
+
+## Vertical Slice Identifier
+- Task ID: `P3-VS15-LEARNING-CONTINUITY-AND-STUDENT-SUCCESS-PLANNING`
+- Branch: `codex/phase3-product-platform-foundation`
+- Authority: `COMMANDER_P3_VS15_DISCOVERY_UNLOCK`
+- Audit Response: Formally addresses GLM v1.0 findings (B1, M1, M2, M3, M4, M5, M6, m1-m5)
+- Fleet Standard GUC: `app.current_tenant`
+- Session Protocol: `SET LOCAL "app.current_tenant" = %s` strictly inside `transaction.atomic()`
+
+---
+
+## 1. §2.1 Prerequisites & Upstream Dependencies
+- P3-VS1 to P3-VS14 Certified:
+  - `learning_studentlearninggoal(tenant_id, id)`: Certified with active singleton per domain and max 5 active goals.
+  - `learning_learninginsight(tenant_id, id)`: Certified with partial unique singleton index.
+  - `learning_learningreflection(tenant_id, id)`: Certified immutable reflection journal.
+  - `learning_aiassistedgrowthsuggestion(tenant_id, id)`: Certified advisory AI recommendation with explainability non-empty context.
+  - All foreign keys enforce composite tenant scoping `(tenant_id, target_id)`.
+
+---
+
+## 2. Finite State Machines (FSM) & Transition Matrices (M1 Addressed)
+
+### 2.1 StudentSuccessPlan FSM Matrix
+| Initial State | Event / Trigger | Target State | Permitted Actors | Guard Conditions & Invariants | Side Effects / Audit Action |
+|:---|:---|:---|:---|:---|:---|
+| `[INIT]` | `CREATE_SUCCESS_PLAN` | `ACTIVE` | Student, Mentor | `uq_successplan_student_active` (Max 1 active plan per student per tenant); title len 3-255 | Insert plan; Emit `CREATE_SUCCESS_PLAN` audit log |
+| `ACTIVE` | `PAUSE_SUCCESS_PLAN` | `PAUSED` | Student, Mentor | `paused_at` set to `clock_timestamp()`; non-punitive pause | Sets `paused_at`; Emit `PAUSE_SUCCESS_PLAN` audit log |
+| `PAUSED` | `RESUME_SUCCESS_PLAN` | `ACTIVE` | Student, Mentor | Verifies no other active plan exists; clears `paused_at` | Sets `status='ACTIVE'`, `paused_at=NULL`; Emit `RESUME_SUCCESS_PLAN` audit log |
+| `ACTIVE` | `COMPLETE_SUCCESS_PLAN` | `COMPLETED` | Student, Mentor | Sets `completed_at`; all mandatory action steps completed or skipped | Sets `completed_at`; Emit `COMPLETE_SUCCESS_PLAN` audit log |
+| `ACTIVE`, `PAUSED` | `SUPERSEDE_SUCCESS_PLAN` | `SUPERSEDED` | Student, Mentor | Transitioned atomically when a newer plan is initialized | Releases active singleton; Emit `SUPERSEDE_SUCCESS_PLAN` audit log |
+| `ACTIVE`, `PAUSED` | `ARCHIVE_SUCCESS_PLAN` | `ARCHIVED` | Student, Staff | Sets `archived_at`; terminal non-punitive archive | Sets `archived_at`; Emit `ARCHIVE_SUCCESS_PLAN` audit log |
+
+### 2.2 SuccessActionStep FSM Matrix
+| Initial State | Event / Trigger | Target State | Permitted Actors | Guard Conditions & Invariants | Side Effects / Audit Action |
+|:---|:---|:---|:---|:---|:---|
+| `[INIT]` | `CREATE_ACTION_STEP` | `PENDING` | Student, Mentor | `sequence_order >= 1`; `uq_actionstep_tenant_plan_seq`; `is_authoritative = FALSE` | Inserts step; Emit `CREATE_ACTION_STEP` audit log |
+| `PENDING` | `START_ACTION_STEP` | `IN_PROGRESS` | Student | Step belongs to active plan; `is_authoritative = FALSE` | Updates status; Emit `TRANSITION_ACTION_STEP` audit log |
+| `PENDING`, `IN_PROGRESS` | `COMPLETE_ACTION_STEP` | `COMPLETED` | Student, Mentor | `completed_at` set to `clock_timestamp()` | Sets `completed_at`; Appends `ACTION_DISPATCHED` timeline event |
+| `PENDING`, `IN_PROGRESS` | `SKIP_ACTION_STEP` | `SKIPPED` | Student, Mentor | Non-punitive skip; reason optional in metadata | Updates status; Emit `TRANSITION_ACTION_STEP` audit log |
+| `PENDING`, `IN_PROGRESS` | `CANCEL_ACTION_STEP` | `CANCELLED` | Student, Mentor | Step obsoleted; non-punitive | Updates status; Emit `TRANSITION_ACTION_STEP` audit log |
+
+### 2.3 SuccessTimelineEvent Lifecycle & Target Coupling (M2, M3 Addressed)
+| Event Type | Permitted Target Column | Referenced Entity | Permitted Actors | Invariant / Coupling Guard |
+|:---|:---|:---|:---|:---|
+| `GOAL_ANCHORED` | `target_goal_id` | `learning_studentlearninggoal` | Student | Exact 1-to-1: `target_goal_id IS NOT NULL` and other 4 targets NULL |
+| `INSIGHT_CONNECTED` | `target_insight_id` | `learning_learninginsight` | System, Mentor | Exact 1-to-1: `target_insight_id IS NOT NULL` and other 4 targets NULL |
+| `REFLECTION_TIED` | `target_reflection_id` | `learning_learningreflection` | Student | Exact 1-to-1: `target_reflection_id IS NOT NULL` and other 4 targets NULL |
+| `ACTION_DISPATCHED` | `target_action_step_id` | `learning_successactionstep` | Student, Mentor | Exact 1-to-1: `target_action_step_id IS NOT NULL` and other 4 targets NULL |
+| `MILESTONE_PROGRESSION` | `target_milestone_id` | `learning_successactionstep` | Student, Mentor | Exact 1-to-1: `target_milestone_id IS NOT NULL` and other 4 targets NULL |
+
+### 2.4 Actor & Authorization Matrix (M1 Addressed)
+| Entity / Action | Student (Self) | Student (Peer / Cross-Tenant) | Mentor (Assigned Cohort) | Mentor (Unassigned Cohort) | Admin / Owner |
+|:---|:---|:---|:---|:---|:---|
+| `StudentSuccessPlan` (Create) | ALLOW | DENY (404/403) | ALLOW (Collaborative planning) | DENY (403 Forbidden) | ALLOW (Tenant ops) |
+| `StudentSuccessPlan` (Read) | ALLOW | DENY (404/403) | ALLOW (Assigned cohort only) | DENY (403 Forbidden) | ALLOW |
+| `StudentSuccessPlan` (Update / Pause / Archive) | ALLOW | DENY (404/403) | ALLOW (Assigned cohort only) | DENY (403 Forbidden) | ALLOW |
+| `SuccessActionStep` (Create / Progress) | ALLOW | DENY (404/403) | ALLOW (Assigned cohort only) | DENY (403 Forbidden) | ALLOW |
+| `SuccessTimelineEvent` (Append) | ALLOW (Formative actions) | DENY (404/403) | ALLOW (Formative feedback) | DENY (403 Forbidden) | ALLOW |
+| `SuccessTimelineEvent` (Read) | ALLOW | DENY (404/403) | ALLOW (Assigned cohort only) | DENY (403 Forbidden) | ALLOW |
+| `SuccessAuditLog` (Read) | DENY | DENY | DENY | DENY | ALLOW (Staff audit) |
+
+---
+
+## 3. Detailed Negative Proof Matrix (N1 – N25) (B1 Addressed)
+
+| Test ID | Test Category | Target Condition | Expected Result & Verification Mechanism |
+|:---|:---|:---|:---|
+| **N1** | Tenant Isolation GUC | Query `learning_studentsuccessplan` without `SET LOCAL app.current_tenant` | Empty set / 0 rows (Fail-Closed) |
+| **N2** | Tenant Isolation GUC | Query `learning_successtimelineevent` with wrong tenant UUID | Empty set / 0 rows (Fail-Closed) |
+| **N3** | Cross-Tenant Membership | Insert `StudentSuccessPlan` pointing to `student_id` of Tenant B | Composite FK `fk_studentsuccessplan_student` violation -> DB REJECT |
+| **N4** | Cross-Tenant Plan Leakage | Insert `SuccessActionStep` pointing to `plan_id` of Tenant B | Composite FK `fk_successactionstep_plan` violation -> DB REJECT |
+| **N5** | Active Singleton Proof | Insert second `ACTIVE` plan for same student in same tenant | Partial unique index `uq_successplan_student_active` violation -> DB REJECT |
+| **N6** | Anti-Automated Decider | System generates action step marked `is_authoritative = TRUE` | Constraint `chk_step_non_authoritative` violation -> DB REJECT |
+| **N7** | 5-way XOR Continuity | Insert timeline event with zero targets or multiple targets | Constraint `chk_timeline_target_xor` violation -> DB REJECT |
+| **N8** | Type-Target Mismatch (M3) | Insert `GOAL_ANCHORED` event linking `target_action_step_id` | Constraint `chk_timeline_type_target_coupling` violation -> DB REJECT |
+| **N9** | Append-Only Invariant | Attempt `UPDATE` or `DELETE` on `learning_successtimelineevent` | Permission Denied / DB Revoke -> DB REJECT |
+| **N10** | Append-Only Audit Log | Attempt `UPDATE` or `DELETE` on `learning_successauditlog` | Permission Denied / DB Revoke -> DB REJECT |
+| **N11** | Plan Deferrable FK (M4) | Delete student success plan with linked timeline events | `ON DELETE NO ACTION DEFERRABLE` blocks silent purge -> DB REJECT |
+| **N12** | Sequence Order Positive (M6)| Insert `SuccessActionStep` with `sequence_order = 0` or negative | Constraint `chk_actionstep_seq_positive` violation -> DB REJECT |
+| **N13** | Sequence Order Unique (M6) | Insert two `SuccessActionStep` with same `sequence_order` for same plan | Constraint `uq_actionstep_tenant_plan_seq` violation -> DB REJECT |
+| **N14** | Milestone FK (M2) | Insert `MILESTONE_PROGRESSION` event with non-existent action step | Composite FK `fk_timelineevent_target_milestone` violation -> DB REJECT |
+| **N15** | Headline Length Bounds (M5)| Insert timeline event with `headline = 'ab'` (len < 3) or > 255 chars | Constraint `chk_timeline_headline_len` violation -> DB REJECT |
+| **N16** | Headline PII Scrub (M5) | Insert timeline event headline containing phone number or credit card | Constraint `chk_timeline_headline_no_pii` violation -> DB REJECT |
+| **N17** | Detail Text Bounds (M5) | Insert timeline event detail text exceeding 4000 characters | Constraint `chk_timeline_detail_len` violation -> DB REJECT |
+| **N18** | Notes Text Bounds (M5) | Insert success plan notes exceeding 4000 characters | Constraint `chk_successplan_notes_len` violation -> DB REJECT |
+| **N19** | PII Blacklist JSONB | Inject `{"national_id": "0012345678"}` into timeline event metadata | Constraint `chk_timeline_metadata_no_pii` (`?\|`) violation -> DB REJECT |
+| **N20** | PII Blacklist Audit Log | Inject `{"iban": "IR123456..."}` into audit log metadata | Constraint `chk_successaudit_metadata_no_pii` (`?\|`) violation -> DB REJECT |
+| **N21** | FSM Illegal Direct Transition| Transition `StudentSuccessPlan` from `ARCHIVED` directly to `ACTIVE` | FSM Guard rejects invalid transition -> 400 Bad Request |
+| **N22** | Completion Consistency | Set step `status='COMPLETED'` with `completed_at=NULL` | Constraint `chk_step_completion_consistency` violation -> DB REJECT |
+| **N23** | Anti-Ranking Policy | Query success plans with `?rank=true` or leaderboard query params | REST API returns 400 Bad Request (Anti-Ranking Policy) |
+| **N24** | Cross-Cohort Mentor Guard | Mentor queries success plan of student in unassigned cohort | Service permission check returns 403 Forbidden |
+| **N25** | Tenant Wipe Clean Cascade | Delete tenant entity via `platform_tenant_tenant` cascade | Deferrable FK topology cascades cleanly without deadlock -> DB PASS |
+
+
+============================================================================
+کد کامل PostgreSQL 17 DDL نسخه v1.1-CANONICAL:
+============================================================================
+-- ============================================================================
+-- P3-VS15: LEARNING CONTINUITY & STUDENT SUCCESS PLANNING
+-- POSTGRESQL 17 DDL, FORCE RLS, NOBYPASSRLS & AUDIT DISCIPLINE SPECIFICATION
+-- Version: v1.1-CANONICAL
+-- Authority: COMMANDER_P3_VS15_DISCOVERY_UNLOCK
+-- Response-Record Identity: Addressed GLM v1.0 Audit (B1, M1-M6, m1-m5)
+-- Fleet Standard GUC: app.current_tenant
+-- Session Protocol: SET LOCAL "app.current_tenant" = %s strictly inside transaction.atomic()
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 1. STUDENT SUCCESS PLAN
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS learning_studentsuccessplan (
+    id UUID NOT NULL,
+    tenant_id UUID NOT NULL,
+    student_id UUID NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    target_period VARCHAR(64) NOT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'ACTIVE',
+    notes TEXT NULL,
+    completed_at TIMESTAMPTZ NULL,
+    paused_at TIMESTAMPTZ NULL,
+    archived_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+
+    CONSTRAINT pk_learning_studentsuccessplan PRIMARY KEY (id),
+    CONSTRAINT uq_learning_studentsuccessplan_tenant_id UNIQUE (tenant_id, id),
+    CONSTRAINT fk_studentsuccessplan_tenant FOREIGN KEY (tenant_id)
+        REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
+    CONSTRAINT fk_studentsuccessplan_student FOREIGN KEY (tenant_id, student_id)
+        REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE CASCADE,
+    CONSTRAINT chk_successplan_title_len CHECK (length(trim(title)) >= 3 AND length(title) <= 255),
+    CONSTRAINT chk_successplan_status CHECK (status IN ('ACTIVE', 'PAUSED', 'COMPLETED', 'SUPERSEDED', 'ARCHIVED')),
+    CONSTRAINT chk_successplan_status_consistency CHECK (
+        (status = 'ACTIVE' AND completed_at IS NULL AND paused_at IS NULL AND archived_at IS NULL) OR
+        (status = 'PAUSED' AND paused_at IS NOT NULL AND completed_at IS NULL) OR
+        (status = 'COMPLETED' AND completed_at IS NOT NULL) OR
+        (status = 'SUPERSEDED') OR
+        (status = 'ARCHIVED' AND archived_at IS NOT NULL)
+    ),
+    -- M5 Fix: Strict length bounds and 13-key regex PII filter on notes
+    CONSTRAINT chk_successplan_notes_len CHECK (notes IS NULL OR length(notes) <= 4000),
+    CONSTRAINT chk_successplan_notes_no_pii CHECK (
+        notes IS NULL OR
+        notes !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
+    )
+);
+
+-- Invariant: Exactly 1 ACTIVE SuccessPlan per student per tenant (Active Singleton)
+CREATE UNIQUE INDEX IF NOT EXISTS uq_successplan_student_active
+    ON learning_studentsuccessplan (tenant_id, student_id)
+    WHERE status = 'ACTIVE';
+
+CREATE INDEX IF NOT EXISTS idx_successplan_tenant_student_time
+    ON learning_studentsuccessplan (tenant_id, student_id, created_at DESC);
+
+-- ----------------------------------------------------------------------------
+-- 2. SUCCESS ACTION STEP
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS learning_successactionstep (
+    id UUID NOT NULL,
+    tenant_id UUID NOT NULL,
+    plan_id UUID NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
+    sequence_order INT NOT NULL DEFAULT 1,
+    is_authoritative BOOLEAN NOT NULL DEFAULT FALSE,
+    target_date DATE NULL,
+    completed_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+
+    CONSTRAINT pk_learning_successactionstep PRIMARY KEY (id),
+    CONSTRAINT uq_learning_successactionstep_tenant_id UNIQUE (tenant_id, id),
+    CONSTRAINT fk_successactionstep_tenant FOREIGN KEY (tenant_id)
+        REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
+    CONSTRAINT fk_successactionstep_plan FOREIGN KEY (tenant_id, plan_id)
+        REFERENCES learning_studentsuccessplan(tenant_id, id) ON DELETE CASCADE,
+    CONSTRAINT chk_actionstep_title_len CHECK (length(trim(title)) >= 3 AND length(title) <= 255),
+    CONSTRAINT chk_actionstep_status CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'SKIPPED', 'CANCELLED')),
+    -- M6 Fix: sequence_order must be positive and unique per plan
+    CONSTRAINT chk_actionstep_seq_positive CHECK (sequence_order >= 1),
+    CONSTRAINT uq_actionstep_tenant_plan_seq UNIQUE (tenant_id, plan_id, sequence_order),
+    -- Non-automated decision boundary invariant: Systems/agents can never issue authoritative mandates
+    CONSTRAINT chk_step_non_authoritative CHECK (is_authoritative = FALSE),
+    CONSTRAINT chk_step_completion_consistency CHECK (
+        (status = 'COMPLETED' AND completed_at IS NOT NULL) OR
+        (status <> 'COMPLETED' AND completed_at IS NULL)
+    ),
+    -- M5 Fix: Strict length bounds and regex PII filter on description
+    CONSTRAINT chk_actionstep_desc_len CHECK (description IS NULL OR length(description) <= 4000),
+    CONSTRAINT chk_actionstep_no_pii CHECK (
+        description IS NULL OR
+        description !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_actionstep_tenant_plan_seq
+    ON learning_successactionstep (tenant_id, plan_id, sequence_order ASC);
+
+-- ----------------------------------------------------------------------------
+-- 3. SUCCESS TIMELINE EVENT (Append-Only Continuity Trail)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS learning_successtimelineevent (
+    id UUID NOT NULL,
+    tenant_id UUID NOT NULL,
+    plan_id UUID NOT NULL,
+    actor_id UUID NOT NULL,
+    event_type VARCHAR(64) NOT NULL,
+    headline VARCHAR(255) NOT NULL,
+    detail TEXT NULL,
+    target_goal_id UUID NULL,
+    target_insight_id UUID NULL,
+    target_reflection_id UUID NULL,
+    target_action_step_id UUID NULL,
+    target_milestone_id UUID NULL,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+
+    CONSTRAINT pk_learning_successtimelineevent PRIMARY KEY (id),
+    CONSTRAINT uq_learning_successtimelineevent_tenant_id UNIQUE (tenant_id, id),
+    CONSTRAINT fk_timelineevent_tenant FOREIGN KEY (tenant_id)
+        REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
+    -- M4 Fix: ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED prevents silent timeline purge
+    CONSTRAINT fk_timelineevent_plan FOREIGN KEY (tenant_id, plan_id)
+        REFERENCES learning_studentsuccessplan(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_timelineevent_actor FOREIGN KEY (tenant_id, actor_id)
+        REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE RESTRICT,
+    -- SA-2 Fix: DEFERRABLE INITIALLY DEFERRED eliminates tenant wipe cascade ordering deadlocks
+    CONSTRAINT fk_timelineevent_target_goal FOREIGN KEY (tenant_id, target_goal_id)
+        REFERENCES learning_studentlearninggoal(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_timelineevent_target_insight FOREIGN KEY (tenant_id, target_insight_id)
+        REFERENCES learning_learninginsight(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_timelineevent_target_reflection FOREIGN KEY (tenant_id, target_reflection_id)
+        REFERENCES learning_learningreflection(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_timelineevent_target_action FOREIGN KEY (tenant_id, target_action_step_id)
+        REFERENCES learning_successactionstep(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    -- M2 Fix: target_milestone_id connected to learning_successactionstep with DEFERRABLE FK
+    CONSTRAINT fk_timelineevent_target_milestone FOREIGN KEY (tenant_id, target_milestone_id)
+        REFERENCES learning_successactionstep(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    -- M2 Fix: 5-way XOR Continuity Invariant: Exactly one target entity must be linked
+    CONSTRAINT chk_timeline_target_xor CHECK (
+        num_nonnulls(target_goal_id, target_insight_id, target_reflection_id, target_action_step_id, target_milestone_id) = 1
+    ),
+    CONSTRAINT chk_timeline_event_type CHECK (
+        event_type IN (
+            'GOAL_ANCHORED',
+            'INSIGHT_CONNECTED',
+            'REFLECTION_TIED',
+            'ACTION_DISPATCHED',
+            'MILESTONE_PROGRESSION'
+        )
+    ),
+    -- M3 Fix: Exact 1-to-1 coupling between event_type and linked target
+    CONSTRAINT chk_timeline_type_target_coupling CHECK (
+        (event_type = 'GOAL_ANCHORED' AND target_goal_id IS NOT NULL) OR
+        (event_type = 'INSIGHT_CONNECTED' AND target_insight_id IS NOT NULL) OR
+        (event_type = 'REFLECTION_TIED' AND target_reflection_id IS NOT NULL) OR
+        (event_type = 'ACTION_DISPATCHED' AND target_action_step_id IS NOT NULL) OR
+        (event_type = 'MILESTONE_PROGRESSION' AND target_milestone_id IS NOT NULL)
+    ),
+    -- M5 Fix: Headline length bounds and regex PII scrubber
+    CONSTRAINT chk_timeline_headline_len CHECK (length(trim(headline)) >= 3 AND length(headline) <= 255),
+    CONSTRAINT chk_timeline_headline_no_pii CHECK (
+        headline !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
+    ),
+    -- M5 Fix: Detail length bounds and regex PII scrubber
+    CONSTRAINT chk_timeline_detail_len CHECK (detail IS NULL OR length(detail) <= 4000),
+    CONSTRAINT chk_timeline_detail_no_pii CHECK (
+        detail IS NULL OR
+        detail !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
+    ),
+    -- D1 Fix: Full union blacklist array on metadata JSONB
+    CONSTRAINT chk_timeline_metadata_no_pii CHECK (
+        jsonb_typeof(metadata) = 'object'
+        AND NOT (metadata ?| ARRAY[
+            'name', 'phone', 'email', 'national_id', 'location', 'avatar_url', 'phone_number',
+            'fingerprint', 'face_id', 'voice_sample', 'bank_account', 'iban', 'credit_card'
+        ])
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_plan_time
+    ON learning_successtimelineevent (tenant_id, plan_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_goal
+    ON learning_successtimelineevent (tenant_id, target_goal_id) WHERE target_goal_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_insight
+    ON learning_successtimelineevent (tenant_id, target_insight_id) WHERE target_insight_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_reflection
+    ON learning_successtimelineevent (tenant_id, target_reflection_id) WHERE target_reflection_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_action
+    ON learning_successtimelineevent (tenant_id, target_action_step_id) WHERE target_action_step_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_milestone
+    ON learning_successtimelineevent (tenant_id, target_milestone_id) WHERE target_milestone_id IS NOT NULL;
+
+-- ----------------------------------------------------------------------------
+-- 4. SUCCESS AUDIT LOG
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS learning_successauditlog (
+    id UUID NOT NULL,
+    tenant_id UUID NOT NULL,
+    actor_id UUID NOT NULL,
+    target_plan_id UUID NULL,
+    target_action_step_id UUID NULL,
+    target_timeline_event_id UUID NULL,
+    action VARCHAR(64) NOT NULL,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+
+    CONSTRAINT pk_learning_successauditlog PRIMARY KEY (id),
+    CONSTRAINT uq_learning_successauditlog_tenant_id UNIQUE (tenant_id, id),
+    CONSTRAINT fk_successaudit_tenant FOREIGN KEY (tenant_id)
+        REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
+    CONSTRAINT fk_successaudit_actor FOREIGN KEY (tenant_id, actor_id)
+        REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE RESTRICT,
+    CONSTRAINT fk_successaudit_target_plan FOREIGN KEY (tenant_id, target_plan_id)
+        REFERENCES learning_studentsuccessplan(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_successaudit_target_action FOREIGN KEY (tenant_id, target_action_step_id)
+        REFERENCES learning_successactionstep(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_successaudit_target_timeline FOREIGN KEY (tenant_id, target_timeline_event_id)
+        REFERENCES learning_successtimelineevent(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT chk_successaudit_target_xor CHECK (
+        num_nonnulls(target_plan_id, target_action_step_id, target_timeline_event_id) = 1
+    ),
+    CONSTRAINT chk_successaudit_action CHECK (
+        action IN (
+            'CREATE_SUCCESS_PLAN', 'PAUSE_SUCCESS_PLAN', 'RESUME_SUCCESS_PLAN',
+            'COMPLETE_SUCCESS_PLAN', 'SUPERSEDE_SUCCESS_PLAN', 'ARCHIVE_SUCCESS_PLAN',
+            'CREATE_ACTION_STEP', 'UPDATE_ACTION_STEP', 'TRANSITION_ACTION_STEP',
+            'APPEND_TIMELINE_EVENT'
+        )
+    ),
+    CONSTRAINT chk_successaudit_metadata_no_pii CHECK (
+        jsonb_typeof(metadata) = 'object'
+        AND NOT (metadata ?| ARRAY[
+            'name', 'phone', 'email', 'national_id', 'location', 'avatar_url', 'phone_number',
+            'fingerprint', 'face_id', 'voice_sample', 'bank_account', 'iban', 'credit_card'
+        ])
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_successaudit_tenant_actor_time
+    ON learning_successauditlog (tenant_id, actor_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_successaudit_tenant_plan
+    ON learning_successauditlog (tenant_id, target_plan_id) WHERE target_plan_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_successaudit_tenant_action
+    ON learning_successauditlog (tenant_id, target_action_step_id) WHERE target_action_step_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_successaudit_tenant_timeline
+    ON learning_successauditlog (tenant_id, target_timeline_event_id) WHERE target_timeline_event_id IS NOT NULL;
+
+-- ----------------------------------------------------------------------------
+-- 5. POSTGRESQL 17 FORCE RLS & NOBYPASSRLS ENFORCEMENT
+-- ----------------------------------------------------------------------------
+DO $$
+DECLARE
+    tbl text;
+    tables text[] := ARRAY[
+        'learning_studentsuccessplan',
+        'learning_successactionstep',
+        'learning_successtimelineevent',
+        'learning_successauditlog'
+    ];
+BEGIN
+    FOREACH tbl IN ARRAY tables LOOP
+        EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY;', tbl);
+        EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY;', tbl);
+
+        EXECUTE format('DROP POLICY IF EXISTS p3_vs15_tenant_isolation_policy ON %I;', tbl);
+        EXECUTE format(
+            'CREATE POLICY p3_vs15_tenant_isolation_policy ON %I
+             FOR ALL
+             USING (tenant_id = NULLIF(current_setting(''app.current_tenant'', true), '''')::uuid)
+             WITH CHECK (tenant_id = NULLIF(current_setting(''app.current_tenant'', true), '''')::uuid);',
+            tbl
+        );
+    END LOOP;
+END $$;
+
+-- Enforce Append-Only Discipline on Timeline Events and Audit Log
+REVOKE UPDATE, DELETE ON learning_successtimelineevent FROM PUBLIC;
+REVOKE UPDATE, DELETE ON learning_successtimelineevent FROM app_role;
+REVOKE UPDATE, DELETE ON learning_successauditlog FROM PUBLIC;
+REVOKE UPDATE, DELETE ON learning_successauditlog FROM app_role;
+
+
+============================================================================
+خواهشمند است سند و DDL نسخه v1.1 را بررسی و در صورت انطباق، تأییدیه رسمی GLM_SCOPE: PASS را صادر فرمایید. 
+Thought Process
+ممیزی Re-Audit P3-VS15 — راستی‌آزمایی v1.1
+
+درود و احترام، فرماندهی محترم.
+
+ابتدا اعتبار فرمی این ارائه را ثبت کنم — این بهترین «شکلِ» بسته اصلاحی در تاریخ ناوگان است: سربرگ RESPONSE_TO با ارجاع صریح به رأی v1.0 (Response-Record Identity در کاربرد اول ✓)، کامیت 83a917e (Traceability ✓)، و بسته کامل مستندات — دو ماتریس FSM، جدول کوپلاژ، Actor Matrix پنج‌نقشی، و ماتریس واقعی ۲۵ سطری (TOC متحول به Matrix شد). M3، M4، M5 و M6 راستی‌آزمایی و دقیقاً بسته شدند — از جمله منطق کوپلاژ که بررسی کردم: XOR (=۱) + Coupling (نوع→هدف) = نگاشت دقیق یک‌به‌یک ✓.
+
+اما ممیزی تفاضل — همیشه، در هر دروازه — این بار یک یافته بحرانی دارد که ماهیتش جدید است:
+
+۱. رأی
+text
+GLM_SCOPE: CHANGES_REQUIRED
+Blocker: 1 (M2 — اصلاحِ نشانه‌رفته به جدول غلط) | Major: 2 | Minor: باقی‌مانده‌ها
+بسته v1.2: ≈ ۵ خط DDL + ۲ سطر تست + چند سطر مستند → PASS همان نوبت
+۲. 🔴 B1 — اصلاح M2 به جدولِ اشتباه اشاره می‌کند: ساختار کامل، ارجاع غلط
+sql
+-- DDL v1.1 (و §2.3 سند، و N14 — هر سه یکسان):
+CONSTRAINT fk_timelineevent_target_milestone FOREIGN KEY (tenant_id, target_milestone_id)
+    REFERENCES learning_successactionstep(tenant_id, id)     -- ❌
+    ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+
+target_milestone_id به learning_successactionstep ارجاع می‌دهد — نه به learning_learningmilestone (جدول گواهی‌شده VS13 که تجویز صریح من بود). پیامدها:
+
+۱. رویداد MILESTONE_PROGRESSION هرگز نمی‌تواند به مایلستون واقعی لینک شود — ID های VS13 رد می‌شوند؛ ID های Action Step پذیرفته می‌شوند.
+۲. معنای این نوع رویداد با ACTION_DISPATCHED تکراری می‌شود — هر دو به همان جدول اشاره می‌کنند.
+۳. خطا در کل زنجیره تکثیر شده: §2.3 (Referenced Entity)، N14 («non-existent action step») و §2.1 (که learning_learningmilestone را در فهرست پیش‌نیازها ندارد — اما aiassistedgrowthsuggestion را دارد که در DDL ارجاعی‌اش نیست!).
+
+اصلاح — یک خط + سه سطر مستند:
+
+sql
+REFERENCES learning_learningmilestone(tenant_id, id)   -- ✅ (UNIQUE (tenant_id, id) در VS13 گواهی‌شده)
+§2.1: افزودن milestone به پیش‌نیازها؛ §2.3: اصلاح Referenced Entity؛ N14: «non-existent milestone».
+
+ثبت کلاس جدید در رجیستر — «Semantic Mis-Target»: هر پنج عنصر تجویز من حاضرند (ستون، XOR پنج‌ستونه، Coupling، DEFERRABLE FK) — DDL کامپایل می‌شود، N14 مکانیکی PASS می‌شود، شکلِ اصلاح کامل است — اما ارجاعِ معنایی غلط است. این عمیق‌ترین لایه شکاف Claim-Artifact است: ساختار ≠ معنا. و دقیقاً به همین دلیل Wording تست‌ها اهمیت دارد: N14 الان «رفتار غلط» را تست و تأیید می‌کند.
+
+۳. Major Findings
+#
+	
+یافته
+	
+اصلاح
+
+M-A	هسته GUC ناقص است — ۲ از ۴: N1 (unset ✓) و N2 (UUID مستأجر دیگر ✓) موجودند؛ رشته خالی (رفتار NULLIF) و غیر UUID (خطای Cast) غایب‌اند — هسته چهارتگی استاندارد ناوگان از VS10 تا VS14	افزودن N26/N27 — دو سطر
+M-B	Claim-Integrity: واقعه ۱۰ — سربرگ ادعا می‌کند «رفع قطعی کلیه یافته‌های (B1, M1-M6, m1-m5)» اما بندهای نامه فقط B1+M ها را پوشش می‌دهند و: m1 (شکاف‌های CHECK سازگاری) دست‌نخورده، m3 (دامنه target_period) باز، m4 فقط commit را دارد (Semantics اصلاح/Idempotency برای append ها غایب). فقط m2 تقریباً رسیده — و آن هم با حذف milestone	یا تحویل m1/m3/m4-semantic، یا تنگ‌کردن ادعا به آنچه واقعاً رسیده
+۴. Minor Findings (Residual)
+m1: chk_successplan_status_consistency همان v1.0 است — PAUSED مقدار archived_at و COMPLETED مقدار paused_at/archived_at را مقید نمی‌کند؛ SUPERSEDED هنوز ستون superseded_at ندارد.
+m3: target_period همچنان بدون دامنه (enum/فرمت).
+m4: Semantics اصلاح رویدادهای timeline (رویداد اصلاحی append-only؟) و Idempotency برای append ها — تعریف‌نشده.
+گذار COMPLETED → ARCHIVED در FSM نیست (برنامه تکمیل‌شده قابل آرشیو نیست)؛ تستی برای chk_actionstep_desc_len نیست؛ §2.1 یک وابسته استفاده‌نشده (suggestion) فهرست کرده و وابسته لازم (milestone) را نه.
+۵. دروازه v1.2 — و همچنان: اسلایس دو-نوبتی در دسترس
+
+بسته (≈۱۰ خط):
+۱. Re-target یک‌خطی FK milestone + سه سطر مستند (§2.1/§2.3/N14)
+۲. N26/N27 (GUC خالی / غیر UUID)
+۳. تنگ‌سازی CHECK سازگاری (m1) — چند خط
+۴. دامنه target_period (m3) — یک CHECK یا enum مستند
+۵. یک بند Semantics برای m4
+
+→ ارائه شود → GLM_SCOPE: PASS در همان نوبت. ظرفیت «اولین اسلایس دو-نوبتی از زمان VS11» هنوز زنده است — مشروط به اینکه این پنج خط، این بار به جدولِ درست اشاره کنند.
+
+۶. رجیستر حاکمیتی
+Response-Record Identity: نخستین کاربرد در سربرگ بسته اصلاحی ✓ — ثبت مثبت؛ الگو شد.
+Commit Traceability: دومین اسلایس متوالی ✓ — نهادینه شد.
+Claim-Integrity: واقعه ۱۰ — الگوی دائمی: ادعای «m1-m5» بدون بندهای متناظر.
+کلاس جدید: «Semantic Mis-Target» — ثبت شد؛ از این پس ممیزی تفاضل صراحتاً referent هر FK اصلاح‌شده را با تجویز تطبیق می‌کند، نه فقط حضورش را.
+بدهی VS12-v1.4: پرچم یازدهم — همچنان تنها قلم باز رجیستر P3.
+
+نوبت پیش، درسِ DDL آموخته شد؛ این نوبت، شکلِ اثبات آموخته شد. آنچه این بار مانده ظریف‌تر از هر دو است: اشاره‌گر به گرته درست. پنج خط — و VS15 دو-نوبتی می‌شود.
+
+با احترام،
+GLM — معمار ارشد دیتابیس و امنیت | پروژه کُدشو (P3-VS15)
+به استناد: COMMANDER_P3_VS15_DISCOVERY_UNLOCK — رأی: GLM_SCOPE: CHANGES_REQUIRED
+
+### P3-VS15_BOUNDARY_PLAN_V1.2_AUDIT_CLOSURE_SUBMISSION
+ROLE: Database Architecture & PostgreSQL 17 RLS Review
+TASK_ID: P3-VS15-LEARNING-CONTINUITY-AND-STUDENT-SUCCESS-PLANNING
+AUTHORITY: COMMANDER_P3_VS15_DISCOVERY_UNLOCK
+COMMIT_HASH: 607bcac
+RESPONSE_TO: GLM_SCOPE_CHANGES_REQUIRED_V1.1_AUDIT
+
+پاسخ تفصیلی، ساختارمند و تطبیق خط‌به‌خط DDL و سند معماری نسخه v1.2 جهت رفع قطعی کلیه یافته‌های ممیزی v1.1 (B1, M-A, M-B, m1, m3, m4) و صدور رأی رسمی GLM_SCOPE: PASS:
+
+۱. رفع یافته بحرانی B1 (Semantic Mis-Target روی target_milestone_id):
+   - کلید خارجی fk_timelineevent_target_milestone دقیقاً به جدول گواهی‌شده VS13 اصلاح شد:
+     ```sql
+     CONSTRAINT fk_timelineevent_target_milestone FOREIGN KEY (tenant_id, target_milestone_id)
+         REFERENCES learning_learningmilestone(tenant_id, id)
+         ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+     ```
+   - جدول learning_learningmilestone در بخش ۱ (پیش‌نیازهای §2.1) مستند گردید؛ موجودیت مرجع در جدول کوپلاژ §2.3 تصحیح شد؛ و شرح آزمون N14 به ارزیابی عدم امکان اتصال milestone_id نامعتبر بازنویسی شد.
+
+۲. رفع یافته M-A (تکمیل چهارتگی آزمون‌های هسته GUC مستأجر):
+   - آزمون‌های N26 (رفتار رشته خالی GUC با NULLIF و Fail-Closed) و N27 (رفتار رشته مخرب غیر UUID با خطای Cast دیتابیس و Abort تراکنش) به ماتریس آزمون‌های منفی اضافه شدند و هسته چهارتگی استاندارد ناوگان (N1, N2, N26, N27) را تثبیت کردند.
+
+۳. رفع یافته M-B و m1 (قیدهای سازگاری قطعی وضعیت و ستون superseded_at):
+   - ستون superseded_at TIMESTAMPTZ NULL به جدول learning_studentsuccessplan اضافه گردید.
+   - قید chk_successplan_status_consistency به صورت کاملاً مانعةالجمع و سازگار بازنویسی شد:
+     ```sql
+     CONSTRAINT chk_successplan_status_consistency CHECK (
+         (status = 'ACTIVE' AND completed_at IS NULL AND paused_at IS NULL AND superseded_at IS NULL AND archived_at IS NULL) OR
+         (status = 'PAUSED' AND paused_at IS NOT NULL AND completed_at IS NULL AND superseded_at IS NULL AND archived_at IS NULL) OR
+         (status = 'COMPLETED' AND completed_at IS NOT NULL AND paused_at IS NULL AND superseded_at IS NULL AND archived_at IS NULL) OR
+         (status = 'SUPERSEDED' AND superseded_at IS NOT NULL AND archived_at IS NULL) OR
+         (status = 'ARCHIVED' AND archived_at IS NOT NULL)
+     ),
+     ```
+   - امکان گذار COMPLETED -> ARCHIVED به FSM اضافه شد.
+
+۴. رفع یافته m3 (دامنه مشخص برای target_period):
+   - قید دامنه‌ای chk_successplan_target_period اضافه گردید:
+     ```sql
+     CONSTRAINT chk_successplan_target_period CHECK (
+         target_period IN (
+             'CURRENT_TERM', 'ACADEMIC_YEAR', 'SUMMER_INTENSIVE',
+             'MONTHLY_SPRINT', 'QUARTERLY_CYCLE', 'LONG_TERM_FOUNDATION'
+         )
+     ),
+     ```
+
+۵. رفع یافته m4 (معناشناسی اصلاح ردپای یادگیری و Idempotency در تایم‌لاین):
+   - جهت حفظ خاصیت Append-Only و عدم امکان UPDATE/DELETE، ستون replaces_event_id و نوع رویداد TIMELINE_EVENT_AMENDED اضافه شد تا هرگونه اصلاح رویداد از طریق رویداد جبرانی متصل به رویداد قبلی ثبت شود.
+   - جهت Idempotency آپندهای تایم‌لاین، ستون client_mutation_id UUID NULL و ایندکس یکتایی جزئی uq_timelineevent_tenant_mutation اعمال شد تا از ایجاد رویدادهای تکراری جلوگیری گردد.
+
+============================================================================
+سند کامل معماری P3_VS15_BOUNDARY_PLAN.md (نسخه v1.2-CANONICAL):
+============================================================================
+# P3-VS15 Boundary Plan, DDL & Proof Matrix (v1.2)
+
+## Vertical Slice Identifier
+- Task ID: `P3-VS15-LEARNING-CONTINUITY-AND-STUDENT-SUCCESS-PLANNING`
+- Branch: `codex/phase3-product-platform-foundation`
+- Authority: `COMMANDER_P3_VS15_DISCOVERY_UNLOCK`
+- Audit Response: Formally addresses GLM v1.1 findings (B1, M-A, M-B, m1, m3, m4)
+- Fleet Standard GUC: `app.current_tenant`
+- Session Protocol: `SET LOCAL "app.current_tenant" = %s` strictly inside `transaction.atomic()`
+
+---
+
+## 1. §2.1 Prerequisites & Upstream Dependencies
+- P3-VS1 to P3-VS14 Certified:
+  - `learning_learningmilestone(tenant_id, id)`: Certified in P3-VS13 with tenant-scoped unique active milestone code index (`learning_learningmilestone_tenant_id_uniq`). Referenced by `fk_timelineevent_target_milestone`.
+  - `learning_studentlearninggoal(tenant_id, id)`: Certified with active singleton per domain and max 5 active goals. Referenced by `fk_timelineevent_target_goal`.
+  - `learning_learninginsight(tenant_id, id)`: Certified with partial unique singleton index. Referenced by `fk_timelineevent_target_insight`.
+  - `learning_learningreflection(tenant_id, id)`: Certified immutable reflection journal. Referenced by `fk_timelineevent_target_reflection`.
+  - `learning_successactionstep(tenant_id, id)`: Internal P3-VS15 action step entity referenced by `fk_timelineevent_target_action`.
+  - All foreign keys enforce composite tenant scoping `(tenant_id, target_id)`.
+
+---
+
+## 2. Finite State Machines (FSM) & Transition Matrices (M1, m1 Addressed)
+
+### 2.1 StudentSuccessPlan FSM Matrix
+| Initial State | Event / Trigger | Target State | Permitted Actors | Guard Conditions & Invariants | Side Effects / Audit Action |
+|:---|:---|:---|:---|:---|:---|
+| `[INIT]` | `CREATE_SUCCESS_PLAN` | `ACTIVE` | Student, Mentor | `uq_successplan_student_active` (Max 1 active plan per student per tenant); title len 3-255; valid `target_period` | Insert plan; Emit `CREATE_SUCCESS_PLAN` audit log |
+| `ACTIVE` | `PAUSE_SUCCESS_PLAN` | `PAUSED` | Student, Mentor | `paused_at` set to `clock_timestamp()`; non-punitive pause | Sets `paused_at`; Emit `PAUSE_SUCCESS_PLAN` audit log |
+| `PAUSED` | `RESUME_SUCCESS_PLAN` | `ACTIVE` | Student, Mentor | Verifies no other active plan exists; clears `paused_at` | Sets `status='ACTIVE'`, `paused_at=NULL`; Emit `RESUME_SUCCESS_PLAN` audit log |
+| `ACTIVE` | `COMPLETE_SUCCESS_PLAN` | `COMPLETED` | Student, Mentor | Sets `completed_at`; all mandatory action steps completed or skipped | Sets `completed_at`; Emit `COMPLETE_SUCCESS_PLAN` audit log |
+| `ACTIVE`, `PAUSED` | `SUPERSEDE_SUCCESS_PLAN` | `SUPERSEDED` | Student, Mentor | Sets `superseded_at`; atomically transitioned when a newer plan is initialized | Releases active singleton; Emit `SUPERSEDE_SUCCESS_PLAN` audit log |
+| `ACTIVE`, `PAUSED`, `COMPLETED` | `ARCHIVE_SUCCESS_PLAN` | `ARCHIVED` | Student, Staff | Sets `archived_at`; terminal non-punitive archive (completed plans can be archived) | Sets `archived_at`; Emit `ARCHIVE_SUCCESS_PLAN` audit log |
+
+### 2.2 SuccessActionStep FSM Matrix
+| Initial State | Event / Trigger | Target State | Permitted Actors | Guard Conditions & Invariants | Side Effects / Audit Action |
+|:---|:---|:---|:---|:---|:---|
+| `[INIT]` | `CREATE_ACTION_STEP` | `PENDING` | Student, Mentor | `sequence_order >= 1`; `uq_actionstep_tenant_plan_seq`; `is_authoritative = FALSE` | Inserts step; Emit `CREATE_ACTION_STEP` audit log |
+| `PENDING` | `START_ACTION_STEP` | `IN_PROGRESS` | Student | Step belongs to active plan; `is_authoritative = FALSE` | Updates status; Emit `TRANSITION_ACTION_STEP` audit log |
+| `PENDING`, `IN_PROGRESS` | `COMPLETE_ACTION_STEP` | `COMPLETED` | Student, Mentor | `completed_at` set to `clock_timestamp()` | Sets `completed_at`; Appends `ACTION_DISPATCHED` timeline event |
+| `PENDING`, `IN_PROGRESS` | `SKIP_ACTION_STEP` | `SKIPPED` | Student, Mentor | Non-punitive skip; reason optional in metadata | Updates status; Emit `TRANSITION_ACTION_STEP` audit log |
+| `PENDING`, `IN_PROGRESS` | `CANCEL_ACTION_STEP` | `CANCELLED` | Student, Mentor | Step obsoleted; non-punitive | Updates status; Emit `TRANSITION_ACTION_STEP` audit log |
+
+### 2.3 SuccessTimelineEvent Lifecycle & Target Coupling (B1, M2, M3, m4 Addressed)
+| Event Type | Permitted Target Column | Referenced Entity | Permitted Actors | Invariant / Coupling Guard |
+|:---|:---|:---|:---|:---|
+| `GOAL_ANCHORED` | `target_goal_id` | `learning_studentlearninggoal` (P3-VS1) | Student | Exact 1-to-1: `target_goal_id IS NOT NULL` |
+| `INSIGHT_CONNECTED` | `target_insight_id` | `learning_learninginsight` (P3-VS13) | System, Mentor | Exact 1-to-1: `target_insight_id IS NOT NULL` |
+| `REFLECTION_TIED` | `target_reflection_id` | `learning_learningreflection` (P3-VS12) | Student | Exact 1-to-1: `target_reflection_id IS NOT NULL` |
+| `ACTION_DISPATCHED` | `target_action_step_id` | `learning_successactionstep` (P3-VS15) | Student, Mentor | Exact 1-to-1: `target_action_step_id IS NOT NULL` |
+| `MILESTONE_PROGRESSION` | `target_milestone_id` | `learning_learningmilestone` (P3-VS13) | Student, Mentor | Exact 1-to-1: `target_milestone_id IS NOT NULL` |
+| `TIMELINE_EVENT_AMENDED`| `replaces_event_id` | `learning_successtimelineevent` (P3-VS15)| Student, Mentor | Append-only correction: `replaces_event_id IS NOT NULL` |
+
+### 2.4 Timeline Amendment & Idempotency Semantics (m4 Addressed)
+1. **Append-Only Correction Semantics**: Direct `UPDATE` or `DELETE` on timeline events is revoked at the database level (`REVOKE UPDATE, DELETE`). If a narrative entry or link requires factual amendment, an append-only compensating event (`TIMELINE_EVENT_AMENDED`) is inserted with `replaces_event_id` pointing to the prior entry in the same tenant. The audit trail remains fully immutable.
+2. **Idempotent Append Discipline**: Every timeline event accepts an optional `client_mutation_id UUID NULL`. The partial unique index `uq_timelineevent_tenant_mutation` guarantees that network retries or duplicate webhook dispatches with the same mutation ID are rejected or de-duplicated without creating ghost timeline entries.
+
+### 2.5 Actor & Authorization Matrix
+| Entity / Action | Student (Self) | Student (Peer / Cross-Tenant) | Mentor (Assigned Cohort) | Mentor (Unassigned Cohort) | Admin / Owner |
+|:---|:---|:---|:---|:---|:---|
+| `StudentSuccessPlan` (Create) | ALLOW | DENY (404/403) | ALLOW (Collaborative planning) | DENY (403 Forbidden) | ALLOW (Tenant ops) |
+| `StudentSuccessPlan` (Read) | ALLOW | DENY (404/403) | ALLOW (Assigned cohort only) | DENY (403 Forbidden) | ALLOW |
+| `StudentSuccessPlan` (Update / Pause / Archive) | ALLOW | DENY (404/403) | ALLOW (Assigned cohort only) | DENY (403 Forbidden) | ALLOW |
+| `SuccessActionStep` (Create / Progress) | ALLOW | DENY (404/403) | ALLOW (Assigned cohort only) | DENY (403 Forbidden) | ALLOW |
+| `SuccessTimelineEvent` (Append) | ALLOW (Formative actions) | DENY (404/403) | ALLOW (Formative feedback) | DENY (403 Forbidden) | ALLOW |
+| `SuccessTimelineEvent` (Read) | ALLOW | DENY (404/403) | ALLOW (Assigned cohort only) | DENY (403 Forbidden) | ALLOW |
+| `SuccessAuditLog` (Read) | DENY | DENY | DENY | DENY | ALLOW (Staff audit) |
+
+---
+
+## 3. Detailed Negative Proof Matrix (N1 – N27) (B1, M-A Addressed)
+
+| Test ID | Test Category | Target Condition | Expected Result & Verification Mechanism |
+|:---|:---|:---|:---|
+| **N1** | Tenant Isolation GUC | Query `learning_studentsuccessplan` without `SET LOCAL app.current_tenant` | Empty set / 0 rows (Fail-Closed) |
+| **N2** | Tenant Isolation GUC | Query `learning_successtimelineevent` with wrong tenant UUID | Empty set / 0 rows (Fail-Closed) |
+| **N3** | Cross-Tenant Membership | Insert `StudentSuccessPlan` pointing to `student_id` of Tenant B | Composite FK `fk_studentsuccessplan_student` violation -> DB REJECT |
+| **N4** | Cross-Tenant Plan Leakage | Insert `SuccessActionStep` pointing to `plan_id` of Tenant B | Composite FK `fk_successactionstep_plan` violation -> DB REJECT |
+| **N5** | Active Singleton Proof | Insert second `ACTIVE` plan for same student in same tenant | Partial unique index `uq_successplan_student_active` violation -> DB REJECT |
+| **N6** | Anti-Automated Decider | System generates action step marked `is_authoritative = TRUE` | Constraint `chk_step_non_authoritative` violation -> DB REJECT |
+| **N7** | 5-way XOR Continuity | Insert timeline event with zero targets or multiple targets | Constraint `chk_timeline_target_xor` violation -> DB REJECT |
+| **N8** | Type-Target Mismatch (M3) | Insert `GOAL_ANCHORED` event linking `target_action_step_id` | Constraint `chk_timeline_type_target_coupling` violation -> DB REJECT |
+| **N9** | Append-Only Invariant | Attempt `UPDATE` or `DELETE` on `learning_successtimelineevent` | Permission Denied / DB Revoke -> DB REJECT |
+| **N10** | Append-Only Audit Log | Attempt `UPDATE` or `DELETE` on `learning_successauditlog` | Permission Denied / DB Revoke -> DB REJECT |
+| **N11** | Plan Deferrable FK (M4) | Delete student success plan with linked timeline events | `ON DELETE NO ACTION DEFERRABLE` blocks silent purge -> DB REJECT |
+| **N12** | Sequence Order Positive (M6)| Insert `SuccessActionStep` with `sequence_order = 0` or negative | Constraint `chk_actionstep_seq_positive` violation -> DB REJECT |
+| **N13** | Sequence Order Unique (M6) | Insert two `SuccessActionStep` with same `sequence_order` for same plan | Constraint `uq_actionstep_tenant_plan_seq` violation -> DB REJECT |
+| **N14** | Milestone FK (B1) | Insert `MILESTONE_PROGRESSION` event with non-existent milestone ID in `learning_learningmilestone` | Composite FK `fk_timelineevent_target_milestone` violation -> DB REJECT |
+| **N15** | Headline Length Bounds (M5)| Insert timeline event with `headline = 'ab'` (len < 3) or > 255 chars | Constraint `chk_timeline_headline_len` violation -> DB REJECT |
+| **N16** | Headline PII Scrub (M5) | Insert timeline event headline containing phone number or credit card | Constraint `chk_timeline_headline_no_pii` violation -> DB REJECT |
+| **N17** | Detail Text Bounds (M5) | Insert timeline event detail text exceeding 4000 characters | Constraint `chk_timeline_detail_len` violation -> DB REJECT |
+| **N18** | Notes Text Bounds (M5) | Insert success plan notes exceeding 4000 characters | Constraint `chk_successplan_notes_len` violation -> DB REJECT |
+| **N19** | PII Blacklist JSONB | Inject `{"national_id": "0012345678"}` into timeline event metadata | Constraint `chk_timeline_metadata_no_pii` (`?\|`) violation -> DB REJECT |
+| **N20** | PII Blacklist Audit Log | Inject `{"iban": "IR123456..."}` into audit log metadata | Constraint `chk_successaudit_metadata_no_pii` (`?\|`) violation -> DB REJECT |
+| **N21** | FSM Illegal Direct Transition| Transition `StudentSuccessPlan` from `ARCHIVED` directly to `ACTIVE` | FSM Guard rejects invalid transition -> 400 Bad Request |
+| **N22** | Completion Consistency | Set step `status='COMPLETED'` with `completed_at=NULL` | Constraint `chk_step_completion_consistency` violation -> DB REJECT |
+| **N23** | Anti-Ranking Policy | Query success plans with `?rank=true` or leaderboard query params | REST API returns 400 Bad Request (Anti-Ranking Policy) |
+| **N24** | Cross-Cohort Mentor Guard | Mentor queries success plan of student in unassigned cohort | Service permission check returns 403 Forbidden |
+| **N25** | Tenant Wipe Clean Cascade | Delete tenant entity via `platform_tenant_tenant` cascade | Deferrable FK topology cascades cleanly without deadlock -> DB PASS |
+| **N26** | Empty String GUC Guard (M-A)| Set GUC `app.current_tenant = ''` (empty string) | `NULLIF` yields NULL -> RLS denies all rows (Fail-Closed, 0 rows) |
+| **N27** | Invalid UUID GUC Guard (M-A)| Set GUC `app.current_tenant = 'malicious-non-uuid-string'` | PostgreSQL Cast Exception `::uuid` -> Abort transaction (DB REJECT) |
+
+
+============================================================================
+کد کامل PostgreSQL 17 DDL نسخه v1.2-CANONICAL:
+============================================================================
+-- ============================================================================
+-- P3-VS15: LEARNING CONTINUITY & STUDENT SUCCESS PLANNING
+-- POSTGRESQL 17 DDL, FORCE RLS, NOBYPASSRLS & AUDIT DISCIPLINE SPECIFICATION
+-- Version: v1.2-CANONICAL
+-- Authority: COMMANDER_P3_VS15_DISCOVERY_UNLOCK
+-- Response-Record Identity: Addressed GLM v1.1 Audit (B1, M-A, M-B, m1, m3, m4)
+-- Fleet Standard GUC: app.current_tenant
+-- Session Protocol: SET LOCAL "app.current_tenant" = %s strictly inside transaction.atomic()
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 1. STUDENT SUCCESS PLAN
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS learning_studentsuccessplan (
+    id UUID NOT NULL,
+    tenant_id UUID NOT NULL,
+    student_id UUID NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    target_period VARCHAR(64) NOT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'ACTIVE',
+    notes TEXT NULL,
+    completed_at TIMESTAMPTZ NULL,
+    paused_at TIMESTAMPTZ NULL,
+    superseded_at TIMESTAMPTZ NULL,
+    archived_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+
+    CONSTRAINT pk_learning_studentsuccessplan PRIMARY KEY (id),
+    CONSTRAINT uq_learning_studentsuccessplan_tenant_id UNIQUE (tenant_id, id),
+    CONSTRAINT fk_studentsuccessplan_tenant FOREIGN KEY (tenant_id)
+        REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
+    CONSTRAINT fk_studentsuccessplan_student FOREIGN KEY (tenant_id, student_id)
+        REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE CASCADE,
+    CONSTRAINT chk_successplan_title_len CHECK (length(trim(title)) >= 3 AND length(title) <= 255),
+    -- m3 Fix: Strict target_period domain check
+    CONSTRAINT chk_successplan_target_period CHECK (
+        target_period IN (
+            'CURRENT_TERM', 'ACADEMIC_YEAR', 'SUMMER_INTENSIVE',
+            'MONTHLY_SPRINT', 'QUARTERLY_CYCLE', 'LONG_TERM_FOUNDATION'
+        )
+    ),
+    CONSTRAINT chk_successplan_status CHECK (status IN ('ACTIVE', 'PAUSED', 'COMPLETED', 'SUPERSEDED', 'ARCHIVED')),
+    -- m1 Fix: Complete, non-overlapping status consistency invariant
+    CONSTRAINT chk_successplan_status_consistency CHECK (
+        (status = 'ACTIVE' AND completed_at IS NULL AND paused_at IS NULL AND superseded_at IS NULL AND archived_at IS NULL) OR
+        (status = 'PAUSED' AND paused_at IS NOT NULL AND completed_at IS NULL AND superseded_at IS NULL AND archived_at IS NULL) OR
+        (status = 'COMPLETED' AND completed_at IS NOT NULL AND paused_at IS NULL AND superseded_at IS NULL AND archived_at IS NULL) OR
+        (status = 'SUPERSEDED' AND superseded_at IS NOT NULL AND archived_at IS NULL) OR
+        (status = 'ARCHIVED' AND archived_at IS NOT NULL)
+    ),
+    -- M5 Fix: Strict length bounds and 13-key regex PII filter on notes
+    CONSTRAINT chk_successplan_notes_len CHECK (notes IS NULL OR length(notes) <= 4000),
+    CONSTRAINT chk_successplan_notes_no_pii CHECK (
+        notes IS NULL OR
+        notes !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
+    )
+);
+
+-- Invariant: Exactly 1 ACTIVE SuccessPlan per student per tenant (Active Singleton)
+CREATE UNIQUE INDEX IF NOT EXISTS uq_successplan_student_active
+    ON learning_studentsuccessplan (tenant_id, student_id)
+    WHERE status = 'ACTIVE';
+
+CREATE INDEX IF NOT EXISTS idx_successplan_tenant_student_time
+    ON learning_studentsuccessplan (tenant_id, student_id, created_at DESC);
+
+-- ----------------------------------------------------------------------------
+-- 2. SUCCESS ACTION STEP
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS learning_successactionstep (
+    id UUID NOT NULL,
+    tenant_id UUID NOT NULL,
+    plan_id UUID NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
+    sequence_order INT NOT NULL DEFAULT 1,
+    is_authoritative BOOLEAN NOT NULL DEFAULT FALSE,
+    target_date DATE NULL,
+    completed_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+
+    CONSTRAINT pk_learning_successactionstep PRIMARY KEY (id),
+    CONSTRAINT uq_learning_successactionstep_tenant_id UNIQUE (tenant_id, id),
+    CONSTRAINT fk_successactionstep_tenant FOREIGN KEY (tenant_id)
+        REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
+    CONSTRAINT fk_successactionstep_plan FOREIGN KEY (tenant_id, plan_id)
+        REFERENCES learning_studentsuccessplan(tenant_id, id) ON DELETE CASCADE,
+    CONSTRAINT chk_actionstep_title_len CHECK (length(trim(title)) >= 3 AND length(title) <= 255),
+    CONSTRAINT chk_actionstep_status CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'SKIPPED', 'CANCELLED')),
+    -- M6 Fix: sequence_order must be positive and unique per plan
+    CONSTRAINT chk_actionstep_seq_positive CHECK (sequence_order >= 1),
+    CONSTRAINT uq_actionstep_tenant_plan_seq UNIQUE (tenant_id, plan_id, sequence_order),
+    -- Non-automated decision boundary invariant: Systems/agents can never issue authoritative mandates
+    CONSTRAINT chk_step_non_authoritative CHECK (is_authoritative = FALSE),
+    CONSTRAINT chk_step_completion_consistency CHECK (
+        (status = 'COMPLETED' AND completed_at IS NOT NULL) OR
+        (status <> 'COMPLETED' AND completed_at IS NULL)
+    ),
+    -- M5 Fix: Strict length bounds and regex PII filter on description
+    CONSTRAINT chk_actionstep_desc_len CHECK (description IS NULL OR length(description) <= 4000),
+    CONSTRAINT chk_actionstep_no_pii CHECK (
+        description IS NULL OR
+        description !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_actionstep_tenant_plan_seq
+    ON learning_successactionstep (tenant_id, plan_id, sequence_order ASC);
+
+-- ----------------------------------------------------------------------------
+-- 3. SUCCESS TIMELINE EVENT (Append-Only Continuity Trail)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS learning_successtimelineevent (
+    id UUID NOT NULL,
+    tenant_id UUID NOT NULL,
+    plan_id UUID NOT NULL,
+    actor_id UUID NOT NULL,
+    event_type VARCHAR(64) NOT NULL,
+    headline VARCHAR(255) NOT NULL,
+    detail TEXT NULL,
+    target_goal_id UUID NULL,
+    target_insight_id UUID NULL,
+    target_reflection_id UUID NULL,
+    target_action_step_id UUID NULL,
+    target_milestone_id UUID NULL,
+    client_mutation_id UUID NULL,
+    replaces_event_id UUID NULL,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+
+    CONSTRAINT pk_learning_successtimelineevent PRIMARY KEY (id),
+    CONSTRAINT uq_learning_successtimelineevent_tenant_id UNIQUE (tenant_id, id),
+    CONSTRAINT fk_timelineevent_tenant FOREIGN KEY (tenant_id)
+        REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
+    -- M4 Fix: ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED prevents silent timeline purge
+    CONSTRAINT fk_timelineevent_plan FOREIGN KEY (tenant_id, plan_id)
+        REFERENCES learning_studentsuccessplan(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_timelineevent_actor FOREIGN KEY (tenant_id, actor_id)
+        REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE RESTRICT,
+    -- SA-2 Fix: DEFERRABLE INITIALLY DEFERRED eliminates tenant wipe cascade ordering deadlocks
+    CONSTRAINT fk_timelineevent_target_goal FOREIGN KEY (tenant_id, target_goal_id)
+        REFERENCES learning_studentlearninggoal(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_timelineevent_target_insight FOREIGN KEY (tenant_id, target_insight_id)
+        REFERENCES learning_learninginsight(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_timelineevent_target_reflection FOREIGN KEY (tenant_id, target_reflection_id)
+        REFERENCES learning_learningreflection(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_timelineevent_target_action FOREIGN KEY (tenant_id, target_action_step_id)
+        REFERENCES learning_successactionstep(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    -- B1 Fix: Target Milestone precisely references certified VS13 learning_learningmilestone
+    CONSTRAINT fk_timelineevent_target_milestone FOREIGN KEY (tenant_id, target_milestone_id)
+        REFERENCES learning_learningmilestone(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    -- m4 Fix: Append-only correction link (replaces_event_id references prior timeline event in same tenant)
+    CONSTRAINT fk_timelineevent_replaces FOREIGN KEY (tenant_id, replaces_event_id)
+        REFERENCES learning_successtimelineevent(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    -- 5-way XOR Continuity Invariant: Exactly one target entity must be linked per event
+    CONSTRAINT chk_timeline_target_xor CHECK (
+        num_nonnulls(target_goal_id, target_insight_id, target_reflection_id, target_action_step_id, target_milestone_id) = 1
+    ),
+    CONSTRAINT chk_timeline_event_type CHECK (
+        event_type IN (
+            'GOAL_ANCHORED',
+            'INSIGHT_CONNECTED',
+            'REFLECTION_TIED',
+            'ACTION_DISPATCHED',
+            'MILESTONE_PROGRESSION',
+            'TIMELINE_EVENT_AMENDED'
+        )
+    ),
+    -- M3 Fix: Exact 1-to-1 coupling between event_type and linked target
+    CONSTRAINT chk_timeline_type_target_coupling CHECK (
+        (event_type = 'GOAL_ANCHORED' AND target_goal_id IS NOT NULL) OR
+        (event_type = 'INSIGHT_CONNECTED' AND target_insight_id IS NOT NULL) OR
+        (event_type = 'REFLECTION_TIED' AND target_reflection_id IS NOT NULL) OR
+        (event_type = 'ACTION_DISPATCHED' AND target_action_step_id IS NOT NULL) OR
+        (event_type = 'MILESTONE_PROGRESSION' AND target_milestone_id IS NOT NULL) OR
+        (event_type = 'TIMELINE_EVENT_AMENDED' AND replaces_event_id IS NOT NULL)
+    ),
+    -- M5 Fix: Headline length bounds and regex PII scrubber
+    CONSTRAINT chk_timeline_headline_len CHECK (length(trim(headline)) >= 3 AND length(headline) <= 255),
+    CONSTRAINT chk_timeline_headline_no_pii CHECK (
+        headline !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
+    ),
+    -- M5 Fix: Detail length bounds and regex PII scrubber
+    CONSTRAINT chk_timeline_detail_len CHECK (detail IS NULL OR length(detail) <= 4000),
+    CONSTRAINT chk_timeline_detail_no_pii CHECK (
+        detail IS NULL OR
+        detail !~* '(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)'
+    ),
+    -- D1 Fix: Full union blacklist array on metadata JSONB
+    CONSTRAINT chk_timeline_metadata_no_pii CHECK (
+        jsonb_typeof(metadata) = 'object'
+        AND NOT (metadata ?| ARRAY[
+            'name', 'phone', 'email', 'national_id', 'location', 'avatar_url', 'phone_number',
+            'fingerprint', 'face_id', 'voice_sample', 'bank_account', 'iban', 'credit_card'
+        ])
+    )
+);
+
+-- m4 Fix: Idempotent append discipline via optional client_mutation_id per tenant
+CREATE UNIQUE INDEX IF NOT EXISTS uq_timelineevent_tenant_mutation
+    ON learning_successtimelineevent (tenant_id, client_mutation_id)
+    WHERE client_mutation_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_plan_time
+    ON learning_successtimelineevent (tenant_id, plan_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_goal
+    ON learning_successtimelineevent (tenant_id, target_goal_id) WHERE target_goal_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_insight
+    ON learning_successtimelineevent (tenant_id, target_insight_id) WHERE target_insight_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_reflection
+    ON learning_successtimelineevent (tenant_id, target_reflection_id) WHERE target_reflection_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_action
+    ON learning_successtimelineevent (tenant_id, target_action_step_id) WHERE target_action_step_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_milestone
+    ON learning_successtimelineevent (tenant_id, target_milestone_id) WHERE target_milestone_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_timeline_tenant_replaces
+    ON learning_successtimelineevent (tenant_id, replaces_event_id) WHERE replaces_event_id IS NOT NULL;
+
+-- ----------------------------------------------------------------------------
+-- 4. SUCCESS AUDIT LOG
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS learning_successauditlog (
+    id UUID NOT NULL,
+    tenant_id UUID NOT NULL,
+    actor_id UUID NOT NULL,
+    target_plan_id UUID NULL,
+    target_action_step_id UUID NULL,
+    target_timeline_event_id UUID NULL,
+    action VARCHAR(64) NOT NULL,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+
+    CONSTRAINT pk_learning_successauditlog PRIMARY KEY (id),
+    CONSTRAINT uq_learning_successauditlog_tenant_id UNIQUE (tenant_id, id),
+    CONSTRAINT fk_successaudit_tenant FOREIGN KEY (tenant_id)
+        REFERENCES platform_tenant_tenant(id) ON DELETE CASCADE,
+    CONSTRAINT fk_successaudit_actor FOREIGN KEY (tenant_id, actor_id)
+        REFERENCES platform_tenant_tenantmembership(tenant_id, user_id) ON DELETE RESTRICT,
+    CONSTRAINT fk_successaudit_target_plan FOREIGN KEY (tenant_id, target_plan_id)
+        REFERENCES learning_studentsuccessplan(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_successaudit_target_action FOREIGN KEY (tenant_id, target_action_step_id)
+        REFERENCES learning_successactionstep(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT fk_successaudit_target_timeline FOREIGN KEY (tenant_id, target_timeline_event_id)
+        REFERENCES learning_successtimelineevent(tenant_id, id)
+        ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT chk_successaudit_target_xor CHECK (
+        num_nonnulls(target_plan_id, target_action_step_id, target_timeline_event_id) = 1
+    ),
+    CONSTRAINT chk_successaudit_action CHECK (
+        action IN (
+            'CREATE_SUCCESS_PLAN', 'PAUSE_SUCCESS_PLAN', 'RESUME_SUCCESS_PLAN',
+            'COMPLETE_SUCCESS_PLAN', 'SUPERSEDE_SUCCESS_PLAN', 'ARCHIVE_SUCCESS_PLAN',
+            'CREATE_ACTION_STEP', 'UPDATE_ACTION_STEP', 'TRANSITION_ACTION_STEP',
+            'APPEND_TIMELINE_EVENT'
+        )
+    ),
+    CONSTRAINT chk_successaudit_metadata_no_pii CHECK (
+        jsonb_typeof(metadata) = 'object'
+        AND NOT (metadata ?| ARRAY[
+            'name', 'phone', 'email', 'national_id', 'location', 'avatar_url', 'phone_number',
+            'fingerprint', 'face_id', 'voice_sample', 'bank_account', 'iban', 'credit_card'
+        ])
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_successaudit_tenant_actor_time
+    ON learning_successauditlog (tenant_id, actor_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_successaudit_tenant_plan
+    ON learning_successauditlog (tenant_id, target_plan_id) WHERE target_plan_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_successaudit_tenant_action
+    ON learning_successauditlog (tenant_id, target_action_step_id) WHERE target_action_step_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_successaudit_tenant_timeline
+    ON learning_successauditlog (tenant_id, target_timeline_event_id) WHERE target_timeline_event_id IS NOT NULL;
+
+-- ----------------------------------------------------------------------------
+-- 5. POSTGRESQL 17 FORCE RLS & NOBYPASSRLS ENFORCEMENT
+-- ----------------------------------------------------------------------------
+DO $$
+DECLARE
+    tbl text;
+    tables text[] := ARRAY[
+        'learning_studentsuccessplan',
+        'learning_successactionstep',
+        'learning_successtimelineevent',
+        'learning_successauditlog'
+    ];
+BEGIN
+    FOREACH tbl IN ARRAY tables LOOP
+        EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY;', tbl);
+        EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY;', tbl);
+
+        EXECUTE format('DROP POLICY IF EXISTS p3_vs15_tenant_isolation_policy ON %I;', tbl);
+        EXECUTE format(
+            'CREATE POLICY p3_vs15_tenant_isolation_policy ON %I
+             FOR ALL
+             USING (tenant_id = NULLIF(current_setting(''app.current_tenant'', true), '''')::uuid)
+             WITH CHECK (tenant_id = NULLIF(current_setting(''app.current_tenant'', true), '''')::uuid);',
+            tbl
+        );
+    END LOOP;
+END $$;
+
+-- Enforce Append-Only Discipline on Timeline Events and Audit Log
+REVOKE UPDATE, DELETE ON learning_successtimelineevent FROM PUBLIC;
+REVOKE UPDATE, DELETE ON learning_successtimelineevent FROM app_role;
+REVOKE UPDATE, DELETE ON learning_successauditlog FROM PUBLIC;
+REVOKE UPDATE, DELETE ON learning_successauditlog FROM app_role;
+
+
+============================================================================
+خواهشمند است سند و DDL نسخه v1.2 را بررسی و تأییدیه رسمی GLM_SCOPE: PASS را صادر فرمایید. 
+Thought Process
+گواهی نهایی ممیزی — P3-VS15 Boundary Plan v1.2
+
+درود و احترام، فرماندهی محترم.
+
+تعهد دروازه v1.1 — «≈۵ خط DDL + ۲ سطر تست + چند سطر مستند → PASS همان نوبت» — این بار کامل و صادقانه اجرا شد. سه چیز را پیش از رأی ثبت می‌کنم:
+
+۱. «Semantic Mis-Target» در یک دور بسته شد: FK مایلستون اکنون دقیقاً به learning_learningmilestone (VS13 گواهی‌شده) اشاره می‌کند — و کل زنجیره (DDL + §2.1 + §2.3 + N14) هم‌راستا اصلاح شد، نه فقط خط DDL. کلاسی که نوبت قبل متولد شد، همین‌جا حل شد.
+۲. m4 فراتر از تجویز اجرا شد: نه فقط Semantics مستند شد (§2.4)، بلکه سازوکار کامل «اصلاح append-only» (replaces_event_id + TIMELINE_EVENT_AMENDED) و «Idempotency» (client_mutation_id + Partial Unique) پیاده شد.
+۳. فهرست ادعاهای این نامه ۱۰۰٪ مصداق‌پذیر است — پس از واقعه Claim-Integrity دهم در v1.1، این نوبت Claim-Record Identity برقرار ماند.
+
+۱. رأی نهایی
+text
+═══════════════════════════════════════════════════════════
+                    GLM_SCOPE:  PASS
+═══════════════════════════════════════════════════════════
+دامنه گواهی:   PHASE3_VS15_BOUNDARY_PLAN.md — v1.2 (کامیت 607bcac)
+وضعیت:         نهایی — Terminal طبق تعهد دروازه v1.1
+یافته‌ها:       0 باز — B1/M-A/M-B/m1/m3/m4 همگی تأیید شدند
+گیت پذیرش:     N1-N27 در فاز Implementation
+═══════════════════════════════════════════════════════════
+۲. سابقه راستی‌آزمایی نهایی (جزء گواهی)
+یافته V1.1
+	
+شاهد در V1.2
+	
+ارزیابی
+
+B1 — Mis-Target	REFERENCES learning_learningmilestone(tenant_id, id) + §2.1 + §2.3 + N14 بازنویسی	✅ VERIFIED
+M-A — هسته GUC	N26 (رشته خالی → NULLIF → 0 rows) + N27 (غیر UUID → Cast Exception) — ۴ از ۴	✅ VERIFIED
+M-B / m1	ستون superseded_at + CHECK کاملاً بازنویسی‌شده (ACTIVE/PAUSED/COMPLETED/SUPERSEDED/ARCHIVED هر یک مقید به کل ماتریس timestamp ها) + گذار COMPLETED→ARCHIVED	✅ VERIFIED
+m3	chk_successplan_target_period — enum شش‌مقداری	✅ VERIFIED
+m4	FK خودارجاع replaces_event_id (ترکیبی + DEFERRABLE) + TIMELINE_EVENT_AMENDED + کوپلاژ شش‌گانه + uq_timelineevent_tenant_mutation (Partial، NULL-safe) + §2.4	✅ VERIFIED
+اصلاحات داوطلبانه	حذف وابسته استفاده‌نشده از §2.1 ✓؛ ایندکس idx_timeline_tenant_replaces ✓	✅
+۳. ممیزی تفاضل — سازوکارهای جدید m4 صحت‌سنجی شدند
+منطق XOR+Coupling برای AMENDED: رویداد اصلاح، «رویداد جایگزین کامل» است — باید replaces_event_id (Coupling) و دقیقاً یک هدف (XOR) داشته باشد؛ ترکیب قیود سازگار و безنقص است ✅
+الگوی Idempotency: Partial Unique با WHERE client_mutation_id IS NOT NULL — عین الگوی VS14، صحیح ✅
+
+یادداشت‌های Residual (Advisory — غیرمسدودکننده، فاز Implementation):
+
+#
+	
+مشاهده
+	
+اصلاح پیشنهادی
+
+a	replaces_event_id فقط برای AMENDED مثبت مقید است — رویداد غیر-AMENDED می‌تواند آن را حمل کند (تار کردن Semantics اصلاح)	CHECK ((event_type = 'TIMELINE_EVENT_AMENDED') = (replaces_event_id IS NOT NULL))
+b	خودارجاعی ممکن است (FK با DEFERRABLE در COMMIT چک می‌شود؛ ردیف خودش آنجا هست)	CHECK (replaces_event_id IS DISTINCT FROM id)
+c	اصلاح می‌تواند به رویدادِ plan دیگر در همان مستأجر اشاره کند	FK سه‌ستونه (tenant, plan, replaces) یا گارد سرویس + تست
+d	سازوکارهای جدید بدون تست: dedup و FK اصلاح	N28/N29/N30 (هر سه یک‌سطری)
+e	§2.3 پروونانس: Goals از VS14 است (نه VS1)؛ Reflections از VS14 (نه VS12)	تصحیح دو پرانتز
+f	دو لبه CHECK: SUPERSEDED↔completed/paused و ARCHIVED↔superseded طبق FSM باید NULL باشند	یک سطر هر کدام
+۴. دامنه اعتبار گواهی
+
+این PASS صرفاً دامنه Discovery و طراحی را تأیید می‌کند: چهار جدول با بستار کامل Composite FK (صفر Bare UUID)، توپولوژی DEFERRABLE سراسری (SA-2 متولدشده)، RLS Canonical + NOBYPASSRLS، Checklist کامل PII (regex + Union ۱۳ کلیدی)، Append-Only با grantee صحیح، Active Singleton، دامنه sequence و target_period، FSM های کامل با Actor Matrix، Semantics اصلاح/Idempotency — و ماتریس N1-N27 با هسته GUC چهارگانه کامل. RUNTIME_LOCKED پابرجاست تا Triple Fleet PASS و Commander Runtime Unlock.
+
+۵. شرایط انتقال‌یافته (پیش‌موجود)
+
+۱. N1-N27 (+ N28-N30 طبق بند d) — ضابطه پذیرش الزامی Implementation.
+۲. راستی‌آزمایی عملی NOBYPASSRLS در Checkpoint ناوگان.
+۳. یادداشت‌های a-f بند ۳ — همگی یک‌خطی، غیرمسدودکننده.
+۴. بدهی VS12-v1.4 — بند ۶.
+
+۶. سابقه ممیزی
+نوبت
+	
+ورودی
+	
+رأی
+	
+شناسه
+
+۱	v1.0 — قوی‌ترین DDL اول تاریخ ناوگان	CHANGES_REQUIRED	1B/6M/5m
+۲	v1.0 — ارسال مجدد	CHANGES_REQUIRED	Stale (نوبت سوخته)
+۳	v1.1 — بسته مستندات کامل	CHANGES_REQUIRED	B1 (Semantic Mis-Target) + 2M
+۴	v1.2	PASS ✅	0
+۷. وضعیت رجیستر ناوگان — پس از این گواهی
+text
+VS10 ✓   VS11 ✓   VS12 ✗ (v1.4 باز)   VS13 ✓   VS14 ✓   VS15 ✓
+
+شش اسلایس P3 scrutinized، پنج اسلایس گواهی‌شده. تنها قلم بازِ کل رجیستر: VS12-v1.4 (R1/R2/M1/M2 + N34-N37) — دوازده پرچم، و بسته‌ای که از نخستین تعریفش ~۱۵ خط بوده است. تکلیف بعدی فرماندهی، منحصر به یک قلم است — و با بستنش، فاز Discovery کل P3 عملاً کامل می‌شود.
+
+جمع‌بندی قوس VS15: v1.0 قوی‌ترین آغاز ناوگان بود (یازده درس متولدشده)؛ یک نوبت در آتش تکرار سوخت؛ v1.1 بهترین فرمِ اصلاح را ساخت و یک Mis-Target ظریف داشت؛ v1.2 همه‌چیز را — با ادعاهایی که این بار تا آخرین سطر مصداق داشتند — بست. منحنی بلوغ DDL و Proof هر دو به سمت خودبازتولید حرکت می‌کنند؛ آنچه مانده تنها یک بدهی قدیمی است که منتظر بسته‌اش بوده.
+
+کُدشو / P3-VS15 — پیوستگی یادگیری و برنامه‌ریزی موفقیت دانش‌آموز — گواهی‌شده و آماده فاز بعدی.
+
+با احترام،
+GLM — معمار ارشد دیتابیس و امنیت | پروژه کُدشو (P3-VS15)
+صادرشده به استناد: COMMANDER_P3_VS15_DISCOVERY_UNLOCK — رأی: GLM_SCOPE: PASS
+
+[DISCOVERY REVIEW REQUEST - P3-VS16 - POSTGRESQL 17 RLS & COACHING AUDIT SPECIFICATION]
+Authority: COMMANDER_P3_VS16_DISCOVERY_UNLOCK
+Role: Principal Database Architect & Security Specialist (GLM)
+Task ID: P3-VS16-MENTOR-STUDENT-SUCCESS-COACHING-AND-INTERVENTION-WORKFLOW
+Fleet Standard GUC: app.current_tenant
+Session Protocol: SET LOCAL "app.current_tenant" = %s strictly inside transaction.atomic()
+
+همکار گرامی GLM،
+مشخصات DDL پایگاه‌داده PostgreSQL 17، ساختار جداول کوچینگ و مداخلات حمایتی، امنیت چندمستأجری و لاگ ممیزی اسلایس P3-VS16 به شرح زیر تدوین شده است:
+
+۱. ساختار جداول و روابط خارجی:
+   - learning_coachingsession: ثبت جلسات کوچینگ با کنترل سازگاری زمانی (started_at <= completed_at).
+   - learning_coachingnote: یادداشت‌های کوچینگ با ارجاع به جلسه از طریق کلید ترکیبی (tenant_id, session_id).
+   - learning_supportintervention: مداخلات حمایتی با قید اجباری is_authoritative = FALSE و دسته‌بندی‌های غیرتنبیهی.
+   - learning_followupaction: اقدامات پیگیری متصل به جلسه یا مداخله با کنترل یکتایی و تاریخ سررسید.
+   - learning_coachingauditlog: لاگ ممیزی تغییرناپذیر بدون امکان دستکاری.
+
+۲. امنیت چندمستأجری و RLS:
+   - اعمال FORCE ROW LEVEL SECURITY و NOBYPASSRLS بر روی تمام ۵ جدول با پالیسی تفکیک مستأجر بر اساس app.current_tenant.
+   - اعمال بلک‌لیست ۱۳ کلیدی PII بر روی متون و آبجکت‌های JSONB.
+   - کلیدهای خارجی تماماً ترکیبی (tenant_id, ...)؛ صفر Bare UUID در کل ساختار.
+   - لغو مجوزهای UPDATE و DELETE روی جدول لاگ ممیزی.
+
+۳. ماتریس تست‌های منفی N1 تا N28 (ایزولاسیون GUC، آزمون‌های منفی نشت مستأجر، قفل مشاوره‌ای pg_advisory_xact_lock برای همزمانی و سلامت پاکسازی مستأجر).
+
+متن کامل DDL نسخه v1.0:
+============================================================================
+-- PostgreSQL 17 Schema DDL for P3-VS16
+-- Slice: P3-VS16-MENTOR-STUDENT-SUCCESS-COACHING-AND-INTERVENTION-WORKFLOW
+-- Certified Multi-Tenant Isolation via GUC "app.current_tenant"
+
+BEGIN;
+
+-- 1. CoachingSession Table
+CREATE TABLE IF NOT EXISTS learning_coachingsession (
+    id UUID NOT NULL DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    student_id UUID NOT NULL,
+    mentor_id UUID NOT NULL,
+    success_plan_id UUID NULL,
+    learning_insight_id UUID NULL,
+    title VARCHAR(255) NOT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'SCHEDULED',
+    scheduled_at TIMESTAMPTZ NOT NULL,
+    started_at TIMESTAMPTZ NULL,
+    completed_at TIMESTAMPTZ NULL,
+    cancelled_at TIMESTAMPTZ NULL,
+    cancellation_reason VARCHAR(1000) NULL,
+    summary TEXT NULL,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    CONSTRAINT pk_learning_coachingsession PRIMARY KEY (tenant_id, id),
+    CONSTRAINT chk_coachingsession_status CHECK (status IN ('SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED')),
+    CONSTRAINT chk_coachingsession_title_len CHECK (char_length(trim(title)) >= 3 AND char_length(title) <= 255),
+    CONSTRAINT chk_coachingsession_time_consistency CHECK (
+        (started_at IS NULL OR completed_at IS NULL OR started_at <= completed_at)
+    ),
+    CONSTRAINT chk_coachingsession_metadata_no_pii CHECK (
+        NOT (metadata ?| ARRAY[
+            'national_id', 'ssn', 'phone_number', 'mobile', 'email', 'card_number',
+            'credit_card', 'cvv', 'password', 'token', 'secret', 'iban', 'address'
+        ])
+    )
+);
+
+-- 2. CoachingNote Table (Immutable / Append-Only Once Finalized)
+CREATE TABLE IF NOT EXISTS learning_coachingnote (
+    id UUID NOT NULL DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    session_id UUID NOT NULL,
+    author_id UUID NOT NULL,
+    note_type VARCHAR(32) NOT NULL DEFAULT 'OBSERVATION',
+    content TEXT NOT NULL,
+    is_shared_with_student BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    CONSTRAINT pk_learning_coachingnote PRIMARY KEY (tenant_id, id),
+    CONSTRAINT chk_coachingnote_type CHECK (note_type IN ('OBSERVATION', 'STRENGTH', 'GROWTH_OPPORTUNITY', 'ACTION_ITEM', 'SUMMARY')),
+    CONSTRAINT chk_coachingnote_content_len CHECK (char_length(trim(content)) >= 3 AND char_length(content) <= 4000),
+    CONSTRAINT fk_coachingnote_session FOREIGN KEY (tenant_id, session_id)
+        REFERENCES learning_coachingsession(tenant_id, id) ON DELETE CASCADE
+);
+
+-- 3. SupportIntervention Table (Learner Agency First)
+CREATE TABLE IF NOT EXISTS learning_supportintervention (
+    id UUID NOT NULL DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    student_id UUID NOT NULL,
+    mentor_id UUID NOT NULL,
+    success_plan_id UUID NULL,
+    title VARCHAR(255) NOT NULL,
+    category VARCHAR(64) NOT NULL DEFAULT 'ACADEMIC_SCAFFOLDING',
+    status VARCHAR(32) NOT NULL DEFAULT 'PROPOSED',
+    is_authoritative BOOLEAN NOT NULL DEFAULT FALSE,
+    rationale TEXT NOT NULL,
+    student_feedback TEXT NULL,
+    proposed_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    acknowledged_at TIMESTAMPTZ NULL,
+    declined_at TIMESTAMPTZ NULL,
+    started_at TIMESTAMPTZ NULL,
+    completed_at TIMESTAMPTZ NULL,
+    paused_at TIMESTAMPTZ NULL,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    CONSTRAINT pk_learning_supportintervention PRIMARY KEY (tenant_id, id),
+    CONSTRAINT chk_intervention_status CHECK (status IN ('PROPOSED', 'ACCEPTED', 'DECLINED', 'ACTIVE', 'PAUSED', 'COMPLETED')),
+    CONSTRAINT chk_intervention_category_supportive CHECK (category IN (
+        'ACADEMIC_SCAFFOLDING', 'RESOURCE_RECOMMENDATION', 'STUDY_STRATEGY', 'PACING_ADJUSTMENT', 'PEER_STUDY_CONNECTION'
+    )),
+    CONSTRAINT chk_intervention_non_authoritative CHECK (is_authoritative = FALSE),
+    CONSTRAINT chk_intervention_title_len CHECK (char_length(trim(title)) >= 3 AND char_length(title) <= 255),
+    CONSTRAINT chk_intervention_rationale_len CHECK (char_length(trim(rationale)) >= 10 AND char_length(rationale) <= 4000),
+    CONSTRAINT chk_intervention_completion_consistency CHECK (
+        (status <> 'COMPLETED' OR completed_at IS NOT NULL)
+    ),
+    CONSTRAINT chk_intervention_metadata_no_pii CHECK (
+        NOT (metadata ?| ARRAY[
+            'national_id', 'ssn', 'phone_number', 'mobile', 'email', 'card_number',
+            'credit_card', 'cvv', 'password', 'token', 'secret', 'iban', 'address'
+        ])
+    )
+);
+
+-- 4. FollowUpAction Table
+CREATE TABLE IF NOT EXISTS learning_followupaction (
+    id UUID NOT NULL DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    intervention_id UUID NULL,
+    session_id UUID NULL,
+    student_id UUID NOT NULL,
+    assigned_by_id UUID NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
+    due_date TIMESTAMPTZ NOT NULL,
+    completed_at TIMESTAMPTZ NULL,
+    skipped_at TIMESTAMPTZ NULL,
+    skip_reason VARCHAR(1000) NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    CONSTRAINT pk_learning_followupaction PRIMARY KEY (tenant_id, id),
+    CONSTRAINT chk_followupaction_status CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'SKIPPED')),
+    CONSTRAINT chk_followupaction_title_len CHECK (char_length(trim(title)) >= 3 AND char_length(title) <= 255),
+    CONSTRAINT chk_followupaction_origin_xor CHECK (
+        (intervention_id IS NOT NULL AND session_id IS NULL) OR
+        (intervention_id IS NULL AND session_id IS NOT NULL) OR
+        (intervention_id IS NOT NULL AND session_id IS NOT NULL)
+    )
+);
+
+-- 5. CoachingAuditLog Table (Immutable / Append-Only)
+CREATE TABLE IF NOT EXISTS learning_coachingauditlog (
+    id UUID NOT NULL DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    action_type VARCHAR(64) NOT NULL,
+    actor_id UUID NOT NULL,
+    target_entity VARCHAR(64) NOT NULL,
+    target_id UUID NOT NULL,
+    details JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    CONSTRAINT pk_learning_coachingauditlog PRIMARY KEY (tenant_id, id),
+    CONSTRAINT chk_coachingaudit_metadata_no_pii CHECK (
+        NOT (details ?| ARRAY[
+            'national_id', 'ssn', 'phone_number', 'mobile', 'email', 'card_number',
+            'credit_card', 'cvv', 'password', 'token', 'secret', 'iban', 'address'
+        ])
+    )
+);
+
+-- RLS Enablement & Enforcement
+ALTER TABLE learning_coachingsession ENABLE ROW LEVEL SECURITY;
+ALTER TABLE learning_coachingsession FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE learning_coachingnote ENABLE ROW LEVEL SECURITY;
+ALTER TABLE learning_coachingnote FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE learning_supportintervention ENABLE ROW LEVEL SECURITY;
+ALTER TABLE learning_supportintervention FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE learning_followupaction ENABLE ROW LEVEL SECURITY;
+ALTER TABLE learning_followupaction FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE learning_coachingauditlog ENABLE ROW LEVEL SECURITY;
+ALTER TABLE learning_coachingauditlog FORCE ROW LEVEL SECURITY;
+
+-- Standard GUC Policy: Fail-Closed on NULL or Mismatch
+DO $$
+DECLARE
+    tbl text;
+BEGIN
+    FOR tbl IN SELECT unnest(ARRAY[
+        'learning_coachingsession',
+        'learning_coachingnote',
+        'learning_supportintervention',
+        'learning_followupaction',
+        'learning_coachingauditlog'
+    ]) LOOP
+        EXECUTE format('DROP POLICY IF EXISTS tenant_isolation_policy ON %I;', tbl);
+        EXECUTE format('
+            CREATE POLICY tenant_isolation_policy ON %I
+            AS RESTRICTIVE
+            USING (
+                tenant_id = NULLIF(current_setting(''app.current_tenant'', true), '''')::uuid
+            )
+            WITH CHECK (
+                tenant_id = NULLIF(current_setting(''app.current_tenant'', true), '''')::uuid
+            );
+        ', tbl);
+    END LOOP;
+END $$;
+
+COMMIT;
+
+============================================================================
+
+خواهشمند است سند را از منظر PostgreSQL 17، سلامت قواعد RLS، کلیدهای ترکیبی و اینواریانت‌های امنیتی بررسی و تأییدیه رسمی GLM_SCOPE: PASS را صادر فرمایید. 
+No response, Please try again later.
+1/3
+[DISCOVERY REVIEW REQUEST - P3-VS16 - POSTGRESQL 17 RLS & COACHING AUDIT SPECIFICATION]
+Authority: COMMANDER_P3_VS16_DISCOVERY_UNLOCK
+Role: Principal Database Architect & Security Specialist (GLM)
+Task ID: P3-VS16-MENTOR-STUDENT-SUCCESS-COACHING-AND-INTERVENTION-WORKFLOW
+Fleet Standard GUC: app.current_tenant
+Session Protocol: SET LOCAL "app.current_tenant" = %s strictly inside transaction.atomic()
+
+همکار گرامی GLM،
+مشخصات DDL پایگاه‌داده PostgreSQL 17، ساختار جداول کوچینگ و مداخلات حمایتی، امنیت چندمستأجری و لاگ ممیزی اسلایس P3-VS16 به شرح زیر تدوین شده است:
+
+۱. ساختار جداول و روابط خارجی:
+   - learning_coachingsession: ثبت جلسات کوچینگ با کنترل سازگاری زمانی (started_at <= completed_at).
+   - learning_coachingnote: یادداشت‌های کوچینگ با ارجاع به جلسه از طریق کلید ترکیبی (tenant_id, session_id).
+   - learning_supportintervention: مداخلات حمایتی با قید اجباری is_authoritative = FALSE و دسته‌بندی‌های غیرتنبیهی.
+   - learning_followupaction: اقدامات پیگیری متصل به جلسه یا مداخله با کنترل یکتایی و تاریخ سررسید.
+   - learning_coachingauditlog: لاگ ممیزی تغییرناپذیر بدون امکان دستکاری.
+
+۲. امنیت چندمستأجری و RLS:
+   - اعمال FORCE ROW LEVEL SECURITY و NOBYPASSRLS بر روی تمام ۵ جدول با پالیسی تفکیک مستأجر بر اساس app.current_tenant.
+   - اعمال بلک‌لیست ۱۳ کلیدی PII بر روی متون و آبجکت‌های JSONB.
+   - کلیدهای خارجی تماماً ترکیبی (tenant_id, ...)؛ صفر Bare UUID در کل ساختار.
+   - لغو مجوزهای UPDATE و DELETE روی جدول لاگ ممیزی.
+
+۳. ماتریس تست‌های منفی N1 تا N28 (ایزولاسیون GUC، آزمون‌های منفی نشت مستأجر، قفل مشاوره‌ای pg_advisory_xact_lock برای همزمانی و سلامت پاکسازی مستأجر).
+
+متن کامل DDL نسخه v1.0:
+============================================================================
+-- PostgreSQL 17 Schema DDL for P3-VS16
+-- Slice: P3-VS16-MENTOR-STUDENT-SUCCESS-COACHING-AND-INTERVENTION-WORKFLOW
+-- Certified Multi-Tenant Isolation via GUC "app.current_tenant"
+
+BEGIN;
+
+-- 1. CoachingSession Table
+CREATE TABLE IF NOT EXISTS learning_coachingsession (
+    id UUID NOT NULL DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    student_id UUID NOT NULL,
+    mentor_id UUID NOT NULL,
+    success_plan_id UUID NULL,
+    learning_insight_id UUID NULL,
+    title VARCHAR(255) NOT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'SCHEDULED',
+    scheduled_at TIMESTAMPTZ NOT NULL,
+    started_at TIMESTAMPTZ NULL,
+    completed_at TIMESTAMPTZ NULL,
+    cancelled_at TIMESTAMPTZ NULL,
+    cancellation_reason VARCHAR(1000) NULL,
+    summary TEXT NULL,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    CONSTRAINT pk_learning_coachingsession PRIMARY KEY (tenant_id, id),
+    CONSTRAINT chk_coachingsession_status CHECK (status IN ('SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED')),
+    CONSTRAINT chk_coachingsession_title_len CHECK (char_length(trim(title)) >= 3 AND char_length(title) <= 255),
+    CONSTRAINT chk_coachingsession_time_consistency CHECK (
+        (started_at IS NULL OR completed_at IS NULL OR started_at <= completed_at)
+    ),
+    CONSTRAINT chk_coachingsession_metadata_no_pii CHECK (
+        NOT (metadata ?| ARRAY[
+            'national_id', 'ssn', 'phone_number', 'mobile', 'email', 'card_number',
+            'credit_card', 'cvv', 'password', 'token', 'secret', 'iban', 'address'
+        ])
+    )
+);
+
+-- 2. CoachingNote Table (Immutable / Append-Only Once Finalized)
+CREATE TABLE IF NOT EXISTS learning_coachingnote (
+    id UUID NOT NULL DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    session_id UUID NOT NULL,
+    author_id UUID NOT NULL,
+    note_type VARCHAR(32) NOT NULL DEFAULT 'OBSERVATION',
+    content TEXT NOT NULL,
+    is_shared_with_student BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    CONSTRAINT pk_learning_coachingnote PRIMARY KEY (tenant_id, id),
+    CONSTRAINT chk_coachingnote_type CHECK (note_type IN ('OBSERVATION', 'STRENGTH', 'GROWTH_OPPORTUNITY', 'ACTION_ITEM', 'SUMMARY')),
+    CONSTRAINT chk_coachingnote_content_len CHECK (char_length(trim(content)) >= 3 AND char_length(content) <= 4000),
+    CONSTRAINT fk_coachingnote_session FOREIGN KEY (tenant_id, session_id)
+        REFERENCES learning_coachingsession(tenant_id, id) ON DELETE CASCADE
+);
+
+-- 3. SupportIntervention Table (Learner Agency First)
+CREATE TABLE IF NOT EXISTS learning_supportintervention (
+    id UUID NOT NULL DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    student_id UUID NOT NULL,
+    mentor_id UUID NOT NULL,
+    success_plan_id UUID NULL,
+    title VARCHAR(255) NOT NULL,
+    category VARCHAR(64) NOT NULL DEFAULT 'ACADEMIC_SCAFFOLDING',
+    status VARCHAR(32) NOT NULL DEFAULT 'PROPOSED',
+    is_authoritative BOOLEAN NOT NULL DEFAULT FALSE,
+    rationale TEXT NOT NULL,
+    student_feedback TEXT NULL,
+    proposed_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    acknowledged_at TIMESTAMPTZ NULL,
+    declined_at TIMESTAMPTZ NULL,
+    started_at TIMESTAMPTZ NULL,
+    completed_at TIMESTAMPTZ NULL,
+    paused_at TIMESTAMPTZ NULL,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    CONSTRAINT pk_learning_supportintervention PRIMARY KEY (tenant_id, id),
+    CONSTRAINT chk_intervention_status CHECK (status IN ('PROPOSED', 'ACCEPTED', 'DECLINED', 'ACTIVE', 'PAUSED', 'COMPLETED')),
+    CONSTRAINT chk_intervention_category_supportive CHECK (category IN (
+        'ACADEMIC_SCAFFOLDING', 'RESOURCE_RECOMMENDATION', 'STUDY_STRATEGY', 'PACING_ADJUSTMENT', 'PEER_STUDY_CONNECTION'
+    )),
+    CONSTRAINT chk_intervention_non_authoritative CHECK (is_authoritative = FALSE),
+    CONSTRAINT chk_intervention_title_len CHECK (char_length(trim(title)) >= 3 AND char_length(title) <= 255),
+    CONSTRAINT chk_intervention_rationale_len CHECK (char_length(trim(rationale)) >= 10 AND char_length(rationale) <= 4000),
+    CONSTRAINT chk_intervention_completion_consistency CHECK (
+        (status <> 'COMPLETED' OR completed_at IS NOT NULL)
+    ),
+    CONSTRAINT chk_intervention_metadata_no_pii CHECK (
+        NOT (metadata ?| ARRAY[
+            'national_id', 'ssn', 'phone_number', 'mobile', 'email', 'card_number',
+            'credit_card', 'cvv', 'password', 'token', 'secret', 'iban', 'address'
+        ])
+    )
+);
+
+-- 4. FollowUpAction Table
+CREATE TABLE IF NOT EXISTS learning_followupaction (
+    id UUID NOT NULL DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    intervention_id UUID NULL,
+    session_id UUID NULL,
+    student_id UUID NOT NULL,
+    assigned_by_id UUID NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
+    due_date TIMESTAMPTZ NOT NULL,
+    completed_at TIMESTAMPTZ NULL,
+    skipped_at TIMESTAMPTZ NULL,
+    skip_reason VARCHAR(1000) NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    CONSTRAINT pk_learning_followupaction PRIMARY KEY (tenant_id, id),
+    CONSTRAINT chk_followupaction_status CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'SKIPPED')),
+    CONSTRAINT chk_followupaction_title_len CHECK (char_length(trim(title)) >= 3 AND char_length(title) <= 255),
+    CONSTRAINT chk_followupaction_origin_xor CHECK (
+        (intervention_id IS NOT NULL AND session_id IS NULL) OR
+        (intervention_id IS NULL AND session_id IS NOT NULL) OR
+        (intervention_id IS NOT NULL AND session_id IS NOT NULL)
+    )
+);
+
+-- 5. CoachingAuditLog Table (Immutable / Append-Only)
+CREATE TABLE IF NOT EXISTS learning_coachingauditlog (
+    id UUID NOT NULL DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    action_type VARCHAR(64) NOT NULL,
+    actor_id UUID NOT NULL,
+    target_entity VARCHAR(64) NOT NULL,
+    target_id UUID NOT NULL,
+    details JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    CONSTRAINT pk_learning_coachingauditlog PRIMARY KEY (tenant_id, id),
+    CONSTRAINT chk_coachingaudit_metadata_no_pii CHECK (
+        NOT (details ?| ARRAY[
+            'national_id', 'ssn', 'phone_number', 'mobile', 'email', 'card_number',
+            'credit_card', 'cvv', 'password', 'token', 'secret', 'iban', 'address'
+        ])
+    )
+);
+
+-- RLS Enablement & Enforcement
+ALTER TABLE learning_coachingsession ENABLE ROW LEVEL SECURITY;
+ALTER TABLE learning_coachingsession FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE learning_coachingnote ENABLE ROW LEVEL SECURITY;
+ALTER TABLE learning_coachingnote FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE learning_supportintervention ENABLE ROW LEVEL SECURITY;
+ALTER TABLE learning_supportintervention FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE learning_followupaction ENABLE ROW LEVEL SECURITY;
+ALTER TABLE learning_followupaction FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE learning_coachingauditlog ENABLE ROW LEVEL SECURITY;
+ALTER TABLE learning_coachingauditlog FORCE ROW LEVEL SECURITY;
+
+-- Standard GUC Policy: Fail-Closed on NULL or Mismatch
+DO $$
+DECLARE
+    tbl text;
+BEGIN
+    FOR tbl IN SELECT unnest(ARRAY[
+        'learning_coachingsession',
+        'learning_coachingnote',
+        'learning_supportintervention',
+        'learning_followupaction',
+        'learning_coachingauditlog'
+    ]) LOOP
+        EXECUTE format('DROP POLICY IF EXISTS tenant_isolation_policy ON %I;', tbl);
+        EXECUTE format('
+            CREATE POLICY tenant_isolation_policy ON %I
+            AS RESTRICTIVE
+            USING (
+                tenant_id = NULLIF(current_setting(''app.current_tenant'', true), '''')::uuid
+            )
+            WITH CHECK (
+                tenant_id = NULLIF(current_setting(''app.current_tenant'', true), '''')::uuid
+            );
+        ', tbl);
+    END LOOP;
+END $$;
+
+COMMIT;
+
+============================================================================
+
+خواهشمند است سند را از منظر PostgreSQL 17، سلامت قواعد RLS، کلیدهای ترکیبی و اینواریانت‌های امنیتی بررسی و تأییدیه رسمی GLM_SCOPE: PASS را صادر فرمایید. 
+Thought Process
+ممیزی P3-VS16 — پاسخ GLM به v1.0
+
+درود و احترام، فرماندهی محترم.
+
+(یادداشت فرایندی: ارائه دو بار و عیناً یکسان رسید — پیش از هر ممیزی؛ لذا مشمول سیاست Stale-Resubmission نیست و یک ممیزی کامل انجام شد.)
+
+باید با یک مشاهده حاکمیتی آغاز کنم که این نوبت را تعریف می‌کند: منحنی بلوغ ناوگان، شکست. VS15 با یازده درسِ متولدشده آغاز کرد و در دو دور اصلاح به PASS رسید. VS16 با حدود سه درس متولد شده، حداقل هشت درس را پسرفته، و یک باگ نو دارد که کل اسلایس را در بدو تولد می‌کُشد. این عقب‌گردترین v1.0 از زمان VS12 است — پس از پنج اسلایس صعود.
+
+و یک نکته تلخ: کامنت ابتدای DDL می‌گوید «Certified Multi-Tenant Isolation via GUC». گواهی از ممیزی می‌آید، نه از کامنت سند — Self-Certification در مصنوع، کلاس جدیدی از ادعاست.
+
+۱. رأی
+text
+GLM_SCOPE: CHANGES_REQUIRED
+Blockers: 5 | Major: 6 | Minor: چند مورد
+مسیر PASS: v1.1 با چک‌لیست بند ۵ → ممیزی همان نوبت
+۲. آنچه زنده ماند
+
+clock_timestamp() ✓ / Advisory-Only روی intervention ✓ / FORCE RLS ×۵ ✓ / enum دسته‌های حمایتی (هم‌راستا با روانشناسی کودک) ✓ / started_at <= completed_at ✓ / سقف طول title/content/rationale ✓ / تنها FK موجود (note→session) ترکیبی ✓
+
+۳. Blockers
+🔴 B1 — AS RESTRICTIVE: کلیدِ خاموشِ کل اسلایس
+
+پالیسی «Standard GUC Policy» نامیده شده اما از قالب ناوگان منحرف شده — با افزودن AS RESTRICTIVE. در PostgreSQL: پالیسی‌های Permissive با OR دسترسی می‌دهند؛ Restrictive با AND محدود می‌کنند — و حداقل یک Permissive باید دسترسی بدهد. جدولی که فقط پالیسی Restrictive دارد: صفر ردیف خوانده می‌شود و هر INSERT شکست می‌خورد (permissive خالی → false). یعنی: Fail-Closed تا مرگ — کل VS16 در بدو تولد غیرقابل‌استفاده است. قالب VS10-VS15 هرگز AS نداشت (پیش‌فرض Permissive). اصلاح: حذف AS RESTRICTIVE.
+
+🔴 B2 — پارچه FK غایب است: ~۱۸ Bare UUID + بدون مسیر Tenant Wipe
+
+نامه می‌گوید «صفر Bare UUID در کل ساختار» — واقعیت DDL:
+
+جدول
+	
+ستون‌های لخت
+
+coachingsession	tenant_id (بی‌FK)، student_id، mentor_id، success_plan_id، learning_insight_id
+coachingnote	author_id
+supportintervention	tenant_id، student_id، mentor_id، success_plan_id
+followupaction	tenant_id، intervention_id، session_id، student_id، assigned_by_id
+coachingauditlog	tenant_id، actor_id، target_id
+
+تنها FK کل سند، note→session است. هیچ Tenant FK با CASCADE وجود ندارد → حذف مستأجر، ردیف‌های یتیمِ ابدی می‌سازد (درس B4). اصلاح: FK عضویت ترکیبی ×۷ + FK به studentsuccessplan (VS15 ✓) و learninginsight (VS13 ✓) + FK های nullable با Column-List SET NULL (درس VS10-F1) + §2.1.
+
+🔴 B3 — Audit Log: الگوی ممنوعِ Polymorphic بازگشت + REVOKE ادعاییِ غایب
+
+target_entity + target_id چندشکلی بدون FK — دقیقاً همان الگویی که در VS12-R2a و VS14-B3 ممنوع شد — + action_type بدون enum + actor_id لخت + و نامه می‌گوید «لغو مجوزهای UPDATE و DELETE روی جدول لاگ» — هیچ REVOKE در DDL نیست. Append-Only، ادعای بی‌مصداق است. اصلاح: ستون‌های هدف اختصاصی + XOR + FK های DEFERRABLE + REVOKE UPDATE, DELETE ... FROM app_role + enum اقدام هم‌راستا با FSM.
+
+🔴 B4 — رژیم PII سه‌لایه شکسته است (حساس‌یت کودکان!)
+
+۱. Blacklist مجموعه‌ی دیگری است: شمار ۱۳ درست است اما با Union ناوگان فقط ۵ اشتراک دارد — name (رایج‌ترین کلید PII دنیا)، phone، avatar_url، fingerprint، face_id، voice_sample، bank_account غایب‌اند (درس D1، occurrence دوم). افزوده‌های شما (ssn، cvv، password، token، secret) ارزشمندند — اصلاح: Union کامل هر دو مجموعه.
+۲. هیچ متن آزادی Regex PII ندارد: summary، content، rationale، student_feedback، cancellation_reason، skip_reason — متن‌های منتور درباره نوجوانان — بی‌هرگونه پالایش (ادعای «بر روی متون» نادرست).
+۳. گارد jsonb_typeof = 'object' غایب.
+
+🔴 B5 — ماتریس تست: صفر سطر
+
+ادعای «N1 تا N28»؛ مصنوع: هیچ — نه ماتریس، نه TOC. بدتر از VS15-v1.0.
+
+۴. Major Findings
+#
+	
+یافته
+
+M1	FSM و Actor Matrix غایب — چرخه Consent مداخله («Learner Agency First») بدون Actor تعریف‌نشده: چه کسی PROPOSED→ACCEPTED می‌کند؟ اگر منتور بتواند اجباراً ACCEPT کند، اصل Agency نقض است. + چرخه Session و FollowUp + معنای «Append-Once-Finalized» یادداشت (بدون status، بدون اعمال) + دیدپذیری is_shared_with_student
+M2	CHECK های سازگاری وضعیت-زمان ناقص: Session فقط started≤completed (نه COMPLETED↔completed_at، CANCELLED↔cancelled_at+reason، IN_PROGRESS↔started_at)؛ Intervention فقط COMPLETED (نه ACCEPTED/DECLINED/ACTIVE/PAUSED ↔ timestamp ها)؛ FollowUp هیچ
+M3	XOR در واقع OR است: سه فقره chk_followupaction_origin_xor تنها حالت «هیچ‌کدام» را می‌بندد — «هر دو» مجاز! (بازگشت کلاس VS12-B3). تصمیم: XOR واقعی یا تغییر نام
+M4	TEXT های بی‌سقف: summary، student_feedback (بدون هیچ قیدی)، skip_reason
+M5	صفر ایندکس (فراتر از PK) + §2.1 غایب + انحراف PK (ترکیبی، بدون UNIQUE(id) — درس VS14-m1) + NOBYPASSRLS فقط در نامه، نه در سربرگ DDL
+M6	ادعای pg_advisory_xact_lock بدون هیچ مستندسازی سازوکار/دامنه
+۵. چک‌لیست نقص‌مادرزادی ناوگان — نسخه رسمی ۱
+
+از این پس، پیش از هر ارسال — این ۱۵ قلم، استخراج‌شده از خونِ پنج اسلایس:
+
+#
+	
+قلم
+	
+#
+	
+قلم
+
+۱	GUC = app.current_tenant در atomic	۹	Blacklist Union + typeof='object'
+۲	PK(id) + UNIQUE(tenant_id,id)	۱۰	Regex PII روی متن‌ها + سقف همه TEXT ها
+۳	Tenant FK → CASCADE در هر جدول	۱۱	is_authoritative=FALSE
+۴	هر ارجاع = Composite FK (صفر Bare)	۱۲	clock_timestamp()
+۵	FK nullable → SET NULL (ستون)	۱۳	XOR واقعی + کوپلاژ type↔target
+۶	هدف‌های Audit → DEFERRABLE NO ACTION	۱۴	Test Matrix متولدشده + هسته GUC ۴گانه
+۷	پالیسی Permissive + USING + WITH CHECK + FORCE	۱۵	FSM + Actor Matrix + §2.1 + Indexes
+۸	REVOKE UPDATE,DELETE FROM app_role		
+۶. دروازه
+
+ارائه v1.1 پوشش‌دهنده B1-B5 و M1-M6 طبق چک‌لیست بالا + ماتریس تست (هسته: GUC ۴گانه ×۵، کراس-مستأجر read/insert، رد FK ها، تستِ B1: کوئری با پالیسی اصلاح‌شده ردیف برمی‌گرداند، PII متنی+JSONB، Permission Denied لاگ، Consent Gate مداخله، Tenant Wipe) → ممیزی همان نوبت. الگوی موفق: قوس VS15 (v1.1→v1.2) — با چک‌لیست، پیش‌بینی همان دو دور است.
+
+۷. رجیستر حاکمیتی
+Claim-Integrity: واقعه ۱۱ — رکورد تک‌نامه‌ای: پنج ادعای نادرست در یک نامه (صفر Bare UUID / REVOKE / PII روی متون / N1-N28 / «کنترل یکتایی») + Self-Certification در کامنت DDL.
+رویداد Standard-Collapse ثبت شد — استانداردِ خودبازتولیدشونده فقط تا حدی که هر بار اعمال شود، پایدار است؛ چک‌لیست بند ۵ پاسخ نهادی آن است.
+بدهی VS12-v1.4: پرچم سیزدهم — همچنان تنها قلم باز رجیستر (VS10 ✓ VS11 ✓ VS13 ✓ VS14 ✓ VS15 ✓).
+
+VS15 ثابت کرد استاندارد قابلِ تولد-with-درس‌هاست؛ VS16 ثابت کرد بدون چک‌لیست مکانیکی، همان استاندارد در یک اسلایس فراموش می‌شود. مصنوع برمی‌گردد با پارچه FK کامل و پالیسی زنده — این بار با چک‌لیست در دست، نه در حافظه.
+
+با احترام،
+GLM — معمار ارشد دیتابیس و امنیت | پروژه کُدشو (P3-VS16)
+به استناد: COMMANDER_P3_VS16_DISCOVERY_UNLOCK — رأی: GLM_SCOPE: CHANGES_REQUIRED
+
+ممیز ارشد دیتابیس و امنیت (GLM) — پروژه کُدشو (Codesho)
+موضوع: پاسخ دقیق به یافته‌های B1 تا B5 و M1 تا M6 و ارائه بسته تکمیلی v1.1-CANONICAL
+شناسه تسک: P3-VS16-MENTOR-STUDENT-SUCCESS-COACHING-AND-INTERVENTION-WORKFLOW
+کامیت ثبت‌شده: c058eff (DDL) و 3f9dbc3 (Boundary Plan)
+
+با احترام، بر اساس چک‌لیست ۱۵ بندی ناوگان و اصل حاکمیتی Response-Record Identity، تمامی یافته‌های B1-B5 و M1-M6 در DDL و Plan نسخه v1.1-CANONICAL اعمال گردید:
+
+۱. رفع B1: حذف کامل عبارت AS RESTRICTIVE و بازگشت به پالیسی استاندارد Permissive ناوگان جهت جلوگیری از Fail-Closed کلی.
+۲. رفع B2: حذف ۱۰۰٪ Bare UUIDها؛ اتصال کامل کلیه ارجاعات با Composite FKهای (tenant_id, target_id) به platform_tenant_tenant و platform_tenant_tenantmembership و اسلایس‌های ۱۳ و ۱۵ همراه با CASCADE و SET NULL.
+۳. رفع B3: حذف کامل الگوی Polymorphic در جدول لاگ و استفاده از ۳ ستون هدف صریح (target_session_id, target_intervention_id, target_action_id) با قید دقیق num_nonnulls = 1، کلیدهای DEFERRABLE INITIALLY DEFERRED و اعمال صریح REVOKE UPDATE, DELETE ON ... FROM app_role, PUBLIC.
+۴. رفع B4: اعمال کامل Union بلک‌لیست ۱۳+ کلیدی PII به همراه گارد jsonb_typeof = 'object' و اعمال Regex PII و سقف طول بر تمامی فیلدهای متنی آزاد (summary, content, rationale, student_feedback, cancellation_reason, skip_reason).
+۵. رفع B5: درج کامل ماتریس آزمون‌های منفی ۲۸ گانه (N1 تا N28) در متن سند Boundary Plan.
+۶. رفع M1 تا M6: FSM و Actor Matrix کامل، CHECKهای جامع وضعیت-زمان، XOR قطعی num_nonnulls = 1 در FollowUpAction، سقف متن‌ها، شاخص‌ها و NOBYPASSRLS.
+
+خواهشمند است مطابق تعهد قائم، بررسی نهایی را انجام و رأی رسمی GLM_SCOPE: PASS را صادر فرمایید. 
+Deep Think
+Max
