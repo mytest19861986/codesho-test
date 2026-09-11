@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import authoring_views, views
+from . import authoring_views, governance_views, views
 from .views import (
     AdminLearningCurriculumView,
     AdminLearningTransitionView,
@@ -557,9 +557,56 @@ urlpatterns = [
         authoring_views.ReleaseExceptionGrantView.as_view(),
         name="learning-readiness-gate-waive",
     ),
+    # Phase 3 Macro Epic 26-28 Enterprise Governance & Pilot Readiness Center
     path(
-        "readiness/rollforward-plans/",
-        authoring_views.CohortRollforwardPlanView.as_view(),
-        name="learning-rollforward-plans",
+        "governance/staff-access/",
+        governance_views.StaffAccessAssignmentView.as_view(),
+        name="learning-governance-staff-access",
+    ),
+    path(
+        "governance/privileged-grants/",
+        governance_views.PrivilegedPermissionGrantView.as_view(),
+        name="learning-governance-privileged-grants",
+    ),
+    path(
+        "governance/access-reviews/campaigns/",
+        governance_views.AccessReviewCampaignView.as_view(),
+        name="learning-governance-access-review-campaigns",
+    ),
+    path(
+        "governance/access-reviews/decisions/",
+        governance_views.AccessReviewDecisionView.as_view(),
+        name="learning-governance-access-review-decisions",
+    ),
+    path(
+        "governance/retention/policies/",
+        governance_views.DataRetentionPolicyView.as_view(),
+        name="learning-governance-retention-policies",
+    ),
+    path(
+        "governance/retention/legal-holds/",
+        governance_views.LegalHoldView.as_view(),
+        name="learning-governance-legal-holds",
+    ),
+    path(
+        "governance/readiness/controls/",
+        governance_views.ReadinessControlView.as_view(),
+        name="learning-governance-readiness-controls",
+    ),
+    path(
+        "governance/readiness/evidence/",
+        governance_views.ReadinessEvidenceSubmitView.as_view(),
+        name="learning-governance-readiness-evidence",
+    ),
+    path(
+        "governance/readiness/assessments/",
+        governance_views.PilotReadinessAssessmentRunView.as_view(),
+        name="learning-governance-readiness-assessments",
+    ),
+    path(
+        "governance/readiness/gates/evaluate/",
+        governance_views.PilotReadinessGateEvaluationView.as_view(),
+        name="learning-governance-readiness-gate-evaluate",
     ),
 ]
+
