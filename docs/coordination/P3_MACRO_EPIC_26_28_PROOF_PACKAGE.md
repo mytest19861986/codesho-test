@@ -81,29 +81,27 @@
 ```
 - **Guards**: `chk_hold_release_consistency` strictly enforces `released_at IS NULL` on `ACTIVE` and `released_at IS NOT NULL` on `RELEASED`.
 
-### 3.4. DataDispositionRecord FSM (DDL: status IN ('PENDING_APPROVAL', 'APPROVED', 'EXECUTED', 'CANCELLED'))
+### 3.4. DataDispositionRecord FSM & Execution Model (DDL: Immutable Audit Execution)
 ```
-[PENDING_APPROVAL] ──(approve / ComplianceOfficer)─> [APPROVED]
-[APPROVED] ──────────(execute / SystemWorker)───────> [EXECUTED] (executed_at NOT NULL)
-[PENDING_APPROVAL] ──(reject / ComplianceOfficer)───> [CANCELLED]
+[EVALUATED] ──(execute_disposition / SystemWorker)──> [RECORD_CREATED] (executed_at NOT NULL, cryptographic_digest NOT NULL)
 ```
-- **Guards**: Active LegalHold on targeted resource blocks transition to `APPROVED` and `EXECUTED`.
+- **Guards**: Disposition execution is strictly immutable. Active `LegalHold` on targeted resource blocks evaluation and execution. `learning_disposition_audit_log` records each entity action with `REVOKE UPDATE, DELETE`.
 
-### 3.5. ReadinessAssessmentRun FSM (DDL: status IN ('SCHEDULED', 'RUNNING', 'COMPLETED', 'FAILED'))
+### 3.5. ReadinessAssessmentRun FSM (DDL: overall_status IN ('IN_PROGRESS', 'READY', 'NOT_READY', 'BLOCKED', 'EXCEPTION_REQUIRED'))
 ```
-[SCHEDULED] ──(start_assessment / Runner)─> [RUNNING] (started_at NOT NULL)
-[RUNNING] ────(complete_evaluation / Runner)─> [COMPLETED] (ended_at NOT NULL, ended_at >= started_at)
-[RUNNING] ────(abort_on_error / Runner)──────> [FAILED] (ended_at NOT NULL)
+[IN_PROGRESS] ──(evaluate_all_passed / Engine)──────> [READY] (completed_at NOT NULL)
+[IN_PROGRESS] ──(evaluate_nonblocking_fails / Engine)─> [NOT_READY] (completed_at NOT NULL)
+[IN_PROGRESS] ──(evaluate_blocking_fails / Engine)───> [BLOCKED] (completed_at NOT NULL)
+[BLOCKED] ──────(grant_active_exceptions / Engine)───> [EXCEPTION_REQUIRED]
 ```
-- **Guards**: `chk_assessment_timing_order` ensures valid chronological intervals.
+- **Guards**: `chk_run_status` enforces strict 5-state lifecycle; completed runs link to `PilotReadinessGate` for human attestation.
 
-### 3.6. ReadinessFinding FSM (DDL: status IN ('OPEN', 'INVESTIGATING', 'RESOLVED', 'ACCEPTED_RISK'))
+### 3.6. ReadinessFinding Lifecycle (DDL: is_resolved BOOLEAN, severity IN ('BLOCKER', 'CRITICAL', 'MAJOR', 'MINOR'))
 ```
-[OPEN] ──────────(investigate / Auditor)────> [INVESTIGATING]
-[INVESTIGATING] ─(resolve / SecOps)─────────> [RESOLVED] (resolved_at NOT NULL, resolution_notes NOT NULL)
-[INVESTIGATING] ─(accept_risk / CISO)───────> [ACCEPTED_RISK] (resolved_at NOT NULL, resolution_notes NOT NULL)
+[is_resolved = FALSE] ──(remediate / SecOps)───────> [is_resolved = TRUE]
+[is_resolved = FALSE] ──(grant_exception / CISO)───> [COVERED_BY_EXCEPTION] (via learning_readiness_exception)
 ```
-- **Guards**: `chk_finding_resolution_order` ensures forensic accountability upon resolution.
+- **Guards**: `chk_finding_severity` restricts severity levels; unresolved BLOCKER findings block readiness gates unless covered by an unexpired `ReadinessException`.
 
 ---
 
