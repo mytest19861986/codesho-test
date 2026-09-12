@@ -1,7 +1,7 @@
 # PHASE 3 FINAL SYSTEM CLOSURE: GEMINI FRONTEND & UX DOSSIER
 **Task ID**: `P3-FINAL-SYSTEM-CLOSURE-AND-PRE-PILOT-GO-NO-GO`
 **Branch**: `codex/phase3-product-platform-foundation`
-**Commit SHA**: `1b8263592859972baee4c997757bd9d5aefddfe6`
+**Commit SHA**: `d84fe73`
 **Target Agent**: Gemini (UI/UX Reviewer)
 
 ---
@@ -29,14 +29,48 @@
 
 ---
 
-## 2. Design System & Accessibility Standards
-- **Typography & Aesthetics**: Vibrant, modern layout with Persian font stack (`Vazirmatn`, `IRANSans`) and RTL/LTR bidirectional support.
+## 2. Representative Visual Surfaces & Viewport Screenshots
+
+As required by Commander's visual inspection directive for the Phase 3 final closure gate, real browser screenshots were captured under native runtime conditions for four critical operational surfaces across both Desktop (`1440x900`) and Mobile (`390x844`) viewports:
+
+### Surface 1: Learner Coaching & Intervention (`/dashboard/student/coaching`)
+- **Desktop (1440x900)**: `learner_desktop_1440x900.png`
+  - GitHub Raw: `https://raw.githubusercontent.com/mytest19861986/codesho-test/d84fe73/temp/fleet_exchange/P3-PHASE3-FINAL-CLOSURE/gemini/learner_desktop_1440x900.png`
+- **Mobile (390x844)**: `learner_mobile_390x844.png`
+  - GitHub Raw: `https://raw.githubusercontent.com/mytest19861986/codesho-test/d84fe73/temp/fleet_exchange/P3-PHASE3-FINAL-CLOSURE/gemini/learner_mobile_390x844.png`
+- **UX Invariants**: Non-stigmatizing Persian microcopy, milestone mastery badges, zero competitive leaderboards or peer rankings.
+
+### Surface 2: Mentor Caseload & Operations (`/dashboard/mentor/operations`)
+- **Desktop (1440x900)**: `mentor_desktop_1440x900.png`
+  - GitHub Raw: `https://raw.githubusercontent.com/mytest19861986/codesho-test/d84fe73/temp/fleet_exchange/P3-PHASE3-FINAL-CLOSURE/gemini/mentor_desktop_1440x900.png`
+- **Mobile (390x844)**: `mentor_mobile_390x844.png`
+  - GitHub Raw: `https://raw.githubusercontent.com/mytest19861986/codesho-test/d84fe73/temp/fleet_exchange/P3-PHASE3-FINAL-CLOSURE/gemini/mentor_mobile_390x844.png`
+- **UX Invariants**: Caseload queue management, affirmative check-in scheduling, outbox synchronization status.
+
+### Surface 3: Admin Curriculum Authoring (`/dashboard/admin/curriculum-authoring`)
+- **Desktop (1440x900)**: `admin_desktop_1440x900.png`
+  - GitHub Raw: `https://raw.githubusercontent.com/mytest19861986/codesho-test/d84fe73/temp/fleet_exchange/P3-PHASE3-FINAL-CLOSURE/gemini/admin_desktop_1440x900.png`
+- **Mobile (390x844)**: `admin_mobile_390x844.png`
+  - GitHub Raw: `https://raw.githubusercontent.com/mytest19861986/codesho-test/d84fe73/temp/fleet_exchange/P3-PHASE3-FINAL-CLOSURE/gemini/admin_mobile_390x844.png`
+- **UX Invariants**: Pedagogical node tree, versioned draft lifecycle, role-separated authoring controls.
+
+### Surface 4: Enterprise Control Center & Governance (`/admin/governance`)
+- **Desktop (1440x900)**: `governance_desktop_1440x900.png`
+  - GitHub Raw: `https://raw.githubusercontent.com/mytest19861986/codesho-test/d84fe73/temp/fleet_exchange/P3-PHASE3-FINAL-CLOSURE/gemini/governance_desktop_1440x900.png`
+- **Mobile (390x844)**: `governance_mobile_390x844.png`
+  - GitHub Raw: `https://raw.githubusercontent.com/mytest19861986/codesho-test/d84fe73/temp/fleet_exchange/P3-PHASE3-FINAL-CLOSURE/gemini/governance_mobile_390x844.png`
+- **UX Invariants**: Legal hold active indicators, immutable audit log viewer, emergency privilege suspension actions.
+
+---
+
+## 3. Design System & Accessibility Standards
+- **Typography & Aesthetics**: Persian font stack (`Vazirmatn`, `IRANSans`), full RTL alignment (`dir="rtl"`), WCAG 2.2 AA compliant contrast ratios.
 - **Micro-Interactions & State Coverage**:
   - Loading skeleton states for async API fetches.
   - Distinct empty states with actionable guidance.
   - High-contrast error banners with non-stigmatizing Persian copy.
-  - Destructive confirmations with two-step validation for release halts and unassignments.
+  - Two-step destructive confirmation modals for critical actions.
 - **Child Protection & Anti-Ranking**:
   - Zero leaderboard, percentile, or competitive ranking badges.
   - Positive feedback mechanisms focused on individual mastery and milestone completion.
-- **Responsive Layout**: Validated across Desktop (`1440x900`) and Mobile (`390x844`).
+- **Responsive Layout**: Verified across Desktop (`1440x900`) and Mobile (`390x844`).
