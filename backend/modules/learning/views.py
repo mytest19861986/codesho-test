@@ -3325,8 +3325,8 @@ class MentorSupportQueueResolveView(APIView):
         if not actor_id:
             return Response({"detail": "Authentication required"}, status=401)
 
-        role = _get_membership_role(request) or "MENTOR"
-        if role == "STUDENT":
+        role = str(_get_membership_role(request) or "MENTOR").upper()
+        if role in ("STUDENT", "LEARNER"):
             return Response({"detail": "Students cannot resolve support queue items"}, status=403)
 
         from modules.learning.mentor_operations_service import MentorOperationsService

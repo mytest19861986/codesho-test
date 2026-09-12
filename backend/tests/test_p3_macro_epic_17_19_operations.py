@@ -21,6 +21,8 @@ from modules.learning.models import (
     SupportQueueItem,
     SupportQueueStatus,
     SupportQueueUrgency,
+    CoachingSession,
+    SupportIntervention,
 )
 from modules.learning.mentor_operations_service import MentorOperationsService
 from modules.learning.views import (
@@ -143,11 +145,19 @@ class TestP3MacroEpic1719OperationsMatrix:
     # -------------------------------------------------------------------------
     def test_n4_set_null_preserves_tenant_id_intervention(self):
         """N4: Preserves tenant_id when source_intervention_id is nullified."""
+        session = CoachingSession.objects.create(
+            tenant=self.tenant_a,
+            student_id=self.student_a_id,
+            mentor_id=self.mentor_a_id,
+            title="Weekly Triage",
+            scheduled_at=timezone.now() + datetime.timedelta(days=1),
+        )
         item = SupportQueueItem(
             tenant_id=self.tenant_a.id,
             mentor_id=self.mentor_a_id,
             student_id=self.student_a_id,
             source_intervention_id=None,
+            source_session=session,
             due_date=timezone.now() + datetime.timedelta(days=1),
         )
         item.clean()
@@ -155,10 +165,17 @@ class TestP3MacroEpic1719OperationsMatrix:
 
     def test_n5_set_null_preserves_tenant_id_session(self):
         """N5: Preserves tenant_id when source_session_id is nullified."""
+        interv = SupportIntervention.objects.create(
+            tenant=self.tenant_a,
+            student_id=self.student_a_id,
+            mentor_id=self.mentor_a_id,
+            title="Academic Help",
+        )
         item = SupportQueueItem(
             tenant_id=self.tenant_a.id,
             mentor_id=self.mentor_a_id,
             student_id=self.student_a_id,
+            source_intervention=interv,
             source_session_id=None,
             due_date=timezone.now() + datetime.timedelta(days=1),
         )
@@ -425,10 +442,18 @@ class TestP3MacroEpic1719OperationsMatrix:
     # -------------------------------------------------------------------------
     def test_n23_audit_protection_append_only(self):
         """N23: Audit log entries cannot be mutated or deleted directly."""
+        checkin = MentorOperationsService.schedule_checkin(
+            tenant_id=self.tenant_a.id,
+            mentor_id=self.mentor_a_id,
+            student_id=self.student_a_id,
+            scheduled_start=timezone.now() + datetime.timedelta(days=1),
+            actor_id=self.mentor_a_id,
+        )
         log = MentorOperationsAuditLog.objects.create(
             tenant_id=self.tenant_a.id,
             action_type=MentorOperationsAuditAction.SCHEDULE_CHECKIN,
             actor_id=self.mentor_a_id,
+            target_checkin=checkin,
             details={"note": "Immutable audit"},
         )
         assert log.id is not None

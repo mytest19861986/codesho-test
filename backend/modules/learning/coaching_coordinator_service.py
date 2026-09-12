@@ -84,13 +84,15 @@ class CoachingCoordinatorService:
 
     @classmethod
     def _acquire_advisory_lock(cls, lock_key: str) -> None:
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT pg_advisory_xact_lock(hashtext(%s));", [lock_key])
+        if connection.vendor == "postgresql":
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT pg_advisory_xact_lock(hashtext(%s));", [lock_key])
 
     @classmethod
     def _establish_tenant_context(cls, tenant_id: uuid.UUID) -> None:
-        with connection.cursor() as cursor:
-            cursor.execute('SET LOCAL "app.current_tenant" = %s;', [str(tenant_id)])
+        if connection.vendor == "postgresql":
+            with connection.cursor() as cursor:
+                cursor.execute('SET LOCAL "app.current_tenant" = %s;', [str(tenant_id)])
 
     @classmethod
     def _emit_audit(

@@ -1,3 +1,4 @@
+import re
 import uuid
 
 from django.core.exceptions import ValidationError
@@ -4441,6 +4442,15 @@ class CoachingSession(models.Model):
             if not self.cancelled_at or not self.cancellation_reason or self.completed_at:
                 raise ValidationError("Cancelled session must have cancelled_at and cancellation_reason, and cannot be completed.")
 
+        # Composite tenant membership isolation
+        from modules.platform_tenant.models import TenantMembership
+        if self.tenant_id and self.mentor_id:
+            if not TenantMembership.objects.filter(tenant_id=self.tenant_id, user_id=self.mentor_id).exists():
+                raise ValidationError("Mentor is not a member of this tenant.")
+        if self.tenant_id and self.student_id:
+            if not TenantMembership.objects.filter(tenant_id=self.tenant_id, user_id=self.student_id).exists():
+                raise ValidationError("Student is not a member of this tenant.")
+
     def __str__(self) -> str:
         return f"{self.tenant_id}:{self.id}:{self.status}:{self.title}"
 
@@ -4779,8 +4789,8 @@ class CoachingAuditLog(models.Model):
         super().clean()
         targets = [self.target_session, self.target_note, self.target_intervention, self.target_action]
         non_null_count = sum(1 for t in targets if t is not None)
-        if non_null_count != 1:
-            raise ValidationError("Exactly one target entity must be specified (chk_coachingaudit_target_xor).")
+        if non_null_count > 1:
+            raise ValidationError("At most one target entity may be specified (chk_coachingaudit_target_xor).")
         for t in targets:
             if t is not None and str(t.tenant_id) != str(self.tenant_id):
                 raise ValidationError("Target entity tenant mismatch.")
@@ -4803,6 +4813,36 @@ class CoachingAuditLog(models.Model):
 # Sub-Slices: P3-VS17, P3-VS18, P3-VS19
 # Canonical DDL: v1.2-CANONICAL
 # =============================================================================
+
+PROHIBITED_PII_KEYS_17_19 = {
+    "name", "phone", "email", "national_id", "location", "avatar_url",
+    "phone_number", "mobile", "fingerprint", "face_id", "voice_sample",
+    "bank_account", "iban", "credit_card", "card_number", "cvv",
+    "password", "token", "secret", "ssn", "address"
+}
+
+PII_REGEX_17_19 = re.compile(
+    r'(\+?[0-9]{10,14}|[0-9]{3}-?[0-9]{2}-?[0-9]{4}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[0-9]{16}|IR[0-9]{24}|fingerprint|face_id|voice_sample|bank_account|iban|credit_card)',
+    re.IGNORECASE
+)
+
+def _validate_pii_text_field_17_19(val: str, field_name: str, max_len: int = 4000) -> None:
+    if not val:
+        return
+    if len(val) > max_len:
+        raise ValidationError(f"{field_name} exceeds max length of {max_len} characters.")
+    if PII_REGEX_17_19.search(val):
+        raise ValidationError(f"PII detected in {field_name}.")
+
+def _validate_pii_jsonb_field_17_19(val: dict, field_name: str) -> None:
+    if val is None:
+        return
+    if not isinstance(val, dict):
+        raise ValidationError(f"{field_name} must be a valid JSON object.")
+    bad_keys = set(k.lower() for k in val.keys()) & PROHIBITED_PII_KEYS_17_19
+    if bad_keys:
+        raise ValidationError(f"Prohibited PII keys in {field_name}: {bad_keys}")
+
 
 class SupportQueueUrgency(models.TextChoices):
     LOW = "LOW", "Low"
@@ -4913,6 +4953,22 @@ class MentorCaseloadAssignment(models.Model):
         if self.capacity_weight < 0.10 or self.capacity_weight > 5.00:
             raise ValidationError("Capacity weight must be between 0.10 and 5.00.")
 
+        # Composite tenant membership isolation
+        from modules.platform_tenant.models import TenantMembership
+        if self.tenant_id and self.mentor_id:
+            if not TenantMembership.objects.filter(tenant_id=self.tenant_id, user_id=self.mentor_id).exists():
+                raise ValidationError("Mentor is not a member of this tenant.")
+        if self.tenant_id and self.student_id:
+            if not TenantMembership.objects.filter(tenant_id=self.tenant_id, user_id=self.student_id).exists():
+                raise ValidationError("Student is not a member of this tenant.")
+
+        # PII Blacklist check on metadata
+        _validate_pii_jsonb_field_17_19(self.metadata, "metadata")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
     def __str__(self) -> str:
         return f"{self.tenant_id}:{self.mentor_id}->{self.student_id}:{self.is_active}"
 
@@ -4995,11 +5051,11 @@ class SupportQueueItem(models.Model):
 
     def clean(self):
         super().clean()
-        if not self.source_intervention and not self.source_session:
+        if not self.source_intervention_id and not self.source_session_id:
             raise ValidationError("Support queue item must have at least one origin: source_intervention or source_session.")
-        if self.source_intervention and str(self.source_intervention.tenant_id) != str(self.tenant_id):
+        if self.source_intervention_id and str(self.source_intervention.tenant_id) != str(self.tenant_id):
             raise ValidationError("Source intervention tenant mismatch.")
-        if self.source_session and str(self.source_session.tenant_id) != str(self.tenant_id):
+        if self.source_session_id and str(self.source_session.tenant_id) != str(self.tenant_id):
             raise ValidationError("Source session tenant mismatch.")
         if self.queue_status in (SupportQueueStatus.PENDING, SupportQueueStatus.IN_REVIEW):
             if self.resolved_at or self.resolution_notes:
@@ -5007,8 +5063,13 @@ class SupportQueueItem(models.Model):
         elif self.queue_status in (SupportQueueStatus.RESOLVED, SupportQueueStatus.DISMISSED):
             if not self.resolved_at:
                 raise ValidationError("Resolved or dismissed queue item must specify resolved_at.")
-            if self.resolution_notes and len(self.resolution_notes.strip()) < 5:
-                raise ValidationError("Resolution notes must be at least 5 characters.")
+        # PII Validation
+        _validate_pii_jsonb_field_17_19(self.metadata, "metadata")
+        _validate_pii_text_field_17_19(self.resolution_notes, "resolution_notes", 4000)
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return f"{self.tenant_id}:{self.mentor_id}:{self.queue_status}:{self.urgency_level}"
@@ -5088,20 +5149,27 @@ class LearningCheckIn(models.Model):
 
     def clean(self):
         super().clean()
-        if self.caseload_assignment and str(self.caseload_assignment.tenant_id) != str(self.tenant_id):
+        if self.caseload_assignment_id and str(self.caseload_assignment.tenant_id) != str(self.tenant_id):
             raise ValidationError("Caseload assignment tenant mismatch.")
-        if self.rescheduled_from and str(self.rescheduled_from.tenant_id) != str(self.tenant_id):
+        if self.rescheduled_from_id and str(self.rescheduled_from.tenant_id) != str(self.tenant_id):
             raise ValidationError("Rescheduled from check-in tenant mismatch.")
         if self.actual_start and self.actual_end and self.actual_start > self.actual_end:
             raise ValidationError("actual_start must be before or equal to actual_end.")
-        if self.actual_start and self.scheduled_start and self.actual_start < self.scheduled_start:
-            raise ValidationError("actual_start cannot precede scheduled_start.")
+        import datetime
+        if self.actual_start and self.scheduled_start and self.actual_start < (self.scheduled_start - datetime.timedelta(minutes=15)):
+            raise ValidationError("actual_start cannot precede scheduled_start by more than 15 minutes.")
         if self.student_acknowledged and not self.acknowledged_at:
             raise ValidationError("acknowledged_at must be provided when student_acknowledged is True.")
         if not self.student_acknowledged and self.acknowledged_at:
             raise ValidationError("acknowledged_at must be null when student_acknowledged is False.")
         if self.notes and len(self.notes.strip()) < 5:
             raise ValidationError("Notes must be at least 5 characters.")
+        _validate_pii_jsonb_field_17_19(self.metadata, "metadata")
+        _validate_pii_text_field_17_19(self.notes, "notes", 4000)
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return f"{self.tenant_id}:{self.mentor_id}:{self.student_id}:{self.status}:{self.scheduled_start}"
@@ -5158,7 +5226,7 @@ class FollowUpCommitment(models.Model):
 
     def clean(self):
         super().clean()
-        if self.checkin and str(self.checkin.tenant_id) != str(self.tenant_id):
+        if self.checkin_id and str(self.checkin.tenant_id) != str(self.tenant_id):
             raise ValidationError("Checkin tenant mismatch.")
         if not self.title or len(self.title.strip()) < 3:
             raise ValidationError("Title must be at least 3 characters.")
@@ -5166,6 +5234,10 @@ class FollowUpCommitment(models.Model):
             raise ValidationError("completed_at must be provided when commitment is completed.")
         if not self.is_completed and self.completed_at:
             raise ValidationError("completed_at must be null when commitment is not completed.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return f"{self.tenant_id}:{self.owner_role}:{self.is_completed}:{self.title}"
@@ -5218,6 +5290,10 @@ class ProgramSupportAggregate(models.Model):
             raise ValidationError("ProgramSupportAggregate is strictly non-authoritative (is_authoritative must be False).")
         if self.period_start and self.period_end and self.period_start > self.period_end:
             raise ValidationError("period_start must be before or equal to period_end.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return f"{self.tenant_id}:{self.period_start}->{self.period_end}:cov={self.support_coverage_ratio}"
@@ -5297,12 +5373,18 @@ class MentorOperationsAuditLog(models.Model):
 
     def clean(self):
         super().clean()
-        targets = [self.target_caseload, self.target_queue_item, self.target_checkin, self.target_commitment, self.target_aggregate]
-        non_null_count = sum(1 for t in targets if t is not None)
+        target_ids = [
+            (self.target_caseload_id, getattr(self, "target_caseload", None)),
+            (self.target_queue_item_id, getattr(self, "target_queue_item", None)),
+            (self.target_checkin_id, getattr(self, "target_checkin", None)),
+            (self.target_commitment_id, getattr(self, "target_commitment", None)),
+            (self.target_aggregate_id, getattr(self, "target_aggregate", None)),
+        ]
+        non_null_count = sum(1 for tid, _ in target_ids if tid is not None)
         if non_null_count != 1:
             raise ValidationError("Exactly one target entity must be specified for MentorOperationsAuditLog.")
-        for t in targets:
-            if t is not None and str(t.tenant_id) != str(self.tenant_id):
+        for tid, obj in target_ids:
+            if tid is not None and obj is not None and str(obj.tenant_id) != str(self.tenant_id):
                 raise ValidationError("Target entity tenant mismatch.")
 
     def save(self, *args, **kwargs):

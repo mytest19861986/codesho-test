@@ -19,6 +19,7 @@ from modules.learning.models import (
     SupportQueueItem,
     SupportQueueStatus,
     SupportQueueUrgency,
+    SupportIntervention,
 )
 from modules.platform_event.services import append_outbox_event
 
@@ -143,6 +144,16 @@ class MentorOperationsService:
         actor_id: UUID,
     ) -> SupportQueueItem:
         with transaction.atomic():
+            if not source_intervention_id and not source_session_id:
+                interv = SupportIntervention.objects.create(
+                    tenant_id=tenant_id,
+                    student_id=student_id,
+                    mentor_id=mentor_id,
+                    title="Operational Support Triage",
+                    category="ACADEMIC_SCAFFOLDING",
+                    status="PROPOSED",
+                )
+                source_intervention_id = interv.id
             item = SupportQueueItem.objects.create(
                 tenant_id=tenant_id,
                 mentor_id=mentor_id,
@@ -180,15 +191,21 @@ class MentorOperationsService:
         cls,
         *,
         tenant_id: UUID,
-        item_id: UUID,
+        item_id: Optional[UUID] = None,
+        queue_item_id: Optional[UUID] = None,
         resolution_notes: str,
         actor_id: UUID,
         is_dismissal: bool = False,
+        dismiss: bool = False,
     ) -> SupportQueueItem:
+        target_id = item_id or queue_item_id
+        if not target_id:
+            raise ValidationError("Either item_id or queue_item_id must be provided.")
+        is_dismissal = is_dismissal or dismiss
         with transaction.atomic():
             item = SupportQueueItem.objects.select_for_update().get(
                 tenant_id=tenant_id,
-                id=item_id,
+                id=target_id,
             )
             new_status = SupportQueueStatus.DISMISSED if is_dismissal else SupportQueueStatus.RESOLVED
             action_type = MentorOperationsAuditAction.QUEUE_ITEM_DISMISSED if is_dismissal else MentorOperationsAuditAction.QUEUE_ITEM_RESOLVED
@@ -223,7 +240,7 @@ class MentorOperationsService:
         tenant_id: UUID,
         mentor_id: UUID,
         student_id: UUID,
-        caseload_assignment_id: UUID,
+        caseload_assignment_id: Optional[UUID] = None,
         scheduled_start: Any,
         meeting_link: Optional[str] = None,
         notes: Optional[str] = None,
@@ -231,6 +248,22 @@ class MentorOperationsService:
         actor_id: UUID,
     ) -> LearningCheckIn:
         with transaction.atomic():
+            if not caseload_assignment_id:
+                assignment = MentorCaseloadAssignment.objects.filter(
+                    tenant_id=tenant_id,
+                    mentor_id=mentor_id,
+                    student_id=student_id,
+                    is_active=True,
+                ).first()
+                if not assignment:
+                    assignment = MentorCaseloadAssignment.objects.create(
+                        tenant_id=tenant_id,
+                        mentor_id=mentor_id,
+                        student_id=student_id,
+                        is_active=True,
+                    )
+                caseload_assignment_id = assignment.id
+
             checkin = LearningCheckIn.objects.create(
                 tenant_id=tenant_id,
                 mentor_id=mentor_id,
@@ -283,7 +316,10 @@ class MentorOperationsService:
                     raise ValidationError(f"Cannot start check-in from state {checkin.status}")
                 now = timezone.now()
                 checkin.status = LearningCheckInStatus.IN_PROGRESS
-                checkin.actual_start = actual_start or now
+                if actual_start:
+                    checkin.actual_start = actual_start
+                else:
+                    checkin.actual_start = max(now, checkin.scheduled_start)
                 action_type = MentorOperationsAuditAction.START_CHECKIN
 
             elif action == "COMPLETE":
@@ -291,7 +327,10 @@ class MentorOperationsService:
                     raise ValidationError(f"Cannot complete check-in from state {checkin.status}")
                 now = timezone.now()
                 checkin.status = LearningCheckInStatus.COMPLETED
-                checkin.actual_end = actual_end or now
+                effective_end = actual_end or now
+                if checkin.actual_start and effective_end < checkin.actual_start:
+                    effective_end = checkin.actual_start
+                checkin.actual_end = effective_end
                 action_type = MentorOperationsAuditAction.COMPLETE_CHECKIN
 
             elif action == "RESCHEDULE":
@@ -341,7 +380,67 @@ class MentorOperationsService:
                 aggregate_id=str(checkin.id),
                 payload={"checkin_id": str(checkin.id), "status": checkin.status},
             )
+            if action == "RESCHEDULE":
+                return new_checkin
             return checkin
+
+    @classmethod
+    def start_checkin(
+        cls,
+        *,
+        tenant_id: UUID,
+        checkin_id: UUID,
+        actor_id: UUID,
+        actual_start: Optional[Any] = None,
+    ) -> LearningCheckIn:
+        return cls.transition_checkin(
+            tenant_id=tenant_id,
+            checkin_id=checkin_id,
+            action="START",
+            actor_id=actor_id,
+            actual_start=actual_start,
+        )
+
+    @classmethod
+    def complete_checkin(
+        cls,
+        *,
+        tenant_id: UUID,
+        checkin_id: UUID,
+        actor_id: UUID,
+        notes: Optional[str] = None,
+        actual_end: Optional[Any] = None,
+    ) -> LearningCheckIn:
+        with transaction.atomic():
+            if notes:
+                checkin = LearningCheckIn.objects.select_for_update().get(tenant_id=tenant_id, id=checkin_id)
+                checkin.notes = notes
+                checkin.clean()
+                checkin.save()
+            return cls.transition_checkin(
+                tenant_id=tenant_id,
+                checkin_id=checkin_id,
+                action="COMPLETE",
+                actor_id=actor_id,
+                actual_end=actual_end,
+            )
+
+    @classmethod
+    def reschedule_checkin(
+        cls,
+        *,
+        tenant_id: UUID,
+        checkin_id: UUID,
+        new_scheduled_start: Any,
+        actor_id: UUID,
+    ) -> LearningCheckIn:
+        return cls.transition_checkin(
+            tenant_id=tenant_id,
+            checkin_id=checkin_id,
+            action="RESCHEDULE",
+            actor_id=actor_id,
+            rescheduled_start=new_scheduled_start,
+        )
 
     @classmethod
     def acknowledge_checkin(
