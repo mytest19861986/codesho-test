@@ -101,6 +101,16 @@ ALTER TABLE learning_mentorcaseloadassignment DISABLE ROW LEVEL SECURITY;
 """
 
 
+def enable_mentor_operations_postgres_rls(apps, schema_editor):
+    if schema_editor.connection.vendor == "postgresql":
+        schema_editor.execute(POSTGRES_MENTOR_OPERATIONS_RLS_SQL)
+
+
+def disable_mentor_operations_postgres_rls(apps, schema_editor):
+    if schema_editor.connection.vendor == "postgresql":
+        schema_editor.execute(POSTGRES_MENTOR_OPERATIONS_REVERSE_SQL)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -108,8 +118,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL(
-            sql=POSTGRES_MENTOR_OPERATIONS_RLS_SQL,
-            reverse_sql=POSTGRES_MENTOR_OPERATIONS_REVERSE_SQL,
+        migrations.RunPython(
+            enable_mentor_operations_postgres_rls,
+            reverse_code=disable_mentor_operations_postgres_rls,
         ),
     ]

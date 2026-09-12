@@ -1,4 +1,4 @@
-# P3-MACRO-EPIC-26-28 Comprehensive Proof Package & Invariant Verification Matrix (v1.0-CANONICAL)
+# P3-MACRO-EPIC-26-28 Comprehensive Proof Package & Invariant Verification Matrix (v1.3-CANONICAL)
 
 ## 1. Upstream Pinning & Architectural Pre-Conditions (§2.1 Pin)
 1. **Upstream Tenant & Membership Authority**:
@@ -34,22 +34,22 @@
 | **N13** | Legal Hold Bypass Denial | Attempt disposition on record covered by active `LegalHold` | Application/FSM Guard: `LegalHoldActiveError` |
 | **N14** | Legal Hold Release Consistency | Hold with status `ACTIVE` and `released_at IS NOT NULL` | CheckConstraint Violation (`chk_hold_release_consistency`) |
 | **N15** | Legal Hold Release Integrity | Hold with status `RELEASED` and `released_by_id IS NULL` | CheckConstraint Violation (`chk_hold_release_consistency`) |
-| **N16** | FSM Illegal Transition | Campaign transition `COMPLETED` -> `IN_PROGRESS` | FSM Guard Rejection (`FSMValidationError`) |
+| **N16** | FSM Illegal Transition | Campaign transition `CONCLUDED` -> `ACTIVE` | FSM Guard Rejection (`FSMValidationError`) |
 | **N17** | FSM Illegal Transition | Privilege grant `REVOKED` -> `ACTIVE` | FSM Guard Rejection (`FSMValidationError`) |
-| **N18** | FSM Illegal Transition | Assessment run `FAILED` -> `RUNNING` | FSM Guard Rejection (`FSMValidationError`) |
+| **N18** | FSM Illegal Transition | Assessment run `BLOCKED` -> `IN_PROGRESS` | FSM Guard Rejection (`FSMValidationError`) |
 | **N19** | Anti-Ranking Compliance | Query parameter or API attempting learner ranking or scores | 400 Bad Request: `ranking_queries_prohibited` |
 | **N20** | Non-Authoritative Advisory | Attempt to assign automated deployment authority to readiness gate | Rejection / Invariant: `PRODUCTION_DEPLOY_AUTHORITY: 0` |
 | **N21** | Staff Validity Window | Staff assignment with `valid_until <= valid_from` | CheckConstraint Violation (`chk_staff_validity_window`) |
 | **N22** | Retention Period Baseline | Retention policy version with `retention_period_days < 30` | CheckConstraint Violation (`chk_retention_period_positive`) |
-| **N23** | Assessment Execution Window | Readiness assessment run with `ended_at < started_at` | CheckConstraint Violation (`chk_assessment_timing_order`) |
-| **N24** | Finding Resolution Order | Readiness finding with `status = 'RESOLVED'` and `resolved_at IS NULL` | CheckConstraint Violation (`chk_finding_resolution_order`) |
-| **N25** | PII Blacklist (JSONB) | Metadata containing blacklisted PII key (e.g. `national_id`, `ssn`) | CheckConstraint Violation (`chk_staff_assignment_metadata_no_pii`) |
+| **N23** | Assessment Execution Window | Readiness assessment run execution ordering | Clean validation / Ordering check (`completed_at >= created_at`) |
+| **N24** | Finding Resolution Order | Unresolved finding lifecycle before exception grant | Finding `is_resolved=False` -> Exception -> `is_resolved=True` |
+| **N25** | PII Blacklist (JSONB) | Prohibited PII keys in privileged action audit details | CheckConstraint Violation (`chk_privileged_action_audit_details_no_pii`) |
 | **N26** | PII Free-Text Bound | Privilege justification containing regex PII pattern or >2000 chars | CheckConstraint Violation (`chk_privilege_justification_pii`) |
-| **N27** | PII Free-Text Bound | Legal hold reason containing regex PII pattern or >2000 chars | CheckConstraint Violation (`chk_legal_hold_reason_pii`) |
+| **N27** | PII Free-Text Bound | Legal hold reason containing regex PII pattern or >2000 chars | CheckConstraint Violation (`chk_hold_reason_pii`) |
 | **N28** | PII Free-Text Bound | Readiness finding summary containing regex PII pattern or >2000 chars | CheckConstraint Violation (`chk_finding_summary_pii`) |
 | **N29** | PII Free-Text Bound | Attestation summary containing regex PII pattern or >2000 chars | CheckConstraint Violation (`chk_attestation_summary_pii`) |
 | **N30** | Scope Resource Enum | Delegated admin scope with invalid `scope_resource_type` | CheckConstraint Violation (`chk_scope_resource_type`) |
-| **N31** | Control Category Enum | Readiness control with invalid `control_category` | CheckConstraint Violation (`chk_control_category`) |
+| **N31** | Control Category Enum | Readiness control with invalid `category` | CheckConstraint Violation (`chk_control_category`) |
 | **N32** | Zero Bare UUIDs | Database schema introspection across all 20 tables | 100% Assertion Pass: Zero bare foreign key UUIDs |
 | **N33** | Tenant Cascade Wipe | Hard deletion of tenant in test environment | Cascades clean across all tables with zero orphaned rows |
 | **N34** | Malformed Tenant GUC | GUC set to malformed non-UUID value (e.g. `'malformed-tenant-uuid'`) | Fail-closed: 0 rows returned, safe DB error handling |
@@ -67,13 +67,12 @@
 ```
 - **Guards**: `user_id <> granted_by_id` (No self-grant); `second_approver_id <> granted_by_id` (Two-person separation).
 
-### 3.2. AccessReviewCampaign FSM (DDL: status IN ('DRAFT', 'ACTIVE', 'COMPLETED', 'CANCELLED'))
+### 3.2. AccessReviewCampaign FSM (DDL: status IN ('ACTIVE', 'CONCLUDED', 'CANCELLED'))
 ```
-[DRAFT] ──(launch_campaign / Admin)────> [ACTIVE]
-[ACTIVE] ──(close_campaign / Admin)────> [COMPLETED]
-[DRAFT / ACTIVE] ──(cancel / Admin)────> [CANCELLED]
+[ACTIVE] ──(conclude_campaign / Admin)──> [CONCLUDED]
+[ACTIVE] ──(cancel_campaign / Admin)────> [CANCELLED]
 ```
-- **Guards**: Campaign completion requires all review decisions recorded or explicitly exempted.
+- **Guards**: Campaign conclusion requires all review decisions recorded or explicitly exempted. Strict check constraint: `chk_campaign_status`.
 
 ### 3.3. LegalHold FSM (DDL: status IN ('ACTIVE', 'RELEASED'))
 ```

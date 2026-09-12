@@ -1,8 +1,8 @@
 -- ==============================================================================
--- P3-MACRO-EPIC-26-28 SCHEMA DDL v1.1-HARDENED
+-- P3-MACRO-EPIC-26-28 SCHEMA DDL v1.3-CANONICAL
 -- Enterprise Governance, Data Lifecycle & Pilot Readiness Center
 -- PostgreSQL 17 Canonical Hardened DDL
--- Remediation for GLM Discovery Audit (B1, B2, M1-M6 Resolved)
+-- Remediation for GLM Discovery Audit (Indexes, FSM & Constraint Alignment Resolved)
 -- Session Protocol: SET LOCAL "app.current_tenant" = %s inside transaction.atomic()
 -- ==============================================================================
 
@@ -516,8 +516,8 @@ CREATE INDEX IF NOT EXISTS idx_access_review_decision_tenant_campaign_reviewer
 CREATE INDEX IF NOT EXISTS idx_privileged_action_audit_tenant_actor_created
     ON learning_privileged_action_audit (tenant_id, actor_id, created_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_data_retention_policy_tenant_active
-    ON learning_data_retention_policy (tenant_id, is_active);
+CREATE INDEX IF NOT EXISTS idx_data_retention_policy_tenant_category
+    ON learning_data_retention_policy (tenant_id, data_category);
 
 CREATE INDEX IF NOT EXISTS idx_retention_policy_version_tenant_policy
     ON learning_retention_policy_version (tenant_id, policy_id, version_number DESC);
@@ -525,26 +525,26 @@ CREATE INDEX IF NOT EXISTS idx_retention_policy_version_tenant_policy
 CREATE INDEX IF NOT EXISTS idx_legal_hold_tenant_status
     ON learning_legal_hold (tenant_id, status);
 
-CREATE INDEX IF NOT EXISTS idx_legal_hold_scope_tenant_hold
-    ON learning_legal_hold_scope (tenant_id, hold_id);
+CREATE INDEX IF NOT EXISTS idx_legal_hold_scope_tenant_legal_hold
+    ON learning_legal_hold_scope (tenant_id, legal_hold_id);
 
-CREATE INDEX IF NOT EXISTS idx_data_disposition_record_tenant_status
-    ON learning_data_disposition_record (tenant_id, status);
+CREATE INDEX IF NOT EXISTS idx_data_disposition_record_tenant_action
+    ON learning_data_disposition_record (tenant_id, action_applied);
 
-CREATE INDEX IF NOT EXISTS idx_disposition_audit_log_tenant_actor_created
-    ON learning_disposition_audit_log (tenant_id, actor_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_disposition_audit_log_tenant_entity_created
+    ON learning_disposition_audit_log (tenant_id, entity_key_hash, created_at DESC);
 
 CREATE INDEX IF NOT EXISTS idx_readiness_control_tenant_category
-    ON learning_readiness_control (tenant_id, control_category);
+    ON learning_readiness_control (tenant_id, category);
 
 CREATE INDEX IF NOT EXISTS idx_readiness_assessment_run_tenant_status
-    ON learning_readiness_assessment_run (tenant_id, status);
+    ON learning_readiness_assessment_run (tenant_id, overall_status);
 
-CREATE INDEX IF NOT EXISTS idx_readiness_finding_tenant_severity_status
-    ON learning_readiness_finding (tenant_id, severity, status);
+CREATE INDEX IF NOT EXISTS idx_readiness_finding_tenant_severity_resolved
+    ON learning_readiness_finding (tenant_id, severity, is_resolved);
 
-CREATE INDEX IF NOT EXISTS idx_pilot_readiness_gate_tenant_status
-    ON learning_pilot_readiness_gate (tenant_id, status);
+CREATE INDEX IF NOT EXISTS idx_pilot_readiness_gate_tenant_verdict
+    ON learning_pilot_readiness_gate (tenant_id, gate_verdict);
 
 CREATE INDEX IF NOT EXISTS idx_control_attestation_audit_tenant_gate
     ON learning_control_attestation_audit (tenant_id, gate_id, created_at DESC);

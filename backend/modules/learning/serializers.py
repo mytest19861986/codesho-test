@@ -1528,3 +1528,141 @@ class MentorOperationsAuditLogSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = fields
+
+
+
+
+# =============================================================================
+# P3-MACRO-EPIC-20-22: CURRICULUM DELIVERY & PROGRAM OPERATIONS SERIALIZERS
+# =============================================================================
+
+class CurriculumVersionSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import CurriculumVersion
+        model = CurriculumVersion
+        fields = [
+            "id",
+            "course",
+            "semver_major",
+            "semver_minor",
+            "semver_patch",
+            "version_tag",
+            "status",
+            "created_by_id",
+            "approved_by_id",
+            "published_at",
+            "metadata",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "status", "created_by_id", "approved_by_id", "published_at", "created_at", "updated_at"]
+
+
+class CourseReleaseSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import CourseRelease
+        model = CourseRelease
+        fields = [
+            "id",
+            "course",
+            "curriculum_version",
+            "release_title",
+            "release_notes",
+            "is_active_default",
+            "created_at",
+        ]
+        read_only_fields = ["id", "created_at"]
+
+
+class CohortScheduleSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import CohortSchedule
+        model = CohortSchedule
+        fields = [
+            "id",
+            "cohort",
+            "course_release",
+            "schedule_title",
+            "start_date",
+            "end_date",
+            "recurrence_rule",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+
+class LearningSessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import LearningSession
+        model = LearningSession
+        fields = [
+            "id",
+            "cohort_schedule",
+            "session_title",
+            "session_order",
+            "lesson_snapshot",
+            "assigned_mentor_id",
+            "scheduled_start",
+            "scheduled_end",
+            "status",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "status", "created_at", "updated_at"]
+
+
+class SessionOccurrenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import SessionOccurrence
+        model = SessionOccurrence
+        fields = [
+            "id",
+            "learning_session",
+            "conducted_by_id",
+            "actual_start",
+            "actual_end",
+            "occurrence_status",
+            "session_notes",
+            "created_at",
+        ]
+        read_only_fields = ["id", "created_at"]
+
+
+class DeliveryExceptionQueueSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import DeliveryExceptionQueue
+        model = DeliveryExceptionQueue
+        fields = [
+            "id",
+            "cohort",
+            "learning_session",
+            "exception_type",
+            "severity",
+            "status",
+            "description",
+            "resolved_by_id",
+            "resolved_at",
+            "created_at",
+        ]
+        read_only_fields = ["id", "status", "resolved_by_id", "resolved_at", "created_at"]
+
+
+class ProgramDeliveryAggregateSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import ProgramDeliveryAggregate
+        model = ProgramDeliveryAggregate
+        fields = [
+            "id",
+            "cohort",
+            "total_sessions",
+            "completed_sessions",
+            "cancelled_sessions",
+            "rescheduled_sessions",
+            "active_release_version",
+            "is_authoritative",
+            "computed_at",
+            "metadata",
+        ]
+        read_only_fields = fields

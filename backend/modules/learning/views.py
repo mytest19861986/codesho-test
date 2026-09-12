@@ -3636,3 +3636,198 @@ class MentorProgramAnalyticsView(APIView):
 
 
 
+
+
+
+
+# =============================================================================
+# P3-MACRO-EPIC-20-22: CURRICULUM DELIVERY & PROGRAM OPERATIONS VIEWS
+# =============================================================================
+
+class CurriculumVersionListCreateView(APIView):
+    """
+    GET  /api/v1/learning/curriculum/versions/
+    POST /api/v1/learning/curriculum/versions/
+    """
+    def get(self, request: Request) -> Response:
+        for param in request.query_params:
+            if any(forbidden in param.lower() for forbidden in ["rank", "leaderboard", "percentile", "score"]):
+                return Response(
+                    {"code": "ranking_queries_prohibited", "detail": "Student ranking and psychological scores are strictly prohibited."},
+                    status=400,
+                )
+        tenant_id = _tenant_id(request)
+        course_id = request.query_params.get("course_id")
+        from modules.learning.models import CurriculumVersion
+        from modules.learning.serializers import CurriculumVersionSerializer
+
+        qs = CurriculumVersion.objects.filter(tenant_id=tenant_id)
+        if course_id:
+            qs = qs.filter(course_id=course_id)
+        qs = qs.order_by("-created_at")[:50]
+        return Response(CurriculumVersionSerializer(qs, many=True).data, status=200)
+
+    def post(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        from modules.learning.curriculum_operations_service import CurriculumOperationsService
+        from modules.learning.serializers import CurriculumVersionSerializer
+
+        data = request.data
+        try:
+            version = CurriculumOperationsService.create_version(
+                tenant_id=tenant_id,
+                course_id=data.get("course_id"),
+                semver_major=int(data.get("semver_major", 1)),
+                semver_minor=int(data.get("semver_minor", 0)),
+                semver_patch=int(data.get("semver_patch", 0)),
+                version_tag=data.get("version_tag", "v1.0.0"),
+                actor_id=actor_id,
+                metadata=data.get("metadata", {}),
+            )
+            return Response(CurriculumVersionSerializer(version).data, status=201)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+
+
+class CurriculumVersionPublishView(APIView):
+    """
+    POST /api/v1/learning/curriculum/versions/<id>/publish/
+    """
+    def post(self, request: Request, version_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        from modules.learning.curriculum_operations_service import CurriculumOperationsService
+        from modules.learning.serializers import CurriculumVersionSerializer
+
+        try:
+            version = CurriculumOperationsService.publish_version(
+                tenant_id=tenant_id,
+                version_id=version_id,
+                actor_id=actor_id,
+            )
+            return Response(CurriculumVersionSerializer(version).data, status=200)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+
+
+class CohortScheduleListCreateView(APIView):
+    """
+    GET  /api/v1/learning/cohorts/<cohort_id>/schedules/
+    POST /api/v1/learning/cohorts/<cohort_id>/schedules/
+    """
+    def get(self, request: Request, cohort_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        from modules.learning.models import CohortSchedule
+        from modules.learning.serializers import CohortScheduleSerializer
+
+        qs = CohortSchedule.objects.filter(tenant_id=tenant_id, cohort_id=cohort_id).order_by("-start_date")
+        return Response(CohortScheduleSerializer(qs, many=True).data, status=200)
+
+    def post(self, request: Request, cohort_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        from modules.learning.curriculum_operations_service import CurriculumOperationsService
+        from modules.learning.serializers import CohortScheduleSerializer
+
+        data = request.data
+        try:
+            schedule = CurriculumOperationsService.create_cohort_schedule(
+                tenant_id=tenant_id,
+                cohort_id=cohort_id,
+                course_release_id=data.get("course_release_id"),
+                schedule_title=data.get("schedule_title", "Schedule"),
+                start_date=data.get("start_date"),
+                end_date=data.get("end_date"),
+                recurrence_rule=data.get("recurrence_rule", "WEEKLY"),
+                is_active=data.get("is_active", True),
+            )
+            return Response(CohortScheduleSerializer(schedule).data, status=201)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+
+
+class LearningSessionRescheduleView(APIView):
+    """
+    POST /api/v1/learning/sessions/<id>/reschedule/
+    """
+    def post(self, request: Request, session_id: UUID) -> Response:
+        tenant_id = _tenant_id(request)
+        actor_id = getattr(request.user, "id", None)
+        from modules.learning.curriculum_operations_service import CurriculumOperationsService
+        from modules.learning.serializers import LearningSessionSerializer
+
+        data = request.data
+        try:
+            session = CurriculumOperationsService.reschedule_session(
+                tenant_id=tenant_id,
+                session_id=session_id,
+                new_start=data.get("new_start"),
+                new_end=data.get("new_end"),
+                changed_by_id=actor_id or uuid.uuid4(),
+                reason=data.get("reason", "Rescheduled by operator"),
+            )
+            return Response(LearningSessionSerializer(session).data, status=200)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)
+
+
+class ProgramDeliveryOverviewView(APIView):
+    """
+    GET  /api/v1/learning/operations/delivery-overview/
+    """
+    def get(self, request: Request) -> Response:
+        for param in request.query_params:
+            if any(forbidden in param.lower() for forbidden in ["rank", "leaderboard", "percentile", "score"]):
+                return Response(
+                    {"code": "ranking_queries_prohibited", "detail": "Student ranking and psychological scores are strictly prohibited."},
+                    status=400,
+                )
+        tenant_id = _tenant_id(request)
+        from modules.learning.models import ProgramDeliveryAggregate
+        from modules.learning.serializers import ProgramDeliveryAggregateSerializer
+
+        aggregates = ProgramDeliveryAggregate.objects.filter(tenant_id=tenant_id).order_by("-computed_at")[:50]
+        return Response(ProgramDeliveryAggregateSerializer(aggregates, many=True).data, status=200)
+
+
+class DeliveryExceptionQueueView(APIView):
+    """
+    GET  /api/v1/learning/operations/exceptions/
+    POST /api/v1/learning/operations/exceptions/
+    """
+    def get(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        from modules.learning.models import DeliveryExceptionQueue
+        from modules.learning.serializers import DeliveryExceptionQueueSerializer
+
+        items = DeliveryExceptionQueue.objects.filter(tenant_id=tenant_id).order_by("-created_at")[:100]
+        return Response(DeliveryExceptionQueueSerializer(items, many=True).data, status=200)
+
+    def post(self, request: Request) -> Response:
+        tenant_id = _tenant_id(request)
+        from modules.learning.curriculum_operations_service import CurriculumOperationsService
+        from modules.learning.serializers import DeliveryExceptionQueueSerializer
+
+        data = request.data
+        try:
+            item = CurriculumOperationsService.log_delivery_exception(
+                tenant_id=tenant_id,
+                cohort_id=data.get("cohort_id"),
+                exception_type=data.get("exception_type", "SESSION_DELAY"),
+                severity=data.get("severity", "MEDIUM"),
+                description=data.get("description", ""),
+                learning_session_id=data.get("learning_session_id"),
+            )
+            return Response(DeliveryExceptionQueueSerializer(item).data, status=201)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=400)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=403)

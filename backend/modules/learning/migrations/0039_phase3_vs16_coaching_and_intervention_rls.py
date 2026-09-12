@@ -93,6 +93,16 @@ ALTER TABLE learning_coachingauditlog DISABLE ROW LEVEL SECURITY;
 """
 
 
+def enable_coaching_and_intervention_postgres_rls(apps, schema_editor):
+    if schema_editor.connection.vendor == "postgresql":
+        schema_editor.execute(POSTGRES_COACHING_AND_INTERVENTION_RLS_SQL)
+
+
+def disable_coaching_and_intervention_postgres_rls(apps, schema_editor):
+    if schema_editor.connection.vendor == "postgresql":
+        schema_editor.execute(POSTGRES_COACHING_AND_INTERVENTION_REVERSE_SQL)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -100,8 +110,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL(
-            sql=POSTGRES_COACHING_AND_INTERVENTION_RLS_SQL,
-            reverse_sql=POSTGRES_COACHING_AND_INTERVENTION_RLS_REVERSE_SQL,
+        migrations.RunPython(
+            enable_coaching_and_intervention_postgres_rls,
+            reverse_code=disable_coaching_and_intervention_postgres_rls,
         ),
     ]
