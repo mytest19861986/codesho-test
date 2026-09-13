@@ -35,7 +35,9 @@ const navItems: NavigationItem[] = [
 ];
 
 export function EnterpriseGovernanceScreen() {
-  const [activeTab, setActiveTab] = useState<"delegated_admin" | "data_lifecycle" | "pilot_readiness">("pilot_readiness");
+  const [activeTab, setActiveTab] = useState<"delegated_admin" | "data_lifecycle" | "pilot_readiness" | "pilot_operations">("pilot_readiness");
+  const [rollbackConfirmationModal, setRollbackConfirmationModal] = useState<boolean>(false);
+  const [rollbackInputText, setRollbackInputText] = useState<string>("");
 
   const syntheticAssignments: StaffAssignmentItem[] = [
     { id: "a-1", roleName: "مدیر راهبری داده", scopeType: "TENANT_WIDE", isActive: true, validUntil: "1403/12/29" },
@@ -75,6 +77,13 @@ export function EnterpriseGovernanceScreen() {
             onClick={() => setActiveTab("pilot_readiness")}
           >
             گیت‌ها و کنترل‌های آمادگی پایلوت (VS28)
+          </button>
+          <button
+            type="button"
+            className={`${styles.tabBtn} ${activeTab === "pilot_operations" ? styles.tabBtnActive : ""}`}
+            onClick={() => setActiveTab("pilot_operations")}
+          >
+            عملیات پایلوت، کاندیدای انتشار و رخدادها (فاز ۴)
           </button>
           <button
             type="button"
@@ -160,6 +169,177 @@ export function EnterpriseGovernanceScreen() {
                 </button>
               </article>
             ))}
+          </section>
+        )}
+        {activeTab === "pilot_operations" && (
+          <section className={styles.cardGrid} aria-label="عملیات پایلوت و کاندیدای انتشار">
+            <article className={styles.card}>
+              <div className={styles.cardHeader}>
+                <span className={`${styles.badge} ${styles.badgeActive}`}>
+                  CANDIDATE_TAGGED
+                </span>
+                <span className={`${styles.badge} ${styles.badgeAdvisory}`}>
+                  پایلوت غیرعملیاتی
+                </span>
+              </div>
+              <h2 className={styles.cardTitle}>
+                کاندیدای انتشار: <bdi dir="ltr">v4.0.0-rc1</bdi>
+              </h2>
+              <div className={styles.cardMeta}>
+                <span>هش کامیت مصوب: <bdi dir="ltr">a6bc0d9</bdi></span>
+                <span>اختیار پروداکشن: <bdi dir="ltr">PRODUCTION_DEPLOY_AUTHORITY: 0</bdi></span>
+                <span>تاییدیه دومنظوره: الزامی برای ارتقا به پایلوت</span>
+              </div>
+              <button
+                type="button"
+                className={styles.actionBtn}
+                onClick={() => setRollbackConfirmationModal(true)}
+              >
+                اجرای رول‌بک اضطراری با تایید اصطکاکی
+              </button>
+            </article>
+
+            <article className={styles.card}>
+              <div className={styles.cardHeader}>
+                <span className={`${styles.badge} ${styles.badgeBlocking}`}>
+                  SEV2 - فعال
+                </span>
+                <span className={`${styles.badge} ${styles.badgePending}`}>
+                  در حال بررسی
+                </span>
+              </div>
+              <h2 className={styles.cardTitle}>
+                رخداد عملیاتی: <bdi dir="ltr">INC-2026-042</bdi>
+              </h2>
+              <div className={styles.cardMeta}>
+                <span>شرح: بررسی تاخیر صف سنتتیک ورکر‌های بک‌اند</span>
+                <span>حریم خصوصی: عاری از هرگونه هویت واقعی یا PII</span>
+                <span>سوابق پس از رخداد (PIR): تغییرناپذیر در دیتابیس</span>
+              </div>
+              <button type="button" className={styles.actionBtn}>
+                مشاهده فرآیند تریاژ
+              </button>
+            </article>
+
+            <article className={styles.card}>
+              <div className={styles.cardHeader}>
+                <span className={`${styles.badge} ${styles.badgeActive}`}>
+                  PLANNED
+                </span>
+                <span className={`${styles.badge} ${styles.badgeAdvisory}`}>
+                  موجودیت ساختگی
+                </span>
+              </div>
+              <h2 className={styles.cardTitle}>
+                برنامه فعال‌سازی مستأجر پایلوت
+              </h2>
+              <div className={styles.cardMeta}>
+                <span>کد طرح: <bdi dir="ltr">PLAN-SYNTH-P4</bdi></span>
+                <span>مدرسه هدف: دبیرستان نمونه ساختگی الف</span>
+                <span>سیاست ضدرتبه‌بندی: <bdi dir="ltr">STUDENT_RANKING: 0</bdi> برقرار است</span>
+              </div>
+              <button type="button" className={styles.actionBtn}>
+                بررسی چک‌لیست آنبوردینگ
+              </button>
+            </article>
+
+            {rollbackConfirmationModal && (
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="rollback-dialog-title"
+                style={{
+                  position: "fixed",
+                  inset: 0,
+                  backgroundColor: "rgba(0,0,0,0.6)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  zIndex: 50,
+                  padding: "1rem",
+                }}
+              >
+                <div
+                  style={{
+                    backgroundColor: "#ffffff",
+                    borderRadius: "0.75rem",
+                    maxWidth: "480px",
+                    width: "100%",
+                    padding: "1.5rem",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "1rem",
+                    direction: "rtl",
+                    boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+                  }}
+                >
+                  <h3 id="rollback-dialog-title" style={{ fontSize: "1.25rem", fontWeight: 700, color: "#991b1b" }}>
+                    تایید اصطکاکی بازگشت به نسخه پیشین (Rollback)
+                  </h3>
+                  <p style={{ fontSize: "0.9rem", color: "#475569", lineHeight: 1.6 }}>
+                    این یک اقدام اصطکاکی دو مرحله‌ای جهت پیشگیری از خطای انسانی است (N4-13). جهت تأیید رول‌بک به نسخه پیشین، لطفاً عبارت <bdi dir="ltr"><strong>CONFIRM-ROLLBACK</strong></bdi> را در کادر زیر تایپ نمایید:
+                  </p>
+                  <input
+                    type="text"
+                    value={rollbackInputText}
+                    onChange={(e) => setRollbackInputText(e.target.value)}
+                    placeholder="CONFIRM-ROLLBACK"
+                    aria-label="تایپ عبارت تایید رول‌بک"
+                    style={{
+                      padding: "0.75rem",
+                      borderRadius: "0.375rem",
+                      border: "1px solid #cbd5e1",
+                      fontSize: "1rem",
+                      direction: "ltr",
+                      textAlign: "center",
+                      minHeight: "44px",
+                    }}
+                  />
+                  <div style={{ display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRollbackConfirmationModal(false);
+                        setRollbackInputText("");
+                      }}
+                      style={{
+                        padding: "0.5rem 1rem",
+                        borderRadius: "0.375rem",
+                        border: "1px solid #cbd5e1",
+                        background: "#ffffff",
+                        cursor: "pointer",
+                        minHeight: "44px",
+                        minWidth: "44px",
+                      }}
+                    >
+                      انصراف
+                    </button>
+                    <button
+                      type="button"
+                      disabled={rollbackInputText !== "CONFIRM-ROLLBACK"}
+                      onClick={() => {
+                        alert("دستور رول‌بک با موفقیت به FSM پایلوت ارسال گردید.");
+                        setRollbackConfirmationModal(false);
+                        setRollbackInputText("");
+                      }}
+                      style={{
+                        padding: "0.5rem 1.25rem",
+                        borderRadius: "0.375rem",
+                        border: "none",
+                        backgroundColor: rollbackInputText === "CONFIRM-ROLLBACK" ? "#991b1b" : "#cbd5e1",
+                        color: "#ffffff",
+                        cursor: rollbackInputText === "CONFIRM-ROLLBACK" ? "pointer" : "not-allowed",
+                        minHeight: "44px",
+                        minWidth: "44px",
+                        fontWeight: 600,
+                      }}
+                    >
+                      تایید و اجرای رول‌بک
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </section>
         )}
       </div>

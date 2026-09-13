@@ -8583,3 +8583,170 @@ class ControlAttestationAudit(models.Model):
 
     def __str__(self) -> str:
         return f"{self.tenant_id}:{self.gate_id}:{self.attestation_role}:{self.attested_by_id}"
+
+
+class ReleaseCandidateState(models.TextChoices):
+    DRAFT = "DRAFT", "Draft"
+    CANDIDATE_TAGGED = "CANDIDATE_TAGGED", "Candidate Tagged"
+    VERIFIED_ON_STAGING = "VERIFIED_ON_STAGING", "Verified On Staging"
+    PILOT_DEPLOYED = "PILOT_DEPLOYED", "Pilot Deployed"
+    ABORTED = "ABORTED", "Aborted"
+    ROLLED_BACK = "ROLLED_BACK", "Rolled Back"
+
+
+class ReleaseCandidate(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="release_candidates",
+    )
+    version_tag = models.CharField(max_length=64)
+    commit_sha = models.CharField(max_length=64)
+    state = models.CharField(
+        max_length=32,
+        choices=ReleaseCandidateState.choices,
+        default=ReleaseCandidateState.DRAFT,
+    )
+    is_production_target = models.BooleanField(default=False)
+    has_dual_custody_approval = models.BooleanField(default=False)
+    created_by_id = models.UUIDField()
+    approved_by_id = models.UUIDField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_release_candidate"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_release_candidate_tenant_id",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "version_tag"],
+                name="uq_learning_release_candidate_version_tag",
+            ),
+            models.CheckConstraint(
+                condition=Q(state__in=ReleaseCandidateState.values),
+                name="chk_rc_state_valid",
+            ),
+            models.CheckConstraint(
+                condition=Q(is_production_target=False),
+                name="chk_rc_zero_production_deploy",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "state"], name="idx_rc_t_state"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.is_production_target:
+            raise ValidationError("PRODUCTION_DEPLOY_AUTHORITY: 0. Production deployment is strictly prohibited.")
+        if self.state == ReleaseCandidateState.PILOT_DEPLOYED and not self.has_dual_custody_approval:
+            raise ValidationError("Dual-custody approval is strictly required before PILOT_DEPLOYED state.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.version_tag}:{self.state}"
+
+
+class IncidentSeverity(models.TextChoices):
+    SEV1 = "SEV1", "SEV1 - Multi-Tenant / Outage"
+    SEV2 = "SEV2", "SEV2 - Critical Learning Blocker"
+    SEV3 = "SEV3", "SEV3 - Moderate Performance"
+    SEV4 = "SEV4", "SEV4 - Minor Issue"
+
+
+class IncidentState(models.TextChoices):
+    DETECTED = "DETECTED", "Detected"
+    TRIAGED = "TRIAGED", "Triaged"
+    INVESTIGATING = "INVESTIGATING", "Investigating"
+    MITIGATED = "MITIGATED", "Mitigated"
+    RESOLVED = "RESOLVED", "Resolved"
+
+
+class IncidentRecord(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="incidents",
+    )
+    incident_number = models.CharField(max_length=64)
+    severity = models.CharField(max_length=16, choices=IncidentSeverity.choices, default=IncidentSeverity.SEV3)
+    state = models.CharField(max_length=32, choices=IncidentState.choices, default=IncidentState.DETECTED)
+    summary = models.TextField()
+    assigned_operator_id = models.UUIDField(null=True, blank=True)
+    post_incident_review = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_incident_record"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_incident_record_tenant_id",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "incident_number"],
+                name="uq_learning_incident_number",
+            ),
+            models.CheckConstraint(
+                condition=Q(severity__in=IncidentSeverity.values),
+                name="chk_incident_severity_valid",
+            ),
+            models.CheckConstraint(
+                condition=Q(state__in=IncidentState.values),
+                name="chk_incident_state_valid",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "state", "severity"], name="idx_incident_t_st_sev"),
+        ]
+
+    def clean(self):
+        super().clean()
+        _validate_pii_text_field(self.summary, "summary", 2000)
+        if self.post_incident_review:
+            _validate_pii_text_field(self.post_incident_review, "post_incident_review", 4000)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.incident_number}:{self.severity}:{self.state}"
+
+
+class PilotTenantProvisioningPlan(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="pilot_provisioning_plans",
+    )
+    plan_code = models.CharField(max_length=64)
+    organization_name = models.CharField(max_length=128)
+    status = models.CharField(max_length=32, default="PLANNED")
+    is_synthetic_only = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_pilot_tenant_provisioning_plan"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_pilot_provisioning_plan_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(is_synthetic_only=True),
+                name="chk_pilot_synthetic_data_only",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if not self.is_synthetic_only:
+            raise ValidationError("REAL_PILOT_ACTIVATION: 0. Real data activation is prohibited.")
+        _validate_pii_text_field(self.organization_name, "organization_name", 128)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.plan_code}:{self.status}"
+
