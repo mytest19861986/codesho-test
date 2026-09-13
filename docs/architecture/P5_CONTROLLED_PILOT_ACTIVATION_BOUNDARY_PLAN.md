@@ -4,6 +4,8 @@
 ## Authority: COMMANDER_P5_DISCOVERY_EXECUTION_ORDER
 ## Implementation Baseline: `e8a9a421466de31b53c22191e3673a94a0eba78a`
 ## Evidence Baseline: `f999314505dbcb03e9f4c7f96186be11e9627e29`
+## Session Protocol: `SET LOCAL "app.current_tenant" = %s` strictly inside `transaction.atomic()`
+## Security Posture: `FORCE ROW LEVEL SECURITY` + `NOBYPASSRLS` on all tenant-aware entities
 
 ---
 
