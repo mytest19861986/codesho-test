@@ -1,31 +1,31 @@
-# Current Task: PHASE4_CONTROLLED_PILOT_PREPARATION_COMPLETE_FINAL_ACCEPTED
+# Current Task: P5-CONTROLLED-PILOT-ACTIVATION-DISCOVERY
 
-## Phase 4 Controlled Pilot Preparation & Operational Readiness — 2026-09-13
+## Phase 5 Controlled Pilot Activation Discovery & Boundary Architecture — 2026-09-13
 
-- Status: `COMPLETE_FINAL_ACCEPTED`
-- Authority: `COMMANDER_PHASE4_COMPLETE_FINAL_ACCEPTANCE: GRANTED`
+- Status: `DISCOVERY_AND_ARCHITECTURE_ACTIVE`
+- Authority: `COMMANDER_P5_DISCOVERY_EXECUTION_ORDER: ACTIVE`
 - Implementation Baseline: `e8a9a421466de31b53c22191e3673a94a0eba78a`
 - Evidence Baseline: `f999314505dbcb03e9f4c7f96186be11e9627e29`
-- Project Status: `CERTIFIED_AT_CONTROLLED_PILOT_PREPARATION_BOUNDARY`
+- Project Status: `DISCOVERY_AND_ARCHITECTURE_ACTIVE`
 
-### Summary of Completed Qualification:
-1. **Fleet Consensus (Unanimous PASS)**:
-   - Qwen (Domain & Governance FSM): `PASS` (Blockers: 0)
-   - Gemini (UI/UX & Human Factors / WCAG 2.2 AA): `PASS` (Blockers: 0)
-   - Claude & GLM (DB Role Topology, Additive DDL, FORCE RLS, NOBYPASSRLS, REVOKE DELETE): `PASS` (Blockers: 0)
-2. **Machine Qualification Gates**:
-   - Backend Regression: `PASS` (337 passed, 1 skipped, 0 failed)
-   - N4 Negative Governance Suite: `16/16 PASS`
-   - Django Check: `PASS` (0 issues)
-   - Migration Safety & Drift: `0 unapplied, 0 drift`
-   - Backup/Restore Rehearsal: `PASS`
-   - PITR Sandbox Rehearsal: `PASS`
-3. **Authority Invariants**:
-   - `MERGE_TO_MAIN`: NOT_AUTHORIZED (Reserved for Human Manager)
-   - `REAL_PILOT`: NOT_AUTHORIZED (Reserved for Human Manager)
-   - `PRODUCTION_DEPLOY`: NOT_AUTHORIZED (Reserved for Human Manager)
-4. **Current Status**: Awaiting explicit Human-Manager decision on:
-   - Option A: `MERGE_TO_MAIN`
-   - Option B: `BEGIN_PHASE5_DISCOVERY`
-   - Option C: `PREPARE_CONTROLLED_REAL_PILOT`
-   - Option D: `HOLD_CERTIFIED_STATE`
+### Scope & Invariants:
+1. **P5 Discovery Scope (Authorized)**:
+   - Phase 5 Discovery Dossier (`docs/coordination/P5_CONTROLLED_PILOT_ACTIVATION_DISCOVERY_DOSSIER.md`)
+   - Phase 5 Activation Boundary Architecture (`docs/architecture/P5_CONTROLLED_PILOT_ACTIVATION_BOUNDARY_PLAN.md`)
+   - Write Manifest (`docs/coordination/P5_CONTROLLED_PILOT_ACTIVATION_WRITE_MANIFEST.md`)
+   - Pilot Go/No-Go Control Matrix (`docs/coordination/P5_PILOT_GO_NO_GO_CONTROL_MATRIX.md`)
+   - Synthetic Pilot Rehearsal Plan R1-R16 (`docs/coordination/P5_SYNTHETIC_PILOT_REHEARSAL_PLAN.md`)
+   - Negative Test Matrix N5-01..N5-20+ (`docs/coordination/P5_NEGATIVE_TEST_MATRIX.md`)
+   - Specialized Fleet Review Packages (Qwen, GLM, Gemini) in `temp/fleet_exchange/P5-CONTROLLED-PILOT-ACTIVATION/`
+   - Security scrub, Git commit, push, immutable raw URL verification, and `P5_FLEET_TRANSFER_PRECHECK` report to Commander.
+
+2. **Locked Boundaries (Strictly Preserved)**:
+   - `P5_RUNTIME_IMPLEMENTATION`: LOCKED
+   - `DATABASE_MIGRATIONS_FOR_P5`: NOT_AUTHORIZED
+   - `NEW_RUNTIME_API`: NOT_AUTHORIZED
+   - `NEW_RUNTIME_UI`: NOT_AUTHORIZED
+   - `P5_FLEET_DISPATCH`: LOCKED (awaiting Commander approval)
+   - `REAL_PILOT`: NOT_AUTHORIZED (LOCKED)
+   - `MERGE_TO_MAIN`: NOT_AUTHORIZED (LOCKED_FOR_MANAGER)
+   - `PRODUCTION_DEPLOY`: NOT_AUTHORIZED (LOCKED)
+   - `REAL_CHILD_DATA`: 0, `REAL_GUARDIAN_DATA`: 0, `REAL_CONTACT_DATA`: 0, `REAL_PAYMENT`: 0, `STUDENT_RANKING`: 0, `PRODUCTION_CREDENTIALS`: 0
