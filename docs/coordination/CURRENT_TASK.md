@@ -1,21 +1,31 @@
-# Current Task: P3-MACRO-EPIC-17-19-RUNTIME-ACTIVE
+# Current Task: PHASE4_CONTROLLED_PILOT_PREPARATION_COMPLETE_FINAL_ACCEPTED
 
-## Active Phase 3 Macro Epic 17-19 — 2026-09-11
+## Phase 4 Controlled Pilot Preparation & Operational Readiness — 2026-09-13
 
-- Status: `RUNTIME_ACTIVE_CONCURRENT_EXECUTION`
-- Mode: `MACRO_FAST_ENTERPRISE` (Authorized by Commander Directive `COMMANDER_P3_MACRO_EPIC_17_19_RUNTIME_UNLOCK: GRANTED`)
-- Authority: `COMMANDER_P3_MACRO_EPIC_17_19_RUNTIME_UNLOCK: GRANTED` (12,086 chars full directive)
-- Discovery Baseline: `40805bb` (`TRIPLE_FLEET_UNANIMOUS_PASS: Qwen PASS, Gemini PASS, GLM PASS`)
-- Active Epic ID: `P3-MACRO-EPIC-17-19-MENTOR-OPERATIONS-AND-PROGRAM-SUCCESS`
-- Persian Title: مرکز عملیات منتور، هماهنگی تداوم یادگیری و هوشمندی موفقیت برنامه آموزشی
-- English Title: Mentor Operations, Learning Continuity Orchestration & Program Success Intelligence
-- Sub-Slices Included in One Delivery Package:
-  1. `P3-VS17-MENTOR-CASELOAD-AND-SUPPORT-QUEUE-OPERATIONS`: مدیریت بار کاری منتور و صف عملیات حمایتی دانش‌آموزان
-  2. `P3-VS18-LEARNING-CHECKINS-SCHEDULING-AND-FOLLOWUP-ORCHESTRATION`: برنامه‌ریزی جلسات پیگیری، چک‌این‌های آموزشی و هماهنگی اقدامات بعدی
-  3. `P3-VS19-PROGRAM-SUCCESS-OPERATIONS-AND-SUPPORT-ANALYTICS`: داشبورد عملیاتی موفقیت برنامه و تحلیل اثربخشی حمایت آموزشی
-- Key Directives:
-  - Six Canonical Models: `MentorCaseloadAssignment`, `SupportQueueItem`, `LearningCheckIn`, `FollowUpCommitment`, `ProgramSupportAggregate`, `MentorOperationsAuditLog`.
-  - Service Layer: `mentor_operations_service.py` with transactional Outbox and FSM transitions.
-  - Endpoints: `/api/v1/learning/mentor/...` for caseload, check-ins, and analytics.
-  - Mandatory Negative Proof Matrix: N1 to N33 pass criteria.
-  - Zero wildcards, anti-ranking, fail-closed tenant isolation, learner agency, child safety.
+- Status: `COMPLETE_FINAL_ACCEPTED`
+- Authority: `COMMANDER_PHASE4_COMPLETE_FINAL_ACCEPTANCE: GRANTED`
+- Implementation Baseline: `e8a9a421466de31b53c22191e3673a94a0eba78a`
+- Evidence Baseline: `f999314505dbcb03e9f4c7f96186be11e9627e29`
+- Project Status: `CERTIFIED_AT_CONTROLLED_PILOT_PREPARATION_BOUNDARY`
+
+### Summary of Completed Qualification:
+1. **Fleet Consensus (Unanimous PASS)**:
+   - Qwen (Domain & Governance FSM): `PASS` (Blockers: 0)
+   - Gemini (UI/UX & Human Factors / WCAG 2.2 AA): `PASS` (Blockers: 0)
+   - Claude & GLM (DB Role Topology, Additive DDL, FORCE RLS, NOBYPASSRLS, REVOKE DELETE): `PASS` (Blockers: 0)
+2. **Machine Qualification Gates**:
+   - Backend Regression: `PASS` (337 passed, 1 skipped, 0 failed)
+   - N4 Negative Governance Suite: `16/16 PASS`
+   - Django Check: `PASS` (0 issues)
+   - Migration Safety & Drift: `0 unapplied, 0 drift`
+   - Backup/Restore Rehearsal: `PASS`
+   - PITR Sandbox Rehearsal: `PASS`
+3. **Authority Invariants**:
+   - `MERGE_TO_MAIN`: NOT_AUTHORIZED (Reserved for Human Manager)
+   - `REAL_PILOT`: NOT_AUTHORIZED (Reserved for Human Manager)
+   - `PRODUCTION_DEPLOY`: NOT_AUTHORIZED (Reserved for Human Manager)
+4. **Current Status**: Awaiting explicit Human-Manager decision on:
+   - Option A: `MERGE_TO_MAIN`
+   - Option B: `BEGIN_PHASE5_DISCOVERY`
+   - Option C: `PREPARE_CONTROLLED_REAL_PILOT`
+   - Option D: `HOLD_CERTIFIED_STATE`
