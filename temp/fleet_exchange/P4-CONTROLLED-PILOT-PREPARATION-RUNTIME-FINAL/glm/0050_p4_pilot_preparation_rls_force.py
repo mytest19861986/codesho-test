@@ -37,10 +37,20 @@ REVOKE DELETE ON learning_pilot_tenant_provisioning_plan FROM PUBLIC;
 
 DO $$
 BEGIN
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'codesho_runtime') THEN
+        REVOKE DELETE ON learning_incident_record FROM codesho_runtime;
+        REVOKE DELETE ON learning_release_candidate FROM codesho_runtime;
+        REVOKE DELETE ON learning_pilot_tenant_provisioning_plan FROM codesho_runtime;
+    END IF;
     IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'codesho_app') THEN
         REVOKE DELETE ON learning_incident_record FROM codesho_app;
         REVOKE DELETE ON learning_release_candidate FROM codesho_app;
         REVOKE DELETE ON learning_pilot_tenant_provisioning_plan FROM codesho_app;
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'app_role') THEN
+        REVOKE DELETE ON learning_incident_record FROM app_role;
+        REVOKE DELETE ON learning_release_candidate FROM app_role;
+        REVOKE DELETE ON learning_pilot_tenant_provisioning_plan FROM app_role;
     END IF;
 END $$;
 """
