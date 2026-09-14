@@ -60,7 +60,20 @@ export function EnterpriseGovernanceScreen() {
   ];
 
   return (
-    <AppShell navigationItems={navItems} activeNavigationId="admin-governance">
+    <AppShell
+      activeItemId="admin-governance"
+      brand={
+        <a href="/dashboard" style={{ textDecoration: "none", color: "inherit", fontWeight: "bold" }}>
+          🛡️ کُدشو
+        </a>
+      }
+      drawerCloseLabel="بستن منو"
+      menuButtonLabel="باز کردن منو"
+      bottomNavigationItems={navItems}
+      navigationItems={navItems}
+      navigationLabel="ناوبری حاکمیت سازمانی"
+      tone="admin"
+    >
       <div className={styles.container}>
         <header className={styles.header}>
           <h1 className={styles.title}>مرکز کنترل، حاکمیت سازمانی و آمادگی پایلوت (P3-VS26 - VS28)</h1>
@@ -73,6 +86,7 @@ export function EnterpriseGovernanceScreen() {
           <strong>اصل استقلال و مشورتی بودن گیت:</strong> گیت آمادگی پایلوت کاملاً مستقل، نظارتی و مشورتی است و فاقد اختیار دپلویمنت خودکار به محیط عملیاتی است (`PRODUCTION_DEPLOY_AUTHORITY: 0`). تمام داده‌ها کاملاً مصنوعی و عاری از هرگونه هویت واقعی یا رتبه‌بندی دانش‌آموزان است.
         </div>
 
+        <nav className={styles.tabNav}>
           <button
             type="button"
             className={`${styles.tabBtn} ${activeTab === "pilot_activation" ? styles.tabBtnActive : ""}`}
