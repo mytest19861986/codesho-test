@@ -56,12 +56,45 @@ END $$;
 """
 
 def enable_p5_postgres_rls(apps, schema_editor):
-    if schema_editor.connection.vendor == "postgresql":
-        schema_editor.execute(POSTGRES_P5_RLS_SQL)
+    if schema_editor.connection.vendor != "postgresql":
+        return
+    with schema_editor.connection.cursor() as cursor:
+        tables = [
+            'learning_pilot_tenant_lifecycle',
+            'learning_pilot_prerequisite_checklist',
+            'learning_dual_custody_approval_event'
+        ]
+        for tbl in tables:
+            cursor.execute(f"ALTER TABLE {tbl} ENABLE ROW LEVEL SECURITY;")
+            cursor.execute(f"ALTER TABLE {tbl} FORCE ROW LEVEL SECURITY;")
+            cursor.execute(f"DROP POLICY IF EXISTS p5_tenant_isolation_policy ON {tbl};")
+            cursor.execute(
+                f"CREATE POLICY p5_tenant_isolation_policy ON {tbl} "
+                f"FOR ALL USING (tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid) "
+                f"WITH CHECK (tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid);"
+            )
+        cursor.execute("REVOKE DELETE ON learning_dual_custody_approval_event FROM PUBLIC;")
+        cursor.execute("""
+        DO $$
+        BEGIN
+            IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'codesho_app') THEN
+                REVOKE DELETE ON learning_dual_custody_approval_event FROM codesho_app;
+            END IF;
+        END $$;
+        """)
 
 def disable_p5_postgres_rls(apps, schema_editor):
-    if schema_editor.connection.vendor == "postgresql":
-        schema_editor.execute(REVERSE_P5_RLS_SQL)
+    if schema_editor.connection.vendor != "postgresql":
+        return
+    with schema_editor.connection.cursor() as cursor:
+        tables = [
+            'learning_pilot_tenant_lifecycle',
+            'learning_pilot_prerequisite_checklist',
+            'learning_dual_custody_approval_event'
+        ]
+        for tbl in tables:
+            cursor.execute(f"DROP POLICY IF EXISTS p5_tenant_isolation_policy ON {tbl};")
+            cursor.execute(f"ALTER TABLE {tbl} NO FORCE ROW LEVEL SECURITY;")
 
 
 class Migration(migrations.Migration):

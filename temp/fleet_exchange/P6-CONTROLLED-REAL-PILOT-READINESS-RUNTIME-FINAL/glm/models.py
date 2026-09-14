@@ -8772,17 +8772,6 @@ class PilotLifecycleState(models.TextChoices):
     CLOSED = "CLOSED", "Closed"
 
 
-# Backward compatibility aliases for Phase 5 test harness
-PilotLifecycleState.DRAFT = PilotLifecycleState.CANDIDATE  # type: ignore[attr-defined]
-PilotLifecycleState.ELIGIBILITY_REVIEW = PilotLifecycleState.DUE_DILIGENCE  # type: ignore[attr-defined]
-PilotLifecycleState.PREREQUISITES_PENDING = PilotLifecycleState.OPERATIONAL_REVIEW  # type: ignore[attr-defined]
-PilotLifecycleState.TECHNICALLY_READY = PilotLifecycleState.TECHNICAL_READY  # type: ignore[attr-defined]
-PilotLifecycleState.MANAGER_APPROVAL_REQUIRED = PilotLifecycleState.MANAGER_DECISION_REQUIRED  # type: ignore[attr-defined]
-PilotLifecycleState.ACTIVATION_AUTHORIZED = PilotLifecycleState.MANAGER_AUTHORIZED  # type: ignore[attr-defined]
-PilotLifecycleState.PILOT_ACTIVE = PilotLifecycleState.ACTIVE  # type: ignore[attr-defined]
-
-
-
 PILOT_FSM_TRANSITIONS = {
     PilotLifecycleState.CANDIDATE: {PilotLifecycleState.DUE_DILIGENCE, PilotLifecycleState.CLOSED},
     PilotLifecycleState.DUE_DILIGENCE: {PilotLifecycleState.SECURITY_REVIEW, PilotLifecycleState.CLOSED},
