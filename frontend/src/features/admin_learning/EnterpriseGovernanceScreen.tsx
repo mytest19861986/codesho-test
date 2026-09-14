@@ -29,13 +29,16 @@ export interface PilotControlItem {
   readonly evidenceStatus: string;
 }
 
+import { PilotActivationControlBoard } from "./PilotActivationControlBoard";
+import { PilotGoNoGoView } from "./PilotGoNoGoView";
+
 const navItems: NavigationItem[] = [
   { id: "admin-learning", label: "مدیریت آموزشی", href: "/admin/learning", icon: "⚙" },
   { id: "admin-governance", label: "مرکز کنترل و حاکمیت سازمانی", href: "/admin/governance", icon: "🛡" },
 ];
 
 export function EnterpriseGovernanceScreen() {
-  const [activeTab, setActiveTab] = useState<"delegated_admin" | "data_lifecycle" | "pilot_readiness" | "pilot_operations">("pilot_readiness");
+  const [activeTab, setActiveTab] = useState<"delegated_admin" | "data_lifecycle" | "pilot_readiness" | "pilot_operations" | "pilot_activation" | "pilot_go_no_go">("pilot_readiness");
   const [rollbackConfirmationModal, setRollbackConfirmationModal] = useState<boolean>(false);
   const [rollbackInputText, setRollbackInputText] = useState<string>("");
 
@@ -70,7 +73,20 @@ export function EnterpriseGovernanceScreen() {
           <strong>اصل استقلال و مشورتی بودن گیت:</strong> گیت آمادگی پایلوت کاملاً مستقل، نظارتی و مشورتی است و فاقد اختیار دپلویمنت خودکار به محیط عملیاتی است (`PRODUCTION_DEPLOY_AUTHORITY: 0`). تمام داده‌ها کاملاً مصنوعی و عاری از هرگونه هویت واقعی یا رتبه‌بندی دانش‌آموزان است.
         </div>
 
-        <nav className={styles.tabs} aria-label="بخش‌های حاکمیت سازمانی">
+          <button
+            type="button"
+            className={`${styles.tabBtn} ${activeTab === "pilot_activation" ? styles.tabBtnActive : ""}`}
+            onClick={() => setActiveTab("pilot_activation")}
+          >
+            فعال‌سازی پایلوت و ماشین حالت ۱۰ مرحله‌ای (فاز ۵)
+          </button>
+          <button
+            type="button"
+            className={`${styles.tabBtn} ${activeTab === "pilot_go_no_go" ? styles.tabBtnActive : ""}`}
+            onClick={() => setActiveTab("pilot_go_no_go")}
+          >
+            ماتریس کنترل Go / No-Go (فاز ۵)
+          </button>
           <button
             type="button"
             className={`${styles.tabBtn} ${activeTab === "pilot_readiness" ? styles.tabBtnActive : ""}`}
@@ -100,6 +116,14 @@ export function EnterpriseGovernanceScreen() {
             چرخه عمر داده و هولد حقوقی (VS27)
           </button>
         </nav>
+
+        {activeTab === "pilot_activation" && (
+          <PilotActivationControlBoard />
+        )}
+
+        {activeTab === "pilot_go_no_go" && (
+          <PilotGoNoGoView />
+        )}
 
         {activeTab === "pilot_readiness" && (
           <section className={styles.cardGrid} aria-label="کنترل‌های آمادگی پایلوت">

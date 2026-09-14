@@ -22,6 +22,9 @@ from modules.learning.models import (
     ReadinessException,
     PilotReadinessGate,
     ControlAttestationAudit,
+    PilotTenantLifecycle,
+    PilotPrerequisiteChecklist,
+    DualCustodyApprovalEvent,
 )
 
 
@@ -352,6 +355,78 @@ class ControlAttestationAuditSerializer(serializers.ModelSerializer):
             "attested_by_id",
             "attestation_role",
             "signature_digest",
+            "created_at",
+        ]
+        read_only_fields = ["id", "tenant", "signature_digest", "created_at"]
+
+
+class PilotTenantLifecycleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PilotTenantLifecycle
+        fields = [
+            "id",
+            "tenant",
+            "pilot_code",
+            "state",
+            "is_synthetic_mode",
+            "is_production_target",
+            "initiated_by_id",
+            "technical_reviewer_id",
+            "manager_approver_id",
+            "manager_approval_signed_at",
+            "activation_token",
+            "suspension_reason",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "tenant", "is_synthetic_mode", "is_production_target", "created_at", "updated_at"]
+
+
+class PilotPrerequisiteChecklistSerializer(serializers.ModelSerializer):
+    is_fully_satisfied = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PilotPrerequisiteChecklist
+        fields = [
+            "id",
+            "tenant",
+            "lifecycle",
+            "legal_basis_or_consent",
+            "data_minimization_audited",
+            "retention_policy_enforced",
+            "offboarding_policy_verified",
+            "incident_readiness_tested",
+            "tenant_authorization_isolated",
+            "access_review_completed",
+            "auditability_ledger_active",
+            "support_readiness_active",
+            "security_acceptance_cleared",
+            "manager_authorization_signed",
+            "certified_at",
+            "certified_by_id",
+            "is_fully_satisfied",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "tenant", "lifecycle", "is_fully_satisfied", "created_at", "updated_at"]
+
+    def get_is_fully_satisfied(self, obj: PilotPrerequisiteChecklist) -> bool:
+        return obj.is_fully_satisfied()
+
+
+class DualCustodyApprovalEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DualCustodyApprovalEvent
+        fields = [
+            "id",
+            "tenant",
+            "lifecycle",
+            "action_type",
+            "initiator_id",
+            "secondary_signer_id",
+            "nonce",
+            "signature_digest",
+            "is_executed",
             "created_at",
         ]
         read_only_fields = ["id", "tenant", "signature_digest", "created_at"]

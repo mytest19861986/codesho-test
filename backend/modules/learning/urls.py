@@ -608,5 +608,26 @@ urlpatterns = [
         governance_views.PilotReadinessGateEvaluationView.as_view(),
         name="learning-governance-readiness-gate-evaluate",
     ),
+    # Phase 5: Controlled Pilot Activation Governance & FSM
+    path(
+        "governance/pilot/candidates/",
+        governance_views.PilotLifecycleCandidateView.as_view(),
+        name="learning-governance-pilot-candidates",
+    ),
+    path(
+        "governance/pilot/<uuid:lifecycle_id>/transition/",
+        governance_views.PilotLifecycleTransitionView.as_view(),
+        name="learning-governance-pilot-transition",
+    ),
+    path(
+        "governance/pilot/<uuid:lifecycle_id>/checklist/",
+        governance_views.PilotPrerequisiteChecklistView.as_view(),
+        name="learning-governance-pilot-checklist",
+    ),
+    path(
+        "governance/pilot/<uuid:lifecycle_id>/dual-custody-approval/",
+        governance_views.DualCustodyApprovalView.as_view(),
+        name="learning-governance-pilot-dual-custody-approval",
+    ),
 ]
 

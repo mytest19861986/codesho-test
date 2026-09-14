@@ -8750,3 +8750,233 @@ class PilotTenantProvisioningPlan(models.Model):
     def __str__(self) -> str:
         return f"{self.tenant_id}:{self.plan_code}:{self.status}"
 
+
+# =============================================================================
+# PHASE 5: CONTROLLED PILOT ACTIVATION GOVERNANCE & RUNTIME FSM
+# Canonical 10-State FSM, Dual-Custody Approval, 11-Prerequisite Real Data Gate
+# =============================================================================
+
+class PilotLifecycleState(models.TextChoices):
+    DRAFT = "DRAFT", "Draft"
+    ELIGIBILITY_REVIEW = "ELIGIBILITY_REVIEW", "Eligibility Review"
+    PREREQUISITES_PENDING = "PREREQUISITES_PENDING", "Prerequisites Pending"
+    TECHNICALLY_READY = "TECHNICALLY_READY", "Technically Ready"
+    MANAGER_APPROVAL_REQUIRED = "MANAGER_APPROVAL_REQUIRED", "Manager Approval Required"
+    ACTIVATION_AUTHORIZED = "ACTIVATION_AUTHORIZED", "Activation Authorized"
+    PILOT_ACTIVE = "PILOT_ACTIVE", "Pilot Active"
+    SUSPENDED = "SUSPENDED", "Suspended"
+    EXITING = "EXITING", "Exiting"
+    CLOSED = "CLOSED", "Closed"
+
+
+PILOT_FSM_TRANSITIONS = {
+    PilotLifecycleState.DRAFT: {PilotLifecycleState.ELIGIBILITY_REVIEW},
+    PilotLifecycleState.ELIGIBILITY_REVIEW: {PilotLifecycleState.PREREQUISITES_PENDING, PilotLifecycleState.CLOSED},
+    PilotLifecycleState.PREREQUISITES_PENDING: {PilotLifecycleState.TECHNICALLY_READY, PilotLifecycleState.CLOSED},
+    PilotLifecycleState.TECHNICALLY_READY: {PilotLifecycleState.MANAGER_APPROVAL_REQUIRED, PilotLifecycleState.PREREQUISITES_PENDING},
+    PilotLifecycleState.MANAGER_APPROVAL_REQUIRED: {PilotLifecycleState.ACTIVATION_AUTHORIZED, PilotLifecycleState.SUSPENDED, PilotLifecycleState.CLOSED},
+    PilotLifecycleState.ACTIVATION_AUTHORIZED: {PilotLifecycleState.PILOT_ACTIVE, PilotLifecycleState.SUSPENDED},
+    PilotLifecycleState.PILOT_ACTIVE: {PilotLifecycleState.SUSPENDED, PilotLifecycleState.EXITING},
+    PilotLifecycleState.SUSPENDED: {PilotLifecycleState.PILOT_ACTIVE, PilotLifecycleState.EXITING, PilotLifecycleState.CLOSED},
+    PilotLifecycleState.EXITING: {PilotLifecycleState.CLOSED},
+    PilotLifecycleState.CLOSED: set(),
+}
+
+PILOT_IDENTIFIER_REGEX = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
+
+
+class PilotTenantLifecycle(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="pilot_lifecycles",
+    )
+    pilot_code = models.CharField(max_length=64)
+    state = models.CharField(
+        max_length=32,
+        choices=PilotLifecycleState.choices,
+        default=PilotLifecycleState.DRAFT,
+    )
+    is_synthetic_mode = models.BooleanField(default=True)
+    is_production_target = models.BooleanField(default=False)
+    initiated_by_id = models.UUIDField()
+    technical_reviewer_id = models.UUIDField(null=True, blank=True)
+    manager_approver_id = models.UUIDField(null=True, blank=True)
+    manager_approval_signed_at = models.DateTimeField(null=True, blank=True)
+    activation_token = models.CharField(max_length=128, blank=True, default="")
+    suspension_reason = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_pilot_tenant_lifecycle"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_pilot_tenant_lifecycle_tenant_id",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "pilot_code"],
+                name="uq_learning_pilot_lifecycle_tenant_code",
+            ),
+            models.CheckConstraint(
+                condition=Q(state__in=PilotLifecycleState.values),
+                name="chk_pilot_lifecycle_state_valid",
+            ),
+            models.CheckConstraint(
+                condition=Q(is_production_target=False),
+                name="chk_pilot_zero_production_target",
+            ),
+            models.CheckConstraint(
+                condition=Q(is_synthetic_mode=True),
+                name="chk_pilot_synthetic_mode_enforced",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "state"], name="idx_pilot_lifecycle_t_state"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.is_production_target:
+            raise ValidationError("PRODUCTION_TARGET: DENY. Production target is strictly forbidden.")
+        if not self.is_synthetic_mode:
+            raise ValidationError("REAL_PILOT: NOT_AUTHORIZED. Synthetic mode is strictly enforced.")
+        if self.pilot_code and not PILOT_IDENTIFIER_REGEX.match(self.pilot_code):
+            raise ValidationError("MALFORMED_CONFIG: DENY. Pilot code must match canonical hyphenated alphanumeric regex.")
+        if self.suspension_reason:
+            _validate_pii_text_field(self.suspension_reason, "suspension_reason", 2000)
+
+    def transition_to(self, new_state: PilotLifecycleState, actor_id: uuid.UUID, is_synthetic_rehearsal: bool = False):
+        if new_state not in PILOT_FSM_TRANSITIONS.get(self.state, set()):
+            raise ValidationError(
+                f"INVALID_FSM_TRANSITION: DENY. Cannot transition from {self.state} to {new_state}."
+            )
+        # Real-world state cap: MANAGER_APPROVAL_REQUIRED
+        if not is_synthetic_rehearsal and new_state in {
+            PilotLifecycleState.ACTIVATION_AUTHORIZED,
+            PilotLifecycleState.PILOT_ACTIVE,
+        }:
+            raise ValidationError(
+                "REAL_WORLD_MAX_STATE: MANAGER_APPROVAL_REQUIRED. Real-world activation beyond manager approval requires explicit runtime unlock rehearsal."
+            )
+        # Self-approval denial invariant
+        if new_state == PilotLifecycleState.TECHNICALLY_READY and actor_id == self.initiated_by_id:
+            raise ValidationError("SELF_APPROVAL: DENY. Requesting actor cannot self-approve technical readiness.")
+        if new_state == PilotLifecycleState.ACTIVATION_AUTHORIZED and actor_id == self.initiated_by_id:
+            raise ValidationError("SELF_APPROVAL: DENY. Requesting actor cannot grant manager activation authorization.")
+
+        self.state = new_state
+        self.full_clean()
+        self.save()
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.pilot_code}:{self.state}"
+
+
+class PilotPrerequisiteChecklist(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="pilot_prerequisites",
+    )
+    lifecycle = models.OneToOneField(
+        PilotTenantLifecycle,
+        on_delete=models.CASCADE,
+        related_name="prerequisite_checklist",
+    )
+    legal_basis_or_consent = models.BooleanField(default=False)
+    data_minimization_audited = models.BooleanField(default=False)
+    retention_policy_enforced = models.BooleanField(default=False)
+    offboarding_policy_verified = models.BooleanField(default=False)
+    incident_readiness_tested = models.BooleanField(default=False)
+    tenant_authorization_isolated = models.BooleanField(default=False)
+    access_review_completed = models.BooleanField(default=False)
+    auditability_ledger_active = models.BooleanField(default=False)
+    support_readiness_active = models.BooleanField(default=False)
+    security_acceptance_cleared = models.BooleanField(default=False)
+    manager_authorization_signed = models.BooleanField(default=False)
+    certified_at = models.DateTimeField(null=True, blank=True)
+    certified_by_id = models.UUIDField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_pilot_prerequisite_checklist"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_pilot_prereq_tenant_id",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "lifecycle"],
+                name="uq_learning_pilot_prereq_tenant_lifecycle",
+            ),
+        ]
+
+    def is_fully_satisfied(self) -> bool:
+        return all([
+            self.legal_basis_or_consent,
+            self.data_minimization_audited,
+            self.retention_policy_enforced,
+            self.offboarding_policy_verified,
+            self.incident_readiness_tested,
+            self.tenant_authorization_isolated,
+            self.access_review_completed,
+            self.auditability_ledger_active,
+            self.support_readiness_active,
+            self.security_acceptance_cleared,
+            self.manager_authorization_signed,
+        ])
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.lifecycle_id}:Satisfied={self.is_fully_satisfied()}"
+
+
+class DualCustodyApprovalEvent(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.CASCADE,
+        related_name="dual_custody_approvals",
+    )
+    lifecycle = models.ForeignKey(
+        PilotTenantLifecycle,
+        on_delete=models.CASCADE,
+        related_name="dual_custody_events",
+    )
+    action_type = models.CharField(max_length=64)
+    initiator_id = models.UUIDField()
+    secondary_signer_id = models.UUIDField()
+    nonce = models.CharField(max_length=64, unique=True)
+    signature_digest = models.CharField(max_length=128)
+    is_executed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_dual_custody_approval_event"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_dual_custody_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=~Q(initiator_id=models.F("secondary_signer_id")),
+                name="chk_dual_custody_distinct_signers",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "action_type"], name="idx_dual_custody_t_action"),
+            models.Index(fields=["nonce"], name="idx_dual_custody_nonce"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.initiator_id == self.secondary_signer_id:
+            raise ValidationError("DUAL_CUSTODY_BYPASS: DENY. Initiator and secondary signer must be distinct actors.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.action_type}:{self.initiator_id}+{self.secondary_signer_id}"
+

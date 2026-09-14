@@ -18,6 +18,10 @@ from modules.learning.models import (
     ReadinessAssessmentRun,
     ReadinessFinding,
     PilotReadinessGate,
+    PilotTenantLifecycle,
+    PilotLifecycleState,
+    PilotPrerequisiteChecklist,
+    DualCustodyApprovalEvent,
 )
 from modules.learning.governance_serializers import (
     StaffAccessAssignmentSerializer,
@@ -32,6 +36,9 @@ from modules.learning.governance_serializers import (
     ReadinessFindingSerializer,
     ReadinessExceptionSerializer,
     PilotReadinessGateSerializer,
+    PilotTenantLifecycleSerializer,
+    PilotPrerequisiteChecklistSerializer,
+    DualCustodyApprovalEventSerializer,
 )
 
 
@@ -313,4 +320,115 @@ class PilotReadinessGateEvaluationView(BaseGovernanceView):
             human_summary=data.get("human_summary", "Independent pilot readiness advisory assessment verified."),
         )
         serializer = PilotReadinessGateSerializer(gate)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+# -----------------------------------------------------------------------------
+# PHASE 5: CONTROLLED PILOT ACTIVATION API VIEWS
+# -----------------------------------------------------------------------------
+
+class PilotLifecycleCandidateView(BaseGovernanceView):
+    """Initiate or list pilot candidates."""
+
+    def get(self, request: Request) -> Response:
+        _check_anti_ranking_query(request)
+        tenant_id = _extract_tenant(request)
+        candidates = PilotTenantLifecycle.objects.filter(tenant_id=tenant_id)
+        serializer = PilotTenantLifecycleSerializer(candidates, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request: Request) -> Response:
+        _check_anti_ranking_query(request)
+        tenant_id = _extract_tenant(request)
+        data = request.data
+        initiated_by_id = UUID(str(data.get("initiated_by_id", uuid.uuid4())))
+        pilot_code = str(data["pilot_code"])
+
+        lifecycle = EnterpriseGovernanceService.initiate_pilot_candidate(
+            tenant_id=tenant_id,
+            pilot_code=pilot_code,
+            initiated_by_id=initiated_by_id,
+        )
+        serializer = PilotTenantLifecycleSerializer(lifecycle)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class PilotLifecycleTransitionView(BaseGovernanceView):
+    """Transition pilot lifecycle FSM under strict invariant checks."""
+
+    def post(self, request: Request, lifecycle_id: UUID) -> Response:
+        _check_anti_ranking_query(request)
+        tenant_id = _extract_tenant(request)
+        data = request.data
+        target_state = PilotLifecycleState(str(data["target_state"]))
+        actor_id = UUID(str(data.get("actor_id", uuid.uuid4())))
+        is_synthetic_rehearsal = bool(data.get("is_synthetic_rehearsal", False))
+
+        lifecycle = EnterpriseGovernanceService.advance_pilot_lifecycle(
+            tenant_id=tenant_id,
+            lifecycle_id=lifecycle_id,
+            target_state=target_state,
+            actor_id=actor_id,
+            is_synthetic_rehearsal=is_synthetic_rehearsal,
+        )
+        serializer = PilotTenantLifecycleSerializer(lifecycle)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class PilotPrerequisiteChecklistView(BaseGovernanceView):
+    """Get or update 11-prerequisite checklist."""
+
+    def get(self, request: Request, lifecycle_id: UUID) -> Response:
+        _check_anti_ranking_query(request)
+        tenant_id = _extract_tenant(request)
+        checklist = PilotPrerequisiteChecklist.objects.get(tenant_id=tenant_id, lifecycle_id=lifecycle_id)
+        serializer = PilotPrerequisiteChecklistSerializer(checklist)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def patch(self, request: Request, lifecycle_id: UUID) -> Response:
+        _check_anti_ranking_query(request)
+        tenant_id = _extract_tenant(request)
+        checklist = PilotPrerequisiteChecklist.objects.get(tenant_id=tenant_id, lifecycle_id=lifecycle_id)
+        data = request.data
+        for field in [
+            "legal_basis_or_consent",
+            "data_minimization_audited",
+            "retention_policy_enforced",
+            "offboarding_policy_verified",
+            "incident_readiness_tested",
+            "tenant_authorization_isolated",
+            "access_review_completed",
+            "auditability_ledger_active",
+            "support_readiness_active",
+            "security_acceptance_cleared",
+            "manager_authorization_signed",
+        ]:
+            if field in data:
+                setattr(checklist, field, bool(data[field]))
+        checklist.save()
+        serializer = PilotPrerequisiteChecklistSerializer(checklist)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class DualCustodyApprovalView(BaseGovernanceView):
+    """Execute dual custody approval event."""
+
+    def post(self, request: Request, lifecycle_id: UUID) -> Response:
+        _check_anti_ranking_query(request)
+        tenant_id = _extract_tenant(request)
+        data = request.data
+        action_type = str(data["action_type"])
+        initiator_id = UUID(str(data["initiator_id"]))
+        secondary_signer_id = UUID(str(data["secondary_signer_id"]))
+        nonce = str(data["nonce"])
+
+        event = EnterpriseGovernanceService.execute_dual_custody_approval(
+            tenant_id=tenant_id,
+            lifecycle_id=lifecycle_id,
+            action_type=action_type,
+            initiator_id=initiator_id,
+            secondary_signer_id=secondary_signer_id,
+            nonce=nonce,
+        )
+        serializer = DualCustodyApprovalEventSerializer(event)
         return Response(serializer.data, status=status.HTTP_201_CREATED)

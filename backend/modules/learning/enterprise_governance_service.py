@@ -29,6 +29,10 @@ from modules.learning.models import (
     ReadinessException,
     PilotReadinessGate,
     ControlAttestationAudit,
+    PilotTenantLifecycle,
+    PilotLifecycleState,
+    PilotPrerequisiteChecklist,
+    DualCustodyApprovalEvent,
     StaffRole,
     ScopeResourceType,
     PrivilegedGrantStatus,
@@ -43,6 +47,7 @@ from modules.learning.models import (
     PilotGateVerdict,
 )
 from modules.platform_event.services import append_outbox_event
+from django.db import connection
 
 
 class EnterpriseGovernanceService:
@@ -612,3 +617,120 @@ class EnterpriseGovernanceService:
             payload={"gate_id": str(gate.id), "verdict": verdict, "assessment_run_id": str(run.id)},
         )
         return gate
+
+    # -------------------------------------------------------------------------
+    # 4. PHASE 5: CONTROLLED PILOT ACTIVATION & ADVISORY CONCURRENCY
+    # -------------------------------------------------------------------------
+
+    @classmethod
+    @transaction.atomic
+    def initiate_pilot_candidate(
+        cls,
+        *,
+        tenant_id: UUID,
+        pilot_code: str,
+        initiated_by_id: UUID,
+    ) -> PilotTenantLifecycle:
+        lifecycle = PilotTenantLifecycle(
+            tenant_id=tenant_id,
+            pilot_code=pilot_code,
+            state=PilotLifecycleState.DRAFT,
+            initiated_by_id=initiated_by_id,
+        )
+        lifecycle.full_clean()
+        lifecycle.save()
+
+        PilotPrerequisiteChecklist.objects.create(
+            tenant_id=tenant_id,
+            lifecycle=lifecycle,
+        )
+
+        append_outbox_event(
+            tenant_id=tenant_id,
+            topic="governance.pilot_candidate_initiated",
+            aggregate_type="PilotTenantLifecycle",
+            aggregate_id=str(lifecycle.id),
+            payload={"lifecycle_id": str(lifecycle.id), "pilot_code": pilot_code, "initiated_by_id": str(initiated_by_id)},
+        )
+        return lifecycle
+
+    @classmethod
+    @transaction.atomic
+    def advance_pilot_lifecycle(
+        cls,
+        *,
+        tenant_id: UUID,
+        lifecycle_id: UUID,
+        target_state: PilotLifecycleState,
+        actor_id: UUID,
+        is_synthetic_rehearsal: bool = False,
+    ) -> PilotTenantLifecycle:
+        # Qwen R2: PostgreSQL advisory locking for concurrent race prevention
+        lock_id = int(hashlib.md5(f"pilot_lock:{tenant_id}:{lifecycle_id}".encode("utf-8")).hexdigest()[:8], 16)
+        if connection.vendor == "postgresql":
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT pg_advisory_xact_lock(%s);", [lock_id])
+
+        lifecycle = PilotTenantLifecycle.objects.select_for_update().get(id=lifecycle_id, tenant_id=tenant_id)
+        
+        # Check prerequisites before advancing past PREREQUISITES_PENDING
+        if target_state == PilotLifecycleState.TECHNICALLY_READY:
+            checklist = getattr(lifecycle, "prerequisite_checklist", None)
+            if not checklist or not checklist.is_fully_satisfied():
+                raise ValidationError("PREREQUISITE_FAILED: 11-prerequisite real data admission gate is not fully satisfied.")
+
+        lifecycle.transition_to(target_state, actor_id=actor_id, is_synthetic_rehearsal=is_synthetic_rehearsal)
+
+        append_outbox_event(
+            tenant_id=tenant_id,
+            topic="governance.pilot_lifecycle_transitioned",
+            aggregate_type="PilotTenantLifecycle",
+            aggregate_id=str(lifecycle.id),
+            payload={"lifecycle_id": str(lifecycle.id), "state": target_state, "actor_id": str(actor_id)},
+        )
+        return lifecycle
+
+    @classmethod
+    @transaction.atomic
+    def execute_dual_custody_approval(
+        cls,
+        *,
+        tenant_id: UUID,
+        lifecycle_id: UUID,
+        action_type: str,
+        initiator_id: UUID,
+        secondary_signer_id: UUID,
+        nonce: str,
+    ) -> DualCustodyApprovalEvent:
+        if initiator_id == secondary_signer_id:
+            raise ValidationError("DUAL_CUSTODY_BYPASS: DENY. Initiator and secondary signer must be distinct actors.")
+
+        # Replay attack prevention check
+        if DualCustodyApprovalEvent.objects.filter(nonce=nonce).exists():
+            raise ValidationError("REPLAY_ATTACK: DENY. Approval token nonce has already been utilized.")
+
+        lifecycle = PilotTenantLifecycle.objects.select_for_update().get(id=lifecycle_id, tenant_id=tenant_id)
+        
+        sig = hashlib.sha256(
+            f"{tenant_id}:{lifecycle_id}:{action_type}:{initiator_id}:{secondary_signer_id}:{nonce}".encode("utf-8")
+        ).hexdigest()
+
+        event = DualCustodyApprovalEvent.objects.create(
+            tenant_id=tenant_id,
+            lifecycle=lifecycle,
+            action_type=action_type,
+            initiator_id=initiator_id,
+            secondary_signer_id=secondary_signer_id,
+            nonce=nonce,
+            signature_digest=sig,
+            is_executed=True,
+        )
+
+        append_outbox_event(
+            tenant_id=tenant_id,
+            topic="governance.dual_custody_approval_executed",
+            aggregate_type="DualCustodyApprovalEvent",
+            aggregate_id=str(event.id),
+            payload={"event_id": str(event.id), "lifecycle_id": str(lifecycle.id), "action_type": action_type},
+        )
+        return event
