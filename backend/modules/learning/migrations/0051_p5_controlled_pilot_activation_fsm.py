@@ -4,6 +4,65 @@ import django.db.models.deletion
 import uuid
 from django.db import migrations, models
 
+POSTGRES_P5_RLS_SQL = r"""
+DO $$
+DECLARE
+    tbl text;
+    tables text[] := ARRAY[
+        'learning_pilot_tenant_lifecycle',
+        'learning_pilot_prerequisite_checklist',
+        'learning_dual_custody_approval_event'
+    ];
+BEGIN
+    IF current_setting('server_version_num', true)::int >= 100000 THEN
+        FOREACH tbl IN ARRAY tables LOOP
+            EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY;', tbl);
+            EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY;', tbl);
+            EXECUTE format('DROP POLICY IF EXISTS p5_tenant_isolation_policy ON %I;', tbl);
+            EXECUTE format(
+                'CREATE POLICY p5_tenant_isolation_policy ON %I ' ||
+                'FOR ALL USING (tenant_id = NULLIF(current_setting(''app.current_tenant'', true), '''')::uuid) ' ||
+                'WITH CHECK (tenant_id = NULLIF(current_setting(''app.current_tenant'', true), '''')::uuid);',
+                tbl
+            );
+        END LOOP;
+
+        -- Immutability on dual custody approval and auditability
+        EXECUTE 'REVOKE DELETE ON learning_dual_custody_approval_event FROM PUBLIC;';
+        IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'codesho_app') THEN
+            EXECUTE 'REVOKE DELETE ON learning_dual_custody_approval_event FROM codesho_app;';
+        END IF;
+    END IF;
+END $$;
+"""
+
+REVERSE_P5_RLS_SQL = r"""
+DO $$
+DECLARE
+    tbl text;
+    tables text[] := ARRAY[
+        'learning_pilot_tenant_lifecycle',
+        'learning_pilot_prerequisite_checklist',
+        'learning_dual_custody_approval_event'
+    ];
+BEGIN
+    IF current_setting('server_version_num', true)::int >= 100000 THEN
+        FOREACH tbl IN ARRAY tables LOOP
+            EXECUTE format('DROP POLICY IF EXISTS p5_tenant_isolation_policy ON %I;', tbl);
+            EXECUTE format('ALTER TABLE %I NO FORCE ROW LEVEL SECURITY;', tbl);
+        END LOOP;
+    END IF;
+END $$;
+"""
+
+def enable_p5_postgres_rls(apps, schema_editor):
+    if schema_editor.connection.vendor == "postgresql":
+        schema_editor.execute(POSTGRES_P5_RLS_SQL)
+
+def disable_p5_postgres_rls(apps, schema_editor):
+    if schema_editor.connection.vendor == "postgresql":
+        schema_editor.execute(REVERSE_P5_RLS_SQL)
+
 
 class Migration(migrations.Migration):
 
@@ -127,55 +186,8 @@ class Migration(migrations.Migration):
             model_name='dualcustodyapprovalevent',
             constraint=models.CheckConstraint(condition=models.Q(('initiator_id', models.F('secondary_signer_id')), _negated=True), name='chk_dual_custody_distinct_signers'),
         ),
-        migrations.RunSQL(
-            sql=r"""
-            DO $$
-            DECLARE
-                tbl text;
-                tables text[] := ARRAY[
-                    'learning_pilot_tenant_lifecycle',
-                    'learning_pilot_prerequisite_checklist',
-                    'learning_dual_custody_approval_event'
-                ];
-            BEGIN
-                IF current_setting('server_version_num', true)::int >= 100000 THEN
-                    FOREACH tbl IN ARRAY tables LOOP
-                        EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY;', tbl);
-                        EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY;', tbl);
-                        EXECUTE format('DROP POLICY IF EXISTS p5_tenant_isolation_policy ON %I;', tbl);
-                        EXECUTE format(
-                            'CREATE POLICY p5_tenant_isolation_policy ON %I ' ||
-                            'FOR ALL USING (tenant_id = NULLIF(current_setting(''app.current_tenant'', true), '''')::uuid) ' ||
-                            'WITH CHECK (tenant_id = NULLIF(current_setting(''app.current_tenant'', true), '''')::uuid);',
-                            tbl
-                        );
-                    END LOOP;
-
-                    -- Immutability on dual custody approval and auditability
-                    EXECUTE 'REVOKE DELETE ON learning_dual_custody_approval_event FROM PUBLIC;';
-                    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'codesho_app') THEN
-                        EXECUTE 'REVOKE DELETE ON learning_dual_custody_approval_event FROM codesho_app;';
-                    END IF;
-                END IF;
-            END $$;
-            """,
-            reverse_sql=r"""
-            DO $$
-            DECLARE
-                tbl text;
-                tables text[] := ARRAY[
-                    'learning_pilot_tenant_lifecycle',
-                    'learning_pilot_prerequisite_checklist',
-                    'learning_dual_custody_approval_event'
-                ];
-            BEGIN
-                IF current_setting('server_version_num', true)::int >= 100000 THEN
-                    FOREACH tbl IN ARRAY tables LOOP
-                        EXECUTE format('DROP POLICY IF EXISTS p5_tenant_isolation_policy ON %I;', tbl);
-                        EXECUTE format('ALTER TABLE %I NO FORCE ROW LEVEL SECURITY;', tbl);
-                    END LOOP;
-                END IF;
-            END $$;
-            """
+        migrations.RunPython(
+            code=enable_p5_postgres_rls,
+            reverse_code=disable_p5_postgres_rls,
         ),
     ]
