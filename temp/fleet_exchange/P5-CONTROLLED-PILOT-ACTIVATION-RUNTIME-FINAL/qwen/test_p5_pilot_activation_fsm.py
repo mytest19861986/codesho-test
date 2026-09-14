@@ -177,10 +177,10 @@ class TestPhase5ControlledPilotActivationFSMAndRehearsal:
         assignment = EnterpriseGovernanceService.assign_staff_access(
             tenant_id=self.tenant_a.id,
             user_id=self.operator_2.id,
-            role_name="OPERATOR",
+            role_name="PROGRAM_OPERATOR",
             assigned_by_id=self.operator_1.id,
         )
-        assert assignment.role_name == "OPERATOR"
+        assert assignment.role_name == "PROGRAM_OPERATOR"
         assert assignment.tenant_id == self.tenant_a.id
 
     def test_r3_synthetic_learner_guardian_activation(self):
