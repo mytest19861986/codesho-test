@@ -8757,27 +8757,33 @@ class PilotTenantProvisioningPlan(models.Model):
 # =============================================================================
 
 class PilotLifecycleState(models.TextChoices):
-    DRAFT = "DRAFT", "Draft"
-    ELIGIBILITY_REVIEW = "ELIGIBILITY_REVIEW", "Eligibility Review"
-    PREREQUISITES_PENDING = "PREREQUISITES_PENDING", "Prerequisites Pending"
-    TECHNICALLY_READY = "TECHNICALLY_READY", "Technically Ready"
-    MANAGER_APPROVAL_REQUIRED = "MANAGER_APPROVAL_REQUIRED", "Manager Approval Required"
-    ACTIVATION_AUTHORIZED = "ACTIVATION_AUTHORIZED", "Activation Authorized"
-    PILOT_ACTIVE = "PILOT_ACTIVE", "Pilot Active"
+    CANDIDATE = "CANDIDATE", "Candidate"
+    DUE_DILIGENCE = "DUE_DILIGENCE", "Due Diligence"
+    SECURITY_REVIEW = "SECURITY_REVIEW", "Security Review"
+    PRIVACY_REVIEW = "PRIVACY_REVIEW", "Privacy Review"
+    OPERATIONAL_REVIEW = "OPERATIONAL_REVIEW", "Operational Review"
+    TECHNICAL_READY = "TECHNICAL_READY", "Technical Ready"
+    MANAGER_DECISION_REQUIRED = "MANAGER_DECISION_REQUIRED", "Manager Decision Required"
+    MANAGER_AUTHORIZED = "MANAGER_AUTHORIZED", "Manager Authorized"
+    ACTIVATION_WINDOW = "ACTIVATION_WINDOW", "Activation Window"
+    ACTIVE = "ACTIVE", "Active"
     SUSPENDED = "SUSPENDED", "Suspended"
     EXITING = "EXITING", "Exiting"
     CLOSED = "CLOSED", "Closed"
 
 
 PILOT_FSM_TRANSITIONS = {
-    PilotLifecycleState.DRAFT: {PilotLifecycleState.ELIGIBILITY_REVIEW},
-    PilotLifecycleState.ELIGIBILITY_REVIEW: {PilotLifecycleState.PREREQUISITES_PENDING, PilotLifecycleState.CLOSED},
-    PilotLifecycleState.PREREQUISITES_PENDING: {PilotLifecycleState.TECHNICALLY_READY, PilotLifecycleState.CLOSED},
-    PilotLifecycleState.TECHNICALLY_READY: {PilotLifecycleState.MANAGER_APPROVAL_REQUIRED, PilotLifecycleState.PREREQUISITES_PENDING},
-    PilotLifecycleState.MANAGER_APPROVAL_REQUIRED: {PilotLifecycleState.ACTIVATION_AUTHORIZED, PilotLifecycleState.SUSPENDED, PilotLifecycleState.CLOSED},
-    PilotLifecycleState.ACTIVATION_AUTHORIZED: {PilotLifecycleState.PILOT_ACTIVE, PilotLifecycleState.SUSPENDED},
-    PilotLifecycleState.PILOT_ACTIVE: {PilotLifecycleState.SUSPENDED, PilotLifecycleState.EXITING},
-    PilotLifecycleState.SUSPENDED: {PilotLifecycleState.PILOT_ACTIVE, PilotLifecycleState.EXITING, PilotLifecycleState.CLOSED},
+    PilotLifecycleState.CANDIDATE: {PilotLifecycleState.DUE_DILIGENCE, PilotLifecycleState.CLOSED},
+    PilotLifecycleState.DUE_DILIGENCE: {PilotLifecycleState.SECURITY_REVIEW, PilotLifecycleState.CLOSED},
+    PilotLifecycleState.SECURITY_REVIEW: {PilotLifecycleState.PRIVACY_REVIEW, PilotLifecycleState.CLOSED},
+    PilotLifecycleState.PRIVACY_REVIEW: {PilotLifecycleState.OPERATIONAL_REVIEW, PilotLifecycleState.CLOSED},
+    PilotLifecycleState.OPERATIONAL_REVIEW: {PilotLifecycleState.TECHNICAL_READY, PilotLifecycleState.CLOSED},
+    PilotLifecycleState.TECHNICAL_READY: {PilotLifecycleState.MANAGER_DECISION_REQUIRED, PilotLifecycleState.DUE_DILIGENCE, PilotLifecycleState.CLOSED},
+    PilotLifecycleState.MANAGER_DECISION_REQUIRED: {PilotLifecycleState.MANAGER_AUTHORIZED, PilotLifecycleState.SUSPENDED, PilotLifecycleState.CLOSED},
+    PilotLifecycleState.MANAGER_AUTHORIZED: {PilotLifecycleState.ACTIVATION_WINDOW, PilotLifecycleState.SUSPENDED, PilotLifecycleState.CLOSED},
+    PilotLifecycleState.ACTIVATION_WINDOW: {PilotLifecycleState.ACTIVE, PilotLifecycleState.SUSPENDED, PilotLifecycleState.CLOSED},
+    PilotLifecycleState.ACTIVE: {PilotLifecycleState.SUSPENDED, PilotLifecycleState.EXITING},
+    PilotLifecycleState.SUSPENDED: {PilotLifecycleState.ACTIVE, PilotLifecycleState.EXITING, PilotLifecycleState.CLOSED},
     PilotLifecycleState.EXITING: {PilotLifecycleState.CLOSED},
     PilotLifecycleState.CLOSED: set(),
 }
@@ -8796,12 +8802,15 @@ class PilotTenantLifecycle(models.Model):
     state = models.CharField(
         max_length=32,
         choices=PilotLifecycleState.choices,
-        default=PilotLifecycleState.DRAFT,
+        default=PilotLifecycleState.CANDIDATE,
     )
     is_synthetic_mode = models.BooleanField(default=True)
     is_production_target = models.BooleanField(default=False)
     initiated_by_id = models.UUIDField()
     technical_reviewer_id = models.UUIDField(null=True, blank=True)
+    security_reviewer_id = models.UUIDField(null=True, blank=True)
+    privacy_reviewer_id = models.UUIDField(null=True, blank=True)
+    operational_reviewer_id = models.UUIDField(null=True, blank=True)
     manager_approver_id = models.UUIDField(null=True, blank=True)
     manager_approval_signed_at = models.DateTimeField(null=True, blank=True)
     activation_token = models.CharField(max_length=128, blank=True, default="")
@@ -8853,18 +8862,25 @@ class PilotTenantLifecycle(models.Model):
             raise ValidationError(
                 f"INVALID_FSM_TRANSITION: DENY. Cannot transition from {self.state} to {new_state}."
             )
-        # Real-world state cap: MANAGER_APPROVAL_REQUIRED
+        # Real-world state cap: MANAGER_DECISION_REQUIRED
         if not is_synthetic_rehearsal and new_state in {
-            PilotLifecycleState.ACTIVATION_AUTHORIZED,
-            PilotLifecycleState.PILOT_ACTIVE,
+            PilotLifecycleState.MANAGER_AUTHORIZED,
+            PilotLifecycleState.ACTIVATION_WINDOW,
+            PilotLifecycleState.ACTIVE,
         }:
             raise ValidationError(
-                "REAL_WORLD_MAX_STATE: MANAGER_APPROVAL_REQUIRED. Real-world activation beyond manager approval requires explicit runtime unlock rehearsal."
+                "REAL_WORLD_MAX_STATE: MANAGER_DECISION_REQUIRED. Real-world activation beyond manager decision requires explicit runtime unlock rehearsal."
             )
         # Self-approval denial invariant
-        if new_state == PilotLifecycleState.TECHNICALLY_READY and actor_id == self.initiated_by_id:
-            raise ValidationError("SELF_APPROVAL: DENY. Requesting actor cannot self-approve technical readiness.")
-        if new_state == PilotLifecycleState.ACTIVATION_AUTHORIZED and actor_id == self.initiated_by_id:
+        if new_state in {
+            PilotLifecycleState.DUE_DILIGENCE,
+            PilotLifecycleState.SECURITY_REVIEW,
+            PilotLifecycleState.PRIVACY_REVIEW,
+            PilotLifecycleState.OPERATIONAL_REVIEW,
+            PilotLifecycleState.TECHNICAL_READY,
+        } and actor_id == self.initiated_by_id:
+            raise ValidationError("SELF_APPROVAL: DENY. Requesting actor cannot self-approve readiness gates.")
+        if new_state == PilotLifecycleState.MANAGER_AUTHORIZED and actor_id == self.initiated_by_id:
             raise ValidationError("SELF_APPROVAL: DENY. Requesting actor cannot grant manager activation authorization.")
 
         self.state = new_state
@@ -8887,17 +8903,22 @@ class PilotPrerequisiteChecklist(models.Model):
         on_delete=models.CASCADE,
         related_name="prerequisite_checklist",
     )
+    # 14 Pre-Admission Gate Domains (Phase 6 Architecture)
+    manager_authorization_signed = models.BooleanField(default=False)
+    legal_privacy_review_cleared = models.BooleanField(default=False)
     legal_basis_or_consent = models.BooleanField(default=False)
     data_minimization_audited = models.BooleanField(default=False)
+    tenant_authorization_isolated = models.BooleanField(default=False)
+    access_control_verified = models.BooleanField(default=False)
+    access_review_completed = models.BooleanField(default=False)
     retention_policy_enforced = models.BooleanField(default=False)
+    deletion_procedure_verified = models.BooleanField(default=False)
     offboarding_policy_verified = models.BooleanField(default=False)
     incident_readiness_tested = models.BooleanField(default=False)
-    tenant_authorization_isolated = models.BooleanField(default=False)
-    access_review_completed = models.BooleanField(default=False)
-    auditability_ledger_active = models.BooleanField(default=False)
     support_readiness_active = models.BooleanField(default=False)
+    auditability_ledger_active = models.BooleanField(default=False)
     security_acceptance_cleared = models.BooleanField(default=False)
-    manager_authorization_signed = models.BooleanField(default=False)
+    anti_ranking_validated = models.BooleanField(default=False)
     certified_at = models.DateTimeField(null=True, blank=True)
     certified_by_id = models.UUIDField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -8918,17 +8939,20 @@ class PilotPrerequisiteChecklist(models.Model):
 
     def is_fully_satisfied(self) -> bool:
         return all([
+            self.manager_authorization_signed,
+            self.legal_privacy_review_cleared,
             self.legal_basis_or_consent,
             self.data_minimization_audited,
+            self.tenant_authorization_isolated,
+            self.access_control_verified,
             self.retention_policy_enforced,
+            self.deletion_procedure_verified,
             self.offboarding_policy_verified,
             self.incident_readiness_tested,
-            self.tenant_authorization_isolated,
-            self.access_review_completed,
-            self.auditability_ledger_active,
             self.support_readiness_active,
+            self.auditability_ledger_active,
             self.security_acceptance_cleared,
-            self.manager_authorization_signed,
+            self.anti_ranking_validated,
         ])
 
     def __str__(self) -> str:

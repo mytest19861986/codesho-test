@@ -634,7 +634,7 @@ class EnterpriseGovernanceService:
         lifecycle = PilotTenantLifecycle(
             tenant_id=tenant_id,
             pilot_code=pilot_code,
-            state=PilotLifecycleState.DRAFT,
+            state=PilotLifecycleState.CANDIDATE,
             initiated_by_id=initiated_by_id,
         )
         lifecycle.full_clean()
@@ -673,11 +673,11 @@ class EnterpriseGovernanceService:
 
         lifecycle = PilotTenantLifecycle.objects.select_for_update().get(id=lifecycle_id, tenant_id=tenant_id)
         
-        # Check prerequisites before advancing past PREREQUISITES_PENDING
-        if target_state == PilotLifecycleState.TECHNICALLY_READY:
+        # Check prerequisites before advancing to TECHNICAL_READY
+        if target_state == PilotLifecycleState.TECHNICAL_READY:
             checklist = getattr(lifecycle, "prerequisite_checklist", None)
             if not checklist or not checklist.is_fully_satisfied():
-                raise ValidationError("PREREQUISITE_FAILED: 11-prerequisite real data admission gate is not fully satisfied.")
+                raise ValidationError("PREREQUISITE_FAILED: 14-prerequisite real data admission gate is not fully satisfied.")
 
         lifecycle.transition_to(target_state, actor_id=actor_id, is_synthetic_rehearsal=is_synthetic_rehearsal)
 
