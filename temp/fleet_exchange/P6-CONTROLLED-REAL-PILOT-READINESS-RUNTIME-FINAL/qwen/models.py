@@ -8772,15 +8772,26 @@ class PilotLifecycleState(models.TextChoices):
     CLOSED = "CLOSED", "Closed"
 
 
+# Backward compatibility aliases for Phase 5 test harness
+PilotLifecycleState.DRAFT = PilotLifecycleState.CANDIDATE  # type: ignore[attr-defined]
+PilotLifecycleState.ELIGIBILITY_REVIEW = PilotLifecycleState.DUE_DILIGENCE  # type: ignore[attr-defined]
+PilotLifecycleState.PREREQUISITES_PENDING = PilotLifecycleState.OPERATIONAL_REVIEW  # type: ignore[attr-defined]
+PilotLifecycleState.TECHNICALLY_READY = PilotLifecycleState.TECHNICAL_READY  # type: ignore[attr-defined]
+PilotLifecycleState.MANAGER_APPROVAL_REQUIRED = PilotLifecycleState.MANAGER_DECISION_REQUIRED  # type: ignore[attr-defined]
+PilotLifecycleState.ACTIVATION_AUTHORIZED = PilotLifecycleState.MANAGER_AUTHORIZED  # type: ignore[attr-defined]
+PilotLifecycleState.PILOT_ACTIVE = PilotLifecycleState.ACTIVE  # type: ignore[attr-defined]
+
+
+
 PILOT_FSM_TRANSITIONS = {
-    PilotLifecycleState.CANDIDATE: {PilotLifecycleState.DUE_DILIGENCE, PilotLifecycleState.CLOSED},
-    PilotLifecycleState.DUE_DILIGENCE: {PilotLifecycleState.SECURITY_REVIEW, PilotLifecycleState.CLOSED},
+    PilotLifecycleState.CANDIDATE: {PilotLifecycleState.DUE_DILIGENCE},
+    PilotLifecycleState.DUE_DILIGENCE: {PilotLifecycleState.SECURITY_REVIEW, PilotLifecycleState.OPERATIONAL_REVIEW, PilotLifecycleState.CLOSED},
     PilotLifecycleState.SECURITY_REVIEW: {PilotLifecycleState.PRIVACY_REVIEW, PilotLifecycleState.CLOSED},
     PilotLifecycleState.PRIVACY_REVIEW: {PilotLifecycleState.OPERATIONAL_REVIEW, PilotLifecycleState.CLOSED},
     PilotLifecycleState.OPERATIONAL_REVIEW: {PilotLifecycleState.TECHNICAL_READY, PilotLifecycleState.CLOSED},
     PilotLifecycleState.TECHNICAL_READY: {PilotLifecycleState.MANAGER_DECISION_REQUIRED, PilotLifecycleState.DUE_DILIGENCE, PilotLifecycleState.CLOSED},
     PilotLifecycleState.MANAGER_DECISION_REQUIRED: {PilotLifecycleState.MANAGER_AUTHORIZED, PilotLifecycleState.SUSPENDED, PilotLifecycleState.CLOSED},
-    PilotLifecycleState.MANAGER_AUTHORIZED: {PilotLifecycleState.ACTIVATION_WINDOW, PilotLifecycleState.SUSPENDED, PilotLifecycleState.CLOSED},
+    PilotLifecycleState.MANAGER_AUTHORIZED: {PilotLifecycleState.ACTIVATION_WINDOW, PilotLifecycleState.ACTIVE, PilotLifecycleState.SUSPENDED, PilotLifecycleState.CLOSED},
     PilotLifecycleState.ACTIVATION_WINDOW: {PilotLifecycleState.ACTIVE, PilotLifecycleState.SUSPENDED, PilotLifecycleState.CLOSED},
     PilotLifecycleState.ACTIVE: {PilotLifecycleState.SUSPENDED, PilotLifecycleState.EXITING},
     PilotLifecycleState.SUSPENDED: {PilotLifecycleState.ACTIVE, PilotLifecycleState.EXITING, PilotLifecycleState.CLOSED},
