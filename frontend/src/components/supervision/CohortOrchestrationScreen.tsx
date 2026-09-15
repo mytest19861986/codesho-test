@@ -18,7 +18,7 @@ export const CohortOrchestrationScreen: React.FC<CohortOrchestrationScreenProps>
   const [kpiData, setKpiData] = useState<CohortKpiData | null>(null);
   const [alerts, setAlerts] = useState<SupervisionAlertData[]>([]);
 
-  const fetchCohortData = async () => {
+  const fetchCohortData = React.useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -51,7 +51,7 @@ export const CohortOrchestrationScreen: React.FC<CohortOrchestrationScreenProps>
       if (alertsRes.ok) {
         const alertsJson = await alertsRes.json();
         setAlerts(
-          (alertsJson.alerts || []).map((a: any) => ({
+          (alertsJson.alerts || []).map((a: { id: string; student_id: string; alert_type: SupervisionAlertData["alertType"]; severity: SupervisionAlertData["severity"]; status: SupervisionAlertData["status"]; details: Record<string, unknown>; created_at: string }) => ({
             id: a.id,
             studentId: a.student_id,
             alertType: a.alert_type,
@@ -62,16 +62,25 @@ export const CohortOrchestrationScreen: React.FC<CohortOrchestrationScreenProps>
           }))
         );
       }
-    } catch (err: any) {
-      setError(err.message || "خطایی در بارگذاری داشبورد رخ داد.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "خطایی در بارگذاری داشبورد رخ داد.";
+      setError(message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [cohortId, mentorId]);
 
   useEffect(() => {
-    fetchCohortData();
-  }, [cohortId, mentorId]);
+    let isCancelled = false;
+    (async () => {
+      if (!isCancelled) {
+        await fetchCohortData();
+      }
+    })();
+    return () => {
+      isCancelled = true;
+    };
+  }, [fetchCohortData]);
 
   const handleTransitionStatus = async (alertId: string, targetStatus: "ACKNOWLEDGED" | "RESOLVED") => {
     try {

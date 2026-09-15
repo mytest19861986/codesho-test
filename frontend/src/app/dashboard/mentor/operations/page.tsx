@@ -89,7 +89,7 @@ export default function MentorOperationsPage() {
     aggregatedAt: "۱۴۰۵/۰۶/۲۲ - ساعت ۱۸:۰۰",
   };
 
-  const handleResolveQueueItem = (id: string, notes: string) => {
+  const handleResolveQueueItem = (id: string, _notes: string) => {
     setSupportQueue((prev) =>
       prev.map((item) =>
         item.id === id ? { ...item, queueStatus: "RESOLVED" } : item

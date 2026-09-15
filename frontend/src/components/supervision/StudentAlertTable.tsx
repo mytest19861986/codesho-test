@@ -8,7 +8,7 @@ export interface SupervisionAlertData {
   alertType: "STALLED_PROGRESS" | "FAILED_ASSESSMENTS" | "AT_RISK_DROPOUT";
   severity: "LOW" | "MEDIUM" | "HIGH";
   status: "ACTIVE" | "ACKNOWLEDGED" | "RESOLVED";
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   createdAt: string;
 }
 

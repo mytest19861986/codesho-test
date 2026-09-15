@@ -27,7 +27,7 @@ export function NotificationDrawer({ isOpen, onClose, role = "student" }: Notifi
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = React.useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -72,13 +72,20 @@ export function NotificationDrawer({ isOpen, onClose, role = "student" }: Notifi
     } finally {
       setLoading(false);
     }
-  };
+  }, [role]);
 
   useEffect(() => {
-    if (isOpen) {
-      fetchNotifications();
-    }
-  }, [isOpen]);
+    if (!isOpen) return;
+    let isCancelled = false;
+    (async () => {
+      if (!isCancelled) {
+        await fetchNotifications();
+      }
+    })();
+    return () => {
+      isCancelled = true;
+    };
+  }, [isOpen, fetchNotifications]);
 
   const markAllAsRead = async () => {
     try {

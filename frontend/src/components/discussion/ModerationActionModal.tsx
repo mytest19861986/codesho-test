@@ -106,7 +106,7 @@ export const ModerationActionModal: React.FC<ModerationActionModalProps> = ({
           <div>
             <strong>هدف:</strong> {targetType === "THREAD" ? "رشته گفتگو" : "نظر/پاسخ"} (<bdi dir="ltr">{targetId.slice(0, 8)}</bdi>)
           </div>
-          <div style={{ marginTop: "0.25rem", fontStyle: "italic" }}>"{targetPreview}"</div>
+          <div style={{ marginTop: "0.25rem", fontStyle: "italic" }}>&quot;{targetPreview}&quot;</div>
         </div>
 
         {errorMsg && (

@@ -33,8 +33,12 @@ BEGIN
         EXECUTE 'REVOKE UPDATE, DELETE ON learning_manager_decision_audit_log FROM PUBLIC;';
         
         IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'codesho_app') THEN
-            EXECUTE 'REVOKE UPDATE, DELETE ON learning_manager_decision_ledger FROM codesho_app;';
+            EXECUTE 'REVOKE DELETE ON learning_manager_decision_ledger FROM codesho_app;';
             EXECUTE 'REVOKE UPDATE, DELETE ON learning_manager_decision_audit_log FROM codesho_app;';
+        END IF;
+        IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'codesho_runtime') THEN
+            EXECUTE 'REVOKE DELETE ON learning_manager_decision_ledger FROM codesho_runtime;';
+            EXECUTE 'REVOKE UPDATE, DELETE ON learning_manager_decision_audit_log FROM codesho_runtime;';
         END IF;
     END IF;
 END $$;
@@ -126,7 +130,7 @@ class Migration(migrations.Migration):
                 ('activation_window_start', models.DateTimeField(blank=True, null=True)),
                 ('activation_window_end', models.DateTimeField(blank=True, null=True)),
                 ('token_expiry', models.DateTimeField(blank=True, null=True)),
-                ('authorized_operators', models.JSONField(default=list)),
+                ('authorized_operators', models.JSONField(blank=True, default=list)),
                 ('nonce', models.CharField(max_length=64, unique=True)),
                 ('audit_reference', models.UUIDField(default=uuid.uuid4)),
                 ('superseded_decision_id', models.UUIDField(blank=True, null=True)),

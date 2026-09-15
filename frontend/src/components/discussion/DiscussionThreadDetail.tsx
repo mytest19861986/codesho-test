@@ -29,7 +29,7 @@ interface DiscussionThreadDetailProps {
 export const DiscussionThreadDetail: React.FC<DiscussionThreadDetailProps> = ({
   thread,
   comments,
-  currentUserId,
+  currentUserId: _currentUserId,
   currentUserRole,
   onAddReply,
   onEndorseComment,
