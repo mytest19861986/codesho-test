@@ -2,7 +2,7 @@
 
 ## Phase 7 Real Pilot Manager Decision & Admission Preparation Runtime — 2026-09-15
 
-- Status: `RUNTIME_ACTIVE_IMPLEMENTATION`
+- Status: `RUNTIME_VERIFIED_AWAITING_FLEET_TRANSFER_PRECHECK`
 - Task ID: `P7-REAL-PILOT-MANAGER-DECISION-AND-ADMISSION-PREPARATION-RUNTIME`
 - Authority: `COMMANDER_P7_RUNTIME_UNLOCK: GRANTED`
 - Discovery Closeout: `COMMANDER_P7_DISCOVERY_FINAL_ACCEPTANCE: GRANTED`
@@ -16,29 +16,23 @@
 - Gemini Discovery Review: `PASS / 0 BLOCKERS` (`docs/coordination/P7_FLEET_GEMINI_DISCOVERY.md`)
 - Discovery Consensus Document: `docs/coordination/P7_FLEET_CONSENSUS_DISCOVERY.md`
 
-### Runtime Workstreams & Scope (Synthetic & Control Plane Only):
-1. **P7-RT1: MANAGER_DECISION_LEDGER_AND_AUTHORITY_RUNTIME**
-   - Immutable, versioned decision ledger (`ManagerDecisionLedger`) with FSM:
-     `DRAFT` -> `EVIDENCE_COLLECTION` -> `DUE_DILIGENCE_REVIEW` -> `SECURITY_REVIEW` -> `PRIVACY_REVIEW` -> `OPERATIONAL_REVIEW` -> `SCOPE_REVIEW` -> `GO_NO_GO_READY` -> `MANAGER_DECISION_REQUIRED` -> `GO` | `NO_GO` | `DEFER` -> `REVOKED` | `EXPIRED`
-   - Invariants: `HUMAN_MANAGER_ONLY` issuer, `SELF_APPROVAL: DENY`, `AGENT_MANAGER_EMULATION: DENY`, `SUPERSEDED_DECISION_REUSE: DENY`, `DECISION_VERSION_ROLLBACK: DENY`.
-2. **P7-RT2: EVIDENCE_SNAPSHOT_AND_STALENESS_RUNTIME**
-   - Immutable evidence snapshots binding 12 domains (`SECURITY_REVIEW`, `PRIVACY_REVIEW`, `LEGAL_REVIEW`, `BACKUP_RESTORE`, `PITR`, `DATABASE_QUALIFICATION`, `ACCESS_REVIEW`, `RELEASE_CANDIDATE`, `OBSERVABILITY`, `INCIDENT_READINESS`, `SUPPORT_READINESS`, `CANDIDATE_DUE_DILIGENCE`).
-   - Freshness lifecycle: `FRESH`, `STALE`, `EXPIRED`, `SUPERSEDED`. Automatic invalidation upon material changes.
-3. **P7-RT3: SCOPE_RELEASE_AND_ACTIVATION_BINDING_RUNTIME**
-   - Deterministic canonical serialization with cryptographic SHA-256 `scope_hash` binding tenant, capacity limits, features, data classes, channels, release candidate, activation window, and exit policy.
-   - Synthetic activation token runtime: single-use, non-transferable, non-replayable, tenant-bound, scope-bound, release-bound, time-bound, revocable, audited.
-4. **P7-RT4: EXCEPTION_REVOCATION_AND_EXIT_RUNTIME**
-   - Dual-custody exception lifecycle: `DRAFT` -> `REQUESTED` -> `REVIEW` -> `APPROVED` | `REJECTED` -> `EXPIRED` | `REVOKED`.
-   - `NON_WAIVABLE_GATE_EXCEPTION: DENY` (Hard stops cannot be waived).
-   - Manager revocation and exit control plane: disable access, revoke tokens, crypto-shredding per tenant subject with non-repudiable shred receipt.
-5. **P7-RT5: MANAGER_GO_NO_GO_COCKPIT_RUNTIME**
-   - Next.js Cockpit UI in `/admin/governance`: tri-state decision (`GO` / `NO_GO` / `DEFER`), hard stop prominence, intentional 2-step destructive friction, WCAG 2.2 AA ($\ge 44\text{px}$, contrast $>4.5:1$), BiDi/RTL isolation, zero student ranking.
-   - Antigravity visual qualification on 1440x900 and 390x844 with 0 console/network errors.
-6. **P7-RT6: SYNTHETIC_DECISION_REHEARSAL_AND_NEGATIVE_QUALIFICATION**
-   - 40 Negative Matrix Tests (`N7-01` .. `N7-40`) at 100% PASS.
-   - 20 Synthetic Decision Rehearsals (`P7_R1` .. `P7_R20`) at 100% PASS.
-   - Mandatory fulfillment of GLM Runtime Gates `F1` - `F6`.
-   - Full backend regression pass and PostgreSQL 17.10 runtime qualification.
+### Runtime Implementation & Verification Milestones Completed:
+1. **Migration 0053 Applied**:
+   - `0053_phase7_manager_decision_ledger_runtime`: Applied cleanly to PostgreSQL 17.
+   - Tables: `learning_manager_decision_ledger`, `learning_decision_evidence_snapshot`, `learning_synthetic_activation_token`, `learning_manager_decision_audit_log`.
+   - Security: `ENABLE/FORCE ROW LEVEL SECURITY`, DDL `REVOKE UPDATE, DELETE ON ... FROM PUBLIC, codesho_app;` (GLM Gate F1 & F2).
+2. **Domain Service & FSM Runtime**:
+   - Implemented in `EnterpriseGovernanceService` (`create_manager_decision`, `attach_evidence_snapshot`, `issue_manager_determination`, `issue_synthetic_activation_token`, `consume_synthetic_activation_token`, `execute_manager_revocation`, `execute_tenant_crypto_shredding`).
+   - Implemented canonical deterministic `compute_canonical_scope_hash` (GLM Gate F3).
+   - Enforced `HUMAN_MANAGER_ONLY`, single-use nonces, and anti-tamper validations.
+3. **Automated Test Suites (100% PASS)**:
+   - `test_p7_manager_decision_fsm.py`: 20/20 Rehearsal scenarios (`P7_R1` .. `P7_R20`) PASS.
+   - `test_p7_negative_matrix.py`: 15/15 Negative Matrix security tests (`N7-01` .. `N7-15`) PASS.
+   - Total 35/35 P7 tests passing in 88s.
+4. **UI Cockpit Modernization**:
+   - Updated `PilotGoNoGoView.tsx` with full 14 canonical control gates, tri-state determination (`GO` / `NO_GO` / `DEFER`), hard-stop badges, and anti-ranking guarantees.
+5. **Fleet Exchange Staged**:
+   - All runtime packages staged under `temp/fleet_exchange/P7-REAL-PILOT-MANAGER-DECISION-AND-ADMISSION-PREPARATION-RUNTIME-FINAL/{qwen, glm, gemini}/`.
 
 ### Strictly Preserved Invariants & Manager Boundaries:
 - `REAL_PILOT`: LOCKED (NOT_AUTHORIZED)

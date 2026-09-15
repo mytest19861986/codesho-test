@@ -9015,3 +9015,280 @@ class DualCustodyApprovalEvent(models.Model):
     def __str__(self) -> str:
         return f"{self.tenant_id}:{self.action_type}:{self.initiator_id}+{self.secondary_signer_id}"
 
+
+# =============================================================================
+# PHASE 7: REAL PILOT MANAGER DECISION & ADMISSION CONTROL PLANE RUNTIME
+# Immutable Manager Decision Ledger, Evidence Snapshots, Synthetic Tokens, Audit
+# =============================================================================
+
+class ManagerDecisionState(models.TextChoices):
+    DRAFT = "DRAFT", "Draft"
+    EVIDENCE_COLLECTION = "EVIDENCE_COLLECTION", "Evidence Collection"
+    DUE_DILIGENCE_REVIEW = "DUE_DILIGENCE_REVIEW", "Due Diligence Review"
+    SECURITY_REVIEW = "SECURITY_REVIEW", "Security Review"
+    PRIVACY_REVIEW = "PRIVACY_REVIEW", "Privacy Review"
+    OPERATIONAL_REVIEW = "OPERATIONAL_REVIEW", "Operational Review"
+    SCOPE_REVIEW = "SCOPE_REVIEW", "Scope Review"
+    GO_NO_GO_READY = "GO_NO_GO_READY", "Go/No-Go Ready"
+    MANAGER_DECISION_REQUIRED = "MANAGER_DECISION_REQUIRED", "Manager Decision Required"
+    GO = "GO", "Go (Authorized)"
+    NO_GO = "NO_GO", "No-Go (Denied)"
+    DEFER = "DEFER", "Defer (Pending)"
+    REVOKED = "REVOKED", "Revoked"
+    EXPIRED = "EXPIRED", "Expired"
+
+
+class EvidenceFreshnessState(models.TextChoices):
+    FRESH = "FRESH", "Fresh (<24h)"
+    STALE = "STALE", "Stale (>24h)"
+    EXPIRED = "EXPIRED", "Expired (>7d)"
+    SUPERSEDED = "SUPERSEDED", "Superseded"
+
+
+class ManagerDecisionLedger(models.Model):
+    """
+    P7-RT1: Canonical Manager Decision Ledger.
+    Append-only and immutable. UPDATE/DELETE prohibited.
+    Supersession via new version and superseded_decision_id link.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.RESTRICT,
+        related_name="manager_decisions",
+    )
+    decision_version = models.PositiveIntegerField(default=1)
+    state = models.CharField(
+        max_length=32,
+        choices=ManagerDecisionState.choices,
+        default=ManagerDecisionState.DRAFT,
+    )
+    candidate_id = models.UUIDField()
+    scope_hash = models.CharField(max_length=64)  # SHA-256 canonical digest
+    release_candidate_id = models.CharField(max_length=64)  # Commit SHA
+    activation_window_start = models.DateTimeField(null=True, blank=True)
+    activation_window_end = models.DateTimeField(null=True, blank=True)
+    token_expiry = models.DateTimeField(null=True, blank=True)
+    authorized_operators = models.JSONField(default=list, blank=True)
+    nonce = models.CharField(max_length=64, unique=True)
+    audit_reference = models.UUIDField(default=uuid.uuid4)
+    superseded_decision_id = models.UUIDField(null=True, blank=True)
+    approver_id = models.UUIDField(null=True, blank=True)
+    is_human_manager = models.BooleanField(default=False)
+    is_synthetic_rehearsal = models.BooleanField(default=True)
+    decision_notes = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_manager_decision_ledger"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_manager_decision_tenant_id",
+            ),
+            models.UniqueConstraint(
+                fields=["tenant", "candidate_id", "decision_version"],
+                name="uq_learning_manager_decision_version",
+            ),
+            models.CheckConstraint(
+                condition=Q(state__in=ManagerDecisionState.values),
+                name="chk_manager_decision_state_valid",
+            ),
+            models.CheckConstraint(
+                condition=Q(is_synthetic_rehearsal=True),
+                name="chk_manager_decision_synthetic_only",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "state"], name="idx_mgr_dec_t_st"),
+            models.Index(fields=["candidate_id", "decision_version"], name="idx_mgr_dec_cand_ver"),
+            models.Index(fields=["nonce"], name="idx_mgr_dec_nonce"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if not self.is_synthetic_rehearsal:
+            raise ValidationError("REAL_PILOT: NOT_AUTHORIZED. Synthetic rehearsal mode is strictly enforced.")
+        if self.state in {ManagerDecisionState.GO, ManagerDecisionState.NO_GO, ManagerDecisionState.DEFER}:
+            if not self.approver_id:
+                raise ValidationError("GO_ISSUER: HUMAN_MANAGER_ONLY. Approver ID cannot be null.")
+            if not self.is_human_manager:
+                raise ValidationError("HUMAN_MANAGER_ONLY: Decision must be authorized by a verified human manager.")
+        if self.decision_notes:
+            _validate_pii_text_field(self.decision_notes, "decision_notes", 2000)
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            old = ManagerDecisionLedger.objects.filter(pk=self.pk).values("state").first()
+            if old:
+                # Emergency manager revocation is the only allowed transition out of GO
+                if old["state"] == ManagerDecisionState.GO and self.state == ManagerDecisionState.REVOKED:
+                    pass
+                elif old["state"] in {ManagerDecisionState.GO, ManagerDecisionState.NO_GO, ManagerDecisionState.DEFER, ManagerDecisionState.REVOKED}:
+                    raise ValidationError("Terminal decision records cannot be modified once determined.")
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("ManagerDecisionLedger records cannot be deleted. Ledger is append-only.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.candidate_id}:v{self.decision_version}:{self.state}"
+
+
+class DecisionEvidenceSnapshot(models.Model):
+    """
+    P7-RT2: Canonical Decision Evidence Snapshot.
+    Captures multi-domain verification state with freshness status.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.RESTRICT,
+        related_name="decision_evidence_snapshots",
+    )
+    decision = models.ForeignKey(
+        ManagerDecisionLedger,
+        on_delete=models.RESTRICT,
+        related_name="evidence_snapshots",
+    )
+    domain = models.CharField(max_length=64)
+    evidence_hash = models.CharField(max_length=64)  # SHA-256
+    freshness_state = models.CharField(
+        max_length=16,
+        choices=EvidenceFreshnessState.choices,
+        default=EvidenceFreshnessState.FRESH,
+    )
+    raw_evidence_summary = models.TextField(blank=True, default="")
+    certified_by_id = models.UUIDField()
+    snapshot_timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_decision_evidence_snapshot"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_decision_evidence_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(freshness_state__in=EvidenceFreshnessState.values),
+                name="chk_decision_evidence_freshness",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "domain", "freshness_state"], name="idx_dec_ev_t_dom_fr"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.raw_evidence_summary:
+            _validate_pii_text_field(self.raw_evidence_summary, "raw_evidence_summary", 2000)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.decision_id}:{self.domain}:{self.freshness_state}"
+
+
+class SyntheticActivationToken(models.Model):
+    """
+    P7-RT3: Synthetic Activation Token Runtime.
+    Single-use, non-transferable, non-replayable, strictly synthetic.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.RESTRICT,
+        related_name="activation_tokens",
+    )
+    decision = models.ForeignKey(
+        ManagerDecisionLedger,
+        on_delete=models.RESTRICT,
+        related_name="tokens",
+    )
+    token_value = models.CharField(max_length=128, unique=True)
+    scope_hash = models.CharField(max_length=64)
+    release_candidate_id = models.CharField(max_length=64)
+    authorized_operator_id = models.UUIDField()
+    nonce = models.CharField(max_length=64, unique=True)
+    activation_window_start = models.DateTimeField()
+    activation_window_end = models.DateTimeField()
+    expiry = models.DateTimeField()
+    is_consumed = models.BooleanField(default=False)
+    consumed_at = models.DateTimeField(null=True, blank=True)
+    is_revoked = models.BooleanField(default=False)
+    revoked_at = models.DateTimeField(null=True, blank=True)
+    revocation_reason = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_synthetic_activation_token"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_synthetic_token_tenant_id",
+            ),
+            models.CheckConstraint(
+                condition=Q(activation_window_start__lt=models.F("activation_window_end")),
+                name="chk_synth_token_window_order",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "token_value"], name="idx_token_t_val"),
+            models.Index(fields=["nonce"], name="idx_token_nonce"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.revocation_reason:
+            _validate_pii_text_field(self.revocation_reason, "revocation_reason", 2000)
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.token_value[:12]}:Consumed={self.is_consumed}:Revoked={self.is_revoked}"
+
+
+class ManagerDecisionAuditLog(models.Model):
+    """
+    P7-RT4: Append-Only Immutable Audit Log for Decision Actions.
+    Direct SQL UPDATE and DELETE revoked by PostgreSQL permissions.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        "platform_tenant.Tenant",
+        on_delete=models.RESTRICT,
+        related_name="manager_audit_logs",
+    )
+    decision = models.ForeignKey(
+        ManagerDecisionLedger,
+        on_delete=models.RESTRICT,
+        related_name="audit_logs",
+        null=True,
+        blank=True,
+    )
+    action_type = models.CharField(max_length=64)
+    actor_id = models.UUIDField()
+    details = models.JSONField(default=dict)
+    shred_receipt = models.CharField(max_length=128, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "learning_manager_decision_audit_log"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "id"],
+                name="uq_learning_manager_audit_tenant_id",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["tenant", "action_type", "-created_at"], name="idx_mgr_audit_t_act_cr"),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError("ManagerDecisionAuditLog records are strictly immutable and cannot be modified.")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("ManagerDecisionAuditLog records cannot be deleted. Audit log is append-only.")
+
+    def __str__(self) -> str:
+        return f"{self.tenant_id}:{self.action_type}:{self.actor_id}:{self.created_at}"
+

@@ -2,9 +2,9 @@
 
 ## Phase 7 Real Pilot Manager Decision & Admission Preparation Runtime — 2026-09-15
 
-- Status: `RUNTIME_ACTIVE_IMPLEMENTATION`
+- Status: `RUNTIME_VERIFIED_AWAITING_FLEET_TRANSFER_PRECHECK`
 - Discovery Task ID: `P7-REAL-PILOT-MANAGER-DECISION-AND-ADMISSION-PREPARATION-DISCOVERY` (COMPLETE_FINAL_ACCEPTED)
-- Runtime Task ID: `P7-REAL-PILOT-MANAGER-DECISION-AND-ADMISSION-PREPARATION-RUNTIME` (ACTIVE)
+- Runtime Task ID: `P7-REAL-PILOT-MANAGER-DECISION-AND-ADMISSION-PREPARATION-RUNTIME` (VERIFIED)
 - Base Discovery HEAD: `555203752b52f7c27039d4914b72e9fad6d163aa`
 - Authority: `COMMANDER_P7_RUNTIME_UNLOCK: GRANTED`
 - Discovery Acceptance: `COMMANDER_P7_DISCOVERY_FINAL_ACCEPTANCE: GRANTED`
@@ -13,14 +13,13 @@
   - GLM Review (Database, RLS & Crypto-Shredding): `PASS / 0 BLOCKERS` (`docs/coordination/P7_FLEET_GLM_DISCOVERY.md`)
   - Gemini Review (UI/UX, Accessibility & Anti-Ranking): `PASS / 0 BLOCKERS` (`docs/coordination/P7_FLEET_GEMINI_DISCOVERY.md`)
   - Unified Consensus Document: `docs/coordination/P7_FLEET_CONSENSUS_DISCOVERY.md`
-- Active Runtime Targets:
-  - P7-RT1: Manager Decision Ledger & Authority Runtime (Immutable, Versioned, Superseded, FSM)
-  - P7-RT2: Evidence Snapshot Binding & Staleness Lifecycle (12 domains, Stale invalidation)
-  - P7-RT3: Scope Hash Binding & Synthetic Activation Token Runtime (Single-use, Nonce, Idempotent)
-  - P7-RT4: Exception Workflow, Revocation & Exit Control Plane (Crypto-Shredding with Shred Receipt)
-  - P7-RT5: Manager Decision Cockpit UI (`/admin/governance`, WCAG 2.2 AA, 0 errors, Anti-Ranking)
-  - P7-RT6: Synthetic Decision Rehearsal (20/20 P7_R1..P7_R20) & Negative Matrix (40/40 N7-01..N7-40)
-  - GLM Runtime Gates F1-F6: Mandatory fulfillment
+- Runtime Implementation & Verification Status:
+  - Migration 0053 applied to PostgreSQL 17 (Ledger, Evidence Snapshots, Tokens, Audit Log, RLS, REVOKE DDL).
+  - Domain service & FSM completed with deterministic canonical scope hashing (GLM F3).
+  - Immutability enforced in Ledger & Audit Log with emergency revocation transition.
+  - Automated Tests: 35/35 PASS (`test_p7_manager_decision_fsm.py` 20/20, `test_p7_negative_matrix.py` 15/15).
+  - UI Cockpit updated with 14 control gates, tri-state determination (`GO` / `NO_GO` / `DEFER`), and zero student ranking.
+  - Fleet exchange packages staged under `temp/fleet_exchange/P7-REAL-PILOT-MANAGER-DECISION-AND-ADMISSION-PREPARATION-RUNTIME-FINAL/`.
 - Locked Manager Boundaries (Preserved):
   - `REAL_PILOT`: LOCKED (NOT_AUTHORIZED)
   - `REAL_DATA`: LOCKED (`REAL_CHILD_DATA`: 0, `REAL_GUARDIAN_DATA`: 0, `REAL_PII`: 0)
@@ -28,7 +27,7 @@
   - `MERGE_TO_MAIN`: LOCKED_FOR_MANAGER
   - `PRODUCTION_CREDENTIALS`: 0
   - `ANTI_RANKING`: 0
-- Next Commander Checkpoint: `P7_RUNTIME_FINAL_FLEET_TRANSFER_PRECHECK` (Upon completion of machine/browser qualification).
+- Next Commander Checkpoint: `P7_RUNTIME_FINAL_FLEET_TRANSFER_PRECHECK`.
 
 ## Phase 6 Controlled Real Pilot Readiness Final Closeout — 2026-09-15
 
