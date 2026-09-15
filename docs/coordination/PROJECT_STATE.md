@@ -17,9 +17,13 @@
   - Migration 0053 applied to PostgreSQL 17 (Ledger, Evidence Snapshots, Tokens, Audit Log, RLS, REVOKE DDL).
   - Domain service & FSM completed with deterministic canonical scope hashing (GLM F3).
   - Immutability enforced in Ledger & Audit Log with emergency revocation transition.
-  - Automated Tests: 35/35 PASS (`test_p7_manager_decision_fsm.py` 20/20, `test_p7_negative_matrix.py` 15/15).
+  - Automated Tests: 60/60 PASS (`test_p7_manager_decision_fsm.py` 20/20, `test_p7_negative_matrix.py` 40/40).
+  - PostgreSQL 17.10 Qualification: GUC verified, Advisory Locks verified, RLS & FORCE RLS verified, unprivileged non-bypass verified (GLM Gate F6).
+  - DR & PITR: Full logical backup/restore drill verified (157 tables, 807KB) and PITR pre/post marker replay simulation verified.
+  - OpenAPI: 12/12 contract tests PASS (`OPENAPI_SCHEMA_DRIFT: 0`).
+  - Antigravity Visual Qualification: 4 screenshots captured via CDP (1440x900 & 390x844 viewports), 0 console/network errors.
   - UI Cockpit updated with 14 control gates, tri-state determination (`GO` / `NO_GO` / `DEFER`), and zero student ranking.
-  - Fleet exchange packages staged under `temp/fleet_exchange/P7-REAL-PILOT-MANAGER-DECISION-AND-ADMISSION-PREPARATION-RUNTIME-FINAL/`.
+  - Fleet exchange packages staged and 32/32 immutable raw URLs verified HTTP 200 on GitHub.
 - Locked Manager Boundaries (Preserved):
   - `REAL_PILOT`: LOCKED (NOT_AUTHORIZED)
   - `REAL_DATA`: LOCKED (`REAL_CHILD_DATA`: 0, `REAL_GUARDIAN_DATA`: 0, `REAL_PII`: 0)

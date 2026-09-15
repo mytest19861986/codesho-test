@@ -25,14 +25,25 @@
    - Implemented in `EnterpriseGovernanceService` (`create_manager_decision`, `attach_evidence_snapshot`, `issue_manager_determination`, `issue_synthetic_activation_token`, `consume_synthetic_activation_token`, `execute_manager_revocation`, `execute_tenant_crypto_shredding`).
    - Implemented canonical deterministic `compute_canonical_scope_hash` (GLM Gate F3).
    - Enforced `HUMAN_MANAGER_ONLY`, single-use nonces, and anti-tamper validations.
-3. **Automated Test Suites (100% PASS)**:
+3. **Automated Test Suites (100% PASS - 60/60)**:
    - `test_p7_manager_decision_fsm.py`: 20/20 Rehearsal scenarios (`P7_R1` .. `P7_R20`) PASS.
-   - `test_p7_negative_matrix.py`: 15/15 Negative Matrix security tests (`N7-01` .. `N7-15`) PASS.
-   - Total 35/35 P7 tests passing in 88s.
-4. **UI Cockpit Modernization**:
-   - Updated `PilotGoNoGoView.tsx` with full 14 canonical control gates, tri-state determination (`GO` / `NO_GO` / `DEFER`), hard-stop badges, and anti-ranking guarantees.
-5. **Fleet Exchange Staged**:
-   - All runtime packages staged under `temp/fleet_exchange/P7-REAL-PILOT-MANAGER-DECISION-AND-ADMISSION-PREPARATION-RUNTIME-FINAL/{qwen, glm, gemini}/`.
+   - `test_p7_negative_matrix.py`: 40/40 Negative Matrix security tests (`N7-01` .. `N7-40`) PASS.
+   - Total: 60/60 P7 automated tests passing in 85.07s.
+4. **PostgreSQL 17.10 Runtime Qualification & RLS**:
+   - GUC `app.current_tenant` isolation verified.
+   - `pg_advisory_xact_lock` transactional locking verified.
+   - RLS & FORCE RLS verified enabled on all 4 Phase 7 tables.
+   - Unprivileged application role non-bypass (`rolsuper=f`, `rolbypassrls=f`) verified (GLM Gate F6).
+5. **DR Backup/Restore & PITR Drill**:
+   - Full logical backup (807,533 bytes) restored to sandbox database with 157 tables verified.
+   - PITR replay simulation proved pre-target marker present and post-target marker absent at target timestamp `2026-09-15 16:35:42` and LSN `0/83BD020`.
+6. **OpenAPI Schema Contract Parity**:
+   - `test_openapi_contract.py`: 12/12 contract tests passing in 90s (`OPENAPI_SCHEMA_DRIFT: 0`).
+7. **Antigravity Visual Qualification & UI Cockpit**:
+   - 4 screenshots captured via CDP on 1440x900 and 390x844 viewports with 0 errors.
+   - `PilotGoNoGoView.tsx` modernized with 14 control gates, tri-state determination (`GO`/`NO_GO`/`DEFER`), and zero student ranking.
+8. **Fleet Exchange Staged & 100% Raw URLs Verified**:
+   - All 32 immutable raw URLs across Qwen, GLM, and Gemini verified HTTP 200 on GitHub HEAD commit `0535747`.
 
 ### Strictly Preserved Invariants & Manager Boundaries:
 - `REAL_PILOT`: LOCKED (NOT_AUTHORIZED)
