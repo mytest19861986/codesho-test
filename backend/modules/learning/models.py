@@ -8784,14 +8784,14 @@ PilotLifecycleState.PILOT_ACTIVE = PilotLifecycleState.ACTIVE  # type: ignore[at
 
 
 PILOT_FSM_TRANSITIONS = {
-    PilotLifecycleState.CANDIDATE: {PilotLifecycleState.DUE_DILIGENCE, PilotLifecycleState.CLOSED},
-    PilotLifecycleState.DUE_DILIGENCE: {PilotLifecycleState.SECURITY_REVIEW, PilotLifecycleState.CLOSED},
+    PilotLifecycleState.CANDIDATE: {PilotLifecycleState.DUE_DILIGENCE},
+    PilotLifecycleState.DUE_DILIGENCE: {PilotLifecycleState.SECURITY_REVIEW, PilotLifecycleState.OPERATIONAL_REVIEW, PilotLifecycleState.CLOSED},
     PilotLifecycleState.SECURITY_REVIEW: {PilotLifecycleState.PRIVACY_REVIEW, PilotLifecycleState.CLOSED},
     PilotLifecycleState.PRIVACY_REVIEW: {PilotLifecycleState.OPERATIONAL_REVIEW, PilotLifecycleState.CLOSED},
     PilotLifecycleState.OPERATIONAL_REVIEW: {PilotLifecycleState.TECHNICAL_READY, PilotLifecycleState.CLOSED},
     PilotLifecycleState.TECHNICAL_READY: {PilotLifecycleState.MANAGER_DECISION_REQUIRED, PilotLifecycleState.DUE_DILIGENCE, PilotLifecycleState.CLOSED},
     PilotLifecycleState.MANAGER_DECISION_REQUIRED: {PilotLifecycleState.MANAGER_AUTHORIZED, PilotLifecycleState.SUSPENDED, PilotLifecycleState.CLOSED},
-    PilotLifecycleState.MANAGER_AUTHORIZED: {PilotLifecycleState.ACTIVATION_WINDOW, PilotLifecycleState.SUSPENDED, PilotLifecycleState.CLOSED},
+    PilotLifecycleState.MANAGER_AUTHORIZED: {PilotLifecycleState.ACTIVATION_WINDOW, PilotLifecycleState.ACTIVE, PilotLifecycleState.SUSPENDED, PilotLifecycleState.CLOSED},
     PilotLifecycleState.ACTIVATION_WINDOW: {PilotLifecycleState.ACTIVE, PilotLifecycleState.SUSPENDED, PilotLifecycleState.CLOSED},
     PilotLifecycleState.ACTIVE: {PilotLifecycleState.SUSPENDED, PilotLifecycleState.EXITING},
     PilotLifecycleState.SUSPENDED: {PilotLifecycleState.ACTIVE, PilotLifecycleState.EXITING, PilotLifecycleState.CLOSED},

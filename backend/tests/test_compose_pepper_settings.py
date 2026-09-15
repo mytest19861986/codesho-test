@@ -48,6 +48,10 @@ def test_compose_settings_accept_valid_synthetic_pepper_configuration(monkeypatc
 
 
 def test_compose_services_use_compose_settings():
-    with open("../compose.yaml", encoding="utf-8") as compose_file:
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[2]
+    compose_path = root / "compose.yaml"
+    with open(compose_path, encoding="utf-8") as compose_file:
         compose = compose_file.read()
     assert compose.count("DJANGO_SETTINGS_MODULE: config.settings.compose") == 4
+

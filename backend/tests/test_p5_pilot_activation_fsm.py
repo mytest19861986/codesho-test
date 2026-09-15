@@ -55,12 +55,12 @@ class TestPhase5ControlledPilotActivationFSMAndRehearsal:
         assert lifecycle.state == PilotLifecycleState.DRAFT
         assert hasattr(lifecycle, "prerequisite_checklist")
 
-        # DRAFT -> ELIGIBILITY_REVIEW
+        # DRAFT -> ELIGIBILITY_REVIEW (Non-initiator review)
         lifecycle = EnterpriseGovernanceService.advance_pilot_lifecycle(
             tenant_id=self.tenant_a.id,
             lifecycle_id=lifecycle.id,
             target_state=PilotLifecycleState.ELIGIBILITY_REVIEW,
-            actor_id=self.operator_1.id,
+            actor_id=self.operator_2.id,
         )
         assert lifecycle.state == PilotLifecycleState.ELIGIBILITY_REVIEW
 
@@ -69,23 +69,27 @@ class TestPhase5ControlledPilotActivationFSMAndRehearsal:
             tenant_id=self.tenant_a.id,
             lifecycle_id=lifecycle.id,
             target_state=PilotLifecycleState.PREREQUISITES_PENDING,
-            actor_id=self.operator_1.id,
+            actor_id=self.operator_2.id,
         )
         assert lifecycle.state == PilotLifecycleState.PREREQUISITES_PENDING
 
         # Mark all 11 prerequisites certified
         checklist = lifecycle.prerequisite_checklist
+        checklist.manager_authorization_signed = True
+        checklist.legal_privacy_review_cleared = True
         checklist.legal_basis_or_consent = True
         checklist.data_minimization_audited = True
+        checklist.tenant_authorization_isolated = True
+        checklist.access_control_verified = True
+        checklist.access_review_completed = True
         checklist.retention_policy_enforced = True
+        checklist.deletion_procedure_verified = True
         checklist.offboarding_policy_verified = True
         checklist.incident_readiness_tested = True
-        checklist.tenant_authorization_isolated = True
-        checklist.access_review_completed = True
-        checklist.auditability_ledger_active = True
         checklist.support_readiness_active = True
+        checklist.auditability_ledger_active = True
         checklist.security_acceptance_cleared = True
-        checklist.manager_authorization_signed = True
+        checklist.anti_ranking_validated = True
         checklist.certified_at = timezone.now()
         checklist.certified_by_id = self.operator_2.id
         checklist.save()
@@ -263,7 +267,7 @@ class TestPhase5ControlledPilotActivationFSMAndRehearsal:
             tenant_id=self.tenant_a.id,
             lifecycle_id=lc.id,
             target_state=PilotLifecycleState.ELIGIBILITY_REVIEW,
-            actor_id=self.operator_1.id,
+            actor_id=self.operator_2.id,
         )
         assert lc.state == PilotLifecycleState.ELIGIBILITY_REVIEW
 

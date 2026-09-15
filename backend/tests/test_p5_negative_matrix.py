@@ -72,16 +72,20 @@ class TestPhase5ControlledPilotActivationNegativeMatrix:
         )
         lc.state = PilotLifecycleState.PREREQUISITES_PENDING
         checklist = lc.prerequisite_checklist
+        checklist.legal_privacy_review_cleared = True
         checklist.legal_basis_or_consent = True
         checklist.data_minimization_audited = True
+        checklist.tenant_authorization_isolated = True
+        checklist.access_control_verified = True
+        checklist.access_review_completed = True
         checklist.retention_policy_enforced = True
+        checklist.deletion_procedure_verified = True
         checklist.offboarding_policy_verified = True
         checklist.incident_readiness_tested = True
-        checklist.tenant_authorization_isolated = True
-        checklist.access_review_completed = True
-        checklist.auditability_ledger_active = True
         checklist.support_readiness_active = True
+        checklist.auditability_ledger_active = True
         checklist.security_acceptance_cleared = True
+        checklist.anti_ranking_validated = True
         checklist.manager_authorization_signed = True
         checklist.save()
         lc.save()
