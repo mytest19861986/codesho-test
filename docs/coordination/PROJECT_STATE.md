@@ -1,5 +1,30 @@
 # Codesho Project State
 
+## Phase 6 Controlled Real Pilot Readiness Final Closeout — 2026-09-15
+
+- Status: `COMPLETE_FINAL_ACCEPTED`
+- Task ID: `P6-CONTROLLED-REAL-PILOT-READINESS-RUNTIME-FINAL`
+- Implementation HEAD: `7b7d710aaaf5b4c67fba27edb34038bb562918e5`
+- Authority: `COMMANDER_P6_COMPLETE_FINAL_ACCEPTANCE: GRANTED`
+- Independent Review Fleet Consensus:
+  - Qwen Final Review: `PASS / 0 BLOCKERS`
+  - GLM Final Review: `PASS / 0 BLOCKERS`
+  - Gemini UI Final Review: `PASS / 0 BLOCKERS`
+  - Triple Consensus: `PASS`
+- Verification Baseline:
+  - Full Backend Regression: 705 passed, 60 skipped, 0 failed (765 collected)
+  - P6 Targeted Tests: 51/51 PASS | Matrix N6: 30/30 PASS | Scenarios R1-R20: 20/20 PASS
+  - OpenAPI Parity: PASS (`OPENAPI_SCHEMA_DRIFT: 0`, 12/12 contract tests pass)
+  - PostgreSQL 17.10 & Migration 0052: Applied & verified with RLS / FORCE RLS / NOBYPASSRLS
+  - Antigravity Real Browser Suite: PASS across 21/21 routes (0 errors)
+- Locked Manager Boundaries (Preserved):
+  - `REAL_PILOT`: LOCKED
+  - `REAL_DATA`: LOCKED
+  - `PRODUCTION`: LOCKED
+  - `MERGE_TO_MAIN`: LOCKED_FOR_MANAGER
+- Next Candidate Track: `P7-REAL-PILOT-MANAGER-DECISION-AND-ADMISSION-PREPARATION` (Awaiting Manager Direction or P7 Discovery Authorization).
+
+
 ## Task80B merged closeout / Task80C checkpoint — 2026-08-11
 
 - Validated `main`: `d1da19f76e7f7bae48b836029873272d6cac642a`.
