@@ -1,0 +1,3 @@
+# P7_REAL_PILOT_ADMISSION_ARCHITECTURE.md
+
+Canonical Phase 7 Discovery Specification for P7_REAL_PILOT_ADMISSION_ARCHITECTURE.md

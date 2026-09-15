@@ -1,0 +1,3 @@
+# P7_PRODUCTION_ADMISSION_READINESS.md
+
+Canonical Phase 7 Discovery Specification for P7_PRODUCTION_ADMISSION_READINESS.md

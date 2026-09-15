@@ -1,0 +1,3 @@
+# P7_REAL_DATA_ADMISSION_DECISION_PACKAGE.md
+
+Canonical Phase 7 Discovery Specification for P7_REAL_DATA_ADMISSION_DECISION_PACKAGE.md
