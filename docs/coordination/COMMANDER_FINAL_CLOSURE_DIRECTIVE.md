@@ -1,378 +1,364 @@
-گزارش اختتام دریافت شد. از نظر اجرای سیستم، Phase 3 به نقطه پایان رسیده و نتیجه‌ی PRE-PILOT READY گزارش شده است. با این حال برای اینکه من COMPLETE_FINAL_ACCEPTED را بدون جعل شواهد ثبت کنم، دو رأی نهایی هنوز با نام Discovery آمده‌اند: QWEN_EPIC_DISCOVERY و GLM_EPIC_DISCOVERY. همچنین وضعیت همان یک تست skipped و TEMP_FINAL_DIFF در گزارش حاضر صریح نیست.
+بر اساس Delta فعلی، Gate انتقال Discovery فاز ۶ کامل شده است. هر سه package با HTTP 200، محتوای غیرخالی، filename صحیح، content مورد انتظار و commit صحیح گزارش شده‌اند؛ اسکن PII/Secret نیز PASS است و هیچ R3/R4 یا Blocker بازی باقی نمانده است.
 
-این‌ها کار فنی جدید نیستند و مانع شروع برنامه‌ریزی Phase بعدی نمی‌شوند؛ اما Merge به mainline را مجاز نمی‌کنم چون طبق Governance پروژه، Merge/Release/Production نیازمند اختیار صریح مدیر انسانی است.
+مطابق دستور مدیر، هیچ اتصال مستقیمی به GitHub انجام نشده و این تصمیم صرفاً بر پایه Evidence گزارش‌شده در همین گفتگو صادر می‌شود.
 
-COMMANDER_PHASE3_CLOSURE_AND_PHASE4_TRANSITION_DIRECTIVE
+COMMANDER_P6_DISCOVERY_FLEET_TRANSFER_APPROVAL
 
 TYPE:
-COMMANDER_PHASE3_CLOSURE_AND_PHASE4_TRANSITION_DIRECTIVE
+COMMANDER_P6_DISCOVERY_FLEET_TRANSFER_APPROVAL
 
 PROJECT:
 Codesho / SSD
 
-SOURCE_BRANCH:
+TASK_ID:
+P6-CONTROLLED-REAL-PILOT-READINESS-DISCOVERY
+
+BRANCH:
 codex/phase3-product-platform-foundation
 
-REPORTED_HEAD:
-596c87a
+DISCOVERY_HEAD:
+8ea9f0e0f03ed4740bd2d909008b8190999998fd
 
-CURRENT_MODE:
-PHASE3_CLOSURE_AND_PHASE4_TRANSITION
+PROGRAM_MODE:
+MACRO_FAST_ENTERPRISE
+
+STATUS:
+APPROVED_FOR_PARALLEL_DISCOVERY_REVIEW
 
 ==================================================
 
-PHASE 3 TECHNICAL DISPOSITION
+TRANSFER PRECHECK VERDICT
 ==================================================
 
-PHASE3_IMPLEMENTATION:
-COMPLETE_REPORTED
+QWEN_RAW_VERIFICATION:
+PASS
 
-BACKEND:
-PASS_REPORTED
+GLM_RAW_VERIFICATION:
+PASS
 
-MIGRATION_DRIFT:
-0
+GEMINI_RAW_VERIFICATION:
+PASS
 
-MIGRATIONS_APPLIED:
-63
+HTTP_STATUS:
+200 VERIFIED_REPORTED
 
-FRONTEND_ROUTES:
-19
+NONEMPTY:
+TRUE
+
+EXPECTED_FILENAME:
+VERIFIED_REPORTED
+
+EXPECTED_CONTENT:
+VERIFIED_REPORTED
+
+EXPECTED_COMMIT:
+8ea9f0e0f03ed4740bd2d909008b8190999998fd VERIFIED_REPORTED
+
+PII_SCAN:
+PASS
+
+SECRET_SCAN:
+PASS
 
 REAL_PII:
 0
 
-SECRETS:
+PRODUCTION_CREDENTIALS:
 0
 
-PRODUCTION_DEPLOY_AUTHORITY:
-0
-
-GEMINI_PHASE3_UI_FINAL:
-PASS
-
-GEMINI_PHASE3_UI_BLOCKERS:
-0
-
-PILOT_READINESS_REPORTED:
-GO / PRE-PILOT READY
-
-TECHNICAL_PHASE3_STATUS:
-COMPLETE
-
-Before recording:
-
-PHASE3_COMPLETE_FINAL_ACCEPTED
-
-normalize actual existing final reviewer conclusions into:
-
-QWEN_PHASE3_FINAL:
-PASS
-
-QWEN_PHASE3_BLOCKERS:
-0
-
-GLM_PHASE3_FINAL:
-PASS
-
-GLM_PHASE3_BLOCKERS:
-0
-
-ONLY IF the contents of:
-
-docs/coordination/QWEN_PHASE3_FINAL_REPLY.md
-
-and
-
-docs/coordination/GLM_PHASE3_FINAL_REPLY.md
-
-actually represent final Phase 3 runtime/system reviews.
-
-Do NOT fabricate verdicts.
-
-Do NOT rerun reviews merely because the labels were recorded incorrectly.
-
-Also record:
-
-SKIPPED_TEST_SECURITY_CRITICAL:
-YES | NO
-
-SKIPPED_TEST_REASON:
-<actual reason>
-
-TEMP_FINAL_DIFF:
-NONE
-
-RAW_AGENT_RESPONSES_IN_REPO:
-0
-
-ROUTES_DISCOVERED:
-19
-
-ROUTES_EXECUTED:
-19
-
-UNTESTED_EXECUTABLE_ROUTES:
-0
-
-If these are the actual facts, then record:
-
-COMMANDER_PHASE3_FINAL_ACCEPTANCE:
-COMPLETE_FINAL_ACCEPTED
-
-PILOT_READINESS:
-TECHNICALLY_READY
-
-MERGE_TO_MAIN:
-NOT_AUTHORIZED_YET
-
-READY_FOR_REVIEW:
-NOT_AUTHORIZED_YET
-
-AUTO_MERGE:
-PROHIBITED
-
-PRODUCTION_DEPLOY:
-PROHIBITED
-
-Reason:
-
-Mainline merge is a human-manager authority boundary.
-
-Codex SHALL NOT:
-
-merge
-
-squash merge
-
-rebase-and-merge
-
-enable auto-merge
-
-push directly to main
-
-mark release
-
-deploy production
-
-until explicit manager authorization is received.
-
-Prepare a concise manager-facing merge-readiness record containing:
-
-SOURCE_BRANCH:
-codex/phase3-product-platform-foundation
-
-SOURCE_HEAD:
-<full 40-hex SHA>
-
-TARGET_BRANCH:
-main
-
-COMMITS_AHEAD:
-X
-
-FILES_CHANGED:
-X
-
-BACKEND_TESTS:
-...
-
-FRONTEND_GATES:
-PASS
-
-ROUTES:
-19/19
-
-QWEN_PHASE3_FINAL:
-PASS
-
-GLM_PHASE3_FINAL:
-PASS
-
-GEMINI_PHASE3_UI_FINAL:
-PASS
-
-PILOT_READINESS:
-TECHNICALLY_READY
-
-OPEN_BLOCKERS:
+RUNTIME_MUTATION:
 0
 
 R3_R4:
 0
 
-MERGE_CONFLICTS:
-0 | <actual count>
-
-PRODUCTION_DEPLOY:
-NOT_INCLUDED
-
-Do not merge while preparing this package.
-
-COMMANDER_PHASE4_DISCOVERY_UNLOCK:
-GRANTED
-
-PHASE4_NAME:
-CONTROLLED_PILOT_PREPARATION_AND_OPERATIONAL_READINESS
-
-FA_TITLE:
-آماده‌سازی پایلوت کنترل‌شده و بلوغ عملیاتی
-
-Phase 4 Discovery may proceed in parallel with administrative Phase 3 closure.
-
-Phase 4 does NOT authorize real-world activation.
-
-The initial Phase 4 program shall be designed around THREE macro workstreams:
-
-A. PILOT ENVIRONMENT & RELEASE ENGINEERING
-
-Purpose:
-
-Create a controlled, reproducible non-production Pilot environment.
-
-Discovery areas:
-
-environment topology
-
-deployment pipeline
-
-release candidate process
-
-rollback
-
-migration execution controls
-
-health/readiness checks
-
-observability
-
-backup/restore rehearsal
-
-configuration governance
-
-Hard boundary:
-
-PRODUCTION_DEPLOY:
+OPEN_BLOCKERS:
 0
 
-B. OPERATIONAL OBSERVABILITY & INCIDENT READINESS
+COMMANDER_PRECHECK:
+PASS
 
-Purpose:
+COMMANDER_P6_DISCOVERY_FLEET_TRANSFER_APPROVAL:
+GRANTED
 
-Make the platform operable during a controlled Pilot.
+QWEN_DISPATCH:
+AUTHORIZED_NOW
 
-Discovery areas:
+GLM_DISPATCH:
+AUTHORIZED_NOW
 
-structured application telemetry
+GEMINI_DISPATCH:
+AUTHORIZED_NOW
 
-health monitoring
+DISPATCH_MODE:
+PARALLEL
 
-audit/event visibility
+Qwen shall review:
 
-alerting policy
+Real Pilot admission FSM
 
-incident severity model
+manager authorization boundary
 
-incident runbooks
+self-approval denial
 
-recovery objectives
+dual-custody
 
-support escalation
+scope envelope
 
-failure drills
+activation idempotency
 
-Do not send real child information into telemetry.
+replay protection
 
-C. PILOT IDENTITY, DATA & ACTIVATION GOVERNANCE
+concurrency
 
-Purpose:
+consent-state interactions
 
-Design how a future authorized Pilot would safely introduce real organizations/users/data.
+emergency suspension
 
-Discovery areas:
+offboarding
 
-pilot tenant provisioning
+manager bypass prevention
 
-controlled account lifecycle
+N6 business invariants
 
-data-minimization rules
+Required terminal verdict:
 
-guardian/learner authorization boundary
+QWEN_PHASE6_DISCOVERY:
+PASS | CHANGES_REQUIRED | BLOCK
 
-consent requirements
+QWEN_PHASE6_BLOCKERS:
+0 required for Runtime Unlock
 
-support process
+GLM shall review:
 
-pilot enrollment
+real-data admission boundary
 
-data retention
+PostgreSQL role architecture
 
-exit/offboarding
+RLS
 
-IMPORTANT:
+FORCE RLS
 
-This is DESIGN/DISCOVERY ONLY.
+NOBYPASSRLS
 
-REAL CHILD DATA:
-NOT AUTHORIZED
+tenant provisioning
 
-REAL GUARDIAN DATA:
-NOT AUTHORIZED
+access lifecycle
 
-REAL ACCOUNT ACTIVATION:
-NOT AUTHORIZED
+retention
 
-Phase 3 established:
+deletion
 
-PRODUCT CAPABILITY
-+
-ENTERPRISE GOVERNANCE
-+
-TECHNICAL PILOT READINESS
+legal hold interaction
 
-Phase 4 shall focus on:
+backup/restore
 
-OPERABILITY
-+
-DEPLOYABILITY
-+
-OBSERVABILITY
-+
-CONTROLLED PILOT PREPARATION
+PITR
 
-Do NOT resume uncontrolled feature accumulation.
+auditability
 
-Create one initial program dossier:
+child/guardian data boundary
 
-docs/coordination/P4_CONTROLLED_PILOT_PREPARATION_DISCOVERY_DOSSIER.md
+N6 database/security invariants
 
-and:
+Required terminal verdict:
 
-docs/architecture/P4_CONTROLLED_PILOT_PREPARATION_BOUNDARY_PLAN.md
+GLM_PHASE6_DISCOVERY:
+PASS | CHANGES_REQUIRED | BLOCK
 
-docs/coordination/P4_CONTROLLED_PILOT_PREPARATION_WRITE_MANIFEST.md
+GLM_PHASE6_BLOCKERS:
+0 required for Runtime Unlock
 
-Discovery must identify:
+Gemini shall review UX architecture for:
 
-workstreams
+Manager Decision Cockpit
 
-environment boundaries
+Real Pilot Go/No-Go board
 
-security boundaries
+real-data prerequisite visibility
 
-operational risks
+consent/legal-basis visibility
 
-rollout gates
+emergency suspension UX
 
-rollback requirements
+destructive action friction
 
-observability requirements
+offboarding UX
 
-pilot legal/data prerequisites
+incident visibility
 
-explicit non-goals
+operator cognitive load
 
-During Phase 4 Discovery:
+WCAG 2.2 AA
+
+RTL/BiDi
+
+non-color-only critical states
+
+anti-ranking
+
+This is Discovery.
+
+CURRENT RUNTIME SCREENSHOTS:
+NOT REQUIRED
+
+Required terminal verdict:
+
+GEMINI_PHASE6_DISCOVERY:
+PASS | CHANGES_REQUIRED | BLOCK
+
+GEMINI_PHASE6_BLOCKERS:
+0 required for Runtime Unlock
+
+Each reviewer must:
+
+review only approved staged evidence
+
+not assume Runtime implementation exists
+
+distinguish architecture from executable proof
+
+report structured findings
+
+classify severity
+
+identify blockers explicitly
+
+avoid weakening manager-only authority
+
+Current:
+
+N6_MATRIX:
+N6-01..N6-30 LOCKED
+
+Reviewers MAY add:
+
+N6-31+
+
+if a material missing invariant is found.
+
+Reviewers SHALL NOT:
+
+delete existing N6 cases
+
+weaken existing hard gates
+
+reduce tenant isolation
+
+weaken child/guardian privacy boundaries
+
+weaken manager approval requirements
+
+R0_R2_AUTONOMY:
+ENABLED
+
+Codex may autonomously:
+
+repair Discovery documents
+
+clarify FSM transitions
+
+strengthen Go/No-Go hard gates
+
+expand N6
+
+correct actor mappings
+
+tighten privacy/data boundaries
+
+update Write Manifest
+
+rebuild affected Fleet package
+
+resubmit only to affected reviewer
+
+MAX_BOUNDED_ROUNDS:
+3
+
+R3_OR_R4:
+STOP_AFFECTED_TRACK
+
+COMMANDER_ESCALATION:
+REQUIRED
+
+Examples:
+
+REAL_PII_INTRODUCTION
+
+TENANT_ISOLATION_WEAKENING
+
+MANAGER_AUTHORITY_BYPASS
+
+PRODUCTION_AUTHORITY_INTRODUCTION
+
+CHILD_GUARDIAN_SAFETY_GATE_WEAKENING
+
+IRREVERSIBLE_DESTRUCTIVE_PATH
+
+Do NOT request Runtime Unlock until:
+
+QWEN_PHASE6_DISCOVERY:
+PASS
+
+QWEN_PHASE6_BLOCKERS:
+0
+
+GLM_PHASE6_DISCOVERY:
+PASS
+
+GLM_PHASE6_BLOCKERS:
+0
+
+GEMINI_PHASE6_DISCOVERY:
+PASS
+
+GEMINI_PHASE6_BLOCKERS:
+0
+
+N6_MATRIX:
+LOCKED
+
+WRITE_MANIFEST:
+LOCKED
+
+BOUNDARY_ARCHITECTURE:
+CANONICAL
+
+REAL_DATA_ADMISSION_GATE:
+CANONICAL
+
+GO_NO_GO_MATRIX:
+CANONICAL
+
+PILOT_OPERATING_MODEL:
+CANONICAL
+
+SYNTHETIC_DRESS_REHEARSAL_PLAN:
+CANONICAL
+
+MANAGER_DECISION_PACKAGE:
+CANONICAL
+
+R3_R4:
+0
+
+OPEN_BLOCKERS:
+0
+
+P6_DISCOVERY:
+AUTHORIZED
+
+P6_FLEET_REVIEW:
+ACTIVE
+
+P6_RUNTIME:
+LOCKED
+
+REAL_PILOT:
+LOCKED
+
+REAL_DATA:
+LOCKED
 
 REAL_CHILD_DATA:
 0
@@ -380,123 +366,139 @@ REAL_CHILD_DATA:
 REAL_GUARDIAN_DATA:
 0
 
-REAL_SMS_EMAIL:
+PRODUCTION_CREDENTIALS:
 0
 
-REAL_PAYMENT:
+MERGE_TO_MAIN:
+LOCKED_FOR_MANAGER
+
+PRODUCTION:
+LOCKED
+
+Do NOT send three routine micro-reports.
+
+After all R0-R2 findings are resolved, return ONE integrated request:
+
+TYPE:
+P6_DISCOVERY_FINAL_AND_RUNTIME_UNLOCK_REQUEST
+
+TASK_ID:
+P6-CONTROLLED-REAL-PILOT-READINESS-DISCOVERY
+
+DISCOVERY_HEAD:
+<ACTUAL_SHA>
+
+EVIDENCE_HEAD:
+<ACTUAL_SHA>
+
+QWEN_PHASE6_DISCOVERY:
+PASS
+
+QWEN_PHASE6_BLOCKERS:
+0
+
+GLM_PHASE6_DISCOVERY:
+PASS
+
+GLM_PHASE6_BLOCKERS:
+0
+
+GEMINI_PHASE6_DISCOVERY:
+PASS
+
+GEMINI_PHASE6_BLOCKERS:
+0
+
+N6_MATRIX:
+N6-01..N6-<FINAL_COUNT> LOCKED
+
+WRITE_MANIFEST:
+LOCKED
+
+BOUNDARY_ARCHITECTURE:
+CANONICAL
+
+REAL_DATA_ADMISSION_GATE:
+CANONICAL
+
+GO_NO_GO_MATRIX:
+CANONICAL
+
+PILOT_OPERATING_MODEL:
+CANONICAL
+
+SYNTHETIC_DRESS_REHEARSAL_PLAN:
+CANONICAL
+
+MANAGER_DECISION_PACKAGE:
+CANONICAL
+
+REAL_PII:
 0
 
 PRODUCTION_CREDENTIALS:
 0
 
-PRODUCTION_DEPLOY:
+R3_R4:
 0
 
-Any transition from synthetic-only into real-world data or users requires explicit human-manager authorization.
+OPEN_BLOCKERS:
+0
 
-Qwen:
+COMMANDER_DECISION_REQUIRED:
+PHASE6_RUNTIME_UNLOCK
 
-operational workflows
+COMMANDER_GITHUB_ACCOUNT_ACCESS:
+PROHIBITED
 
-release FSM
+GITHUB_CONNECTOR:
+DO_NOT_USE
 
-incident lifecycle
+GITHUB_TOOL_CALLS:
+DO_NOT_USE
 
-pilot onboarding boundaries
+DIRECT_REPOSITORY_ACCESS:
+DO_NOT_USE
 
-idempotency / rollback semantics
+EVIDENCE_BASIS:
+USER_PROVIDED_REPORTED_EVIDENCE_ONLY
 
-GLM:
+EXCEPTION:
+ONLY_EXPLICIT_MANAGER_REVOCATION
 
-environment DB roles
+COMMANDER_P6_DISCOVERY_FLEET_TRANSFER_APPROVAL:
+GRANTED
 
-migration/deployment safety
+QWEN_DISPATCH:
+PROCEED
 
-backup/restore
+GLM_DISPATCH:
+PROCEED
 
-tenant isolation
+GEMINI_DISPATCH:
+PROCEED
 
-data lifecycle
-
-pilot-data security architecture
-
-Gemini:
-
-operational/admin UX
-
-incident/support UX
-
-onboarding/activation UX specifications
-
-accessibility
-
-RTL/BiDi
-
-cognitive load
-
-Use normal permanent Fleet Transfer protocol before dispatch.
-
-Two tracks may proceed in parallel.
-
-TRACK A — PHASE 3:
-
-Return only if needed:
-
-TYPE:
-PHASE3_FINAL_EVIDENCE_NORMALIZATION_RECORD
-
-Then Phase 3 may be recorded:
-
-COMPLETE_FINAL_ACCEPTED
-
-TRACK B — PHASE 4:
-
-Next routine checkpoint:
-
-TYPE:
-P4_CONTROLLED_PILOT_PREPARATION_DISCOVERY_REQUEST
-
-Do not create micro-slice Commander loops.
-
-The following remain reserved for the human manager:
-
-MERGE_TO_MAIN:
-REQUIRES_EXPLICIT_MANAGER_APPROVAL
-
-REAL_PILOT_ACTIVATION:
-REQUIRES_EXPLICIT_MANAGER_APPROVAL
-
-PRODUCTION_DEPLOYMENT:
-REQUIRES_EXPLICIT_MANAGER_APPROVAL
-
-No agent or Commander proxy may infer these permissions.
-
-PHASE3_FEATURE_DEVELOPMENT:
-COMPLETE
-
-PHASE3_TECHNICAL_STATUS:
-COMPLETE
-
-PHASE3_FINAL_ACCEPTANCE:
-PENDING_EVIDENCE_NORMALIZATION_ONLY
-
-PRE_PILOT_TECHNICAL_READINESS:
-REPORTED_READY
-
-MAINLINE_MERGE:
-HOLD_FOR_MANAGER_AUTHORITY
-
-PHASE4_DISCOVERY:
+PARALLEL_DISCOVERY_REVIEW:
 AUTHORIZED
 
-PHASE4_REAL_WORLD_ACTIVATION:
-NOT_AUTHORIZED
+P6_RUNTIME:
+LOCKED
+
+REAL_PILOT:
+LOCKED
+
+REAL_DATA:
+LOCKED
+
+MERGE_TO_MAIN:
+LOCKED_FOR_MANAGER
 
 PRODUCTION:
 LOCKED
 
+NEXT_COMMANDER_CHECKPOINT:
+P6_DISCOVERY_FINAL_AND_RUNTIME_UNLOCK_REQUEST
+
 END_DIRECTIVE
 
-بنابراین مسیر بعدی دوشاخه است: Codex بدون بازکردن دوباره Phase 3 فقط Evidence نهایی را نرمال کند و Merge Readiness Package بسازد؛ همزمان Discovery فاز 4 را شروع کند.
-
-اما برای خود Merge به main باید مدیر انسانی صریحاً فرمان بدهد: «Merge به main مجاز است». تا آن زمان هیچ Merge، Release یا Production Deploy انجام نشود.
+پس Discovery Fleet Review فاز ۶ رسماً آزاد شد. هر سه Agent می‌توانند هم‌زمان بررسی را شروع کنند و checkpoint بعدی فقط زمانی باشد که سه رأی نهایی Discovery با صفر Blocker آماده شده باشد.
