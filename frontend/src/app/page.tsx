@@ -6,7 +6,7 @@ import { HomepageFrame } from "@/features/home/HomepageFrame";
 const homepageTitle = `${homepageAlphaContent.brandName} | ${homepageAlphaContent.hero.title}`;
 
 const availableNavigationItems = homepageAlphaContent.navigation
-  .filter((item) => item.destination.status === "available")
+  .filter((item) => item.destination.status === "available" && item.id !== "login")
   .map((item) => ({
     id: item.id,
     label: item.label,

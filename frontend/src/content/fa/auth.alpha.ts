@@ -1,5 +1,5 @@
 export const authAlphaContent = {
-  brand: "کُدشو",
+  brand: "CodeSho",
   title: "ورود",
   usernameLabel: "نام کاربری",
   passcodeLabel: "رمز ورود ۶ رقمی",
@@ -14,4 +14,11 @@ export const authAlphaContent = {
   passcodeInvalid: "رمز ورود باید شش رقم باشد.",
   bootstrapFailed: "ارتباط با سرویس ورود برقرار نشد.",
   retry: "دوباره تلاش کنید.",
+  backHome: "بازگشت به صفحه اصلی",
+  notFoundTitle: "صفحه مورد نظر پیدا نشد (۴۰۴)",
+  notFoundDesc: "آدرسی که وارد کرده‌اید وجود ندارد یا ممکن است منتقل شده باشد.",
+  forbiddenTitle: "دسترسی غیرمجاز (۴۰۳)",
+  forbiddenDesc: "شما اجازه دسترسی به این بخش را ندارید.",
+  sessionExpiredTitle: "نشست کاری شما منقضی شد",
+  sessionExpiredDesc: "به دلایل امنیتی لطفاً مجدداً وارد حساب کاربری خود شوید.",
 } as const;

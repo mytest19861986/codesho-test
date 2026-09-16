@@ -6,5 +6,5 @@
 .field input { min-block-size: 2.75rem; inline-size: 100%; padding-inline: var(--cs-space-3); border: var(--cs-border-width) solid var(--cs-color-border-subtle); border-radius: var(--cs-radius-control); background: var(--cs-color-bg-base); color: var(--cs-color-text-primary); font: inherit; }
 .field input:focus-visible, .submit:focus-visible { outline: none; box-shadow: var(--cs-focus-ring); }
 .message { min-block-size: 2.75rem; margin-block: var(--cs-space-2); color: var(--cs-color-text-secondary); }
-.submit { min-block-size: 2.75rem; inline-size: 100%; border: 0; border-radius: var(--cs-radius-control); background: var(--cs-color-brand-primary); color: var(--cs-color-text-inverse); font: inherit; font-weight: var(--cs-font-weight-bold); cursor: pointer; }
+.submit { min-block-size: 2.75rem; inline-size: 100%; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; border: 0; border-radius: var(--cs-radius-control); background: var(--cs-color-brand-primary); color: var(--cs-color-text-inverse); font: inherit; font-weight: var(--cs-font-weight-bold); cursor: pointer; }
 .submit:disabled { cursor: wait; opacity: .7; }
