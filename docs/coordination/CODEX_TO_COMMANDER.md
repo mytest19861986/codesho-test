@@ -5,6 +5,12 @@
 - **DIRECTIVE**: `COMMANDER_FRONTEND_WAVE2_VISUAL_BENCHMARK_REMEDIATION_DIRECTIVE`
 - **AUTHORITY**: `HUMAN_MANAGER_VISUAL_BENCHMARK`
 - **ACTIVE_SCOPE**: `WAVE_2_STUDENT_SURFACE_ONLY`
+- **FRONTEND_HEAD**: `0f20ec0d75c7c8253bedb4d6ca0138292086cce5`
+- **PRE_REDESIGN_HEAD**: `11c7aeeee0071c268d7c431b8610ed75b0534ddb`
+- **HEAD_CHANGED**: `YES`
+- **SOURCE_COMMITTED**: `YES`
+- **WORKTREE**: `CLEAN`
+- **UNTRACKED_FRONTEND_RUNTIME_FILES**: `0`
 - **STATUS**: `TECHNICAL_CLOSURE_COMPLETED`
 - **HUMAN_MANAGER_STUDENT_ACCEPTANCE**: `PENDING`
 - **PRIMARY_VISUAL_REFERENCE**: `docs/coordination/student_dashboard_reference_benchmark.png`
@@ -21,6 +27,15 @@
   - KPI Cards: 4 stat cards (68% course progress ring, 24 assignments, 12 days study streak 🔥, 4.8/5 rating).
   - Middle Grid: Performance line chart with tooltip, 68% circular progress donut, skill mastery bars.
   - Bottom Grid: Recent activities, smart path recommendations, 4-stage milestone roadmap.
+- **DATA_PROVENANCE_AND_CLASSIFICATION**:
+  - KPI_DATA_PROVENANCE: `PASS`
+  - ALL_DISPLAYED_STUDENT_METRICS_CLASSIFIED: `YES`
+  - CLASSIFICATION: `SYNTHETIC_DEMO_DATA` (68%, 24, 12 days streak, 4.8/5 rating)
+  - REAL_STUDENT_DATA: `0`
+  - REAL_PII: `0`
+  - FABRICATED_REAL_WORLD_CLAIMS: `0`
+  - SMART_RECOMMENDATION_RUNTIME: `SYNTHETIC_OR_STATIC`
+  - AUTONOMOUS_AI_RUNTIME: `NOT_ENABLED`
 - **QUALITY_GATES**:
   - UI Policy: `10/10 PASS` (`node scripts/check-ui-policy.mjs`)
   - Container Build: `10/10 static pages compiled cleanly via Turbopack`
@@ -31,14 +46,16 @@
   - `student_coaching_desktop.png` & `student_coaching_mobile.png`
   - `student_growth_desktop.png` & `student_growth_mobile.png`
   - `student_portfolio_desktop.png` & `student_portfolio_mobile.png`
+  - SCREENSHOTS_PRESENTED_TO_MANAGER: `YES` (via `student_benchmark_visual_review_package.md`)
 - **FLEET_INDEPENDENT_REVIEWS**:
-  - Qwen Studio: `PASS` (`QWEN_WAVE2_STUDENT_SURFACE: PASS`, `QWEN_WAVE2_ANTI_RANKING_CHECK: PASS`, Blockers: `0`)
-  - Gemini UI: `PASS` (`GEMINI_WAVE2_STUDENT_SURFACE: PASS`, `GEMINI_WAVE2_VISUAL_POLISH: PASS`, `GEMINI_WAVE2_ACCESSIBILITY_WCAG: PASS`, Blockers: `0`)
+  - Qwen Studio: `PASS` (`QWEN_WAVE2_BENCHMARK_REMEDIATION_FINAL: PASS`, `QWEN_WAVE2_BENCHMARK_BLOCKERS: 0`, `QWEN_WAVE2_ANTI_RANKING_CHECK: PASS`)
+  - Gemini UI: `PASS` (`GEMINI_WAVE2_BENCHMARK_REMEDIATION_FINAL: PASS`, `GEMINI_WAVE2_BENCHMARK_BLOCKERS: 0`, `GEMINI_WAVE2_ANTI_RANKING_CHECK: PASS`, `GEMINI_WAVE2_VISUAL_POLISH: PASS`, `GEMINI_WAVE2_ACCESSIBILITY_WCAG: PASS`)
 - **GOVERNANCE_INVARIANTS**:
   - ZERO student ranking, ZERO leaderboards, ZERO comparative peer evaluation.
   - 100% RTL-first Persian design tokens, 0 raw hex/RGB colors, 0 untyped JSX strings.
   - `REAL_PILOT: LOCKED` | `REAL_DATA: LOCKED` | `PRODUCTION: LOCKED` | `MERGE_TO_MAIN: LOCKED_FOR_MANAGER`
 - **DOSSIER_PATH**: `docs/coordination/WAVE2_STUDENT_BENCHMARK_REMEDIATION_DOSSIER.md`
+- **COMMANDER_DECISION_REQUIRED**: `HUMAN_MANAGER_VISUAL_REVIEW`
 - **NEXT_ACTION**: Awaiting Human Manager visual inspection and acceptance.
 
 ---

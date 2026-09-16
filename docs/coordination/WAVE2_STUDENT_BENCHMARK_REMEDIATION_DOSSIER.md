@@ -3,14 +3,16 @@
 **DIRECTIVE**: `COMMANDER_FRONTEND_WAVE2_VISUAL_BENCHMARK_REMEDIATION_DIRECTIVE`  
 **AUTHORITY**: `HUMAN_MANAGER_VISUAL_BENCHMARK`  
 **ACTIVE SCOPE**: `WAVE_2_STUDENT_SURFACE_ONLY`  
+**FRONTEND_HEAD**: `0f20ec0d75c7c8253bedb4d6ca0138292086cce5`  
+**PRE_REDESIGN_HEAD**: `11c7aeeee0071c268d7c431b8610ed75b0534ddb`  
 **STATUS**: `TECHNICAL_CLOSURE_COMPLETED`  
-**HUMAN_MANAGER_STUDENT_ACCEPTANCE**: `PENDING`
+**HUMAN_MANAGER_STUDENT_ACCEPTANCE**: `PENDING`  
 
 ---
 
 ## 1. Executive Summary & Intent
 
-در راستای دستور مدیر انسانی مبنی بر ارتقای کیفی بنیادین داشبورد دانش‌آموز بر اساس تصویر مرجع بنچمارک (`docs/coordination/student_dashboard_reference_benchmark.png`)، تمامی سطوح دانش‌آموز موج ۲ (`WAVE_2_STUDENT_SURFACE`) به‌طور کامل، ساختاریافته و با بالاترین استانداردهای بصری و تعاملی بازطراحی شدند.
+در راستای دستور مدیر انسانی مبنی بر ارتقای کیفی بنیادین داشبورد دانش‌آموز بر اساس تصویر مرجع بنچمارک (`docs/coordination/student_dashboard_reference_benchmark.png`)، تمامی سطوح دانش‌آموز موج ۲ (`WAVE_2_STUDENT_SURFACE`) به‌طور کامل، ساختاریافته و با بالاترین استانداردهای بصری و تعاملی بازطراحی و در قالب کامیت جدید به شناسه `0f20ec0d75c7c8253bedb4d6ca0138292086cce5` ثبت گردیدند.
 
 این بازطراحی بدون کاهش و با پایبندی ۱۰۰٪ به اصول بنیادین زیر پیاده‌سازی گردید:
 - **Zero Student Ranking / Zero Leaderboard / Zero Peer Comparison**: کلیه شاخص‌ها کاملاً رشد فردی و استمرار شخصی هستند.
@@ -37,7 +39,28 @@
 
 ---
 
-## 3. Route Execution Evidence (5 Mandatory Routes)
+## 3. Data Provenance & Metric Classification (تفکیک دقیق منشأ داده‌ها)
+
+پیرو تدبیر صریح فرمانده، کلیه داده‌ها و شاخص‌های نمایش‌داده‌شده روی رابط کاربری به شکل شفاف طبقه‌بندی شده‌اند:
+
+| شاخص / مولفه | مقدار نمایشی | طبقه‌بندی داده | داده واقعی کاربر؟ | داده PII؟ | ادعای دنیای واقعی؟ |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| پیشرفت کل دوره‌ها | `68%` | `SYNTHETIC_DEMO_DATA` | `NO` | `NO` | `NO` |
+| تکالیف تکمیل‌شده | `24` | `SYNTHETIC_DEMO_DATA` | `NO` | `NO` | `NO` |
+| استمرار مطالعه | `12 روز 🔥 (رکورد شخصی)` | `SYNTHETIC_DEMO_DATA` | `NO` | `NO` | `NO` |
+| امتیاز از منتورها | `4.8 از 5` | `SYNTHETIC_DEMO_DATA` | `NO` | `NO` | `NO` |
+| پیشنهادات هوشمند | ۳ مسیر یادگیری | `SYNTHETIC_OR_STATIC` | `NO` | `NO` | `NO` |
+| فعالیت‌های اخیر | ۳ آیتم فعالیت | `SYNTHETIC_DEMO_DATA` | `NO` | `NO` | `NO` |
+| عملکرد هفتگی | نمودار خطی تحلیلی | `SYNTHETIC_DEMO_DATA` | `NO` | `NO` | `NO` |
+| تسلط بر مهارت‌ها | ۵ نوار پیشرفت مهارت | `SYNTHETIC_DEMO_DATA` | `NO` | `NO` | `NO` |
+| نمونه‌کارها | پروژه‌های پورتفولیو | `SYNTHETIC_DEMO_DATA` | `NO` | `NO` | `NO` |
+
+- **AUTONOMOUS_AI_RUNTIME**: `NOT_ENABLED` (پیشنهادات هوشمند به‌صورت فیکسچر سنتتیک نمایش داده شده و محصول هیچ ادعایی مبنی بر تصمیم‌گیری خودکار AI حقیقی ندارد).
+- **STUDENT_RANKING**: `0` (صفر مطلق رتبه‌بندی، لیدربورد و مقایسه دانش‌آموزان).
+
+---
+
+## 4. Route Execution Evidence (5 Mandatory Routes)
 
 تمامی ۵ مسیر هدف در محیط ران‌تایم زنده Nginx/Docker با موفقیت پاسخ دادند:
 
@@ -51,7 +74,7 @@
 
 ---
 
-## 4. Screenshot Package Evidence (10 High-Fidelity Captures)
+## 5. Screenshot Package Evidence (10 High-Fidelity Captures)
 
 اسکرین‌شات‌ها مستقیماً از طریق پروتکل Chrome DevTools (CDP) بر روی رزولوشن‌های رسمی دسکتاپ (`1440x900`) و موبایل (`390x844`) ثبت شدند:
 
@@ -68,7 +91,7 @@
 
 ---
 
-## 5. Runtime Quality & Governance Accounting
+## 6. Runtime Quality & Governance Accounting
 
 - **Console Errors**: `0`
 - **Hydration Errors**: `0`
@@ -80,35 +103,37 @@
 - **Stack Trace Visible**: `0`
 - **UI Policy Violations**: `0` (Gate Passed cleanly: no raw colors, no untyped JSX literals, no unapproved imports)
 - **Turbopack Production Build**: `10/10 static pages compiled cleanly in container`
+- **Unauthenticated Student Access**: `DENIED`
+- **Wrong-Role Access**: `DENIED`
+- **Cross-Tenant Access**: `DENIED (0 leakage)`
+- **Other Student Private Data Exposure**: `0`
 
 ---
 
-## 6. Fleet Independent Reviews (Qwen Studio & Gemini UI)
+## 7. Fleet Independent Reviews (Qwen Studio & Gemini UI)
 
 ### A. Qwen Studio Review Verdict
 - **Artifact**: `docs/reviews/QWEN_WAVE2_BENCHMARK_REVIEW.txt`
-- **VERDICT**: `PASS`
-- **QWEN_WAVE2_STUDENT_SURFACE**: `PASS`
+- **QWEN_WAVE2_BENCHMARK_REMEDIATION_FINAL**: `PASS`
+- **QWEN_WAVE2_BENCHMARK_BLOCKERS**: `0`
 - **QWEN_WAVE2_ANTI_RANKING_CHECK**: `PASS`
-- **QWEN_WAVE2_BLOCKERS**: `0`
-- **Summary**: Full structural validation, cognitive hierarchy (glance → act → explore → configure), anti-ranking verification across DOM and API queries, synthetic tenant isolation, and WCAG compliance confirmed.
 
 ### B. Gemini UI Review Verdict
 - **Artifact**: `docs/reviews/GEMINI_WAVE2_BENCHMARK_REVIEW.txt`
-- **VERDICT**: `PASS`
-- **GEMINI_WAVE2_STUDENT_SURFACE**: `PASS`
+- **GEMINI_WAVE2_BENCHMARK_REMEDIATION_FINAL**: `PASS`
+- **GEMINI_WAVE2_BENCHMARK_BLOCKERS**: `0`
+- **GEMINI_WAVE2_ANTI_RANKING_CHECK**: `PASS`
 - **GEMINI_WAVE2_VISUAL_POLISH**: `PASS`
 - **GEMINI_WAVE2_ACCESSIBILITY_WCAG**: `PASS`
-- **GEMINI_WAVE2_BLOCKERS**: `0`
-- **Summary**: Visual hierarchy maturity, elevation & tactility (soft shadows, floating cards, translucent borders), RTL typography, touch targets ≥ 44px, contrast > 4.5:1, and zero hardcoded JSX confirmed.
 
 ---
 
-## 7. Visual Self-Assessment & Authority Note
+## 8. Visual Self-Assessment & Authority Note
 
 1. **تطابق با بنچمارک**: هویت و نظم بصری داشبورد مرجع (تراکم اطلاعات، ریتم بصری، کارت‌های KPI، نمودارهای تحلیلی، پیشرفت مهارت‌ها و اکشن‌های هدایت‌کننده) به‌طور کامل و با ظرافت در CodeSho بومی‌سازی شده است.
 2. **برتری نسبت به نسخه پیشین**: نسخه قبلی حالتی شبیه به وایرفریم با تراکم پایین و المان‌های ساده داشت؛ نسخه جدید دارای سلسله‌مراتب بصری غنی، کارت‌های عمیق، گرادیان‌های حساب‌شده و هدایت تعاملی واضح برای کاربر است.
 3. **حفظ استقلال و هویت CodeSho**: برند و شعار رسمی CodeSho حفظ شده و کلیه اصول عدم مقایسه و رتبه‌بندی دانش‌آموزان به عنوان خط قرمز قطعی پروژه رعایت شده است.
+4. **ارائه پکیج اسکرین‌شات به مدیر انسانی**: کلیه تصاویر ۱۰ گانه در آدرس `student_benchmark_visual_review_package.md` جهت بازبینی و صدور رأی مستقیم مدیر انسانی مهیا گردید.
 
 > [!IMPORTANT]
 > **HUMAN_MANAGER_STUDENT_ACCEPTANCE: PENDING**  
