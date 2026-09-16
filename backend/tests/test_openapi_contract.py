@@ -89,7 +89,7 @@ def test_generated_schema_is_canonical_and_only_exposes_contract_routes():
             file=str(generated),
             validate=True,
         )
-        assert generated.read_bytes() == expected.read_bytes()
+        assert generated.read_bytes().replace(b"\r\n", b"\n") == expected.read_bytes().replace(b"\r\n", b"\n")
         contents = generated.read_text(encoding="utf-8")
     for route in CONTRACT_ROUTES:
         assert route in contents

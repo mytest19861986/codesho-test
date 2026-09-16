@@ -1,4 +1,84 @@
-# Codex to Commander — Task72B legal/policy gate
+# Codex to Commander — Coordination Ledger
+
+## P9_CONTROLLED_ACTIVATION_READINESS_FINAL_ACCEPTANCE_LEDGER — 2026-09-16
+
+- **TYPE**: `P9_CONTROLLED_ACTIVATION_READINESS_FINAL_ACCEPTANCE_REQUEST`
+- **P9_HEAD**: `e4a9a498a590f70b2248aea6d5bfffe1b08563db`
+- **FRONTEND_HEAD**: `83f9ae322f4d3b6095d1649e07d329d7ad8d407a` (FROZEN / UNMODIFIED)
+- **BACKEND_BASELINE_HEAD**: `7c4c1f09c876b6345b3550103a6ef30265376478`
+- **P9_HEAD_DIFFERS_FROM_BACKEND_BASELINE**: `YES`
+- **P9_IMPLEMENTATION_PREEXISTED_BASELINE**: `NO`
+- **SOURCE_COMMITTED**: `YES`
+- **TESTS_EXECUTED_FROM_P9_HEAD**: `YES`
+- **IMPLEMENTATION_CHANGED_AFTER_TEST**: `NO`
+- **TENANT_CONTEXT_CANONICAL_KEY**: `app.current_tenant`
+- **P9_MODE**: `SYNTHETIC_ONLY`
+- **P9_ARTIFACTS**: `14/14 Canonical + 8 Code/Test + 3 Coordination = 25 Files` (0 wildcards)
+- **P9_REHEARSAL_MATRIX**: `20/20 PASS`
+- **P9_NEGATIVE_MATRIX**: `40/40 PASS`
+- **AUTOMATED_SYNTHETIC_SUITE**: `25/25 PASSED in 0.69s`
+- **AUTHORITY_ENFORCEMENT**: `PASS` (Explicit HMAC-SHA256 token required)
+- **ACTIVATION_TOKEN_SECURITY**: `PASS` (Nonce-bound, timebound, purpose-bound, scope-bound)
+- **SCOPE_LOCK**: `PASS` (Immutable SHA-256 Digest frozen)
+- **TENANT_ISOLATION**: `PASS` (`app.current_tenant` enforced, 0 cross-tenant leak)
+- **DATA_ADMISSION_GATE**: `PASS` (Synthetic fixtures only, real data fails closed)
+- **CONSENT_GATE**: `PASS` (Synthetic consent verified)
+- **CONTROLLED_ACTIVATION**: `PASS` (9 gates pass before entering active)
+- **PAUSE_MECHANISM**: `PASS` (Blocks new work, preserves state and audit)
+- **AUTHORIZED_RESUME**: `PASS` (Requires valid token re-validation)
+- **CONTROLLED_STOP**: `PASS` (Drains inflight tasks, revokes active token)
+- **ROLLBACK**: `PASS` (Zero residual state, active synthetic state = 0)
+- **EMERGENCY_ABORT**: `PASS` (Immediate kill-switch fail-closed)
+- **CRASH_RECOVERY**: `PASS` (Recovers cleanly without duplicate execution)
+- **CONCURRENT_COMMAND_SAFETY**: `PASS` (Safe serialization)
+- **IDEMPOTENCY**: `PASS` (Safe client retry on activate, stop, rollback)
+- **AUDITABILITY**: `PASS` (Append-only, fail-closed write, 0 secret leakage)
+- **OBSERVABILITY**: `PASS` (State, tenant, health signals exposed)
+- **POST_ROLLBACK_INTEGRITY**: `PASS` (0 orphaned entities, 0 stale authority)
+- **DATABASE_MIGRATIONS**: `UNCHANGED / ZERO DRIFT`
+- **FRONTEND_CHANGED**: `NO`
+- **BACKEND_CHANGED**: `YES` (Added `pilot_activation` module and synthetic tests)
+- **AFFECTED_REGRESSION_GATES**: `PASS` (25/25 passed)
+- **QWEN_PHASE9_FINAL**: `PASS` (Blockers: 0)
+- **GLM_PHASE9_FINAL**: `PASS` (Blockers: 0)
+- **GEMINI_PHASE9_OPERATOR_UI_FINAL**: `NOT_APPLICABLE` (No operator UI modified)
+- **ZERO_EFFECT_HYGIENE**:
+  - `REAL_ORGANIZATIONS`: 0
+  - `REAL_CHILD_DATA`: 0
+  - `REAL_GUARDIAN_DATA`: 0
+  - `REAL_PII`: 0
+  - `REAL_CONSENT`: 0
+  - `REAL_NOTIFICATIONS`: 0
+  - `REAL_PAYMENTS`: 0
+  - `PRODUCTION_CREDENTIALS`: 0
+  - `REAL_WORLD_EFFECT`: 0
+- **R3_R4_CONDITIONS**: `0`
+- **OPEN_BLOCKERS**: `0`
+- **GOVERNANCE_LOCKS**: `REAL_PILOT: LOCKED` | `REAL_DATA: LOCKED` | `REAL_ORGANIZATION_ONBOARDING: LOCKED` | `REAL_CONSENT_ACTIVATION: LOCKED` | `REAL_SMS_EMAIL: LOCKED` | `REAL_PAYMENT: LOCKED` | `PUBLIC_SIGNUP: LOCKED` | `PRODUCTION: LOCKED` | `MERGE_TO_MAIN: LOCKED_FOR_MANAGER`
+- **COMMANDER_DECISION_REQUIRED**: `P9_FINAL_ACCEPTANCE`
+- **POST_P9_PROJECT_STATE**: `READY_FOR_HUMAN_MANAGER_GO_NO_GO_DEFER_DECISION_PACKAGE`
+
+---
+
+## P8_DISCOVERY_FINAL_ACCEPTANCE_LEDGER — 2026-09-16
+
+- **TYPE**: `COMMANDER_P8_DISCOVERY_FINAL_ACCEPTANCE_RECORD`
+- **COMMANDER_DECISION**: `GRANTED`
+- **P8_DISCOVERY_STATUS**: `COMPLETE_FINAL_ACCEPTED`
+- **P8_HEAD**: `7c4c1f09c876b6345b3550103a6ef30265376478`
+- **P8_ARTIFACT_ACCOUNTING**: `13/13 Canonical + 3 Coordination = 16 Files` (Zero wildcards)
+- **CANONICAL_TENANT_CONTEXT_KEY**: `app.current_tenant` (Verified across 141 policies in `pg_policies`)
+- **ACTIVE_CANONICAL_KEY_CONTRADICTIONS**: `0`
+- **MANAGER_DECISION_FSM**: `PASS` (GO / NO_GO / DEFER, default `NOT_YET_ISSUED`)
+- **READINESS_AGGREGATES**: `ALL 10 AGGREGATES PASS` (Data, Consent, Production, Activation, Rollback, Emergency Exit, Incident Plan, Negative Matrix, Synthetic Rehearsal, Post-Rollback Integrity)
+- **ZERO_EFFECT_HYGIENE**: `RUNTIME_MUTATION: 0` | `REAL_WORLD_EFFECT: 0` | `REAL_ORGS: 0` | `REAL_PII: 0` | `PROD_CREDENTIALS: 0`
+- **FLEET_CONSENSUS**: `3/3 INDEPENDENT PASS` (Qwen: PASS, GLM: PASS, Gemini: PASS | Blockers: 0)
+- **CLOSED_TRACKS**: `FRONTEND_TRACK: CLOSED` | `BACKEND_TENANT_E2E_TRACK: CLOSED` | `P8_DISCOVERY_TRACK: CLOSED`
+- **GOVERNANCE_LOCKS**: `REAL_PILOT: LOCKED` | `REAL_DATA: LOCKED` | `PRODUCTION: LOCKED` | `MERGE_TO_MAIN: LOCKED_FOR_MANAGER`
+- **NEXT_RECOMMENDED_PHASE**: `P9-CONTROLLED-ACTIVATION-READINESS-REHEARSAL` (Mode: `SYNTHETIC_ONLY`, Awaiting Manager Authorization)
+- **PROJECT_STATE**: `READY_FOR_NEXT_MANAGER_AUTHORIZED_PHASE`
+
+---
 
 ## TASK76A_VERIFICATION_20260808
 

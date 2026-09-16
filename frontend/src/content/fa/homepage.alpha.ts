@@ -5,6 +5,11 @@ const hidden = (route: HomepageRoute) => ({
   status: "hidden_until_route_available" as const,
 });
 
+const available = (route: HomepageRoute) => ({
+  route,
+  status: "available" as const,
+});
+
 export const homepageAlphaContent = {
   brandName: "CodeSho",
   shell: {
@@ -17,7 +22,7 @@ export const homepageAlphaContent = {
     { id: "courses", label: "دوره‌ها", destination: hidden("/courses") },
     { id: "projects", label: "پروژه‌ها", destination: hidden("/projects") },
     { id: "mentor", label: "منتور هوشمند", destination: hidden("/mentor") },
-    { id: "login", label: "ورود", destination: hidden("/login") },
+    { id: "login", label: "ورود", destination: available("/login") },
     { id: "signup", label: "شروع رایگان", destination: hidden("/signup") },
   ],
   sections: {
@@ -39,7 +44,7 @@ export const homepageAlphaContent = {
     eyebrow: "آکادمی برنامه‌نویسی با منتور هوشمند",
     title: "با هوش مصنوعی، سریع‌تر برنامه‌نویس حرفه‌ای شو",
     description: "CodeSho مسیر یادگیری ساختاریافته، پروژه‌های واقعی و منتور هوشمند را ترکیب کرده تا مهارت‌های موردنیاز بازار کار را سریع‌تر و هوشمندانه‌تر به تو برساند.",
-    primaryAction: { id: "hero-start", label: "شروع یادگیری رایگان", destination: hidden("/signup") },
+    primaryAction: { id: "hero-start", label: "ورود به پلتفرم", destination: available("/login") },
     secondaryAction: { id: "hero-paths", label: "مشاهده مسیرها", destination: hidden("/paths") },
     illustration: {
       id: "home-hero-ai-coding-alpha",
@@ -59,19 +64,19 @@ export const homepageAlphaContent = {
     },
   },
   learningPaths: [
-    { id: "frontend", title: "مسیر فرانت‌اند", description: "توسعه رابط کاربری مدرن و تعاملی", action: { id: "path-frontend", label: "مشاهده مسیر", destination: hidden("/paths") } },
-    { id: "backend", title: "مسیر بک‌اند", description: "ساخت APIها و سیستم‌های مقیاس‌پذیر و پایدار", action: { id: "path-backend", label: "مشاهده مسیر", destination: hidden("/paths") } },
-    { id: "ai-engineering", title: "مسیر مهندسی هوش مصنوعی", description: "ساخت مدل‌های هوشمند و کاربردهای AI", action: { id: "path-ai-engineering", label: "مشاهده مسیر", destination: hidden("/paths") } },
+    { id: "frontend", title: "مسیر فرانت‌اند", description: "توسعه رابط کاربری مدرن و تعاملی", action: { id: "path-frontend", label: "ورود به مسیر", destination: available("/login") } },
+    { id: "backend", title: "مسیر بک‌اند", description: "ساخت APIها و سیستم‌های مقیاس‌پذیر و پایدار", action: { id: "path-backend", label: "ورود به مسیر", destination: available("/login") } },
+    { id: "ai-engineering", title: "مسیر مهندسی هوش مصنوعی", description: "ساخت مدل‌های هوشمند و کاربردهای AI", action: { id: "path-ai-engineering", label: "ورود به مسیر", destination: available("/login") } },
   ],
   learningPathsHeading: "مسیرهای یادگیری",
   mentor: {
     title: "منتور هوشمند CodeSho، همیشه کنار تو",
     descriptionStatus: "pending_transcription",
-    action: { id: "mentor-start", label: "شروع گفتگو با منتور", destination: hidden("/mentor") },
+    action: { id: "mentor-start", label: "ورود و گفتگو با منتور", destination: available("/login") },
   },
   finalCta: {
     title: "آماده‌ای مسیر حرفه‌ای خودت را شروع کنی؟",
-    primaryAction: { id: "final-start", label: "شروع یادگیری رایگان", destination: hidden("/signup") },
+    primaryAction: { id: "final-start", label: "ورود به پلتفرم", destination: available("/login") },
     secondaryAction: { id: "final-paths", label: "مشاهده مسیرها", destination: hidden("/paths") },
   },
 } as const satisfies HomepageAlphaContent;

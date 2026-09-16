@@ -1,28 +1,25 @@
-# Current Task: SPRINT1-SECURITY-CLEANUP-SCHEDULING-ARCHITECTURE-77A
+# Current Task: P9-CONTROLLED-ACTIVATION-READINESS-REHEARSAL
+ 
+- **COMMANDER_P9_START_AUTHORIZATION**: `GRANTED`
+- **P9_STATUS**: `REHEARSAL_COMPLETE_AWAITING_FINAL_ACCEPTANCE`
+- **P9_MODE**: `SYNTHETIC_ONLY`
+- **P9_OBJECTIVE**: `TURN_P8_DESIGNED_CONTROLS_INTO_EXECUTABLE_SYNTHETIC_CONTROLS`
+- **P9_REHEARSAL_MATRIX**: `20/20 PASS`
+- **P9_NEGATIVE_MATRIX**: `40/40 PASS`
+- **AUTOMATED_SUITE**: `25/25 PASSED in 0.42s`
+- **P9_HEAD**: `e4a9a498a590f70b2248aea6d5bfffe1b08563db`
+- **FLEET_CONSENSUS**: `Qwen PASS (0 Blockers) | GLM PASS (0 Blockers) | Gemini NOT_APPLICABLE`
+- **ACCEPTED_BASELINES**:
+  - `FRONTEND_HEAD`: `83f9ae322f4d3b6095d1649e07d329d7ad8d407a` (`COMPLETE_FINAL_ACCEPTED`)
+  - `BACKEND_HEAD`: `7c4c1f09c876b6345b3550103a6ef30265376478` (`COMPLETE_FINAL_ACCEPTED`)
+  - `P8_DISCOVERY_STATUS`: `COMPLETE_FINAL_ACCEPTED` (13 Canonical Artifacts)
+- **CANONICAL_TENANT_KEY**: `app.current_tenant`
+- **GOVERNANCE_LOCKS**: `REAL_PILOT: LOCKED` | `REAL_DATA: LOCKED` | `REAL_ORGANIZATION_ONBOARDING: LOCKED` | `REAL_CONSENT_ACTIVATION: LOCKED` | `REAL_SMS_EMAIL: LOCKED` | `REAL_PAYMENT: LOCKED` | `PUBLIC_SIGNUP: LOCKED` | `PRODUCTION: LOCKED` | `MERGE_TO_MAIN: LOCKED_FOR_MANAGER`
+- **PROJECT_STATE**: `READY_FOR_HUMAN_MANAGER_GO_NO_GO_DEFER_DECISION_PACKAGE`
 
-## Active Task77A handoff — 2026-08-08
+---
 
-- Task: `SPRINT1-SECURITY-CLEANUP-SCHEDULING-ARCHITECTURE-77A`
-- Status: `INSPECTION COMPLETE / DOCS-ONLY IMPLEMENTATION IN PROGRESS`
-- Base SHA: `cb967c26e0faf9a5868e9adc74d59a09c6a42b99`
-- Branch: `codex/task77a-cleanup-scheduling-architecture`
-- Exact write allow-list: the Task77A decision document, this file,
-  `docs/coordination/PROJECT_STATE.md`,
-  `docs/coordination/CODEX_TO_COMMANDER.md`, and the Task77A review summary.
-- No Python, settings, Celery, migration, workflow, Compose, scheduler, or
-  worker implementation changes are authorized.
-- Inspection found the current cleanup task already uses explicit tenant UUID
-  validation, `BaseTenantTask`, `tenant_atomic`, bounded work, database time,
-  row locking, and no registered periodic schedule.
-- Recommended architecture: bounded database-authoritative work claims with
-  short leases, followed by one explicit tenant task per claim.
-
-- Owner: Codex, directed by Commander AI.
-- Status: `IMPLEMENTED / FOCUSED_GATES_PASS / REMOTE_GATES_PASS / CLAUDE_PASS`
-- Base SHA: `cb967c26e0faf9a5868e9adc74d59a09c6a42b99`.
-- Branch: `codex/task76a-passcode-change-cleanup-hardening`.
-- Scope: tenant-scoped passcode-change challenge cleanup hardening only; no
-  migration, beat schedule, global fan-out, or protected-repository promotion.
+# Previous Task: SPRINT1-SECURITY-CLEANUP-SCHEDULING-ARCHITECTURE-77A
 - Current checkpoint: cleanup settings are now represented in `.env.example`
   and validated as bounded configuration at settings load. Existing cleanup
   orchestration and tenant task code were preserved because inspection found

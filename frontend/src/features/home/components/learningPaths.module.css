@@ -46,9 +46,25 @@
 }
 
 .cardAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 2.5rem;
+  margin-block-start: var(--cs-space-2);
+  padding-inline: var(--cs-space-4);
+  border: var(--cs-border-width) solid var(--cs-color-border-subtle);
+  border-radius: var(--cs-radius-control);
+  background: var(--cs-color-brand-primary-soft);
   color: var(--cs-color-brand-primary);
   font-weight: var(--cs-font-weight-semibold);
   text-decoration: none;
+  inline-size: fit-content;
+}
+
+.cardAction:hover,
+.cardAction:focus-visible {
+  background: var(--cs-color-brand-primary);
+  color: var(--cs-color-text-inverse);
 }
 
 .cardAction:focus-visible {
