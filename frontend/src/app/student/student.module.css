@@ -1,8 +1,829 @@
+/* Comprehensive Student Design System Styles matching Reference Benchmark */
+
 .studentDashboard {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: var(--cs-space-6);
+  padding-block-end: var(--cs-space-12);
 }
 
+/* Header Elements in AppHeader slots */
+.headerSearchWrapper {
+  display: flex;
+  align-items: center;
+  inline-size: 100%;
+  max-inline-size: 32rem;
+  background: var(--cs-color-bg-base);
+  border: var(--cs-border-width) solid var(--cs-color-border-subtle);
+  border-radius: var(--cs-radius-pill);
+  padding: var(--cs-space-2) var(--cs-space-4);
+  gap: var(--cs-space-2);
+}
+
+.searchIcon {
+  color: var(--cs-color-text-muted);
+  display: flex;
+  align-items: center;
+}
+
+.searchInput {
+  border: 0;
+  background: var(--cs-color-transparent);
+  outline: none;
+  font-family: inherit;
+  font-size: var(--cs-font-size-body);
+  color: var(--cs-color-text-primary);
+  inline-size: 100%;
+}
+
+.searchShortcut {
+  font-size: var(--cs-font-size-caption);
+  color: var(--cs-color-text-muted);
+  background: var(--cs-color-bg-surface);
+  border: var(--cs-border-width) solid var(--cs-color-border-subtle);
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--cs-radius-control);
+  white-space: nowrap;
+}
+
+.headerActionsArea {
+  display: flex;
+  align-items: center;
+  gap: var(--cs-space-4);
+}
+
+.notifButton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border-radius: var(--cs-radius-pill);
+  background: var(--cs-color-bg-base);
+  border: var(--cs-border-width) solid var(--cs-color-border-subtle);
+  color: var(--cs-color-text-secondary);
+  cursor: pointer;
+}
+
+.notifBadge {
+  position: absolute;
+  inset-block-start: -0.25rem;
+  inset-inline-end: -0.25rem;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  background: var(--cs-color-danger);
+  color: var(--cs-color-text-inverse);
+  border-radius: var(--cs-radius-pill);
+  font-size: 0.6875rem;
+  font-weight: var(--cs-font-weight-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.userProfileBadge {
+  display: flex;
+  align-items: center;
+  gap: var(--cs-space-3);
+  padding-inline-start: var(--cs-space-2);
+  border-inline-start: var(--cs-border-width) solid var(--cs-color-border-subtle);
+}
+
+.userAvatar {
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border-radius: var(--cs-radius-pill);
+  background: var(--cs-color-brand-primary-soft);
+  color: var(--cs-color-brand-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--cs-font-weight-bold);
+  font-size: var(--cs-font-size-heading-lg);
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.userRole {
+  font-size: var(--cs-font-size-caption);
+  color: var(--cs-color-text-muted);
+}
+
+.userName {
+  font-size: var(--cs-font-size-body);
+  font-weight: var(--cs-font-weight-bold);
+  color: var(--cs-color-text-primary);
+}
+
+/* Sidebar Supplementary & Footer */
+.sidebarBrandArea {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.brandLogoTitle {
+  font-size: var(--cs-font-size-heading-lg);
+  font-weight: var(--cs-font-weight-bold);
+  color: var(--cs-color-brand-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--cs-space-2);
+  text-decoration: none;
+}
+
+.brandTagline {
+  font-size: 0.6875rem;
+  color: var(--cs-color-text-muted);
+}
+
+.sidebarFooterLinks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-2);
+  margin-block-end: var(--cs-space-4);
+}
+
+.sidebarUtilityLink {
+  display: flex;
+  align-items: center;
+  gap: var(--cs-space-3);
+  font-size: var(--cs-font-size-body);
+  color: var(--cs-color-text-secondary);
+  text-decoration: none;
+  padding: var(--cs-space-2) var(--cs-space-3);
+  border-radius: var(--cs-radius-control);
+  transition: background-color var(--cs-motion-standard);
+}
+
+.sidebarUtilityLink:hover {
+  background: var(--cs-color-bg-base);
+  color: var(--cs-color-text-primary);
+}
+
+.sidebarPromoCard {
+  background: linear-gradient(135deg, var(--cs-color-brand-dark), var(--cs-color-brand-dark-gradient-end));
+  border-radius: var(--cs-radius-card);
+  padding: var(--cs-space-4);
+  color: var(--cs-color-text-inverse);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-3);
+  box-shadow: var(--cs-shadow-card);
+}
+
+.sidebarPromoTitle {
+  font-size: var(--cs-font-size-body);
+  font-weight: var(--cs-font-weight-bold);
+  margin: 0;
+}
+
+.sidebarPromoSubtitle {
+  font-size: var(--cs-font-size-caption);
+  color: var(--cs-color-text-muted);
+  margin: 0;
+}
+
+.sidebarPromoButton {
+  background: var(--cs-color-brand-primary);
+  color: var(--cs-color-text-inverse);
+  border: 0;
+  border-radius: var(--cs-radius-control);
+  padding: var(--cs-space-2) var(--cs-space-3);
+  font-size: var(--cs-font-size-caption);
+  font-weight: var(--cs-font-weight-bold);
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color var(--cs-motion-standard);
+}
+
+.sidebarPromoButton:hover {
+  background: var(--cs-color-brand-primary-hover);
+}
+
+/* ==========================================================================
+   Hero Banner Section
+   ========================================================================== */
+.heroBanner {
+  background: linear-gradient(135deg, var(--cs-color-brand-dark), var(--cs-color-brand-indigo));
+  border-radius: var(--cs-radius-sheet);
+  padding: var(--cs-space-6) var(--cs-space-8);
+  color: var(--cs-color-text-inverse);
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--cs-space-6);
+  box-shadow: var(--cs-shadow-floating);
+  position: relative;
+  overflow: hidden;
+}
+
+.heroContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-4);
+  z-index: 1;
+}
+
+.heroGreeting {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-2);
+}
+
+.heroGreetingText {
+  font-size: var(--cs-font-size-heading-lg);
+  font-weight: var(--cs-font-weight-semibold);
+  margin: 0;
+  opacity: 0.9;
+}
+
+.heroHeading {
+  font-size: var(--cs-font-size-display);
+  font-weight: var(--cs-font-weight-bold);
+  line-height: 1.3;
+  margin: 0;
+}
+
+.heroSubtitle {
+  font-size: var(--cs-font-size-body);
+  line-height: var(--cs-line-height-relaxed);
+  margin: 0;
+  opacity: 0.85;
+  max-inline-size: 34rem;
+}
+
+.heroButtons {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--cs-space-3);
+  margin-block-start: var(--cs-space-2);
+}
+
+.heroPrimaryBtn {
+  background: var(--cs-color-brand-primary);
+  color: var(--cs-color-text-inverse);
+  border: 0;
+  border-radius: var(--cs-radius-pill);
+  padding: var(--cs-space-3) var(--cs-space-6);
+  font-size: var(--cs-font-size-body);
+  font-weight: var(--cs-font-weight-bold);
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cs-space-2);
+  transition: transform var(--cs-motion-fast), background-color var(--cs-motion-standard);
+}
+
+.heroPrimaryBtn:hover {
+  background: var(--cs-color-brand-primary-hover);
+  transform: translateY(-1px);
+}
+
+.heroSecondaryBtn {
+  background: var(--cs-color-transparent);
+  color: var(--cs-color-text-inverse);
+  border: var(--cs-border-width) solid var(--cs-color-border-subtle);
+  border-radius: var(--cs-radius-pill);
+  padding: var(--cs-space-3) var(--cs-space-6);
+  font-size: var(--cs-font-size-body);
+  font-weight: var(--cs-font-weight-medium);
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cs-space-2);
+  transition: background-color var(--cs-motion-standard);
+}
+
+.heroSecondaryBtn:hover {
+  background: var(--cs-color-brand-primary-hover);
+}
+
+.heroGraphicWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.heroGlassPanel {
+  background: var(--cs-color-brand-dark-gradient-end);
+  border: var(--cs-border-width) solid var(--cs-color-brand-primary);
+  border-radius: var(--cs-radius-card);
+  padding: var(--cs-space-4) var(--cs-space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-3);
+  inline-size: 100%;
+  max-inline-size: 24rem;
+}
+
+.heroQuoteText {
+  font-size: var(--cs-font-size-body);
+  font-style: italic;
+  margin: 0;
+  line-height: var(--cs-line-height-relaxed);
+  text-align: center;
+}
+
+.heroBrandMini {
+  font-size: 0.6875rem;
+  opacity: 0.7;
+  text-align: center;
+}
+
+.heroChecklist {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--cs-space-2);
+  margin-block-start: var(--cs-space-2);
+}
+
+.heroCheckItem {
+  display: flex;
+  align-items: center;
+  gap: var(--cs-space-2);
+  font-size: var(--cs-font-size-caption);
+  background: var(--cs-color-brand-dark);
+  padding: var(--cs-space-2) var(--cs-space-3);
+  border-radius: var(--cs-radius-control);
+}
+
+/* ==========================================================================
+   4 KPI Metric Cards Grid
+   ========================================================================== */
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--cs-space-4);
+}
+
+.kpiCard {
+  background: var(--cs-color-bg-surface);
+  border: var(--cs-border-width) solid var(--cs-color-border-subtle);
+  border-radius: var(--cs-radius-card);
+  padding: var(--cs-space-4) var(--cs-space-5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--cs-shadow-card);
+  transition: transform var(--cs-motion-fast), box-shadow var(--cs-motion-fast);
+}
+
+.kpiCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--cs-shadow-floating);
+}
+
+.kpiContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-1);
+}
+
+.kpiLabel {
+  font-size: var(--cs-font-size-caption);
+  color: var(--cs-color-text-secondary);
+  margin: 0;
+}
+
+.kpiValue {
+  font-size: var(--cs-font-size-heading-xl);
+  font-weight: var(--cs-font-weight-bold);
+  color: var(--cs-color-text-primary);
+  margin: 0;
+}
+
+.kpiSub {
+  font-size: 0.75rem;
+  color: var(--cs-color-success-foreground);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.kpiVisual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kpiIconCircle {
+  inline-size: 3rem;
+  block-size: 3rem;
+  border-radius: var(--cs-radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.kpiCircle1 {
+  background: var(--cs-color-brand-primary-soft);
+  color: var(--cs-color-brand-primary);
+}
+
+.kpiCircle2 {
+  background: var(--cs-color-brand-primary-soft);
+  color: var(--cs-color-success);
+}
+
+.kpiCircle3 {
+  background: var(--cs-color-brand-primary-soft);
+  color: var(--cs-color-warning);
+}
+
+.kpiCircle4 {
+  background: var(--cs-color-brand-primary-soft);
+  color: var(--cs-color-info);
+}
+
+/* ==========================================================================
+   Middle Row: Performance Chart, Goal Progress, Skill Growth
+   ========================================================================== */
+.middleGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: var(--cs-space-4);
+}
+
+.twoColumnGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--cs-space-4);
+}
+
+.cardPanel {
+  background: var(--cs-color-bg-surface);
+  border: var(--cs-border-width) solid var(--cs-color-border-subtle);
+  border-radius: var(--cs-radius-card);
+  padding: var(--cs-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-4);
+  box-shadow: var(--cs-shadow-card);
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.panelTitle {
+  font-size: var(--cs-font-size-heading-lg);
+  font-weight: var(--cs-font-weight-bold);
+  color: var(--cs-color-text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--cs-space-2);
+}
+
+.panelFilter {
+  font-size: var(--cs-font-size-caption);
+  color: var(--cs-color-text-secondary);
+  background: var(--cs-color-bg-base);
+  border: var(--cs-border-width) solid var(--cs-color-border-subtle);
+  border-radius: var(--cs-radius-control);
+  padding: var(--cs-space-1) var(--cs-space-3);
+}
+
+/* Chart Canvas Simulation */
+.chartContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-3);
+  padding-block-start: var(--cs-space-2);
+}
+
+.chartSvgWrapper {
+  inline-size: 100%;
+  block-size: 9rem;
+}
+
+.chartLabelsRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6875rem;
+  color: var(--cs-color-text-muted);
+}
+
+.chartTooltip {
+  background: var(--cs-color-brand-dark);
+  color: var(--cs-color-text-inverse);
+  padding: var(--cs-space-2) var(--cs-space-3);
+  border-radius: var(--cs-radius-control);
+  font-size: 0.75rem;
+  align-self: flex-end;
+}
+
+/* Learning Goal Ring */
+.goalContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--cs-space-2) 0;
+  gap: var(--cs-space-3);
+  text-align: center;
+}
+
+.goalSvgWrapper {
+  inline-size: 7.5rem;
+  block-size: 7.5rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.goalCenterText {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.goalCenterVal {
+  font-size: var(--cs-font-size-heading-xl);
+  font-weight: var(--cs-font-weight-bold);
+  color: var(--cs-color-text-primary);
+}
+
+.goalCenterStatus {
+  font-size: 0.6875rem;
+  color: var(--cs-color-text-muted);
+}
+
+.goalCourseName {
+  font-size: var(--cs-font-size-body);
+  font-weight: var(--cs-font-weight-bold);
+  color: var(--cs-color-text-primary);
+  margin: 0;
+}
+
+.goalModulesDetail {
+  font-size: var(--cs-font-size-caption);
+  color: var(--cs-color-text-muted);
+  margin: 0;
+}
+
+/* Skills Growth List */
+.skillsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-3);
+}
+
+.skillItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.skillInfoRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--cs-font-size-caption);
+  font-weight: var(--cs-font-weight-medium);
+  color: var(--cs-color-text-secondary);
+}
+
+.skillBarBackground {
+  inline-size: 100%;
+  block-size: 0.5rem;
+  background: var(--cs-color-bg-base);
+  border-radius: var(--cs-radius-pill);
+  overflow: hidden;
+}
+
+.skillBarFill {
+  block-size: 100%;
+  border-radius: var(--cs-radius-pill);
+  margin-inline-end: auto;
+}
+
+/* ==========================================================================
+   Bottom Row: Recent Activities, Recommendations, Milestone Roadmap
+   ========================================================================== */
+.bottomGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.3fr) minmax(0, 1.4fr);
+  gap: var(--cs-space-4);
+}
+
+.activityList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-3);
+}
+
+.activityItem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--cs-space-3);
+  padding-block-end: var(--cs-space-3);
+  border-block-end: var(--cs-border-width) solid var(--cs-color-border-subtle);
+}
+
+.activityItem:last-child {
+  border-block-end: 0;
+  padding-block-end: 0;
+}
+
+.activityIconCircle {
+  inline-size: 2rem;
+  block-size: 2rem;
+  border-radius: var(--cs-radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.875rem;
+}
+
+.activityContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  inline-size: 100%;
+}
+
+.activityDesc {
+  font-size: var(--cs-font-size-caption);
+  color: var(--cs-color-text-primary);
+  margin: 0;
+  line-height: var(--cs-line-height-normal);
+}
+
+.activityTime {
+  font-size: 0.6875rem;
+  color: var(--cs-color-text-muted);
+}
+
+/* Smart Recommendations */
+.recList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-3);
+}
+
+.recItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--cs-space-3);
+  border: var(--cs-border-width) solid var(--cs-color-border-subtle);
+  border-radius: var(--cs-radius-control);
+  background: var(--cs-color-bg-base);
+  gap: var(--cs-space-3);
+}
+
+.recTitle {
+  font-size: var(--cs-font-size-caption);
+  font-weight: var(--cs-font-weight-medium);
+  color: var(--cs-color-text-primary);
+  margin: 0;
+}
+
+.recAction {
+  background: var(--cs-color-brand-primary-soft);
+  color: var(--cs-color-brand-primary);
+  border: 0;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--cs-radius-pill);
+  font-size: 0.6875rem;
+  font-weight: var(--cs-font-weight-bold);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Milestone Success Banner */
+.milestonePanel {
+  background: linear-gradient(135deg, var(--cs-color-brand-primary-soft), var(--cs-color-bg-surface));
+  border: var(--cs-border-width) solid var(--cs-color-border-subtle);
+  border-radius: var(--cs-radius-card);
+  padding: var(--cs-space-5);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--cs-space-4);
+  box-shadow: var(--cs-shadow-card);
+}
+
+.milestoneHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.milestoneTitle {
+  font-size: var(--cs-font-size-heading-lg);
+  font-weight: var(--cs-font-weight-bold);
+  color: var(--cs-color-text-primary);
+  margin: 0;
+}
+
+.milestoneDesc {
+  font-size: var(--cs-font-size-caption);
+  color: var(--cs-color-text-secondary);
+  margin: 0;
+}
+
+.milestoneStepsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  padding: var(--cs-space-2) 0;
+}
+
+.milestoneStepNode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--cs-space-1);
+  z-index: 1;
+}
+
+.milestoneCircle {
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  border-radius: var(--cs-radius-pill);
+  background: var(--cs-color-info);
+  color: var(--cs-color-text-inverse);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+}
+
+.milestoneStepLabel {
+  font-size: 0.6875rem;
+  color: var(--cs-color-text-secondary);
+  white-space: nowrap;
+}
+
+.milestoneQuote {
+  font-size: 0.6875rem;
+  font-style: italic;
+  color: var(--cs-color-text-muted);
+  text-align: center;
+  margin: 0;
+}
+
+/* ==========================================================================
+   Responsive Breakpoints
+   ========================================================================== */
+@media (max-width: 68rem) {
+  .middleGrid[style*="1.5fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .kpiGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 48rem) {
+  .heroBanner {
+    grid-template-columns: 1fr;
+    padding: var(--cs-space-5);
+  }
+
+  .kpiGrid,
+  .middleGrid,
+  .twoColumnGrid,
+  .bottomGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .headerSearchWrapper {
+    display: none;
+  }
+
+  .userInfo {
+    display: none;
+  }
+
+  .userProfileBadge {
+    border-inline-start: 0;
+    padding-inline-start: 0;
+  }
+}
+
+/* Existing utility components support */
 .heroCard {
   background: var(--cs-color-bg-surface);
   border: var(--cs-border-width) solid var(--cs-color-border-subtle);
@@ -13,16 +834,9 @@
   gap: var(--cs-space-4);
 }
 
-.heroHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--cs-space-4);
-}
-
 .heroTitle {
   margin: 0;
-  font-size: var(--cs-font-size-heading-1);
+  font-size: var(--cs-font-size-heading-xl);
   color: var(--cs-color-text-primary);
   font-weight: var(--cs-font-weight-bold);
 }
@@ -52,7 +866,7 @@
 
 .cardHeading {
   margin: 0;
-  font-size: var(--cs-font-size-heading-3);
+  font-size: var(--cs-font-size-heading-lg);
   color: var(--cs-color-text-primary);
   font-weight: var(--cs-font-weight-bold);
 }

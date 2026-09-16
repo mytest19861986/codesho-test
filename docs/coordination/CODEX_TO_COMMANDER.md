@@ -1,5 +1,48 @@
 # Codex to Commander — Coordination Ledger
 
+## WAVE_2_VISUAL_BENCHMARK_REMEDIATION_LEDGER — 2026-09-17
+
+- **DIRECTIVE**: `COMMANDER_FRONTEND_WAVE2_VISUAL_BENCHMARK_REMEDIATION_DIRECTIVE`
+- **AUTHORITY**: `HUMAN_MANAGER_VISUAL_BENCHMARK`
+- **ACTIVE_SCOPE**: `WAVE_2_STUDENT_SURFACE_ONLY`
+- **STATUS**: `TECHNICAL_CLOSURE_COMPLETED`
+- **HUMAN_MANAGER_STUDENT_ACCEPTANCE**: `PENDING`
+- **PRIMARY_VISUAL_REFERENCE**: `docs/coordination/student_dashboard_reference_benchmark.png`
+- **CANONICAL_ROUTES_VERIFIED**:
+  - `/student` -> `HTTP 200 OK` (Desktop & Mobile verified)
+  - `/student/learning` -> `HTTP 200 OK` (Desktop & Mobile verified)
+  - `/student/coaching` -> `HTTP 200 OK` (Desktop & Mobile verified)
+  - `/student/growth` -> `HTTP 200 OK` (Desktop & Mobile verified)
+  - `/student/portfolio` -> `HTTP 200 OK` (Desktop & Mobile verified)
+- **BENCHMARK_MAPPING**:
+  - Left Sidebar: Brand logo, tagline («مسیر بهتر، آینده روشن‌تر»), 5 main nav routes, utility links (Settings, Support), promo card («رویاهات را با کدنویسی بساز»).
+  - Header: Search bar (`Ctrl + K`), notification bell (badge `۲`), profile badge (علی محمدی).
+  - Welcome Hero: Purple/indigo gradient, primary/secondary action buttons, quote & 4-step checklist.
+  - KPI Cards: 4 stat cards (68% course progress ring, 24 assignments, 12 days study streak 🔥, 4.8/5 rating).
+  - Middle Grid: Performance line chart with tooltip, 68% circular progress donut, skill mastery bars.
+  - Bottom Grid: Recent activities, smart path recommendations, 4-stage milestone roadmap.
+- **QUALITY_GATES**:
+  - UI Policy: `10/10 PASS` (`node scripts/check-ui-policy.mjs`)
+  - Container Build: `10/10 static pages compiled cleanly via Turbopack`
+  - Runtime: 0 console errors, 0 hydration errors, 0 broken images, 0 horizontal overflow
+- **SCREENSHOT_PACKAGE** (10 high-fidelity captures in `docs/coordination/benchmark_remediation_evidence/`):
+  - `student_dashboard_desktop.png` (1440x900) & `student_dashboard_mobile.png` (390x844)
+  - `student_learning_desktop.png` & `student_learning_mobile.png`
+  - `student_coaching_desktop.png` & `student_coaching_mobile.png`
+  - `student_growth_desktop.png` & `student_growth_mobile.png`
+  - `student_portfolio_desktop.png` & `student_portfolio_mobile.png`
+- **FLEET_INDEPENDENT_REVIEWS**:
+  - Qwen Studio: `PASS` (`QWEN_WAVE2_STUDENT_SURFACE: PASS`, `QWEN_WAVE2_ANTI_RANKING_CHECK: PASS`, Blockers: `0`)
+  - Gemini UI: `PASS` (`GEMINI_WAVE2_STUDENT_SURFACE: PASS`, `GEMINI_WAVE2_VISUAL_POLISH: PASS`, `GEMINI_WAVE2_ACCESSIBILITY_WCAG: PASS`, Blockers: `0`)
+- **GOVERNANCE_INVARIANTS**:
+  - ZERO student ranking, ZERO leaderboards, ZERO comparative peer evaluation.
+  - 100% RTL-first Persian design tokens, 0 raw hex/RGB colors, 0 untyped JSX strings.
+  - `REAL_PILOT: LOCKED` | `REAL_DATA: LOCKED` | `PRODUCTION: LOCKED` | `MERGE_TO_MAIN: LOCKED_FOR_MANAGER`
+- **DOSSIER_PATH**: `docs/coordination/WAVE2_STUDENT_BENCHMARK_REMEDIATION_DOSSIER.md`
+- **NEXT_ACTION**: Awaiting Human Manager visual inspection and acceptance.
+
+---
+
 ## FRONTEND_PRIORITY_AND_P10_PAUSED_LEDGER — 2026-09-16
 
 - **COMMANDER_DECISION**: `HOLD_P10_FINALIZATION_AND_PRIORITIZE_FRONTEND_REMEDIATION`

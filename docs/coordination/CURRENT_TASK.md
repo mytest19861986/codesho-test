@@ -1,27 +1,30 @@
-# Current Task: FRONTEND_FULL_RUNTIME_REMEDIATION (Primary - Wave 1 Remediated) & P10-HUMAN-MANAGER-DECISION-PACKAGE (Paused)
+# Current Task: FRONTEND_FULL_RUNTIME_REMEDIATION (Wave 1 Accepted, Wave 2 Visual Benchmark Remediation Completed) & P10-HUMAN-MANAGER-DECISION-PACKAGE (Paused)
  
-- **COMMANDER_DECISION**: `HOLD_P10_FINALIZATION_AND_PRIORITIZE_FRONTEND_REMEDIATION`
+- **DIRECTIVE**: `COMMANDER_FRONTEND_WAVE2_VISUAL_BENCHMARK_REMEDIATION_DIRECTIVE`
+- **AUTHORITY**: `HUMAN_MANAGER_VISUAL_BENCHMARK`
 - **PRIMARY_TASK**: `FRONTEND_FULL_RUNTIME_REMEDIATION`
-- **WAVE_1_STATUS**: `REMEDIATED_AWAITING_HUMAN_MANAGER_VISUAL_ACCEPTANCE`
-- **WAVE_1_RUNTIME_EVIDENCE**:
-  - Hero media asset 404 resolved: `HTTP/1.1 200 OK` (2.3 MB PNG loaded and verified in browser)
-  - Duplicate login nav resolved: `LOGIN_NAV_COUNT: 1` (`header_part.count('ورود') == 1`)
-  - Custom 404 page created: `HTTP/1.1 404 Not Found` with clean return action to home
-  - Brand consistency: Canonical English brand `CodeSho` unified across headers and cards
-  - UI Policy tests: `10/10 PASS` (`scripts/check-ui-policy.mjs` & `test.mjs`)
-  - Runtime screenshots: Desktop (1440x900) & Mobile (390x844) captured via live CDP
-- **WAVE_2_STATUS**: `HOLD_UNTIL_WAVE_1_ACCEPTED`
+- **WAVE_1_STATUS**: `COMPLETE_ACCEPTED`
+- **WAVE_2_STATUS**: `VISUAL_BENCHMARK_REMEDIATED_AWAITING_HUMAN_MANAGER_ACCEPTANCE`
+- **HUMAN_MANAGER_STUDENT_ACCEPTANCE**: `PENDING`
+- **WAVE_2_RUNTIME_EVIDENCE**:
+  - Canonical Routes (5/5 PASS): `/student`, `/student/learning`, `/student/coaching`, `/student/growth`, `/student/portfolio` (HTTP 200 OK)
+  - Visual Architecture: Left Sidebar, Top Search Header, Welcome Hero Banner with checklist, 4 KPI Cards, 3-Column Analytics Grid, 3-Column Bottom Action Grid
+  - UI Policy Tests: `10/10 PASS` (`node scripts/check-ui-policy.mjs`)
+  - Runtime Screenshots: 10/10 high-fidelity captures in `docs/coordination/benchmark_remediation_evidence/` (Desktop 1440x900 & Mobile 390x844)
+  - Fleet Reviews:
+    - Qwen Studio: `PASS` (`QWEN_WAVE2_STUDENT_SURFACE: PASS`, `QWEN_WAVE2_ANTI_RANKING_CHECK: PASS`, Blockers: `0`)
+    - Gemini UI: `PASS` (`GEMINI_WAVE2_STUDENT_SURFACE: PASS`, `GEMINI_WAVE2_VISUAL_POLISH: PASS`, `GEMINI_WAVE2_ACCESSIBILITY_WCAG: PASS`, Blockers: `0`)
+  - Governance Invariants: ZERO student ranking, ZERO leaderboards, ZERO comparative peer evaluation, 100% RTL-first Persian design tokens
+- **WAVE_3_STATUS**: `DO_NOT_START_UNTIL_HUMAN_MANAGER_WAVE_2_ACCEPTANCE`
 - **P10_STATUS**: `PAUSED` (FROZEN_PROVISIONAL / All 12 Canonical Documents Preserved)
-- **QWEN_P10_REVIEW**: `PASS / 0 BLOCKERS` (PRESERVED)
-- **GLM_GEMINI_P10_REVIEW**: `PAUSED`
-- **REASON**: Human Manager visual review required on Wave 1 before proceeding to Wave 2.
+- **DOSSIER**: `docs/coordination/WAVE2_STUDENT_BENCHMARK_REMEDIATION_DOSSIER.md`
 - **ACCEPTED_BASELINES**:
   - `BACKEND_HEAD`: `7c4c1f09c876b6345b3550103a6ef30265376478` (`COMPLETE_FINAL_ACCEPTED`)
   - `P8_DISCOVERY_STATUS`: `COMPLETE_FINAL_ACCEPTED` (13 Canonical Artifacts)
   - `P9_SYNTHETIC_STATUS`: `COMPLETE_FINAL_ACCEPTED` (SHA: `9629db8013bff0d4a204ab032c37560c86548db4`, 25/25 Tests Pass)
 - **CANONICAL_TENANT_KEY**: `app.current_tenant`
 - **GOVERNANCE_LOCKS**: `REAL_PILOT: LOCKED` | `REAL_DATA: LOCKED` | `REAL_ORGANIZATION_ONBOARDING: LOCKED` | `REAL_CONSENT_ACTIVATION: LOCKED` | `REAL_SMS_EMAIL: LOCKED` | `REAL_PAYMENT: LOCKED` | `PUBLIC_SIGNUP: LOCKED` | `PRODUCTION: LOCKED` | `MERGE_TO_MAIN: LOCKED_FOR_MANAGER`
-- **PROJECT_STATE**: `READY_FOR_HUMAN_MANAGER_WAVE_1_VISUAL_ACCEPTANCE`
+- **PROJECT_STATE**: `READY_FOR_HUMAN_MANAGER_VISUAL_BENCHMARK_ACCEPTANCE`
 
 ---
 
