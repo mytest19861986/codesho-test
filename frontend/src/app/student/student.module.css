@@ -1043,16 +1043,18 @@
 }
 
 .modalSheet {
-  background: var(--cs-color-bg-surface);
+  background: #ffffff;
   border: var(--cs-border-width) solid var(--cs-color-border-subtle);
   border-radius: var(--cs-radius-sheet);
-  box-shadow: var(--cs-shadow-floating);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   max-inline-size: 38rem;
   inline-size: 100%;
   padding: var(--cs-space-6);
   display: flex;
   flex-direction: column;
   gap: var(--cs-space-4);
+  position: relative;
+  z-index: 1001;
 }
 
 .modalHeader {
