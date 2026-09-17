@@ -1,27 +1,30 @@
-# Current Task: WAVE3_PARENT_AND_MENTOR_FRONTEND_VISUAL_STRUCTURAL_RECOVERY (Commander Technical Closure Granted)
+# Current Task: WAVE3_PARENT_AND_MENTOR_FRONTEND_VISUAL_STRUCTURAL_RECOVERY (Commander Functional Technical Reclosure Granted)
  
-- **COMMANDER_DECISION**: `COMMANDER_WAVE3_TECHNICAL_CLOSURE: GRANTED` (2026-09-17)
-- **DIRECTIVE**: `COMMANDER_WAVE3_PARENT_MENTOR_TECHNICAL_CLOSURE`
+- **COMMANDER_DECISION**: `COMMANDER_WAVE3_FUNCTIONAL_TECHNICAL_RECLOSURE: GRANTED` (2026-09-18)
+- **DIRECTIVE**: `COMMANDER_WAVE3_FUNCTIONAL_TECHNICAL_RECLOSURE`
 - **AUTHORITY**: `HUMAN_MANAGER`
-- **PRIMARY_TASK**: `PARENT_AND_MENTOR_FRONTEND_VISUAL_STRUCTURAL_RECOVERY`
+- **PRIMARY_TASK**: `PARENT_AND_MENTOR_FRONTEND_VISUAL_STRUCTURAL_AND_INTERACTION_RECOVERY`
 - **WAVE_1_STATUS**: `COMPLETE_ACCEPTED`
 - **WAVE_2_STATUS**: `COMPLETE_FINAL_ACCEPTED`
 - **WAVE_3_TECHNICAL_STATUS**: `COMPLETE_FINAL_ACCEPTED`
 - **WAVE_3_TRACK**: `CLOSED_FOR_TECHNICAL_WORK`
 - **HUMAN_MANAGER_WAVE3_ACCEPTANCE**: `PENDING`
-- **FRONTEND_HEAD**: `2104c0453de52a315d41265b77edba83568cb557`
+- **FRONTEND_HEAD**: `af0631750bcf036a2ddf63faf806c55a8e995986`
 - **SOURCE_COMMITTED**: `YES`
 - **WORKTREE**: `CLEAN`
-- **WAVE_3_FINAL_COMMIT**: `2104c04` (`feat(frontend): implement Wave 3 Parent and Mentor portals reusing shared design system`)
-- **WAVE_3_RUNTIME_EVIDENCE**:
+- **WAVE_3_COMMITS**:
+  - `2104c04`: Initial Wave 3 portal layout and structural primitives
+  - `6acb761`: Eliminate all no-op controls across mentor and parent portals
+  - `306b711`: Reinforce solid white background and elevated z-index on modalSheet
+  - `af06317`: Add ESC keyboard dismiss to modals and dynamic dependent child data binding
+- **WAVE_3_RUNTIME_INTERACTION_EVIDENCE**:
   - Discovered and Executed Routes (2/2 PASS): `/parent`, `/mentor` (HTTP 200 OK via live Nginx proxy)
-  - Visual Architecture: 100% reuse of accepted Student primitives (`AppShell`, `heroBanner`, `kpiGrid`, `cardPanel`, `twoColumnGrid`), zero emojis, standardized SVG icon system
-  - Parent Portal: Explicit Multi-Child Selector (`Ali Mohammadi - 10th grade`) preventing cross-child data mixing, 4 oversight KPIs, governance consent panel
-  - Mentor Console: Workflow-driven review queue, 4 guidance workload KPIs, dedicated green identity avatar with AppShell `tone="mentor"`
-  - Fleet Verification: Qwen Wave 3 Review `PASS` (`QWEN_BLOCKERS: 0`), Gemini Review verified compliant with Wave 2 benchmark
-  - Runtime Screenshots: 4/4 captures in artifact directory (Desktop 1440x900 & Mobile 390x844)
-  - Data Provenance: All metrics classified as `SYNTHETIC_DEMO_DATA` (0 real PII, 0 fabricated claims, `AUTONOMOUS_AI_RUNTIME: NOT_ENABLED`)
-- **NEXT_GATE**: `HUMAN_MANAGER_WAVE3_VISUAL_DECISION`
+  - Interactive Controls Discovered & Executed: 14/14 (100% PASS, `NO_OP_ACTIONS: 0`, `DEAD_ACTIONS: 0`)
+  - Modals Discovered & Executed: 5/5 (100% PASS, Open/Close, Backdrop, ESC Key, Solid White Surface)
+  - Mentor Search: Dynamic live filter, `Ctrl+K` shortcut, clear button (`IconClose`)
+  - Parent Oversight: Dynamic child switcher updating dependent milestones without data mixing
+  - Automated Regression Suite: `verify_wave3_suite.py` PASS
+- **NEXT_GATE**: `HUMAN_MANAGER_WAVE3_RUNTIME_ACCEPTANCE`
 - **PROJECT_STATE**: `WAVE_3_TECHNICALLY_CLOSED_AWAITING_HUMAN_MANAGER`
 
 ---
