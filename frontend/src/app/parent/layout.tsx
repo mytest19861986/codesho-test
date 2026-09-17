@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AppShell } from "@/components/layout";
@@ -14,8 +14,10 @@ import {
   IconTrending,
   IconDocument,
   IconCheck,
+  IconClose,
 } from "@/components/ui";
 import { parentAlphaContent as copy } from "@/content/fa/parent.alpha";
+import { ParentSearchProvider, useParentSearch } from "./ParentSearchContext";
 import styles from "../student/student.module.css";
 
 interface ParentLayoutProps {
@@ -29,8 +31,21 @@ const navIcons: Record<string, ReactNode> = {
   consent: <IconCheck aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />,
 };
 
-export default function ParentLayout({ children }: ParentLayoutProps) {
+function ParentLayoutInner({ children }: ParentLayoutProps) {
   const pathname = usePathname();
+  const { searchQuery, setSearchQuery, setOpenConsentModal } = useParentSearch();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   let activeItemId = "overview";
   if (pathname.includes("/progress")) activeItemId = "progress";
@@ -58,13 +73,26 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
     <div className={styles.headerSearchWrapper}>
       <IconSearch aria-hidden="true" className={styles.searchIcon} style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
       <input
+        ref={searchInputRef}
         type="search"
         className={styles.searchInput}
         placeholder={copy.shell.searchPlaceholder}
         aria-label={copy.shell.searchPlaceholder}
-        readOnly
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
       />
-      <span className={styles.searchShortcut}>{copy.shell.searchShortcut}</span>
+      {searchQuery ? (
+        <button
+          type="button"
+          onClick={() => setSearchQuery("")}
+          className={styles.searchClearBtn}
+          aria-label="پاک کردن جستجو"
+        >
+          <IconClose aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem" }} />
+        </button>
+      ) : (
+        <span className={styles.searchShortcut}>{copy.shell.searchShortcut}</span>
+      )}
     </div>
   );
 
@@ -107,7 +135,11 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
     <div className={styles.sidebarPromoCard}>
       <p className={styles.sidebarPromoTitle}>{copy.shell.sidebarPromoTitle}</p>
       <p className={styles.sidebarPromoSubtitle}>{copy.shell.sidebarPromoSubtitle}</p>
-      <button type="button" className={styles.sidebarPromoButton}>
+      <button
+        type="button"
+        className={styles.sidebarPromoButton}
+        onClick={() => setOpenConsentModal(true)}
+      >
         {copy.shell.sidebarPromoButton}
       </button>
     </div>
@@ -130,5 +162,13 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
     >
       {children}
     </AppShell>
+  );
+}
+
+export default function ParentLayout({ children }: ParentLayoutProps) {
+  return (
+    <ParentSearchProvider>
+      <ParentLayoutInner>{children}</ParentLayoutInner>
+    </ParentSearchProvider>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AppShell } from "@/components/layout";
@@ -14,8 +14,10 @@ import {
   IconDocument,
   IconLaptop,
   IconClock,
+  IconClose,
 } from "@/components/ui";
 import { mentorAlphaContent as copy } from "@/content/fa/mentor.alpha";
+import { MentorSearchProvider, useMentorSearch } from "./MentorSearchContext";
 import styles from "../student/student.module.css";
 
 interface MentorLayoutProps {
@@ -29,8 +31,21 @@ const navIcons: Record<string, ReactNode> = {
   sessions: <IconClock aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />,
 };
 
-export default function MentorLayout({ children }: MentorLayoutProps) {
+function MentorLayoutInner({ children }: MentorLayoutProps) {
   const pathname = usePathname();
+  const { searchQuery, setSearchQuery, setOpenGuideModal } = useMentorSearch();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   let activeItemId = "overview";
   if (pathname.includes("/reviews")) activeItemId = "reviews";
@@ -58,13 +73,26 @@ export default function MentorLayout({ children }: MentorLayoutProps) {
     <div className={styles.headerSearchWrapper}>
       <IconSearch aria-hidden="true" className={styles.searchIcon} style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
       <input
+        ref={searchInputRef}
         type="search"
         className={styles.searchInput}
         placeholder={copy.shell.searchPlaceholder}
         aria-label={copy.shell.searchPlaceholder}
-        readOnly
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
       />
-      <span className={styles.searchShortcut}>{copy.shell.searchShortcut}</span>
+      {searchQuery ? (
+        <button
+          type="button"
+          className={styles.searchClearBtn}
+          onClick={() => setSearchQuery("")}
+          aria-label="پاک کردن متن جستجو"
+        >
+          <IconClose aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem" }} />
+        </button>
+      ) : (
+        <span className={styles.searchShortcut}>{copy.shell.searchShortcut}</span>
+      )}
     </div>
   );
 
@@ -107,7 +135,11 @@ export default function MentorLayout({ children }: MentorLayoutProps) {
     <div className={styles.sidebarPromoCard}>
       <p className={styles.sidebarPromoTitle}>{copy.shell.sidebarPromoTitle}</p>
       <p className={styles.sidebarPromoSubtitle}>{copy.shell.sidebarPromoSubtitle}</p>
-      <button type="button" className={styles.sidebarPromoButton}>
+      <button
+        type="button"
+        className={styles.sidebarPromoButton}
+        onClick={() => setOpenGuideModal(true)}
+      >
         {copy.shell.sidebarPromoButton}
       </button>
     </div>
@@ -130,5 +162,13 @@ export default function MentorLayout({ children }: MentorLayoutProps) {
     >
       {children}
     </AppShell>
+  );
+}
+
+export default function MentorLayout({ children }: MentorLayoutProps) {
+  return (
+    <MentorSearchProvider>
+      <MentorLayoutInner>{children}</MentorLayoutInner>
+    </MentorSearchProvider>
   );
 }
