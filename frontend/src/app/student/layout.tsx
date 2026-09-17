@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AppShell } from "@/components/layout";
@@ -15,8 +15,10 @@ import {
   IconChat,
   IconTrending,
   IconLaptop,
+  IconClose,
 } from "@/components/ui";
 import { studentAlphaContent as copy } from "@/content/fa/student.alpha";
+import { StudentSearchProvider, useStudentSearch } from "./StudentSearchContext";
 import styles from "./student.module.css";
 
 interface StudentLayoutProps {
@@ -31,8 +33,21 @@ const navIcons: Record<string, ReactNode> = {
   portfolio: <IconLaptop aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />,
 };
 
-export default function StudentLayout({ children }: StudentLayoutProps) {
+function StudentLayoutInner({ children }: StudentLayoutProps) {
   const pathname = usePathname();
+  const { searchQuery, setSearchQuery } = useStudentSearch();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Dynamically determine active item based on current route
   let activeItemId = "dashboard";
@@ -62,13 +77,26 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
     <div className={styles.headerSearchWrapper}>
       <IconSearch aria-hidden="true" className={styles.searchIcon} style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
       <input
+        ref={searchInputRef}
         type="search"
         className={styles.searchInput}
         placeholder={copy.shell.searchPlaceholder}
         aria-label={copy.shell.searchPlaceholder}
-        readOnly
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
       />
-      <span className={styles.searchShortcut}>{copy.shell.searchShortcut}</span>
+      {searchQuery ? (
+        <button
+          type="button"
+          onClick={() => setSearchQuery("")}
+          className={styles.searchClearBtn}
+          aria-label="پاک کردن جستجو"
+        >
+          <IconClose aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem" }} />
+        </button>
+      ) : (
+        <span className={styles.searchShortcut}>{copy.shell.searchShortcut}</span>
+      )}
     </div>
   );
 
@@ -134,5 +162,13 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
     >
       {children}
     </AppShell>
+  );
+}
+
+export default function StudentLayout({ children }: StudentLayoutProps) {
+  return (
+    <StudentSearchProvider>
+      <StudentLayoutInner>{children}</StudentLayoutInner>
+    </StudentSearchProvider>
   );
 }
