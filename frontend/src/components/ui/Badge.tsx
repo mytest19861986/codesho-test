@@ -2,7 +2,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 
 import styles from "./foundation.module.css";
 
-export type BadgeVariant = "primary" | "success" | "warning" | "danger" | "info";
+export type BadgeVariant = "primary" | "success" | "warning" | "danger" | "info" | "outline";
 
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   children: ReactNode;

@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 export default function StudentCoachingPage() {
   const c = copy.coaching;
   const ic = copy.icons;
+  const ind = copy.indicators;
   const cl = copy.commonLabels;
 
   return (
@@ -84,7 +85,7 @@ export default function StudentCoachingPage() {
             <span className={styles.kpiLabel}>{c.kpi2Title}</span>
             <span className={styles.kpiValue}>{c.kpi2Value}</span>
             <span className={styles.kpiSub}>
-              <span aria-hidden="true">{ic.check}</span>
+              <span aria-hidden="true">{ind.check}</span>
               <span>{c.kpi2Sub}</span>
             </span>
           </div>
