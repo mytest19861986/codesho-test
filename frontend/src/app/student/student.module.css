@@ -1001,3 +1001,30 @@
   border-radius: var(--cs-radius-control);
   background: var(--cs-color-bg-base);
 }
+
+.childSelectorBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  background: var(--cs-color-bg-surface);
+  border: var(--cs-border-width) solid var(--cs-color-border-subtle);
+  border-radius: var(--cs-radius-card);
+  padding: var(--cs-space-3) var(--cs-space-5);
+  gap: var(--cs-space-3);
+  box-shadow: var(--cs-shadow-sm);
+}
+
+.childSelectorInfo {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--cs-space-3);
+}
+
+.childSelectorBadge {
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--cs-color-brand-primary);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+}
+
