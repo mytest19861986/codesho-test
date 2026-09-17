@@ -82,8 +82,16 @@ export default function MentorOverviewPage() {
     setOpenReviewModal(true);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      setOpenReviewModal(false);
+      setOpenSessionModal(false);
+      setOpenGuideModal(false);
+    }
+  };
+
   return (
-    <div className={styles.studentDashboard}>
+    <div className={styles.studentDashboard} onKeyDown={handleKeyDown} tabIndex={-1}>
       {/* 1. Contextual Hero Banner */}
       <section className={styles.heroBanner} aria-labelledby="mentor-hero-heading">
         <div className={styles.heroContent}>

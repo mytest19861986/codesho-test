@@ -28,22 +28,40 @@ interface Milestone {
   type: string;
 }
 
-const initialMilestones: Milestone[] = [
-  {
-    id: "m-1",
-    title: copy.overview.milestone1Title,
-    date: copy.overview.milestone1Date,
-    status: copy.overview.milestone1Status,
-    type: "front-end"
-  },
-  {
-    id: "m-2",
-    title: copy.overview.milestone2Title,
-    date: copy.overview.milestone2Date,
-    status: copy.overview.milestone2Status,
-    type: "programming"
-  }
-];
+const milestonesByChild: Record<string, Milestone[]> = {
+  "علی محمدی (پایه دهم ریاضی)": [
+    {
+      id: "m-1",
+      title: copy.overview.milestone1Title,
+      date: copy.overview.milestone1Date,
+      status: copy.overview.milestone1Status,
+      type: "front-end"
+    },
+    {
+      id: "m-2",
+      title: copy.overview.milestone2Title,
+      date: copy.overview.milestone2Date,
+      status: copy.overview.milestone2Status,
+      type: "programming"
+    }
+  ],
+  "مریم محمدی (پایه هفتم)": [
+    {
+      id: "m-3",
+      title: "تکمیل پروژه طراحی صفحات وب با HTML و CSS",
+      date: "دیروز",
+      status: "تأیید مربی",
+      type: "front-end"
+    },
+    {
+      id: "m-4",
+      title: "آشنایی با متغیرها و حلقه‌ها در پایتون مقدماتی",
+      date: "۴ روز پیش",
+      status: "در حال بررسی",
+      type: "python"
+    }
+  ]
+};
 
 export default function ParentOverviewPage() {
   const o = copy.overview;
@@ -63,13 +81,24 @@ export default function ParentOverviewPage() {
   const [chatMessage, setChatMessage] = useState("");
   const [chatSent, setChatSent] = useState(false);
 
-  const filteredMilestones = initialMilestones.filter(m =>
+  // Keyboard accessibility: ESC closes any open modal
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      setOpenWeeklyReportModal(false);
+      setOpenMentorChatModal(false);
+      setOpenConsentModal(false);
+    }
+  };
+
+  const currentMilestones = milestonesByChild[selectedChild] || milestonesByChild["علی محمدی (پایه دهم ریاضی)"];
+
+  const filteredMilestones = currentMilestones.filter(m =>
     m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     m.status.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <div className={styles.studentDashboard}>
+    <div className={styles.studentDashboard} onKeyDown={handleKeyDown} tabIndex={-1}>
       {/* 0. Multi-Child Selector Banner */}
       <div className={styles.childSelectorBanner}>
         <div className={styles.childSelectorInfo}>
