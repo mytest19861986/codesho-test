@@ -36,9 +36,9 @@ export default function StudentPortfolioPage() {
       <section className={styles.heroBanner} aria-labelledby="portfolio-hero-heading">
         <div className={styles.heroContent}>
           <div className={styles.heroGreeting}>
-            <div style={{ display: "flex", alignItems: "center", gap: "var(--cs-space-2)", marginBlockEnd: "var(--cs-space-1)" }}>
-              <Badge variant="info">{p.heroBadge}</Badge>
-              <Badge variant="outline">{p.privacyBadge}</Badge>
+            <div className={styles.heroBadgeRow}>
+              <Badge variant="primary" className={styles.heroBadgeTranslucent}>{p.heroBadge}</Badge>
+              <Badge variant="outline" className={styles.heroBadgeDark}>{p.privacyBadge}</Badge>
             </div>
             <h1 id="portfolio-hero-heading" className={styles.heroHeading}>
               {p.title}
@@ -183,7 +183,7 @@ export default function StudentPortfolioPage() {
               <button className={`${styles.actionButton} ${styles.secondaryAction}`} type="button">
                 {p.actionEdit}
               </button>
-              <button className={styles.actionButton} type="button">
+              <button className={`${styles.actionButton} ${styles.primaryActionButton}`} type="button">
                 {p.actionView}
               </button>
             </div>
@@ -209,7 +209,7 @@ export default function StudentPortfolioPage() {
               <button className={`${styles.actionButton} ${styles.secondaryAction}`} type="button">
                 {p.actionEdit}
               </button>
-              <button className={styles.actionButton} type="button">
+              <button className={`${styles.actionButton} ${styles.primaryActionButton}`} type="button">
                 {p.actionView}
               </button>
             </div>
@@ -235,7 +235,7 @@ export default function StudentPortfolioPage() {
               <button className={`${styles.actionButton} ${styles.secondaryAction}`} type="button">
                 {p.actionEdit}
               </button>
-              <button className={styles.actionButton} type="button">
+              <button className={`${styles.actionButton} ${styles.primaryActionButton}`} type="button">
                 {p.actionView}
               </button>
             </div>
@@ -261,7 +261,7 @@ export default function StudentPortfolioPage() {
               <button className={`${styles.actionButton} ${styles.secondaryAction}`} type="button">
                 {p.actionEdit}
               </button>
-              <button className={styles.actionButton} type="button">
+              <button className={`${styles.actionButton} ${styles.primaryActionButton}`} type="button">
                 {p.actionView}
               </button>
             </div>
