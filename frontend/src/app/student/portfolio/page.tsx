@@ -1,7 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { studentAlphaContent as copy } from "@/content/fa/student.alpha";
-import { Badge } from "@/components/ui";
+import {
+  Badge,
+  IconSparkles,
+  IconDocument,
+  IconCheck,
+  IconArrowUp,
+  IconLaptop,
+  IconClock,
+  IconGear,
+  IconStar,
+  IconTrending,
+  IconTrophy,
+  IconChart,
+  IconTarget,
+  IconHistory,
+  IconFile,
+  IconChat,
+} from "@/components/ui";
 import styles from "../student.module.css";
 
 export const metadata: Metadata = {
@@ -11,7 +28,6 @@ export const metadata: Metadata = {
 
 export default function StudentPortfolioPage() {
   const p = copy.portfolio;
-  const ic = copy.icons;
   const cl = copy.commonLabels;
 
   return (
@@ -33,11 +49,11 @@ export default function StudentPortfolioPage() {
           </div>
           <div className={styles.heroButtons}>
             <button type="button" className={styles.heroPrimaryBtn}>
-              <span aria-hidden="true">{ic.sparkles}</span>
+              <IconSparkles aria-hidden="true" />
               <span>{p.heroActionPrimary}</span>
             </button>
             <button type="button" className={styles.heroSecondaryBtn}>
-              <span aria-hidden="true">{ic.document}</span>
+              <IconDocument aria-hidden="true" />
               <span>{p.heroActionSecondary}</span>
             </button>
           </div>
@@ -49,19 +65,19 @@ export default function StudentPortfolioPage() {
             <span className={styles.heroBrandMini}>{p.privacyNote}</span>
             <div className={styles.heroChecklist}>
               <div className={styles.heroCheckItem}>
-                <span aria-hidden="true">{copy.indicators.check}</span>
+                <IconCheck aria-hidden="true" />
                 <span>{p.project1Status}</span>
               </div>
               <div className={styles.heroCheckItem}>
-                <span aria-hidden="true">{copy.indicators.check}</span>
+                <IconCheck aria-hidden="true" />
                 <span>{p.project2Status}</span>
               </div>
               <div className={styles.heroCheckItem}>
-                <span aria-hidden="true">{copy.indicators.check}</span>
+                <IconCheck aria-hidden="true" />
                 <span>{p.project3Status}</span>
               </div>
               <div className={styles.heroCheckItem}>
-                <span aria-hidden="true">{copy.indicators.check}</span>
+                <IconCheck aria-hidden="true" />
                 <span>{p.project4Status}</span>
               </div>
             </div>
@@ -76,13 +92,13 @@ export default function StudentPortfolioPage() {
             <span className={styles.kpiLabel}>{p.kpi1Title}</span>
             <span className={styles.kpiValue}>{p.kpi1Value}</span>
             <span className={styles.kpiSub}>
-              <span aria-hidden="true">{ic.arrowUp}</span>
+              <IconArrowUp aria-hidden="true" />
               <span>{p.kpi1Sub}</span>
             </span>
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle1}`}>
-              <span aria-hidden="true">{ic.laptop}</span>
+              <IconLaptop aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -92,13 +108,13 @@ export default function StudentPortfolioPage() {
             <span className={styles.kpiLabel}>{p.kpi2Title}</span>
             <span className={styles.kpiValue}>{p.kpi2Value}</span>
             <span className={styles.kpiSub}>
-              <span aria-hidden="true">{ic.clock}</span>
+              <IconClock aria-hidden="true" />
               <span>{p.kpi2Sub}</span>
             </span>
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle3}`}>
-              <span aria-hidden="true">{ic.gear}</span>
+              <IconGear aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -108,13 +124,13 @@ export default function StudentPortfolioPage() {
             <span className={styles.kpiLabel}>{p.kpi3Title}</span>
             <span className={styles.kpiValue}>{p.kpi3Value}</span>
             <span className={styles.kpiSub}>
-              <span aria-hidden="true">{ic.star}</span>
+              <IconStar aria-hidden="true" />
               <span>{p.kpi3Sub}</span>
             </span>
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle2}`}>
-              <span aria-hidden="true">{ic.document}</span>
+              <IconDocument aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -124,13 +140,13 @@ export default function StudentPortfolioPage() {
             <span className={styles.kpiLabel}>{p.kpi4Title}</span>
             <span className={styles.kpiValue}>{p.kpi4Value}</span>
             <span className={styles.kpiSub}>
-              <span aria-hidden="true">{ic.trending}</span>
+              <IconTrending aria-hidden="true" />
               <span>{p.kpi4Sub}</span>
             </span>
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle4}`}>
-              <span aria-hidden="true">{ic.trophy}</span>
+              <IconTrophy aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -140,7 +156,7 @@ export default function StudentPortfolioPage() {
       <section aria-labelledby="showcase-heading" style={{ display: "flex", flexDirection: "column", gap: "var(--cs-space-4)" }}>
         <div className={styles.panelHeader}>
           <h2 id="showcase-heading" className={styles.panelTitle}>
-            <span aria-hidden="true">{ic.laptop}</span>
+            <IconLaptop aria-hidden="true" />
             <span>{cl.activeShowcaseTitle}</span>
           </h2>
           <span className={styles.panelFilter}>{cl.activeProjectsBadge}</span>
@@ -151,7 +167,7 @@ export default function StudentPortfolioPage() {
           <div className={styles.cardPanel}>
             <div className={styles.panelHeader}>
               <h3 className={styles.panelTitle} style={{ fontSize: "var(--cs-font-size-body)" }}>
-                <span aria-hidden="true">{ic.laptop}</span>
+                <IconLaptop aria-hidden="true" />
                 <span>{p.project1Title}</span>
               </h3>
               <Badge variant="success">{p.project1Status}</Badge>
@@ -177,7 +193,7 @@ export default function StudentPortfolioPage() {
           <div className={styles.cardPanel}>
             <div className={styles.panelHeader}>
               <h3 className={styles.panelTitle} style={{ fontSize: "var(--cs-font-size-body)" }}>
-                <span aria-hidden="true">{ic.gear}</span>
+                <IconGear aria-hidden="true" />
                 <span>{p.project2Title}</span>
               </h3>
               <Badge variant="warning">{p.project2Status}</Badge>
@@ -203,7 +219,7 @@ export default function StudentPortfolioPage() {
           <div className={styles.cardPanel}>
             <div className={styles.panelHeader}>
               <h3 className={styles.panelTitle} style={{ fontSize: "var(--cs-font-size-body)" }}>
-                <span aria-hidden="true">{ic.chart}</span>
+                <IconChart aria-hidden="true" />
                 <span>{p.project3Title}</span>
               </h3>
               <Badge variant="info">{p.project3Status}</Badge>
@@ -229,7 +245,7 @@ export default function StudentPortfolioPage() {
           <div className={styles.cardPanel}>
             <div className={styles.panelHeader}>
               <h3 className={styles.panelTitle} style={{ fontSize: "var(--cs-font-size-body)" }}>
-                <span aria-hidden="true">{ic.target}</span>
+                <IconTarget aria-hidden="true" />
                 <span>{p.project4Title}</span>
               </h3>
               <Badge variant="outline">{p.project4Status}</Badge>
@@ -259,14 +275,14 @@ export default function StudentPortfolioPage() {
         <div className={styles.cardPanel}>
           <div className={styles.panelHeader}>
             <h3 className={styles.panelTitle} style={{ fontSize: "var(--cs-font-size-body)" }}>
-              <span aria-hidden="true">{ic.history}</span>
+              <IconHistory aria-hidden="true" />
               <span>{p.recentSubmissionsTitle}</span>
             </h3>
           </div>
           <div className={styles.activityList}>
             <div className={styles.activityItem}>
               <div className={`${styles.activityIconCircle} ${styles.kpiCircle1}`}>
-                <span aria-hidden="true">{ic.file}</span>
+                <IconFile aria-hidden="true" />
               </div>
               <div className={styles.activityContent}>
                 <p className={styles.activityDesc}>{p.sub1Title}</p>
@@ -275,7 +291,7 @@ export default function StudentPortfolioPage() {
             </div>
             <div className={styles.activityItem}>
               <div className={`${styles.activityIconCircle} ${styles.kpiCircle2}`}>
-                <span aria-hidden="true">{ic.document}</span>
+                <IconDocument aria-hidden="true" />
               </div>
               <div className={styles.activityContent}>
                 <p className={styles.activityDesc}>{p.sub2Title}</p>
@@ -289,7 +305,7 @@ export default function StudentPortfolioPage() {
         <div className={styles.cardPanel}>
           <div className={styles.panelHeader}>
             <h3 className={styles.panelTitle} style={{ fontSize: "var(--cs-font-size-body)" }}>
-              <span aria-hidden="true">{ic.chat}</span>
+              <IconChat aria-hidden="true" />
               <span>{p.feedbackSummaryTitle}</span>
             </h3>
           </div>
@@ -316,7 +332,9 @@ export default function StudentPortfolioPage() {
               </h3>
               <p className={styles.milestoneDesc}>{p.readinessScore}</p>
             </div>
-            <span aria-hidden="true" style={{ fontSize: "1.75rem" }}>{ic.trophy}</span>
+            <div style={{ fontSize: "1.75rem", color: "var(--cs-color-brand-primary)" }}>
+              <IconTrophy aria-hidden="true" />
+            </div>
           </div>
           <p style={{ fontSize: "0.75rem", color: "var(--cs-color-text-secondary)", margin: 0 }}>
             {p.readinessDetail}

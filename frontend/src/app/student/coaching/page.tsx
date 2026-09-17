@@ -1,7 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { studentAlphaContent as copy } from "@/content/fa/student.alpha";
-import { Badge } from "@/components/ui";
+import {
+  Badge,
+  IconSparkles,
+  IconCalendar,
+  IconCheck,
+  IconArrowUp,
+  IconChat,
+  IconLightbulb,
+  IconStar,
+  IconFire,
+  IconTrending,
+  IconQuestion,
+  IconDocument,
+  IconLaptop,
+  IconFlag,
+} from "@/components/ui";
 import styles from "../student.module.css";
 
 export const metadata: Metadata = {
@@ -11,8 +26,6 @@ export const metadata: Metadata = {
 
 export default function StudentCoachingPage() {
   const c = copy.coaching;
-  const ic = copy.icons;
-  const ind = copy.indicators;
   const cl = copy.commonLabels;
 
   return (
@@ -34,11 +47,11 @@ export default function StudentCoachingPage() {
           </div>
           <div className={styles.heroButtons}>
             <button type="button" className={styles.heroPrimaryBtn}>
-              <span aria-hidden="true">{ic.sparkles}</span>
+              <IconSparkles aria-hidden="true" />
               <span>{c.heroActionPrimary}</span>
             </button>
             <button type="button" className={styles.heroSecondaryBtn}>
-              <span aria-hidden="true">{ic.calendar}</span>
+              <IconCalendar aria-hidden="true" />
               <span>{c.heroActionSecondary}</span>
             </button>
           </div>
@@ -50,11 +63,11 @@ export default function StudentCoachingPage() {
             <span className={styles.heroBrandMini}>{c.mentorStatus}</span>
             <div className={styles.heroChecklist}>
               <div className={styles.heroCheckItem}>
-                <span aria-hidden="true">{copy.indicators.check}</span>
+                <IconCheck aria-hidden="true" />
                 <span>{cl.fastResponseBadge}</span>
               </div>
               <div className={styles.heroCheckItem}>
-                <span aria-hidden="true">{copy.indicators.check}</span>
+                <IconCheck aria-hidden="true" />
                 <span>{cl.architectureAnalysisBadge}</span>
               </div>
             </div>
@@ -69,13 +82,13 @@ export default function StudentCoachingPage() {
             <span className={styles.kpiLabel}>{c.kpi1Title}</span>
             <span className={styles.kpiValue}>{c.kpi1Value}</span>
             <span className={styles.kpiSub}>
-              <span aria-hidden="true">{ic.arrowUp}</span>
+              <IconArrowUp aria-hidden="true" />
               <span>{c.kpi1Sub}</span>
             </span>
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle1}`}>
-              <span aria-hidden="true">{ic.chat}</span>
+              <IconChat aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -85,13 +98,13 @@ export default function StudentCoachingPage() {
             <span className={styles.kpiLabel}>{c.kpi2Title}</span>
             <span className={styles.kpiValue}>{c.kpi2Value}</span>
             <span className={styles.kpiSub}>
-              <span aria-hidden="true">{ind.check}</span>
+              <IconCheck aria-hidden="true" />
               <span>{c.kpi2Sub}</span>
             </span>
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle2}`}>
-              <span aria-hidden="true">{ic.lightbulb}</span>
+              <IconLightbulb aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -101,13 +114,13 @@ export default function StudentCoachingPage() {
             <span className={styles.kpiLabel}>{c.kpi3Title}</span>
             <span className={styles.kpiValue}>{c.kpi3Value}</span>
             <span className={styles.kpiSub}>
-              <span aria-hidden="true">{ic.star}</span>
+              <IconStar aria-hidden="true" />
               <span>{c.kpi3Sub}</span>
             </span>
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle3}`}>
-              <span aria-hidden="true">{ic.star}</span>
+              <IconStar aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -117,13 +130,13 @@ export default function StudentCoachingPage() {
             <span className={styles.kpiLabel}>{c.kpi4Title}</span>
             <span className={styles.kpiValue}>{c.kpi4Value}</span>
             <span className={styles.kpiSub}>
-              <span aria-hidden="true">{ic.trending}</span>
+              <IconTrending aria-hidden="true" />
               <span>{c.kpi4Sub}</span>
             </span>
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle4}`}>
-              <span aria-hidden="true">{ic.fire}</span>
+              <IconFire aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -135,7 +148,7 @@ export default function StudentCoachingPage() {
         <div className={styles.cardPanel}>
           <div className={styles.panelHeader}>
             <h2 className={styles.panelTitle} style={{ fontSize: "var(--cs-font-size-body)" }}>
-              <span aria-hidden="true">{ic.lightbulb}</span>
+              <IconLightbulb aria-hidden="true" />
               <span>{c.adviceTitle}</span>
             </h2>
             <Badge variant="success">{cl.verifiedAnalysis}</Badge>
@@ -168,7 +181,7 @@ export default function StudentCoachingPage() {
         <div className={styles.cardPanel}>
           <div className={styles.panelHeader}>
             <h2 className={styles.panelTitle} style={{ fontSize: "var(--cs-font-size-body)" }}>
-              <span aria-hidden="true">{ic.question}</span>
+              <IconQuestion aria-hidden="true" />
               <span>{c.recommendedQuestionsTitle}</span>
             </h2>
             <span className={styles.panelFilter}>{cl.analyticSuggestion}</span>
@@ -202,7 +215,7 @@ export default function StudentCoachingPage() {
         <div className={styles.cardPanel}>
           <div className={styles.panelHeader}>
             <h3 className={styles.panelTitle} style={{ fontSize: "var(--cs-font-size-body)" }}>
-              <span aria-hidden="true">{ic.document}</span>
+              <IconDocument aria-hidden="true" />
               <span>{c.h1Title}</span>
             </h3>
             <span className={styles.activityTime}>{c.h1Date}</span>
@@ -219,7 +232,7 @@ export default function StudentCoachingPage() {
         <div className={styles.cardPanel}>
           <div className={styles.panelHeader}>
             <h3 className={styles.panelTitle} style={{ fontSize: "var(--cs-font-size-body)" }}>
-              <span aria-hidden="true">{ic.laptop}</span>
+              <IconLaptop aria-hidden="true" />
               <span>{c.h2Title}</span>
             </h3>
             <span className={styles.activityTime}>{c.h2Date}</span>
@@ -241,7 +254,9 @@ export default function StudentCoachingPage() {
               </h3>
               <p className={styles.milestoneDesc}>{c.h3Date}</p>
             </div>
-            <span aria-hidden="true" style={{ fontSize: "1.75rem" }}>{ic.flag}</span>
+            <div style={{ fontSize: "1.75rem", color: "var(--cs-color-brand-primary)" }}>
+              <IconFlag aria-hidden="true" />
+            </div>
           </div>
           <p style={{ fontSize: "0.75rem", color: "var(--cs-color-text-secondary)", margin: 0 }}>
             {c.h3Content}

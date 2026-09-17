@@ -1,7 +1,25 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  Badge,
+  Progress,
+  IconSparkles,
+  IconMap,
+  IconCheck,
+  IconArrowUp,
+  IconGraduate,
+  IconClock,
+  IconStar,
+  IconDocument,
+  IconTrending,
+  IconFire,
+  IconLaptop,
+  IconGear,
+  IconChart,
+  IconTarget,
+  IconFile,
+} from "@/components/ui";
 import { studentAlphaContent as copy } from "@/content/fa/student.alpha";
-import { Badge, Progress } from "@/components/ui";
 import styles from "../student.module.css";
 
 export const metadata: Metadata = {
@@ -11,7 +29,6 @@ export const metadata: Metadata = {
 
 export default function StudentLearningPage() {
   const l = copy.learning;
-  const ic = copy.icons;
   const cl = copy.commonLabels;
 
   return (
@@ -33,11 +50,11 @@ export default function StudentLearningPage() {
           </div>
           <div className={styles.heroButtons}>
             <button type="button" className={styles.heroPrimaryBtn}>
-              <span aria-hidden="true">{ic.sparkles}</span>
+              <IconSparkles aria-hidden="true" style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
               <span>{l.heroActionPrimary}</span>
             </button>
             <button type="button" className={styles.heroSecondaryBtn}>
-              <span aria-hidden="true">{ic.map}</span>
+              <IconMap aria-hidden="true" style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
               <span>{l.heroActionSecondary}</span>
             </button>
           </div>
@@ -52,11 +69,11 @@ export default function StudentLearningPage() {
             </div>
             <div className={styles.heroChecklist}>
               <div className={styles.heroCheckItem}>
-                <span aria-hidden="true">{copy.indicators.check}</span>
+                <IconCheck aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem", color: "var(--cs-color-success)" }} />
                 <span>{l.module1Status}</span>
               </div>
               <div className={styles.heroCheckItem}>
-                <span aria-hidden="true">{copy.indicators.check}</span>
+                <IconCheck aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem", color: "var(--cs-color-success)" }} />
                 <span>{l.module2Status}</span>
               </div>
             </div>
@@ -71,13 +88,13 @@ export default function StudentLearningPage() {
             <span className={styles.kpiLabel}>{l.kpi1Title}</span>
             <span className={styles.kpiValue}>{l.kpi1Value}</span>
             <span className={styles.kpiSub}>
-              <span aria-hidden="true">{ic.arrowUp}</span>
+              <IconArrowUp aria-hidden="true" style={{ inlineSize: "0.75rem", blockSize: "0.75rem" }} />
               <span>{l.kpi1Sub}</span>
             </span>
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle1}`}>
-              <span aria-hidden="true">{ic.graduate}</span>
+              <IconGraduate aria-hidden="true" style={{ inlineSize: "1.5rem", blockSize: "1.5rem" }} />
             </div>
           </div>
         </div>
@@ -87,13 +104,13 @@ export default function StudentLearningPage() {
             <span className={styles.kpiLabel}>{l.kpi2Title}</span>
             <span className={styles.kpiValue}>{l.kpi2Value}</span>
             <span className={styles.kpiSub}>
-              <span aria-hidden="true">{ic.clock}</span>
+              <IconClock aria-hidden="true" style={{ inlineSize: "0.75rem", blockSize: "0.75rem" }} />
               <span>{l.kpi2Sub}</span>
             </span>
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle2}`}>
-              <span aria-hidden="true">{ic.clock}</span>
+              <IconClock aria-hidden="true" style={{ inlineSize: "1.5rem", blockSize: "1.5rem" }} />
             </div>
           </div>
         </div>
@@ -103,13 +120,13 @@ export default function StudentLearningPage() {
             <span className={styles.kpiLabel}>{l.kpi3Title}</span>
             <span className={styles.kpiValue}>{l.kpi3Value}</span>
             <span className={styles.kpiSub}>
-              <span aria-hidden="true">{ic.star}</span>
+              <IconStar aria-hidden="true" style={{ inlineSize: "0.75rem", blockSize: "0.75rem" }} />
               <span>{l.kpi3Sub}</span>
             </span>
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle3}`}>
-              <span aria-hidden="true">{ic.document}</span>
+              <IconDocument aria-hidden="true" style={{ inlineSize: "1.5rem", blockSize: "1.5rem" }} />
             </div>
           </div>
         </div>
@@ -119,13 +136,13 @@ export default function StudentLearningPage() {
             <span className={styles.kpiLabel}>{l.kpi4Title}</span>
             <span className={styles.kpiValue}>{l.kpi4Value}</span>
             <span className={styles.kpiSub}>
-              <span aria-hidden="true">{ic.trending}</span>
+              <IconTrending aria-hidden="true" style={{ inlineSize: "0.75rem", blockSize: "0.75rem" }} />
               <span>{l.kpi4Sub}</span>
             </span>
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle4}`}>
-              <span aria-hidden="true">{ic.fire}</span>
+              <IconFire aria-hidden="true" style={{ inlineSize: "1.5rem", blockSize: "1.5rem" }} />
             </div>
           </div>
         </div>
@@ -135,7 +152,7 @@ export default function StudentLearningPage() {
       <section aria-labelledby="modules-roadmap-heading" style={{ display: "flex", flexDirection: "column", gap: "var(--cs-space-4)" }}>
         <div className={styles.panelHeader}>
           <h2 id="modules-roadmap-heading" className={styles.panelTitle}>
-            <span aria-hidden="true">{ic.map}</span>
+            <IconMap aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem", color: "var(--cs-color-brand-primary)" }} />
             <span>{l.roadmapHeader}</span>
           </h2>
           <span className={styles.panelFilter}>{l.progressRatio}</span>
@@ -146,7 +163,7 @@ export default function StudentLearningPage() {
           <div className={styles.cardPanel}>
             <div className={styles.panelHeader}>
               <h3 className={styles.panelTitle} style={{ fontSize: "var(--cs-font-size-body)" }}>
-                <span aria-hidden="true">{ic.laptop}</span>
+                <IconLaptop aria-hidden="true" style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
                 <span>{l.module1Title}</span>
               </h3>
               <Badge variant="success">{l.module1Status}</Badge>
@@ -172,7 +189,7 @@ export default function StudentLearningPage() {
           <div className={styles.cardPanel}>
             <div className={styles.panelHeader}>
               <h3 className={styles.panelTitle} style={{ fontSize: "var(--cs-font-size-body)" }}>
-                <span aria-hidden="true">{ic.gear}</span>
+                <IconGear aria-hidden="true" style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
                 <span>{l.module2Title}</span>
               </h3>
               <Badge variant="warning">{l.module2Status}</Badge>
@@ -198,7 +215,7 @@ export default function StudentLearningPage() {
           <div className={styles.cardPanel}>
             <div className={styles.panelHeader}>
               <h3 className={styles.panelTitle} style={{ fontSize: "var(--cs-font-size-body)" }}>
-                <span aria-hidden="true">{ic.chart}</span>
+                <IconChart aria-hidden="true" style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
                 <span>{l.module3Title}</span>
               </h3>
               <Badge variant="info">{l.module3Status}</Badge>
@@ -224,7 +241,7 @@ export default function StudentLearningPage() {
           <div className={styles.cardPanel}>
             <div className={styles.panelHeader}>
               <h3 className={styles.panelTitle} style={{ fontSize: "var(--cs-font-size-body)" }}>
-                <span aria-hidden="true">{ic.target}</span>
+                <IconTarget aria-hidden="true" style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
                 <span>{l.module4Title}</span>
               </h3>
               <Badge variant="outline">{l.module4Status}</Badge>
@@ -254,7 +271,7 @@ export default function StudentLearningPage() {
         <div className={styles.cardPanel}>
           <div className={styles.panelHeader}>
             <h3 className={styles.panelTitle} style={{ fontSize: "var(--cs-font-size-body)" }}>
-              <span aria-hidden="true">{ic.chart}</span>
+              <IconChart aria-hidden="true" style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
               <span>{l.analyticsTitle}</span>
             </h3>
           </div>
@@ -285,14 +302,14 @@ export default function StudentLearningPage() {
         <div className={styles.cardPanel}>
           <div className={styles.panelHeader}>
             <h3 className={styles.panelTitle} style={{ fontSize: "var(--cs-font-size-body)" }}>
-              <span aria-hidden="true">{ic.document}</span>
+              <IconDocument aria-hidden="true" style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
               <span>{l.prerequisitesTitle}</span>
             </h3>
           </div>
           <div className={styles.activityList}>
             <div className={styles.activityItem}>
               <div className={`${styles.activityIconCircle} ${styles.kpiCircle1}`}>
-                <span aria-hidden="true">{ic.file}</span>
+                <IconFile aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem" }} />
               </div>
               <div className={styles.activityContent}>
                 <p className={styles.activityDesc}>{l.prereq1}</p>
@@ -301,7 +318,7 @@ export default function StudentLearningPage() {
             </div>
             <div className={styles.activityItem}>
               <div className={`${styles.activityIconCircle} ${styles.kpiCircle2}`}>
-                <span aria-hidden="true">{ic.laptop}</span>
+                <IconLaptop aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem" }} />
               </div>
               <div className={styles.activityContent}>
                 <p className={styles.activityDesc}>{l.prereq2}</p>
@@ -310,7 +327,7 @@ export default function StudentLearningPage() {
             </div>
             <div className={styles.activityItem}>
               <div className={`${styles.activityIconCircle} ${styles.kpiCircle3}`}>
-                <span aria-hidden="true">{ic.gear}</span>
+                <IconGear aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem" }} />
               </div>
               <div className={styles.activityContent}>
                 <p className={styles.activityDesc}>{l.prereq3}</p>
@@ -329,7 +346,7 @@ export default function StudentLearningPage() {
               </h3>
               <p className={styles.milestoneDesc}>{cl.learningGuideSub}</p>
             </div>
-            <span aria-hidden="true" style={{ fontSize: "1.75rem" }}>{ic.sparkles}</span>
+            <IconSparkles aria-hidden="true" style={{ inlineSize: "2rem", blockSize: "2rem", color: "var(--cs-color-brand-primary)" }} />
           </div>
           <p style={{ fontSize: "0.75rem", color: "var(--cs-color-text-secondary)", margin: 0 }}>
             {copy.coaching.adviceText}

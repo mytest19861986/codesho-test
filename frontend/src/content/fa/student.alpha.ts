@@ -46,7 +46,7 @@ export const studentAlphaContent = {
 
     kpi3Title: "روزهای مطالعه متوالی",
     kpi3Value: "۱۲ روز",
-    kpi3Sub: "رکورد شخصی! 🔥",
+    kpi3Sub: "رکورد شخصی پایدار",
 
     kpi4Title: "امتیاز از منتورها",
     kpi4Value: "۴.۸ از ۵",

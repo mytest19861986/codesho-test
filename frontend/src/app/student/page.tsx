@@ -1,5 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  IconSparkles,
+  IconCalendar,
+  IconCheck,
+  IconGraduate,
+  IconDocument,
+  IconFire,
+  IconStar,
+  IconChart,
+  IconTarget,
+  IconTrending,
+  IconTrophy,
+  IconArrowUp,
+  IconLaptop,
+  IconClock,
+  IconFile,
+  IconChat,
+} from "@/components/ui";
 import { studentAlphaContent as copy } from "@/content/fa/student.alpha";
 import styles from "./student.module.css";
 
@@ -10,7 +28,6 @@ export const metadata: Metadata = {
 
 export default function StudentDashboardPage() {
   const d = copy.dashboard;
-  const ic = copy.icons;
 
   return (
     <div className={styles.studentDashboard}>
@@ -27,11 +44,11 @@ export default function StudentDashboardPage() {
           </div>
           <div className={styles.heroButtons}>
             <Link href="/student/coaching" className={styles.heroPrimaryBtn}>
-              <span aria-hidden="true">{ic.sparkles}</span>
+              <IconSparkles aria-hidden="true" style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
               <span>{d.askMentorAction}</span>
             </Link>
             <Link href="/student/learning" className={styles.heroSecondaryBtn}>
-              <span aria-hidden="true">{ic.calendar}</span>
+              <IconCalendar aria-hidden="true" style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
               <span>{d.personalPlanAction}</span>
             </Link>
           </div>
@@ -43,19 +60,19 @@ export default function StudentDashboardPage() {
             <span className={styles.heroBrandMini}>{d.heroBrandTag}</span>
             <div className={styles.heroChecklist}>
               <div className={styles.heroCheckItem}>
-                <span aria-hidden="true">{copy.indicators.check}</span>
+                <IconCheck aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem", color: "var(--cs-color-success)" }} />
                 <span>{d.step1}</span>
               </div>
               <div className={styles.heroCheckItem}>
-                <span aria-hidden="true">{copy.indicators.check}</span>
+                <IconCheck aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem", color: "var(--cs-color-success)" }} />
                 <span>{d.step2}</span>
               </div>
               <div className={styles.heroCheckItem}>
-                <span aria-hidden="true">{copy.indicators.check}</span>
+                <IconCheck aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem", color: "var(--cs-color-success)" }} />
                 <span>{d.step3}</span>
               </div>
               <div className={styles.heroCheckItem}>
-                <span aria-hidden="true">{copy.indicators.check}</span>
+                <IconCheck aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem", color: "var(--cs-color-success)" }} />
                 <span>{d.step4}</span>
               </div>
             </div>
@@ -70,13 +87,13 @@ export default function StudentDashboardPage() {
             <span className={styles.kpiLabel}>{d.kpi1Title}</span>
             <span className={styles.kpiValue}>{d.kpi1Value}</span>
             <span className={styles.kpiSub}>
-              <span aria-hidden="true">{ic.arrowUp}</span>
+              <IconArrowUp aria-hidden="true" style={{ inlineSize: "0.75rem", blockSize: "0.75rem" }} />
               <span>{d.kpi1Sub}</span>
             </span>
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle1}`}>
-              <span aria-hidden="true">{ic.graduate}</span>
+              <IconGraduate aria-hidden="true" style={{ inlineSize: "1.5rem", blockSize: "1.5rem" }} />
             </div>
           </div>
         </div>
@@ -86,13 +103,13 @@ export default function StudentDashboardPage() {
             <span className={styles.kpiLabel}>{d.kpi2Title}</span>
             <span className={styles.kpiValue}>{d.kpi2Value}</span>
             <span className={styles.kpiSub}>
-              <span aria-hidden="true">{ic.arrowUp}</span>
+              <IconArrowUp aria-hidden="true" style={{ inlineSize: "0.75rem", blockSize: "0.75rem" }} />
               <span>{d.kpi2Sub}</span>
             </span>
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle2}`}>
-              <span aria-hidden="true">{ic.document}</span>
+              <IconDocument aria-hidden="true" style={{ inlineSize: "1.5rem", blockSize: "1.5rem" }} />
             </div>
           </div>
         </div>
@@ -107,7 +124,7 @@ export default function StudentDashboardPage() {
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle3}`}>
-              <span aria-hidden="true">{ic.fire}</span>
+              <IconFire aria-hidden="true" style={{ inlineSize: "1.5rem", blockSize: "1.5rem" }} />
             </div>
           </div>
         </div>
@@ -117,13 +134,13 @@ export default function StudentDashboardPage() {
             <span className={styles.kpiLabel}>{d.kpi4Title}</span>
             <span className={styles.kpiValue}>{d.kpi4Value}</span>
             <span className={styles.kpiSub}>
-              <span aria-hidden="true">{ic.arrowUp}</span>
+              <IconArrowUp aria-hidden="true" style={{ inlineSize: "0.75rem", blockSize: "0.75rem" }} />
               <span>{d.kpi4Sub}</span>
             </span>
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle4}`}>
-              <span aria-hidden="true">{ic.star}</span>
+              <IconStar aria-hidden="true" style={{ inlineSize: "1.5rem", blockSize: "1.5rem" }} />
             </div>
           </div>
         </div>
@@ -135,7 +152,7 @@ export default function StudentDashboardPage() {
         <section className={styles.cardPanel} aria-labelledby="chart-title">
           <header className={styles.panelHeader}>
             <h2 id="chart-title" className={styles.panelTitle}>
-              <span aria-hidden="true">{ic.chart}</span>
+              <IconChart aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem", color: "var(--cs-color-brand-primary)" }} />
               <span>{d.chartTitle}</span>
             </h2>
             <span className={styles.panelFilter}>{d.chartPeriod}</span>
@@ -186,7 +203,7 @@ export default function StudentDashboardPage() {
         <section className={styles.cardPanel} aria-labelledby="goal-title">
           <header className={styles.panelHeader}>
             <h2 id="goal-title" className={styles.panelTitle}>
-              <span aria-hidden="true">{ic.target}</span>
+              <IconTarget aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem", color: "var(--cs-color-brand-primary)" }} />
               <span>{d.goalTitle}</span>
             </h2>
             <span className={styles.panelFilter}>{d.goalFilter}</span>
@@ -229,7 +246,7 @@ export default function StudentDashboardPage() {
         <section className={styles.cardPanel} aria-labelledby="skills-growth-title">
           <header className={styles.panelHeader}>
             <h2 id="skills-growth-title" className={styles.panelTitle}>
-              <span aria-hidden="true">{ic.trending}</span>
+              <IconTrending aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem", color: "var(--cs-color-brand-primary)" }} />
               <span>{d.skillsTitle}</span>
             </h2>
             <Link href="/student/growth" className={styles.panelFilter}>
@@ -296,7 +313,7 @@ export default function StudentDashboardPage() {
         <section className={styles.cardPanel} aria-labelledby="recent-activities-title">
           <header className={styles.panelHeader}>
             <h2 id="recent-activities-title" className={styles.panelTitle}>
-              <span aria-hidden="true">{ic.clock}</span>
+              <IconClock aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem", color: "var(--cs-color-brand-primary)" }} />
               <span>{d.recentTitle}</span>
             </h2>
             <Link href="/student/learning" className={styles.panelFilter}>
@@ -306,7 +323,7 @@ export default function StudentDashboardPage() {
           <div className={styles.activityList}>
             <div className={styles.activityItem}>
               <div className={`${styles.activityIconCircle} ${styles.kpiCircle2}`}>
-                <span aria-hidden="true">{copy.indicators.check}</span>
+                <IconCheck aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem" }} />
               </div>
               <div className={styles.activityContent}>
                 <p className={styles.activityDesc}>{d.act1Desc}</p>
@@ -316,7 +333,7 @@ export default function StudentDashboardPage() {
 
             <div className={styles.activityItem}>
               <div className={`${styles.activityIconCircle} ${styles.kpiCircle1}`}>
-                <span aria-hidden="true">{ic.file}</span>
+                <IconFile aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem" }} />
               </div>
               <div className={styles.activityContent}>
                 <p className={styles.activityDesc}>{d.act2Desc}</p>
@@ -326,7 +343,7 @@ export default function StudentDashboardPage() {
 
             <div className={styles.activityItem}>
               <div className={`${styles.activityIconCircle} ${styles.kpiCircle4}`}>
-                <span aria-hidden="true">{ic.chat}</span>
+                <IconChat aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem" }} />
               </div>
               <div className={styles.activityContent}>
                 <p className={styles.activityDesc}>{d.act3Desc}</p>
@@ -340,7 +357,7 @@ export default function StudentDashboardPage() {
         <section className={styles.cardPanel} aria-labelledby="recommendations-title">
           <header className={styles.panelHeader}>
             <h2 id="recommendations-title" className={styles.panelTitle}>
-              <span aria-hidden="true">{ic.sparkles}</span>
+              <IconSparkles aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem", color: "var(--cs-color-brand-primary)" }} />
               <span>{d.recsTitle}</span>
             </h2>
             <span className={styles.panelFilter}>{d.recsBadge}</span>
@@ -384,34 +401,34 @@ export default function StudentDashboardPage() {
               </h2>
               <p className={styles.milestoneDesc}>{d.milestoneBannerDesc}</p>
             </div>
-            <span style={{ fontSize: "2rem" }} aria-hidden="true">{ic.trophy}</span>
+            <IconTrophy aria-hidden="true" style={{ inlineSize: "2.25rem", blockSize: "2.25rem", color: "var(--cs-color-brand-primary)" }} />
           </div>
 
           <div className={styles.milestoneStepsRow}>
             <div className={styles.milestoneStepNode}>
               <div className={styles.milestoneCircle}>
-                <span aria-hidden="true">{copy.indicators.check}</span>
+                <IconCheck aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem" }} />
               </div>
               <span className={styles.milestoneStepLabel}>{d.step1}</span>
             </div>
 
             <div className={styles.milestoneStepNode}>
               <div className={styles.milestoneCircle}>
-                <span aria-hidden="true">{copy.indicators.check}</span>
+                <IconCheck aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem" }} />
               </div>
               <span className={styles.milestoneStepLabel}>{d.step2}</span>
             </div>
 
             <div className={styles.milestoneStepNode}>
               <div className={styles.milestoneCircle}>
-                <span aria-hidden="true">{copy.indicators.check}</span>
+                <IconCheck aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem" }} />
               </div>
               <span className={styles.milestoneStepLabel}>{d.step3}</span>
             </div>
 
             <div className={styles.milestoneStepNode}>
               <div className={styles.milestoneCircle}>
-                <span aria-hidden="true">{ic.target}</span>
+                <IconTarget aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem" }} />
               </div>
               <span className={styles.milestoneStepLabel}>{d.step4}</span>
             </div>

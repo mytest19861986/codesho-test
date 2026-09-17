@@ -879,35 +879,53 @@
 }
 
 .actionButton {
-  min-block-size: 2.75rem;
+  min-block-size: 2.25rem;
   padding: var(--cs-space-2) var(--cs-space-4);
-  background: var(--cs-color-brand-primary);
-  color: var(--cs-color-text-inverse);
-  border: 0;
+  background: var(--cs-color-bg-base);
+  color: var(--cs-color-brand-primary);
+  border: var(--cs-border-width) solid var(--cs-color-brand-primary);
   border-radius: var(--cs-radius-control);
-  font-weight: var(--cs-font-weight-bold);
+  font-weight: var(--cs-font-weight-semibold);
+  font-size: var(--cs-font-size-caption);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   text-decoration: none;
+  transition: all var(--cs-motion-standard);
 }
 
 .actionButton:hover,
 .actionButton:focus-visible {
-  background: var(--cs-color-brand-primary-hover);
+  background: var(--cs-color-brand-primary-soft);
+  color: var(--cs-color-brand-primary-hover);
   outline: none;
   box-shadow: var(--cs-focus-ring);
 }
 
+.primaryActionButton {
+  background: var(--cs-color-brand-primary);
+  color: var(--cs-color-text-inverse);
+  border: var(--cs-border-width) solid var(--cs-color-brand-primary);
+}
+
+.primaryActionButton:hover,
+.primaryActionButton:focus-visible {
+  background: var(--cs-color-brand-primary-hover);
+  color: var(--cs-color-text-inverse);
+}
+
 .secondaryAction {
-  background: var(--cs-color-brand-primary-soft);
-  color: var(--cs-color-brand-primary);
+  background: var(--cs-color-bg-base);
+  color: var(--cs-color-text-secondary);
+  border: var(--cs-border-width) solid var(--cs-color-border-subtle);
 }
 
 .secondaryAction:hover,
 .secondaryAction:focus-visible {
-  background: var(--cs-color-border-subtle);
+  background: var(--cs-color-brand-primary-soft);
+  color: var(--cs-color-brand-primary);
+  border-color: var(--cs-color-brand-primary-soft);
 }
 
 .badgeRow {

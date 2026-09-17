@@ -1,6 +1,21 @@
+"use client";
+
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { AppShell } from "@/components/layout";
+import {
+  IconBrand,
+  IconSearch,
+  IconBell,
+  IconSettings,
+  IconSupport,
+  IconChart,
+  IconGraduate,
+  IconChat,
+  IconTrending,
+  IconLaptop,
+} from "@/components/ui";
 import { studentAlphaContent as copy } from "@/content/fa/student.alpha";
 import styles from "./student.module.css";
 
@@ -8,18 +23,35 @@ interface StudentLayoutProps {
   children: ReactNode;
 }
 
+const navIcons: Record<string, ReactNode> = {
+  dashboard: <IconChart aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />,
+  learning: <IconGraduate aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />,
+  coaching: <IconChat aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />,
+  growth: <IconTrending aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />,
+  portfolio: <IconLaptop aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />,
+};
+
 export default function StudentLayout({ children }: StudentLayoutProps) {
+  const pathname = usePathname();
+
+  // Dynamically determine active item based on current route
+  let activeItemId = "dashboard";
+  if (pathname.includes("/learning")) activeItemId = "learning";
+  else if (pathname.includes("/coaching")) activeItemId = "coaching";
+  else if (pathname.includes("/growth")) activeItemId = "growth";
+  else if (pathname.includes("/portfolio")) activeItemId = "portfolio";
+
   const navigationItems = copy.navigation.map((item) => ({
     id: item.id,
     label: item.label,
     href: item.href,
-    icon: <span aria-hidden="true">{copy.indicators.bullet}</span>,
+    icon: navIcons[item.id] || <IconChart aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />,
   }));
 
   const brandSlot = (
     <div className={styles.sidebarBrandArea}>
       <Link href="/student" className={styles.brandLogoTitle}>
-        <span aria-hidden="true">{copy.icons.brandCode}</span>
+        <IconBrand aria-hidden="true" style={{ inlineSize: "1.5rem", blockSize: "1.5rem" }} />
         <span>{copy.brand}</span>
       </Link>
       <span className={styles.brandTagline}>{copy.tagline}</span>
@@ -28,7 +60,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
 
   const headerSearchSlot = (
     <div className={styles.headerSearchWrapper}>
-      <span aria-hidden="true" className={styles.searchIcon}>{copy.icons.search}</span>
+      <IconSearch aria-hidden="true" className={styles.searchIcon} style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
       <input
         type="search"
         className={styles.searchInput}
@@ -47,7 +79,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
         className={styles.notifButton}
         aria-label={copy.shell.notificationsLabel}
       >
-        <span aria-hidden="true">{copy.icons.bell}</span>
+        <IconBell aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />
         <span className={styles.notifBadge}>{copy.shell.unreadCount}</span>
       </button>
       <div className={styles.userProfileBadge}>
@@ -65,11 +97,11 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
   const sidebarSupplementarySlot = (
     <div className={styles.sidebarFooterLinks}>
       <Link href="/student" className={styles.sidebarUtilityLink}>
-        <span aria-hidden="true">{copy.icons.settings}</span>
+        <IconSettings aria-hidden="true" style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
         <span>{copy.shell.settingsLabel}</span>
       </Link>
       <Link href="/student" className={styles.sidebarUtilityLink}>
-        <span aria-hidden="true">{copy.icons.support}</span>
+        <IconSupport aria-hidden="true" style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
         <span>{copy.shell.supportLabel}</span>
       </Link>
     </div>
@@ -87,7 +119,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
 
   return (
     <AppShell
-      activeItemId="dashboard"
+      activeItemId={activeItemId}
       brand={brandSlot}
       bottomNavigationItems={navigationItems}
       drawerCloseLabel={copy.shell.drawerCloseLabel}

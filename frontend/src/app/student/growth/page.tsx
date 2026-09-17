@@ -1,7 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { studentAlphaContent as copy } from "@/content/fa/student.alpha";
-import { Badge } from "@/components/ui";
+import {
+  Badge,
+  IconSparkles,
+  IconChart,
+  IconCheck,
+  IconArrowUp,
+  IconTrending,
+  IconStar,
+  IconGraduate,
+  IconTrophy,
+  IconFlag,
+  IconFire,
+  IconClock,
+  IconTarget,
+  IconGear,
+} from "@/components/ui";
 import styles from "../student.module.css";
 
 export const metadata: Metadata = {
@@ -11,7 +26,6 @@ export const metadata: Metadata = {
 
 export default function StudentGrowthPage() {
   const g = copy.growth;
-  const ic = copy.icons;
   const cl = copy.commonLabels;
 
   return (
@@ -33,11 +47,11 @@ export default function StudentGrowthPage() {
           </div>
           <div className={styles.heroButtons}>
             <button type="button" className={styles.heroPrimaryBtn}>
-              <span aria-hidden="true">{ic.sparkles}</span>
+              <IconSparkles aria-hidden="true" />
               <span>{g.heroActionPrimary}</span>
             </button>
             <button type="button" className={styles.heroSecondaryBtn}>
-              <span aria-hidden="true">{ic.chart}</span>
+              <IconChart aria-hidden="true" />
               <span>{g.heroActionSecondary}</span>
             </button>
           </div>
@@ -49,11 +63,11 @@ export default function StudentGrowthPage() {
             <span className={styles.heroBrandMini}>{g.selfSummaryText}</span>
             <div className={styles.heroChecklist}>
               <div className={styles.heroCheckItem}>
-                <span aria-hidden="true">{copy.indicators.check}</span>
+                <IconCheck aria-hidden="true" />
                 <span>{cl.noRankingBadge}</span>
               </div>
               <div className={styles.heroCheckItem}>
-                <span aria-hidden="true">{copy.indicators.check}</span>
+                <IconCheck aria-hidden="true" />
                 <span>{cl.personalContinuityBadge}</span>
               </div>
             </div>
@@ -68,13 +82,13 @@ export default function StudentGrowthPage() {
             <span className={styles.kpiLabel}>{g.kpi1Title}</span>
             <span className={styles.kpiValue}>{g.kpi1Value}</span>
             <span className={styles.kpiSub}>
-              <span aria-hidden="true">{ic.arrowUp}</span>
+              <IconArrowUp aria-hidden="true" />
               <span>{g.kpi1Sub}</span>
             </span>
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle1}`}>
-              <span aria-hidden="true">{ic.trending}</span>
+              <IconTrending aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -84,13 +98,13 @@ export default function StudentGrowthPage() {
             <span className={styles.kpiLabel}>{g.kpi2Title}</span>
             <span className={styles.kpiValue}>{g.kpi2Value}</span>
             <span className={styles.kpiSub}>
-              <span aria-hidden="true">{ic.star}</span>
+              <IconStar aria-hidden="true" />
               <span>{g.kpi2Sub}</span>
             </span>
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle2}`}>
-              <span aria-hidden="true">{ic.graduate}</span>
+              <IconGraduate aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -100,13 +114,13 @@ export default function StudentGrowthPage() {
             <span className={styles.kpiLabel}>{g.kpi3Title}</span>
             <span className={styles.kpiValue}>{g.kpi3Value}</span>
             <span className={styles.kpiSub}>
-              <span aria-hidden="true">{ic.trophy}</span>
+              <IconTrophy aria-hidden="true" />
               <span>{g.kpi3Sub}</span>
             </span>
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle3}`}>
-              <span aria-hidden="true">{ic.flag}</span>
+              <IconFlag aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -116,13 +130,13 @@ export default function StudentGrowthPage() {
             <span className={styles.kpiLabel}>{g.kpi4Title}</span>
             <span className={styles.kpiValue}>{g.kpi4Value}</span>
             <span className={styles.kpiSub}>
-              <span aria-hidden="true">{ic.fire}</span>
+              <IconFire aria-hidden="true" />
               <span>{g.kpi4Sub}</span>
             </span>
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle4}`}>
-              <span aria-hidden="true">{ic.clock}</span>
+              <IconClock aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -134,7 +148,7 @@ export default function StudentGrowthPage() {
         <div className={styles.cardPanel}>
           <div className={styles.panelHeader}>
             <h2 className={styles.panelTitle} style={{ fontSize: "var(--cs-font-size-body)" }}>
-              <span aria-hidden="true">{ic.trending}</span>
+              <IconTrending aria-hidden="true" />
               <span>{g.skillsTitle}</span>
             </h2>
             <Badge variant="success">{cl.personalContinuity}</Badge>
@@ -196,7 +210,7 @@ export default function StudentGrowthPage() {
         <div className={styles.cardPanel}>
           <div className={styles.panelHeader}>
             <h2 className={styles.panelTitle} style={{ fontSize: "var(--cs-font-size-body)" }}>
-              <span aria-hidden="true">{ic.flag}</span>
+              <IconFlag aria-hidden="true" />
               <span>{g.milestoneTitle}</span>
             </h2>
             <span className={styles.panelFilter}>{cl.establishedRecords}</span>
@@ -207,7 +221,7 @@ export default function StudentGrowthPage() {
                 <span className={styles.cardHeading} style={{ fontSize: "var(--cs-font-size-body)" }}>
                   {g.milestone1}
                 </span>
-                <Badge variant="success">{copy.indicators.check}</Badge>
+                <Badge variant="success"><IconCheck aria-hidden="true" style={{ fontSize: "0.75rem" }} /></Badge>
               </div>
               <span className={styles.activityTime}>{g.milestone1Date}</span>
             </li>
@@ -227,7 +241,7 @@ export default function StudentGrowthPage() {
                 <span className={styles.cardHeading} style={{ fontSize: "var(--cs-font-size-body)" }}>
                   {g.milestone3}
                 </span>
-                <Badge variant="success">{copy.indicators.check}</Badge>
+                <Badge variant="success"><IconCheck aria-hidden="true" style={{ fontSize: "0.75rem" }} /></Badge>
               </div>
               <span className={styles.activityTime}>{g.milestone3Date}</span>
             </li>
@@ -241,7 +255,7 @@ export default function StudentGrowthPage() {
         <div className={styles.cardPanel}>
           <div className={styles.panelHeader}>
             <h3 className={styles.panelTitle} style={{ fontSize: "var(--cs-font-size-body)" }}>
-              <span aria-hidden="true">{ic.target}</span>
+              <IconTarget aria-hidden="true" />
               <span>{cl.step1Growth}</span>
             </h3>
             <span className={styles.activityTime}>{cl.nearGoal}</span>
@@ -253,7 +267,7 @@ export default function StudentGrowthPage() {
         <div className={styles.cardPanel}>
           <div className={styles.panelHeader}>
             <h3 className={styles.panelTitle} style={{ fontSize: "var(--cs-font-size-body)" }}>
-              <span aria-hidden="true">{ic.gear}</span>
+              <IconGear aria-hidden="true" />
               <span>{cl.step2Growth}</span>
             </h3>
             <span className={styles.activityTime}>{cl.midGoal}</span>
@@ -270,7 +284,9 @@ export default function StudentGrowthPage() {
               </h3>
               <p className={styles.milestoneDesc}>{cl.proShowcase}</p>
             </div>
-            <span aria-hidden="true" style={{ fontSize: "1.75rem" }}>{ic.trophy}</span>
+            <div style={{ fontSize: "1.75rem", color: "var(--cs-color-brand-primary)" }}>
+              <IconTrophy aria-hidden="true" />
+            </div>
           </div>
           <p style={{ fontSize: "0.75rem", color: "var(--cs-color-text-secondary)", margin: 0 }}>
             {g.planStep3}
