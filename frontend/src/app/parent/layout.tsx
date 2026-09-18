@@ -1,9 +1,9 @@
 "use client";
 
-import { type ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AppShell } from "@/components/layout";
+import { AppShell, NotificationPopover, type DemoNotification } from "@/components/layout";
 import {
   IconBrand,
   IconSearch,
@@ -24,6 +24,25 @@ interface ParentLayoutProps {
   children: ReactNode;
 }
 
+const initialParentNotifications: DemoNotification[] = [
+  {
+    id: "notif-p1",
+    title: "ثبت بازخورد منتور برای علی",
+    description: "منتور ارشد بازخورد پروژه ماشین‌حساب ماژولار را ثبت کرد: کدنویسی تمیز و استاندارد.",
+    time: "۴۵ دقیقه پیش",
+    read: false,
+    type: "success",
+  },
+  {
+    id: "notif-p2",
+    title: "گزارش پیشرفت هفتگی آماده شد",
+    description: "گزارش تحلیلی ساعت مطالعه و تسلط بر مباحث هفته برای علی محمدی آماده مشاهده است.",
+    time: "۳ ساعت پیش",
+    read: true,
+    type: "info",
+  },
+];
+
 const navIcons: Record<string, ReactNode> = {
   overview: <IconChart aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />,
   progress: <IconTrending aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />,
@@ -35,6 +54,14 @@ function ParentLayoutInner({ children }: ParentLayoutProps) {
   const pathname = usePathname();
   const { searchQuery, setSearchQuery, setOpenConsentModal } = useParentSearch();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState<DemoNotification[]>(initialParentNotifications);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const handleMarkAllRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -86,7 +113,7 @@ function ParentLayoutInner({ children }: ParentLayoutProps) {
           type="button"
           onClick={() => setSearchQuery("")}
           className={styles.searchClearBtn}
-          aria-label="پاک کردن جستجو"
+          aria-label={copy.shell.searchPlaceholder}
         >
           <IconClose aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem" }} />
         </button>
@@ -98,20 +125,33 @@ function ParentLayoutInner({ children }: ParentLayoutProps) {
 
   const headerActionsSlot = (
     <div className={styles.headerActionsArea}>
-      <button
-        type="button"
-        className={styles.notifButton}
-        aria-label={copy.shell.notificationsLabel}
-      >
-        <IconBell aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />
-        <span className={styles.notifBadge}>{copy.shell.unreadCount}</span>
-      </button>
+      <div className={styles.notifContainer}>
+        <button
+          type="button"
+          className={styles.notifButton}
+          aria-label={copy.shell.notificationsLabel}
+          aria-expanded={isNotifOpen}
+          aria-haspopup="dialog"
+          onClick={() => setIsNotifOpen((prev) => !prev)}
+        >
+          <IconBell aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />
+          {unreadCount > 0 && <span className={styles.notifBadge}>{unreadCount}</span>}
+        </button>
+        <NotificationPopover
+          isOpen={isNotifOpen}
+          onClose={() => setIsNotifOpen(false)}
+          title={copy.shell.notificationsLabel}
+          notifications={notifications}
+          onMarkAllAsRead={handleMarkAllRead}
+          roleTone="parent"
+        />
+      </div>
       <div className={styles.userProfileBadge}>
         <div className={styles.userInfo}>
           <span className={styles.userRole}>{copy.shell.roleLabel}</span>
           <span className={styles.userName}>{copy.shell.userName}</span>
         </div>
-        <div className={styles.userAvatar} aria-hidden="true" style={{ background: "rgba(99, 102, 241, 0.15)", color: "#4f46e5" }}>
+        <div className={`${styles.userAvatar} ${styles.parentAvatar}`} aria-hidden="true">
           <span>{copy.shell.userName.slice(0, 1)}</span>
         </div>
       </div>

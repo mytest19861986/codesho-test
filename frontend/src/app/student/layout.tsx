@@ -1,9 +1,9 @@
 "use client";
 
-import { type ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AppShell } from "@/components/layout";
+import { AppShell, NotificationPopover, type DemoNotification } from "@/components/layout";
 import {
   IconBrand,
   IconSearch,
@@ -25,6 +25,25 @@ interface StudentLayoutProps {
   children: ReactNode;
 }
 
+const initialStudentNotifications: DemoNotification[] = [
+  {
+    id: "notif-s1",
+    title: "ثبت بازخورد منتور",
+    description: "منتور کد پروژه ماشین‌حساب ماژولار شما را بررسی و بازخورد جدید ثبت کرد.",
+    time: "۲۰ دقیقه پیش",
+    read: false,
+    type: "info",
+  },
+  {
+    id: "notif-s2",
+    title: "تکمیل موفقیت‌آمیز گام یادگیری",
+    description: "گام مبانی توابع در جاوااسکریپت با موفقیت ثبت و تایید شد.",
+    time: "۲ ساعت پیش",
+    read: false,
+    type: "success",
+  },
+];
+
 const navIcons: Record<string, ReactNode> = {
   dashboard: <IconChart aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />,
   learning: <IconGraduate aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />,
@@ -37,6 +56,14 @@ function StudentLayoutInner({ children }: StudentLayoutProps) {
   const pathname = usePathname();
   const { searchQuery, setSearchQuery } = useStudentSearch();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState<DemoNotification[]>(initialStudentNotifications);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const handleMarkAllRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -60,7 +87,7 @@ function StudentLayoutInner({ children }: StudentLayoutProps) {
     id: item.id,
     label: item.label,
     href: item.href,
-    icon: navIcons[item.id] || <IconChart aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />,
+    icon: navIcons[item.id] || navIcons.dashboard,
   }));
 
   const brandSlot = (
@@ -74,8 +101,12 @@ function StudentLayoutInner({ children }: StudentLayoutProps) {
   );
 
   const headerSearchSlot = (
-    <div className={styles.headerSearchWrapper}>
-      <IconSearch aria-hidden="true" className={styles.searchIcon} style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
+    <div className={styles.headerSearchArea}>
+      <IconSearch
+        aria-hidden="true"
+        className={styles.searchIcon}
+        style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }}
+      />
       <input
         ref={searchInputRef}
         type="search"
@@ -90,7 +121,7 @@ function StudentLayoutInner({ children }: StudentLayoutProps) {
           type="button"
           onClick={() => setSearchQuery("")}
           className={styles.searchClearBtn}
-          aria-label="پاک کردن جستجو"
+          aria-label={copy.shell.searchPlaceholder}
         >
           <IconClose aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem" }} />
         </button>
@@ -102,14 +133,27 @@ function StudentLayoutInner({ children }: StudentLayoutProps) {
 
   const headerActionsSlot = (
     <div className={styles.headerActionsArea}>
-      <button
-        type="button"
-        className={styles.notifButton}
-        aria-label={copy.shell.notificationsLabel}
-      >
-        <IconBell aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />
-        <span className={styles.notifBadge}>{copy.shell.unreadCount}</span>
-      </button>
+      <div className={styles.notifContainer}>
+        <button
+          type="button"
+          className={styles.notifButton}
+          aria-label={copy.shell.notificationsLabel}
+          aria-expanded={isNotifOpen}
+          aria-haspopup="dialog"
+          onClick={() => setIsNotifOpen((prev) => !prev)}
+        >
+          <IconBell aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />
+          {unreadCount > 0 && <span className={styles.notifBadge}>{unreadCount}</span>}
+        </button>
+        <NotificationPopover
+          isOpen={isNotifOpen}
+          onClose={() => setIsNotifOpen(false)}
+          title={copy.shell.notificationsLabel}
+          notifications={notifications}
+          onMarkAllAsRead={handleMarkAllRead}
+          roleTone="student"
+        />
+      </div>
       <div className={styles.userProfileBadge}>
         <div className={styles.userInfo}>
           <span className={styles.userRole}>{copy.shell.roleLabel}</span>

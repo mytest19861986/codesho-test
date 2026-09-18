@@ -21,3 +21,5 @@ export type {
   PublicNavigationItem,
   PublicShellProps,
 } from "./public-layout.types";
+export { NotificationPopover } from "./NotificationPopover";
+export type { DemoNotification } from "./NotificationPopover";
