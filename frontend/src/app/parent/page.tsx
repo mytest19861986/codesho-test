@@ -48,19 +48,20 @@ const milestonesByChild: Record<string, Milestone[]> = {
   "مریم محمدی (پایه هفتم)": [
     {
       id: "m-3",
-      title: "تکمیل پروژه طراحی صفحات وب با HTML و CSS",
-      date: "دیروز",
-      status: "تأیید مربی",
+      title: copy.overview.milestone3Title,
+      date: copy.overview.milestone3Date,
+      status: copy.overview.milestone3Status,
       type: "front-end"
     },
     {
       id: "m-4",
-      title: "آشنایی با متغیرها و حلقه‌ها در پایتون مقدماتی",
-      date: "۴ روز پیش",
-      status: "در حال بررسی",
+      title: copy.overview.milestone4Title,
+      date: copy.overview.milestone4Date,
+      status: copy.overview.milestone4Status,
       type: "python"
     }
   ]
+
 };
 
 export default function ParentOverviewPage() {
@@ -99,8 +100,8 @@ export default function ParentOverviewPage() {
 
   return (
     <div className={styles.studentDashboard} onKeyDown={handleKeyDown} tabIndex={-1}>
-      {/* 0. Multi-Child Selector Banner */}
-      <div className={styles.childSelectorBanner}>
+      {/* 0. Page Context Header & Child Anchor */}
+      <header className={styles.childSelectorBanner} aria-label={o.childSelectLabel}>
         <div className={styles.childSelectorInfo}>
           <span style={{ fontSize: "var(--cs-font-size-caption)", color: "var(--cs-color-text-secondary)", fontWeight: "var(--cs-font-weight-medium)" }}>
             {o.childSelectLabel}
@@ -120,28 +121,29 @@ export default function ParentOverviewPage() {
             }}
             aria-label={o.childSelectLabel}
           >
-            <option value="علی محمدی (پایه دهم ریاضی)">علی محمدی (پایه دهم ریاضی)</option>
-            <option value="مریم محمدی (پایه هفتم)">مریم محمدی (پایه هفتم)</option>
+            <option value={o.child1Option}>{o.child1Option}</option>
+            <option value={o.child2Option}>{o.child2Option}</option>
           </select>
         </div>
         <Badge variant="primary" className={styles.childSelectorBadge}>
-          {o.selectedChildBadge}
+          <bdi dir="ltr">{o.selectedChildBadge}</bdi>
         </Badge>
-      </div>
 
-      {/* 1. Contextual Hero Banner */}
+      </header>
+
+      {/* 1. Compact Product Briefing Band (Hero) */}
       <section className={styles.heroBanner} aria-labelledby="parent-hero-heading">
-        <div className={styles.heroContent}>
-          <div className={styles.heroGreeting}>
+        <div className={styles.parentHeroBriefingBand}>
+          <div className={styles.heroGreeting} style={{ maxWidth: "42rem" }}>
             <div className={styles.heroBadgeRow}>
               <Badge variant="primary" className={styles.heroBadgeTranslucent}>{o.heroBadge}</Badge>
-              <Badge variant="outline" className={styles.heroBadgeDark}>حریم خصوصی تضمین‌شده</Badge>
+              <Badge variant="outline" className={styles.heroBadgeDark}>{o.privacyAssuranceBadge}</Badge>
             </div>
-            <h1 id="parent-hero-heading" className={styles.heroHeading}>
+            <h1 id="parent-hero-heading" className={styles.heroHeading} style={{ fontSize: "var(--cs-font-size-heading-xl)" }}>
               {o.heroHeading}
             </h1>
             <p className={styles.heroSubtitle}>
-              {o.heroSubtitle}
+              <bdi dir="rtl">{o.heroSubtitle}</bdi>
             </p>
           </div>
           <div className={styles.heroButtons}>
@@ -153,44 +155,11 @@ export default function ParentOverviewPage() {
               <IconSparkles aria-hidden="true" style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
               <span>{o.heroActionPrimary}</span>
             </button>
-            <button
-              type="button"
-              className={styles.heroSecondaryBtn}
-              onClick={() => setOpenMentorChatModal(true)}
-            >
-              <IconChat aria-hidden="true" style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
-              <span>{o.heroActionSecondary}</span>
-            </button>
-          </div>
-        </div>
-
-        <div className={styles.heroGraphicWrapper}>
-          <div className={styles.heroGlassPanel}>
-            <p className={styles.heroQuoteText}>{o.oversightQuote}</p>
-            <span className={styles.heroBrandMini}>{o.oversightNote}</span>
-            <div className={styles.heroChecklist}>
-              <div className={styles.heroCheckItem}>
-                <IconCheck aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem", color: "var(--cs-color-success)" }} />
-                <span>{o.check1}</span>
-              </div>
-              <div className={styles.heroCheckItem}>
-                <IconCheck aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem", color: "var(--cs-color-success)" }} />
-                <span>{o.check2}</span>
-              </div>
-              <div className={styles.heroCheckItem}>
-                <IconCheck aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem", color: "var(--cs-color-success)" }} />
-                <span>{o.check3}</span>
-              </div>
-              <div className={styles.heroCheckItem}>
-                <IconCheck aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem", color: "var(--cs-color-success)" }} />
-                <span>{o.check4}</span>
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* 2. 4 KPI Metrics Grid for Parent Oversight */}
+      {/* 2. 4 Disciplined KPI Metrics Grid */}
       <section className={styles.kpiGrid} aria-label={o.title}>
         <div className={styles.kpiCard}>
           <div className={styles.kpiContent}>
@@ -203,7 +172,7 @@ export default function ParentOverviewPage() {
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle1}`}>
-              <IconClock aria-hidden="true" style={{ inlineSize: "1.5rem", blockSize: "1.5rem" }} />
+              <IconClock aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />
             </div>
           </div>
         </div>
@@ -219,7 +188,7 @@ export default function ParentOverviewPage() {
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle2}`}>
-              <IconDocument aria-hidden="true" style={{ inlineSize: "1.5rem", blockSize: "1.5rem" }} />
+              <IconDocument aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />
             </div>
           </div>
         </div>
@@ -235,7 +204,7 @@ export default function ParentOverviewPage() {
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle3}`}>
-              <IconCalendar aria-hidden="true" style={{ inlineSize: "1.5rem", blockSize: "1.5rem" }} />
+              <IconCalendar aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />
             </div>
           </div>
         </div>
@@ -251,14 +220,14 @@ export default function ParentOverviewPage() {
           </div>
           <div className={styles.kpiVisual}>
             <div className={`${styles.kpiIconCircle} ${styles.kpiCircle4}`}>
-              <IconShield aria-hidden="true" style={{ inlineSize: "1.5rem", blockSize: "1.5rem" }} />
+              <IconShield aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3. Operational Workflow & Oversight Grid */}
-      <section className={styles.twoColumnGrid} aria-label="روند و دستاوردها">
+      {/* 3. Operational Workflow & Oversight Grid (Content-Weighted) */}
+      <section className={styles.parentLowerGrid} aria-label={o.oversightGridAria}>
         {/* Recent Milestones */}
         <div className={styles.cardPanel}>
           <div className={styles.panelHeader}>
@@ -266,7 +235,7 @@ export default function ParentOverviewPage() {
               <IconLaptop aria-hidden="true" />
               <span>{o.recentMilestonesTitle}</span>
             </h2>
-            <Badge variant="success">تأییدشده</Badge>
+            <Badge variant="success">{o.milestoneStatusApproved}</Badge>
           </div>
 
           {searchQuery && (
@@ -279,9 +248,10 @@ export default function ParentOverviewPage() {
               display: "flex",
               justifyContent: "space-between"
             }}>
-              <span>فیلتر شده بر اساس: «{searchQuery}»</span>
-              <span>{filteredMilestones.length} مورد</span>
+              <span>{`${o.filterPrefix} «${searchQuery}»`}</span>
+              <span>{`${filteredMilestones.length} ${o.filterSuffixCount}`}</span>
             </div>
+
           )}
 
           <div className={styles.activityList}>
@@ -292,7 +262,9 @@ export default function ParentOverviewPage() {
                     <IconCheck aria-hidden="true" />
                   </div>
                   <div className={styles.activityContent} style={{ inlineSize: "100%" }}>
-                    <p className={styles.activityDesc} style={{ fontWeight: "var(--cs-font-weight-bold)" }}>{item.title}</p>
+                    <p className={styles.activityDesc} style={{ fontWeight: "var(--cs-font-weight-bold)" }}>
+                      <bdi dir="rtl">{item.title}</bdi>
+                    </p>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span className={styles.activityTime}>{item.date}</span>
                       <Badge variant="outline">{item.status}</Badge>
@@ -302,7 +274,7 @@ export default function ParentOverviewPage() {
               ))
             ) : (
               <div style={{ textAlign: "center", padding: "var(--cs-space-6) var(--cs-space-4)", color: "var(--cs-color-text-muted)" }}>
-                <p style={{ margin: 0, fontWeight: "var(--cs-font-weight-bold)" }}>نتیجه‌ای برای جستجو یافت نشد</p>
+                <p style={{ margin: 0, fontWeight: "var(--cs-font-weight-bold)" }}>{o.noSearchResults}</p>
               </div>
             )}
           </div>
@@ -315,7 +287,7 @@ export default function ParentOverviewPage() {
               <IconShield aria-hidden="true" />
               <span>{o.safetyTitle}</span>
             </h2>
-            <Badge variant="primary">سیاست حاکمیتی</Badge>
+            <Badge variant="primary">{o.safetyBadge}</Badge>
           </div>
           <p className={styles.cardText}>{o.safetyDescription}</p>
           <div style={{
@@ -334,7 +306,7 @@ export default function ParentOverviewPage() {
               fontWeight: "var(--cs-font-weight-bold)",
               color: consentGranted ? "var(--cs-color-success-foreground)" : "var(--cs-color-danger-foreground)"
             }}>
-              {consentGranted ? o.consentStatusValue : "غیرفعال (محدودشده توسط والد)"}
+              {consentGranted ? o.consentStatusValue : o.consentStatusDisabled}
             </span>
           </div>
           <div style={{ marginBlockStart: "auto", display: "flex", justifyContent: "flex-end" }}>
@@ -349,6 +321,9 @@ export default function ParentOverviewPage() {
         </div>
       </section>
 
+
+      {/* Modal 1: Weekly Progress Report */}
+
       {/* Modal 1: Weekly Progress Report */}
       {openWeeklyReportModal && (
         <div className={styles.modalBackdrop} onClick={() => setOpenWeeklyReportModal(false)}>
@@ -356,33 +331,39 @@ export default function ParentOverviewPage() {
             <div className={styles.modalHeader}>
               <h3 id="report-modal-title" className={styles.modalTitle}>
                 <IconDocument aria-hidden="true" style={{ color: "var(--cs-color-brand-primary)" }} />
-                <span>کارنامه و گزارش تحلیلی پیشرفت هفتگی</span>
+                <span>{o.weeklyReportModalTitle}</span>
               </h3>
               <button
                 type="button"
                 className={styles.modalCloseBtn}
                 onClick={() => setOpenWeeklyReportModal(false)}
-                aria-label="بستن گزارش"
+                aria-label={o.weeklyReportModalCloseAria}
               >
                 <IconClose aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />
               </button>
             </div>
 
             <p style={{ margin: 0, fontSize: "var(--cs-font-size-body)", color: "var(--cs-color-text-secondary)" }}>
-              گزارش عملکرد فرزند گرامی شما ({selectedChild}) در هفته جاری:
+              <span>{o.weeklyReportChildPrefix}</span>
+              <span>{selectedChild}</span>
+              <span>{o.weeklyReportChildSuffix}</span>
             </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "var(--cs-space-3)" }}>
               <div style={{ padding: "var(--cs-space-3)", background: "var(--cs-color-bg-base)", borderRadius: "var(--cs-radius-control)" }}>
-                <strong>زمان یادگیری متمرکز:</strong> ۱۲ ساعت و ۴۵ دقیقه (افزایش ۱۵٪ نسبت به هفته قبل)
+                <strong>{o.weeklyReportMetric1Label}</strong>
+                <span> {o.weeklyReportMetric1Value}</span>
               </div>
               <div style={{ padding: "var(--cs-space-3)", background: "var(--cs-color-bg-base)", borderRadius: "var(--cs-radius-control)" }}>
-                <strong>تمرین‌های کدنویسی تکمیل‌شده:</strong> ۸ پروژه کوچک و ۱ ارزیابی میان‌دوره
+                <strong>{o.weeklyReportMetric2Label}</strong>
+                <span> {o.weeklyReportMetric2Value}</span>
               </div>
               <div style={{ padding: "var(--cs-space-3)", background: "var(--cs-color-bg-base)", borderRadius: "var(--cs-radius-control)" }}>
-                <strong>تاییدیه سلامت و اخلاق تعاملی:</strong> ۱۰۰٪ بدون هیچ‌گونه هشدار یا نقض قوانین
+                <strong>{o.weeklyReportMetric3Label}</strong>
+                <span> {o.weeklyReportMetric3Value}</span>
               </div>
             </div>
+
 
             <div style={{ display: "flex", justifyContent: "flex-end", marginBlockStart: "var(--cs-space-3)" }}>
               <button
@@ -390,7 +371,7 @@ export default function ParentOverviewPage() {
                 className={`${styles.actionButton} ${styles.primaryActionButton}`}
                 onClick={() => setOpenWeeklyReportModal(false)}
               >
-                بستن کارنامه
+                {o.weeklyReportCloseBtn}
               </button>
             </div>
           </div>
@@ -404,20 +385,20 @@ export default function ParentOverviewPage() {
             <div className={styles.modalHeader}>
               <h3 id="mentor-chat-modal-title" className={styles.modalTitle}>
                 <IconChat aria-hidden="true" style={{ color: "var(--cs-color-brand-primary)" }} />
-                <span>ارتباط مستقیم با منتور آموزشی</span>
+                <span>{o.mentorModalTitle}</span>
               </h3>
               <button
                 type="button"
                 className={styles.modalCloseBtn}
                 onClick={() => setOpenMentorChatModal(false)}
-                aria-label="بستن پنجره پیام"
+                aria-label={o.mentorModalCloseAria}
               >
                 <IconClose aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />
               </button>
             </div>
 
             <p style={{ margin: 0, fontSize: "var(--cs-font-size-body)", color: "var(--cs-color-text-secondary)" }}>
-              پیام شما مستقیماً به منتور مسئول ({selectedChild}) ارسال خواهد شد و در سامانه نظارتی ثبت می‌گردد:
+              <span>{o.mentorModalDesc}</span>
             </p>
 
             <textarea
@@ -433,16 +414,16 @@ export default function ParentOverviewPage() {
                 fontSize: "var(--cs-font-size-body)",
                 resize: "vertical"
               }}
-              placeholder="پرسش، نکته یا توصیه مدنظرتان در خصوص روند یادگیری را بنویسید..."
+              placeholder={o.mentorModalPlaceholder}
               value={chatMessage}
               onChange={(e) => setChatMessage(e.target.value)}
             />
 
             {chatSent && (
               <div style={{
-                background: "rgba(16, 185, 129, 0.12)",
+                background: "var(--cs-color-bg-base)",
                 color: "var(--cs-color-success)",
-                border: "1px solid rgba(16, 185, 129, 0.25)",
+                border: "var(--cs-border-width) solid var(--cs-color-border-subtle)",
                 borderRadius: "var(--cs-radius-control)",
                 padding: "var(--cs-space-3)",
                 fontSize: "var(--cs-font-size-caption)",
@@ -451,7 +432,7 @@ export default function ParentOverviewPage() {
                 gap: "var(--cs-space-2)"
               }}>
                 <IconCheck aria-hidden="true" style={{ inlineSize: "1rem", blockSize: "1rem" }} />
-                <span>پیام شما به منتور ارسال شد و پاسخ آن از طریق پنل اعلانات دریافت خواهد شد.</span>
+                <span>{o.mentorModalSuccess}</span>
               </div>
             )}
 
@@ -461,14 +442,14 @@ export default function ParentOverviewPage() {
                 className={styles.actionButton}
                 onClick={() => setOpenMentorChatModal(false)}
               >
-                انصراف
+                {o.mentorModalCancelBtn}
               </button>
               <button
                 type="button"
                 className={`${styles.actionButton} ${styles.primaryActionButton}`}
                 onClick={() => setChatSent(true)}
               >
-                ارسال پیام
+                {o.mentorModalSendBtn}
               </button>
             </div>
           </div>
@@ -482,13 +463,13 @@ export default function ParentOverviewPage() {
             <div className={styles.modalHeader}>
               <h3 id="consent-modal-title" className={styles.modalTitle}>
                 <IconShield aria-hidden="true" style={{ color: "var(--cs-color-brand-primary)" }} />
-                <span>مدیریت رضایت‌نامه و مجوزهای نظارت والد</span>
+                <span>{o.consentModalTitle}</span>
               </h3>
               <button
                 type="button"
                 className={styles.modalCloseBtn}
                 onClick={() => setOpenConsentModal(false)}
-                aria-label="بستن پنجره رضایت‌نامه"
+                aria-label={o.consentModalCloseAria}
               >
                 <IconClose aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />
               </button>
@@ -502,11 +483,11 @@ export default function ParentOverviewPage() {
                   onChange={(e) => setConsentGranted(e.target.checked)}
                   style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }}
                 />
-                <span>مجوز شرکت در کلاس‌های تعاملی آنلاین و نظارت بر کدهای بارگذاری‌شده</span>
+                <span>{o.consentModalItem1Title}</span>
               </label>
 
               <p style={{ margin: 0, fontSize: "var(--cs-font-size-caption)", color: "var(--cs-color-text-muted)", lineHeight: 1.6 }}>
-                بر اساس قوانین پلتفرم کدشو، عدم تایید این مجوز دسترسی دانش‌آموز را به بخش تعامل زنده و ارسال پروژه‌ها برای داوری محدود می‌کند.
+                <span>{o.consentModalItem1Desc}</span>
               </p>
             </div>
 
@@ -516,7 +497,7 @@ export default function ParentOverviewPage() {
                 className={`${styles.actionButton} ${styles.primaryActionButton}`}
                 onClick={() => setOpenConsentModal(false)}
               >
-                ذخیره تنظیمات رضایت‌نامه
+                {o.consentModalConfirmBtn}
               </button>
             </div>
           </div>
@@ -525,3 +506,4 @@ export default function ParentOverviewPage() {
     </div>
   );
 }
+

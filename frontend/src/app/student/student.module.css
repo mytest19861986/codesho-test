@@ -177,36 +177,38 @@
 }
 
 .sidebarPromoCard {
-  background: linear-gradient(135deg, var(--cs-color-brand-dark), var(--cs-color-brand-dark-gradient-end));
+  background: var(--cs-color-bg-base);
+  border: var(--cs-border-width) solid var(--cs-color-border-subtle);
   border-radius: var(--cs-radius-card);
   padding: var(--cs-space-4);
-  color: var(--cs-color-text-inverse);
+  color: var(--cs-color-text-primary);
   display: flex;
   flex-direction: column;
   gap: var(--cs-space-3);
-  box-shadow: var(--cs-shadow-card);
+  box-shadow: none;
 }
 
 .sidebarPromoTitle {
   font-size: var(--cs-font-size-body);
   font-weight: var(--cs-font-weight-bold);
+  color: var(--cs-color-text-primary);
   margin: 0;
 }
 
 .sidebarPromoSubtitle {
   font-size: var(--cs-font-size-caption);
-  color: var(--cs-color-text-muted);
+  color: var(--cs-color-text-secondary);
   margin: 0;
 }
 
 .sidebarPromoButton {
-  background: var(--cs-color-brand-primary);
-  color: var(--cs-color-text-inverse);
-  border: 0;
+  background: var(--cs-color-transparent);
+  color: var(--cs-color-text-primary);
+  border: var(--cs-border-width) solid var(--cs-color-border-subtle);
   border-radius: var(--cs-radius-control);
   padding: var(--cs-space-2) var(--cs-space-3);
   font-size: var(--cs-font-size-caption);
-  font-weight: var(--cs-font-weight-bold);
+  font-weight: var(--cs-font-weight-medium);
   cursor: pointer;
   text-align: center;
   text-decoration: none;
@@ -214,26 +216,37 @@
 }
 
 .sidebarPromoButton:hover {
-  background: var(--cs-color-brand-primary-hover);
+  background: var(--cs-color-bg-surface);
 }
+
 
 /* ==========================================================================
    Hero Banner Section
    ========================================================================== */
 .heroBanner {
-  background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
-  border: var(--cs-border-width) solid rgba(255, 255, 255, 0.1);
+  background: var(--cs-color-brand-dark);
+  border: var(--cs-border-width) solid var(--cs-color-border-subtle);
   border-radius: var(--cs-radius-sheet);
   padding: var(--cs-space-6) var(--cs-space-8);
   color: var(--cs-color-text-inverse);
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-  align-items: center;
-  gap: var(--cs-space-6);
-  box-shadow: var(--cs-shadow-floating);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--cs-space-4);
+  min-block-size: 11.25rem;
+  box-shadow: var(--cs-shadow-card);
   position: relative;
   overflow: hidden;
 }
+
+.parentHeroBriefingBand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--cs-space-4);
+}
+
 
 .heroContent {
   display: flex;
@@ -256,16 +269,17 @@
 }
 
 .heroBadgeDark {
-  background: rgba(255, 255, 255, 0.12) !important;
-  color: #f8fafc !important;
-  border: var(--cs-border-width) solid rgba(255, 255, 255, 0.2) !important;
+  background: var(--cs-color-bg-overlay) !important;
+  color: var(--cs-color-text-inverse) !important;
+  border: var(--cs-border-width) solid var(--cs-color-border-subtle) !important;
 }
 
 .heroBadgeTranslucent {
-  background: rgba(99, 102, 241, 0.25) !important;
-  color: #e0e7ff !important;
-  border: var(--cs-border-width) solid rgba(165, 180, 252, 0.4) !important;
+  background: var(--cs-color-brand-primary-soft) !important;
+  color: var(--cs-color-text-inverse) !important;
+  border: var(--cs-border-width) solid var(--cs-color-brand-primary) !important;
 }
+
 
 .heroGreetingText {
   font-size: var(--cs-font-size-heading-lg);
@@ -347,10 +361,10 @@
 }
 
 .heroGlassPanel {
-  background: rgba(15, 23, 42, 0.65);
+  background: var(--cs-color-bg-overlay);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: var(--cs-border-width) solid rgba(255, 255, 255, 0.15);
+  border: var(--cs-border-width) solid var(--cs-color-border-subtle);
   border-radius: var(--cs-radius-card);
   padding: var(--cs-space-4) var(--cs-space-6);
   display: flex;
@@ -359,6 +373,7 @@
   inline-size: 100%;
   max-inline-size: 24rem;
 }
+
 
 .heroQuoteText {
   font-size: var(--cs-font-size-body);
@@ -452,34 +467,26 @@
 }
 
 .kpiIconCircle {
-  inline-size: 3rem;
-  block-size: 3rem;
-  border-radius: var(--cs-radius-pill);
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  border-radius: var(--cs-radius-control);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.25rem;
+  background: var(--cs-color-bg-base);
+  border: var(--cs-border-width) solid var(--cs-color-border-subtle);
+  color: var(--cs-color-text-secondary);
 }
 
-.kpiCircle1 {
-  background: var(--cs-color-brand-primary-soft);
-  color: var(--cs-color-brand-primary);
-}
-
-.kpiCircle2 {
-  background: var(--cs-color-brand-primary-soft);
-  color: var(--cs-color-success);
-}
-
-.kpiCircle3 {
-  background: var(--cs-color-brand-primary-soft);
-  color: var(--cs-color-warning);
-}
-
+.kpiCircle1,
+.kpiCircle2,
+.kpiCircle3,
 .kpiCircle4 {
-  background: var(--cs-color-brand-primary-soft);
-  color: var(--cs-color-info);
+  background: var(--cs-color-bg-base);
+  color: var(--cs-color-text-secondary);
 }
+
 
 /* ==========================================================================
    Middle Row: Performance Chart, Goal Progress, Skill Growth
@@ -495,6 +502,14 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--cs-space-4);
 }
+
+.parentLowerGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: var(--cs-space-4);
+  align-items: start;
+}
+
 
 .cardPanel {
   background: var(--cs-color-bg-surface);
@@ -740,9 +755,10 @@
 .recAction {
   background: var(--cs-color-brand-primary-soft);
   color: var(--cs-color-brand-primary);
-  border: var(--cs-border-width) solid transparent;
+  border: var(--cs-border-width) solid var(--cs-color-transparent);
   padding: 0.25rem 0.75rem;
   border-radius: var(--cs-radius-pill);
+
   font-size: 0.6875rem;
   font-weight: var(--cs-font-weight-bold);
   text-decoration: none;
@@ -1034,16 +1050,17 @@
 }
 
 .childSelectorBadge {
-  background: rgba(99, 102, 241, 0.12);
+  background: var(--cs-color-brand-primary-soft);
   color: var(--cs-color-brand-primary);
-  border: 1px solid rgba(99, 102, 241, 0.25);
+  border: var(--cs-border-width) solid var(--cs-color-brand-primary);
 }
+
 
 /* Interactive Modal & Action Dialog Overlay */
 .modalBackdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.65);
+  background: var(--cs-color-bg-overlay);
   backdrop-filter: blur(8px);
   z-index: 1000;
   display: flex;
@@ -1054,10 +1071,10 @@
 }
 
 .modalSheet {
-  background: #ffffff;
+  background: var(--cs-color-bg-surface);
   border: var(--cs-border-width) solid var(--cs-color-border-subtle);
   border-radius: var(--cs-radius-sheet);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--cs-shadow-floating);
   max-inline-size: 38rem;
   inline-size: 100%;
   padding: var(--cs-space-6);
@@ -1067,6 +1084,7 @@
   position: relative;
   z-index: 1001;
 }
+
 
 .modalHeader {
   display: flex;
