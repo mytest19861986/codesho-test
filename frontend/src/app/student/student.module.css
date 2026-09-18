@@ -4,7 +4,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--cs-space-6);
-  padding-block-end: var(--cs-space-12);
+  padding-block-end: var(--cs-space-6);
 }
 
 /* Header Elements in AppHeader slots */
@@ -874,16 +874,76 @@
 }
 
 @media (max-width: 48rem) {
+  .studentDashboard {
+    gap: var(--cs-space-4);
+    padding-block-end: var(--cs-space-6);
+  }
+
+  .childSelectorBanner {
+    padding: var(--cs-space-2) var(--cs-space-3);
+    gap: var(--cs-space-2);
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+
+  .childSelectorInfo {
+    gap: var(--cs-space-2);
+    flex-wrap: nowrap;
+    min-inline-size: 0;
+  }
+
+  .childSelectorBadge {
+    padding: 0.125rem 0.375rem;
+    font-size: 0.625rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    opacity: 0.85;
+    border-width: var(--cs-border-width);
+  }
+
+  .childSelectorSelect {
+    font-size: var(--cs-font-size-caption);
+    padding: 0.1875rem 0.375rem;
+    max-inline-size: 11rem;
+  }
+
   .heroBanner {
     grid-template-columns: 1fr;
-    padding: var(--cs-space-5);
+    padding: var(--cs-space-4) var(--cs-space-4);
+    min-block-size: auto;
+    gap: var(--cs-space-3);
+  }
+
+  .heroHeading {
+    font-size: var(--cs-font-size-heading-lg);
+    line-height: 1.25;
+  }
+
+  .heroSubtitle {
+    font-size: var(--cs-font-size-caption);
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .heroButtons {
+    margin-block-start: 0;
+  }
+
+  .heroPrimaryBtn {
+    padding: var(--cs-space-2) var(--cs-space-4);
+    font-size: var(--cs-font-size-caption);
   }
 
   .kpiGrid,
   .middleGrid,
   .twoColumnGrid,
-  .bottomGrid {
+  .bottomGrid,
+  .parentLowerGrid {
     grid-template-columns: 1fr;
+    gap: var(--cs-space-3);
   }
 
   .headerSearchWrapper {
@@ -1033,7 +1093,6 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
   background: var(--cs-color-bg-surface);
   border: var(--cs-border-width) solid var(--cs-color-border-subtle);
   border-radius: var(--cs-radius-card);
@@ -1045,7 +1104,6 @@
 .childSelectorInfo {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   gap: var(--cs-space-3);
 }
 
@@ -1053,6 +1111,18 @@
   background: var(--cs-color-brand-primary-soft);
   color: var(--cs-color-brand-primary);
   border: var(--cs-border-width) solid var(--cs-color-brand-primary);
+}
+
+.childSelectorSelect {
+  font-size: var(--cs-font-size-body);
+  font-weight: var(--cs-font-weight-bold);
+  color: var(--cs-color-text-primary);
+  background: var(--cs-color-transparent);
+  border: var(--cs-border-width) solid var(--cs-color-border-subtle);
+  border-radius: var(--cs-radius-control);
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  max-inline-size: 100%;
 }
 
 

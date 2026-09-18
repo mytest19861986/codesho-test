@@ -384,13 +384,27 @@
 @media (max-width: 47.9375rem) {
   .header {
     min-block-size: var(--cs-shell-header-mobile);
+    grid-template-columns: auto minmax(0, 1fr) auto;
     gap: var(--cs-space-2);
     padding-inline: var(--cs-space-3);
+  }
+
+  .headerPrimarySlot {
+    display: none;
   }
 
   .headerBrand {
     overflow: hidden;
     white-space: nowrap;
+  }
+
+  .headerActions {
+    gap: var(--cs-space-1);
+  }
+
+  .menuButton {
+    min-inline-size: 2.25rem;
+    min-block-size: 2.25rem;
   }
 
   .shellContent {

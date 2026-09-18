@@ -109,16 +109,7 @@ export default function ParentOverviewPage() {
           <select
             value={selectedChild}
             onChange={(e) => setSelectedChild(e.target.value)}
-            style={{
-              fontSize: "var(--cs-font-size-body)",
-              fontWeight: "var(--cs-font-weight-bold)",
-              color: "var(--cs-color-text-primary)",
-              background: "transparent",
-              border: "1px solid var(--cs-color-border-subtle)",
-              borderRadius: "var(--cs-radius-control)",
-              padding: "0.25rem 0.5rem",
-              cursor: "pointer"
-            }}
+            className={styles.childSelectorSelect}
             aria-label={o.childSelectLabel}
           >
             <option value={o.child1Option}>{o.child1Option}</option>
