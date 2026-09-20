@@ -51,7 +51,7 @@ const initialAdminNotifications: DemoNotification[] = [
   },
 ];
 
-const navItems = [
+const navigationItems = [
   { id: "dashboard", label: copy.nav.dashboard, href: "/admin/dashboard", icon: <IconChart aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} /> },
   { id: "tenants", label: copy.nav.tenants, href: "/admin/tenants", icon: <IconLaptop aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} /> },
   { id: "users", label: copy.nav.users, href: "/admin/users", icon: <IconSparkles aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} /> },
@@ -80,73 +80,98 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   else if (pathname.includes("/governance")) activeItemId = "governance";
   else if (pathname.includes("/system")) activeItemId = "system";
 
+  const brandSlot = (
+    <div className={styles.sidebarBrandArea}>
+      <Link href="/admin/dashboard" className={styles.brandLogoTitle}>
+        <IconBrand aria-hidden="true" style={{ inlineSize: "1.5rem", blockSize: "1.5rem" }} />
+        <span>{copy.brand}</span>
+      </Link>
+      <span className={styles.brandTagline}>{copy.portalTitle}</span>
+    </div>
+  );
+
+  const headerSearchSlot = (
+    <div className={styles.headerSearchWrapper}>
+      <IconSearch aria-hidden="true" className={styles.searchIcon} style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
+      <input
+        type="search"
+        className={styles.searchInput}
+        placeholder="جستجو در مدیریت... (Ctrl+K)"
+        aria-label="جستجوی سامانه مدیریت"
+      />
+      <span className={styles.searchShortcut}>Ctrl+K</span>
+    </div>
+  );
+
+  const headerActionsSlot = (
+    <div className={styles.headerActionsArea}>
+      <div className={styles.notifContainer}>
+        <button
+          type="button"
+          className={styles.notifButton}
+          aria-label={`اعلان‌ها (${unreadCount} خوانده‌نشده)`}
+          aria-expanded={isNotifOpen}
+          aria-haspopup="dialog"
+          onClick={() => setIsNotifOpen((prev) => !prev)}
+        >
+          <IconBell aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />
+          {unreadCount > 0 && <span className={styles.notifBadge}>{unreadCount}</span>}
+        </button>
+        <NotificationPopover
+          isOpen={isNotifOpen}
+          onClose={() => setIsNotifOpen(false)}
+          title="اعلان‌های پنل مدیریت"
+          notifications={notifications}
+          onMarkAllAsRead={handleMarkAllRead}
+          roleTone="mentor"
+        />
+      </div>
+      <div className={styles.userProfileBadge}>
+        <div className={styles.userInfo}>
+          <span className={styles.userRole}>Superadmin</span>
+          <span className={styles.userName}>راهبر ارشد سیستم</span>
+        </div>
+        <div className={`${styles.userAvatar} ${styles.mentorAvatar}`} aria-hidden="true">
+          <span>م</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  const sidebarSupplementarySlot = (
+    <div className={styles.sidebarFooterLinks}>
+      <Link href="/admin/system" className={styles.sidebarUtilityLink}>
+        <IconSettings aria-hidden="true" style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
+        <span>پایش سیستم</span>
+      </Link>
+      <Link href="/admin/governance" className={styles.sidebarUtilityLink}>
+        <IconSupport aria-hidden="true" style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
+        <span>سیاست‌ها</span>
+      </Link>
+    </div>
+  );
+
+  const sidebarFooterSlot = (
+    <div className={styles.sidebarPromoCard}>
+      <p className={styles.sidebarPromoTitle}>محیط نظارت و راهبری</p>
+      <p className={styles.sidebarPromoSubtitle}>{copy.envNotice}</p>
+    </div>
+  );
+
   return (
     <AppShell
-      sidebarBrand={{
-        title: copy.brand,
-        subtitle: copy.portalTitle,
-        icon: <IconBrand aria-hidden="true" style={{ inlineSize: "1.5rem", blockSize: "1.5rem" }} />,
-        href: "/admin/dashboard",
-      }}
-      navItems={navItems.map((item) => ({
-        id: item.id,
-        label: item.label,
-        href: item.href,
-        icon: item.icon,
-        isActive: item.id === activeItemId,
-      }))}
-      sidebarFooter={
-        <div style={{ padding: "0.75rem", fontSize: "0.75rem", color: "var(--muted)", textAlign: "center", borderTop: "1px solid var(--line)" }}>
-          <span>{copy.envNotice}</span>
-        </div>
-      }
-      topbarSearch={
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "var(--paper)", border: "1px solid var(--line)", padding: "0.375rem 0.75rem", borderRadius: "8px", width: "260px" }}>
-          <IconSearch aria-hidden="true" style={{ inlineSize: "1rem", blockSize: "1rem", color: "var(--muted)" }} />
-          <input
-            type="search"
-            placeholder="جستجو در مدیریت... (Ctrl+K)"
-            style={{ border: "none", outline: "none", background: "transparent", fontSize: "0.8125rem", width: "100%", fontFamily: "inherit" }}
-            aria-label="جستجوی سامانه مدیریت"
-          />
-        </div>
-      }
-      topbarActions={
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", position: "relative" }}>
-          <button
-            type="button"
-            className={styles.iconBtn}
-            onClick={() => setIsNotifOpen((prev) => !prev)}
-            aria-label={`اعلان‌ها (${unreadCount} خوانده‌نشده)`}
-            aria-expanded={isNotifOpen}
-            aria-haspopup="dialog"
-            style={{ position: "relative" }}
-          >
-            <IconBell aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />
-            {unreadCount > 0 && (
-              <span className={styles.notifBadge} aria-hidden="true">
-                {unreadCount}
-              </span>
-            )}
-          </button>
-
-          <NotificationPopover
-            isOpen={isNotifOpen}
-            onClose={() => setIsNotifOpen(false)}
-            notifications={notifications}
-            onMarkAllRead={handleMarkAllRead}
-            ariaLabel="اعلان‌های پنل مدیریت"
-          />
-
-          <Link href="/admin/system" className={styles.iconBtn} aria-label="تنظیمات سیستم">
-            <IconSettings aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />
-          </Link>
-
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.25rem 0.625rem", background: "#f3eafa", borderRadius: "8px", color: "var(--purple)", fontWeight: 700, fontSize: "0.8125rem" }}>
-            <span>راهبر کل (Superadmin)</span>
-          </div>
-        </div>
-      }
+      activeItemId={activeItemId}
+      brand={brandSlot}
+      bottomNavigationItems={navigationItems}
+      drawerCloseLabel="بستن منو"
+      menuButtonLabel="منوی ناوبری مدیریت"
+      navigationItems={navigationItems}
+      navigationLabel="بخش‌های مدیریت"
+      headerPrimarySlot={headerSearchSlot}
+      headerActionsSlot={headerActionsSlot}
+      sidebarSupplementarySlot={sidebarSupplementarySlot}
+      sidebarFooterSlot={sidebarFooterSlot}
+      tone="mentor"
     >
       {children}
     </AppShell>
