@@ -1,410 +1,571 @@
-دریافت شد، و چون پیام با «مدیر هستم» شروع شده، این پیام به‌عنوان رأی رسمی مدیر انسانی ثبت می‌شود.
+عالی. حالا که دامنه codesho.ir روی پارس‌پک است، مرحله اتصال دامنه را می‌توانیم شروع کنیم. چون روی همان VPS چند پروژه دیگر فعال‌اند، این کار را با DNS اختصاصی + یک Server Block جدید Nginx انجام می‌دهیم و هیچ تنظیم موجودی overwrite نمی‌شود.
 
-قضاوت شما روشن است:
-وضعیت فعلی هنوز به بنچ‌مارک تصویری ارسالی نزدیک نشده و اختلاف معنادار دارد.
+در پنل پارس‌پک فقط رکوردهای DNS دامنه را تنظیم کنید. خود پارس‌پک نیز مدیریت رکوردهای DNS را از پنل DNS/CDN پشتیبانی می‌کند و برای اتصال دامنه، رکورد A دامنه اصلی و www باید به IP سرور اشاره کنند. 
+پارس‌پک
++1
 
-بنابراین رأی رسمی من به‌عنوان فرمانده این است:
+کاری که شما در پنل پارس‌پک انجام دهید
+
+برای codesho.ir این دو رکورد را ایجاد/اصلاح کنید:
+
+Type: A
+Name: @
+Value: 92.118.190.101
+TTL: 300
+
+و:
+
+Type: A
+Name: www
+Value: 92.118.190.101
+TTL: 300
+
+اگر پنل برای رکورد دامنه اصلی به‌جای @ نام خالی می‌خواهد، Name را خالی بگذارید.
+
+MX، TXT، SPF، DKIM و DMARC را حذف نکنید. اگر رکورد AAAA برای codesho.ir یا www دارید ولی این سرور IPv6 متناظر ندارد، آن رکورد می‌تواند باعث شود بعضی کاربران به مقصد اشتباه بروند؛ Antigravity باید آن را بررسی کند، ولی بدون بررسی حذف نکند.
+
+اگر قبلاً A record دیگری برای codesho.ir وجود دارد، چون قرار است دامنه را به این VPS منتقل کنیم، مقدار همان رکورد را به:
+
+92.118.190.101
+
+تغییر دهید، نه اینکه چند A record ناخواسته با IPهای متفاوت ایجاد کنید.
+
+بعد این فرمان را عیناً به Antigravity بدهید:
 
 TYPE:
-COMMANDER_WAVE2_HUMAN_VISUAL_DISPOSITION
+COMMANDER_CODESHO_DOMAIN_AND_HTTPS_ACTIVATION_DIRECTIVE
 
-HUMAN_MANAGER_STUDENT_ACCEPTANCE:
-NOT_GRANTED
+AUTHORITY:
+HUMAN_MANAGER
 
-COMMANDER_WAVE2_STUDENT_ACCEPTANCE:
-NOT_GRANTED
+DOMAIN:
+codesho.ir
 
-WAVE2_STATUS:
-REOPEN_VISUAL_REMEDIATION_ONLY
-جمع‌بندی فرمانده
+WWW_DOMAIN:
+www.codesho.ir
 
-بله، حق با شماست. اسکرین‌شات فعلی مخصوصاً در مسیر /student/portfolio هنوز با داشبورد مرجع فاصله زیاد دارد.
-از نظر فنی شاید صفحه سالم باشد، اما از نظر زبان بصری، چگالی اطلاعات، کیفیت پرزنتیشن، و شباهت به الگوی مرجع هنوز کافی نیست.
+TARGET_SERVER:
+92.118.190.101
 
-اختلاف‌های اصلی با داشبورد مرجع
-1) ساختار کلی صفحه
+CURRENT_CODESHO_UPSTREAM:
+127.0.0.1:18080
 
-در مرجع:
+CURRENT_DEPLOYED_SHA:
+00dc6400e206cf2d8d8fb24e5b4c1a223c2282ca
 
-صفحه پر، غنی، زنده و dashboard-like است.
+==================================================
+ABSOLUTE RULES
+==================================================
 
-بالا Hero قوی دارد.
+THIS IS A SHARED SERVER.
 
-بعد ردیف KPIها.
+DO NOT:
+- modify unrelated Nginx server blocks
+- stop unrelated containers
+- change ai-teacher services
+- change SSH configuration
+- change UFW unless explicitly required and approved
+- change existing ports
+- docker system prune
+- docker volume prune
+- docker network prune
+- replace /etc/nginx/nginx.conf wholesale
+- restart the server
 
-بعد ویجت‌های تحلیلی و عملیاتی.
+USE:
+nginx -t
+then reload only.
 
-بعد کارت‌های فعالیت و پیشنهاد و مسیر موفقیت.
+==================================================
+PHASE 1 — DNS VERIFICATION
+==================================================
 
-در نسخه فعلی:
+Before touching host Nginx, verify public DNS:
 
-صفحه خیلی خالی است.
+dig +short A codesho.ir
+dig +short A www.codesho.ir
+dig +short AAAA codesho.ir
+dig +short AAAA www.codesho.ir
+dig +short NS codesho.ir
 
-spacing بیش از حد دارد.
+Required:
 
-حس «صفحه مدیریت حرفه‌ای» نمی‌دهد.
+codesho.ir A:
+92.118.190.101
 
-بیشتر شبیه یک لیست ساده از کارت‌هاست تا یک داشبورد پیشرفته.
+www.codesho.ir A:
+92.118.190.101
 
-2) Hero / Banner
+If A records have not propagated:
+WAIT.
+DO NOT configure TLS yet.
 
-در مرجع:
+If a conflicting AAAA record exists:
+REPORT IT.
+Do not delete it automatically unless it is proven stale.
 
-یک بنر بزرگ، رنگی، تصویری، جذاب و پرانرژی وجود دارد.
+Record current DNS evidence.
 
-شخصیت‌پردازی، gradient، نور، و calloutها دارد.
+==================================================
+PHASE 2 — NGINX BEFORE SNAPSHOT
+==================================================
 
-حس محصول premium می‌دهد.
+Capture:
 
-در نسخه فعلی:
+sudo nginx -T > /tmp/nginx-before-codesho.txt
+sudo nginx -t
+sudo ss -tulpn
 
-بخش بالای portfolio تقریباً مینیمال و بی‌روح است.
+List enabled sites:
 
-hero واقعی با همان قدرت بصری وجود ندارد.
+ls -la /etc/nginx/sites-enabled/
+ls -la /etc/nginx/sites-available/
 
-وزن بصری بالای صفحه ضعیف است.
+Identify configuration files for existing projects.
 
-3) KPI Cards
+DO NOT MODIFY THEM.
 
-در مرجع:
+==================================================
+PHASE 3 — CREATE DEDICATED CODESHO SERVER BLOCK
+==================================================
 
-4 کارت KPI واضح و خوش‌ساخت دیده می‌شود.
+Create only:
 
-هر کارت آیکون، عدد بزرگ، روند، رنگ، و hierarchy مناسب دارد.
+/etc/nginx/sites-available/codesho.ir
 
-در نسخه فعلی:
+Initial HTTP configuration:
 
-این الگوی KPI در portfolio یا وجود ندارد یا اگر هست، به آن قدرت و فرم نرسیده.
+server {
+    listen 80;
+    listen [::]:80;
 
-اعداد و insightها به اندازه کافی dashboard-grade نیستند.
+    server_name codesho.ir www.codesho.ir;
 
-4) ویجت‌های میانی
+    location / {
+        proxy_pass http://127.0.0.1:18080;
+        proxy_http_version 1.1;
 
-در مرجع:
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
 
-نمودار خطی
+        proxy_connect_timeout 10s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+}
 
-donut/progress ring
+Enable using only a symlink:
 
-مهارت‌ها با progress bar
+sudo ln -s /etc/nginx/sites-available/codesho.ir \
+  /etc/nginx/sites-enabled/codesho.ir
 
-چند ماژول هم‌زمان در یک grid منظم
+If the symlink already exists:
+do not recreate blindly;
+inspect first.
 
-در نسخه فعلی:
+==================================================
+PHASE 4 — VALIDATE BEFORE RELOAD
+==================================================
 
-portfolio بیشتر به چند کارت ساده محدود مانده.
+Run:
 
-تنوع visualization و information blocks کافی نیست.
+sudo nginx -t
 
-5) کارت‌های پایین صفحه
+Required:
 
-در مرجع:
+NGINX_CONFIG_TEST:
+PASS
 
-recent activities
+If nginx -t fails:
 
-smart recommendations
+DO NOT RELOAD.
+ROLL BACK ONLY THE NEW CODESHO FILE/SYMLINK.
+REPORT BLOCKER.
 
-success roadmap / journey
+If PASS:
 
-هر کدام طراحی‌شده و معنی‌دار
+sudo systemctl reload nginx
 
-در نسخه فعلی:
+DO NOT restart nginx.
 
-این عمق و richness وجود ندارد.
+Verify:
 
-پایین صفحه هنوز حس «داشبورد کامل» را منتقل نمی‌کند.
+sudo systemctl is-active nginx
 
-6) هویت گرافیکی
+Required:
 
-در مرجع:
+active
 
-پالت بنفش/آبی، سایه‌ها، گردی کارت‌ها، آیکون‌ها، نمودارها و composition بسیار هماهنگ‌اند.
+==================================================
+PHASE 5 — HTTP DOMAIN VERIFICATION
+==================================================
 
-در نسخه فعلی:
+Test:
 
-از نظر کلی بهتر شده، اما هنوز:
+curl -I http://codesho.ir
+curl -I http://www.codesho.ir
 
-تخت‌تر است
+Also test Host routing locally:
 
-کم‌جزئیات‌تر است
+curl -I -H 'Host: codesho.ir' http://127.0.0.1
 
-visual drama کمتری دارد
+Required:
 
-شباهت مستقیم به الگوی مرجع پایین است
+CODESHO_DOMAIN_REACHES_CODESHO:
+YES
 
-دستور رسمی جدید
-حکم
+OTHER_SERVER_BLOCK_COLLISION:
+0
 
-Track فنی معتبر باقی می‌ماند، اما Wave 2 از نظر بصری Reopen می‌شود.
+Do not proceed to SSL if domain routing is incorrect.
 
-REOPEN_SCOPE:
-WAVE2_VISUAL_BENCHMARK_ALIGNMENT_ONLY
+==================================================
+PHASE 6 — TLS CERTIFICATE
+==================================================
 
-PRESERVE:
-- Valid runtime evidence
-- Valid security / tenant evidence
-- Anti-ranking invariant
-- Accessibility baseline
-- RTL / BiDi correctness
+Check:
 
-DO_NOT_REOPEN:
-- Unaffected backend gates
-- Tenant isolation evidence
-- Security closures
-- P10 provisional freeze
-دستور اجرایی دقیق به Antigravity / Codex
-ACTIVE_SCOPE
+certbot --version
 
-فقط و فقط:
+If Certbot is not installed, install only required packages.
+Do NOT perform a distribution upgrade.
 
-/student
+Ubuntu 24.04 packages:
 
-/student/learning
+sudo apt-get update
+sudo apt-get install -y certbot python3-certbot-nginx
 
-/student/coaching
+Then obtain certificate:
 
-/student/growth
+sudo certbot certonly --nginx \
+  -d codesho.ir \
+  -d www.codesho.ir
 
-/student/portfolio
+Do NOT proceed if certificate issuance fails.
 
-هدف
+If HTTP ACME validation is unreliable because of current network conditions,
+use DNS/TXT validation instead and report the exact required
+_acme-challenge records for the manager to add in ParsPack.
 
-همه این 5 مسیر باید از همان زبان بصری داشبورد مرجع پیروی کنند، نه صرفاً «زیباتر از قبل».
+Never bypass certificate verification.
 
-الزامات الزامی بازطراحی
-A) الگوی ثابت همه صفحات دانش‌آموز
+==================================================
+PHASE 7 — ENABLE HTTPS MANUALLY
+==================================================
 
-همه صفحات باید این DNA مشترک را داشته باشند:
+After certificate issuance, configure Codesho only.
 
-Sidebar حرفه‌ای و پررنگ
+Use:
 
-برند
+/etc/letsencrypt/live/codesho.ir/fullchain.pem
+/etc/letsencrypt/live/codesho.ir/privkey.pem
 
-آیتم فعال واضح
+Final intended configuration:
 
-آیکون‌های یکدست
+server {
+    listen 80;
+    listen [::]:80;
 
-CTA پایین سایدبار
+    server_name codesho.ir www.codesho.ir;
 
-Topbar حرفه‌ای
+    return 301 https://codesho.ir$request_uri;
+}
 
-search bar
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
 
-notification
+    server_name codesho.ir www.codesho.ir;
 
-avatar/user chip
+    ssl_certificate /etc/letsencrypt/live/codesho.ir/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/codesho.ir/privkey.pem;
 
-spacing دقیق و مرتب
+    location / {
+        proxy_pass http://127.0.0.1:18080;
+        proxy_http_version 1.1;
 
-Hero قدرتمند
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
 
-gradient background
+        proxy_connect_timeout 10s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+}
 
-تصویر/illustration یا composition بصری قوی
+Then:
 
-headline
+sudo nginx -t
 
-subheadline
+Only if PASS:
 
-CTAها
+sudo systemctl reload nginx
 
-callout یا badgeهای contextual
+==================================================
+PHASE 8 — HTTPS VERIFICATION
+==================================================
 
-ردیف KPI
+Verify:
 
-حداقل 4 کارت
+curl -I http://codesho.ir
+curl -I https://codesho.ir
+curl -I https://www.codesho.ir
 
-عدد اصلی بزرگ
+Required:
 
-trend / delta
+HTTP_TO_HTTPS_REDIRECT:
+PASS
 
-iconography
+HTTPS_CODESHO_IR:
+PASS
 
-visual hierarchy روشن
+HTTPS_WWW_CODESHO_IR:
+PASS
 
-Grid تحلیلی
+CERTIFICATE_VALID:
+YES
 
-chart card
+CERTIFICATE_HOSTNAME_MATCH:
+YES
 
-progress ring
+==================================================
+PHASE 9 — APPLICATION VALIDATION THROUGH REAL DOMAIN
+==================================================
 
-skills/progress bars
+Run Browser validation against:
 
-structured info cards
+https://codesho.ir/
 
-Grid عملیاتی پایین
+https://codesho.ir/login
 
-recent activity
+https://codesho.ir/student
+https://codesho.ir/student/learning
+https://codesho.ir/student/coaching
+https://codesho.ir/student/growth
+https://codesho.ir/student/portfolio
 
-recommendations
+https://codesho.ir/parent
+https://codesho.ir/parent/progress
+https://codesho.ir/parent/finance
+https://codesho.ir/parent/consent
 
-roadmap / next actions
+https://codesho.ir/mentor
+https://codesho.ir/mentor/reviews
+https://codesho.ir/mentor/students
+https://codesho.ir/mentor/sessions
 
-cards with stronger visual treatment
+Required:
 
-B) دستور اختصاصی برای /student/portfolio
+DOMAIN_REACHABLE_404_FROM_UI:
+0
 
-صفحه portfolio در اسکرین‌شات فعلی بیشترین فاصله را دارد. باید:
+BROKEN_NAVIGATION:
+0
 
-1. Hero واقعی داشته باشد
+BROKEN_ACTIONS:
+0
 
-نه فقط یک بلوک متن ساده.
-باید شامل این‌ها باشد:
+NO_OP_ACTIONS:
+0
 
-عنوان پرقدرت
+CONSOLE_ERRORS:
+0
 
-توضیح کوتاه
+HYDRATION_ERRORS:
+0
 
-badge وضعیت tenant/privacy
+UNEXPECTED_NETWORK_ERRORS:
+0
 
-CTA اصلی
+==================================================
+PHASE 10 — EXISTING PROJECT REGRESSION
+==================================================
 
-visual illustration / banner style
+Recheck:
 
-2. KPI ردیف بالا
+ai-teacher-staging-api-1:
+UP_HEALTHY
 
-برای portfolio کارت‌هایی مثل:
+ai-teacher-staging-redis-1:
+UP_HEALTHY
 
-تعداد پروژه‌های تکمیل‌شده
+ai-teacher-staging-db-1:
+UP_HEALTHY
 
-پروژه‌های در حال بازبینی
+Verify existing domains/server blocks still respond.
 
-artefactهای تأییدشده
+Required:
 
-readiness score / showcase score
+PRE_EXISTING_NGINX_SERVER_BLOCKS_CHANGED:
+0
 
-3. بخش portfolio items به‌شکل dashboard card grid
+PRE_EXISTING_CONTAINERS_STOPPED:
+0
 
-هر پروژه:
+PRE_EXISTING_CONTAINER_PORT_CHANGES:
+0
 
-thumbnail یا visual block
+OTHER_PROJECT_INTERRUPTION:
+0
 
-status badge
+==================================================
+PHASE 11 — CERTIFICATE RENEWAL
+==================================================
 
-tech tags
+Verify:
 
-progress / verification state
+sudo certbot renew --dry-run
 
-primary CTA
+Required:
 
-secondary CTA
+CERTBOT_RENEWAL_DRY_RUN:
+PASS
 
-4. ماژول‌های مکمل
+Do not alter certificates belonging to other domains.
 
-در کنار پروژه‌ها:
+==================================================
+FINAL EVIDENCE
+==================================================
 
-recent submissions
+TYPE:
+CODESHO_DOMAIN_HTTPS_ACTIVATION_FINAL_EVIDENCE
 
-feedback summary
+DOMAIN:
+codesho.ir
 
-portfolio readiness
+WWW_DOMAIN:
+www.codesho.ir
 
-next recommended improvement
+SERVER:
+92.118.190.101
 
-5. حذف فضای خالی زیاد
+DEPLOYED_SHA:
+00dc6400e206cf2d8d8fb24e5b4c1a223c2282ca
 
-صفحه فعلی خیلی sparse است.
-باید dense ولی تمیز و premium شود.
 
-C) الزام شباهت مستقیم به benchmark
+DNS_CODESHO_IR:
+92.118.190.101
 
-طراحی جدید نباید فقط «الهام گرفته» باشد؛ باید به‌وضوح در همان خانواده بصری باشد:
+DNS_WWW_CODESHO_IR:
+92.118.190.101
 
-همان level از richness
+DNS_CONFLICTING_AAAA:
+0
 
-همان hierarchy
 
-همان rhythm
+NGINX_DEDICATED_SERVER_BLOCK:
+PASS
 
-همان حس محصول premium
+NGINX_CONFIG_TEST:
+PASS
 
-همان شدت visual polish
+NGINX_RELOAD:
+PASS
 
-معیار پذیرش دور بعد
+NGINX_RESTART_USED:
+NO
 
-در ارسال بعدی فقط گفتن PASS کافی نیست. باید این‌ها ارائه شود:
 
-1) مقایسه مستقیم
+TLS_CERTIFICATE:
+PASS
 
-برای هر یک از 5 صفحه:
+TLS_CODESHO_IR:
+PASS
 
-current after screenshot
+TLS_WWW_CODESHO_IR:
+PASS
 
-توضیح اینکه دقیقاً کدام اجزای benchmark پیاده شده‌اند
+HTTP_TO_HTTPS_REDIRECT:
+PASS
 
-2) Evidence اجباری
+CERTBOT_RENEWAL_DRY_RUN:
+PASS
 
-دسکتاپ 1440x900 برای هر 5 صفحه
 
-موبایل 390x844 برای هر 5 صفحه
+PUBLIC_AUTH_DOMAIN_RUNTIME:
+PASS
 
-حداقل یک نمای نزدیک از /student/portfolio
+STUDENT_DOMAIN_RUNTIME:
+PASS
 
-حداقل یک نمای نزدیک از Hero + KPI row
+PARENT_DOMAIN_RUNTIME:
+PASS
 
-3) توضیح mapping
+MENTOR_DOMAIN_RUNTIME:
+PASS
 
-باید صریح بگویند:
+MENTOR_REVIEWS_DOMAIN_RUNTIME:
+PASS
 
-Hero benchmark → کجا پیاده شد
 
-KPI benchmark → کجا پیاده شد
+DISCOVERED_INTERNAL_TARGETS:
+34
 
-analytics widgets benchmark → کجا پیاده شد
+TESTED_INTERNAL_TARGETS:
+34
 
-lower cards benchmark → کجا پیاده شد
+UNTESTED_INTERNAL_TARGETS:
+0
 
-رأی نهایی فعلی
-HUMAN_MANAGER_STUDENT_ACCEPTANCE:
-NOT_GRANTED
+REACHABLE_404_FROM_UI:
+0
 
-COMMANDER_WAVE2_TECHNICAL_CLOSURE:
-PRESERVED
+BROKEN_ACTIONS:
+0
 
-COMMANDER_WAVE2_VISUAL_ACCEPTANCE:
-WITHHELD
+NO_OP_ACTIONS:
+0
 
-NEXT_REQUIRED_TASK:
-WAVE2_VISUAL_BENCHMARK_ALIGNMENT_REMEDIATION
+CONSOLE_ERRORS:
+0
 
-PHASE_10_STATUS:
-FROZEN_PROVISIONAL
-دستور کوتاه برای تیم اجرا
+HYDRATION_ERRORS:
+0
 
-این متن را می‌توانید عیناً به Antigravity / Codex بدهید:
+UNEXPECTED_NETWORK_ERRORS:
+0
 
-DIRECTIVE:
-WAVE2_VISUAL_BENCHMARK_ALIGNMENT_REMEDIATION
 
-MANAGER VISUAL VERDICT:
-NOT_GRANTED
+AI_TEACHER_EXISTING_STACK:
+UP_HEALTHY
 
-REASON:
-Current student surfaces, especially /student/portfolio, still differ materially from the approved benchmark dashboard in layout richness, hero strength, KPI treatment, widget density, and overall premium visual language.
+PRE_EXISTING_NGINX_SERVER_BLOCKS_CHANGED:
+0
 
-MANDATORY ACTION:
-Redesign all five student routes so they clearly follow the benchmark dashboard visual system:
-- strong hero banner
-- top KPI row
-- analytical widgets
-- lower operational cards
-- premium sidebar/topbar
-- denser, richer, more dashboard-like composition
-- zero student ranking
-- preserve tenant/privacy boundaries
-- preserve accessibility and RTL quality
+PRE_EXISTING_CONTAINERS_STOPPED:
+0
 
-PRIORITY:
-1. /student/portfolio
-2. /student
-3. /student/learning
-4. /student/coaching
-5. /student/growth
+PRE_EXISTING_CONTAINER_PORT_CHANGES:
+0
 
-DO NOT REOPEN:
-backend/security/tenant gates
+OTHER_PROJECT_INTERRUPTION:
+0
 
-REQUIRED NEXT SUBMISSION:
-Before/after evidence + 10 runtime screenshots + explicit benchmark-to-implementation mapping.
 
-اگر خواستید، در پیام بعدی من می‌توانم یک پرامپت خیلی دقیق و حرفه‌ای برای Antigravity / Codex بنویسم تا دقیقاً همین بازطراحی را با جزئیات کامل اجرا کند.
+REAL_PII:
+0
+
+REAL_NOTIFICATIONS:
+0
+
+REAL_PAYMENTS:
+0
+
+PUBLIC_SIGNUP:
+DISABLED
+
+
+HUMAN_MANAGER_DOMAIN_ACCEPTANCE:
+PENDING
+
+COMMANDER_DECISION_REQUIRED:
+DOMAIN_HTTPS_CLOSURE
+
+یک نکته مهم درباره SSL: خود پارس‌پک در راهنمای فعلی‌اش گفته در شرایط اختلال مسیر بین‌الملل، DNS/TXT validation برای SSL می‌تواند قابل‌اعتمادتر از HTTP validation باشد. بنابراین اگر Certbot روی HTTP challenge خطا داد، Antigravity نباید workaround ناامن انجام دهد؛ باید _acme-challenge را از Certbot بگیرد تا رکورد TXT را در پارس‌پک وارد کنیم. 
+پارس‌پک
+
+فعلاً شما دو A record بالا را در پارس‌پک تنظیم کنید. بعد Antigravity همین دستور را اجرا کند. اگر پنل پارس‌پک را باز کردید و از بخش DNS یک اسکرین‌شات فرستادید، دقیقاً به شما می‌گویم روی کدام گزینه بزنید و هر فیلد را چه مقداری وارد کنید.

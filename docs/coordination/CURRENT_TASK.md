@@ -1,127 +1,22 @@
-# Current Task: WAVE3_PARENT_AND_MENTOR_FRONTEND_VISUAL_STRUCTURAL_RECOVERY (Commander Functional Technical Reclosure Granted)
- 
-- **COMMANDER_DECISION**: `COMMANDER_WAVE3_FUNCTIONAL_TECHNICAL_RECLOSURE: GRANTED` (2026-09-18)
-- **DIRECTIVE**: `COMMANDER_WAVE3_FUNCTIONAL_TECHNICAL_RECLOSURE`
-- **AUTHORITY**: `HUMAN_MANAGER`
-- **PRIMARY_TASK**: `PARENT_AND_MENTOR_FRONTEND_VISUAL_STRUCTURAL_AND_INTERACTION_RECOVERY`
-- **WAVE_1_STATUS**: `COMPLETE_ACCEPTED`
-- **WAVE_2_STATUS**: `COMPLETE_FINAL_ACCEPTED`
-- **WAVE_3_TECHNICAL_STATUS**: `COMPLETE_FINAL_ACCEPTED`
-- **WAVE_3_TRACK**: `CLOSED_FOR_TECHNICAL_WORK`
-- **HUMAN_MANAGER_WAVE3_ACCEPTANCE**: `PENDING`
-- **FRONTEND_HEAD**: `af0631750bcf036a2ddf63faf806c55a8e995986`
-- **SOURCE_COMMITTED**: `YES`
-- **WORKTREE**: `CLEAN`
-- **WAVE_3_COMMITS**:
-  - `2104c04`: Initial Wave 3 portal layout and structural primitives
-  - `6acb761`: Eliminate all no-op controls across mentor and parent portals
-  - `306b711`: Reinforce solid white background and elevated z-index on modalSheet
-  - `af06317`: Add ESC keyboard dismiss to modals and dynamic dependent child data binding
-- **WAVE_3_RUNTIME_INTERACTION_EVIDENCE**:
-  - Discovered and Executed Routes (2/2 PASS): `/parent`, `/mentor` (HTTP 200 OK via live Nginx proxy)
-  - Interactive Controls Discovered & Executed: 14/14 (100% PASS, `NO_OP_ACTIONS: 0`, `DEAD_ACTIONS: 0`)
-  - Modals Discovered & Executed: 5/5 (100% PASS, Open/Close, Backdrop, ESC Key, Solid White Surface)
-  - Mentor Search: Dynamic live filter, `Ctrl+K` shortcut, clear button (`IconClose`)
-  - Parent Oversight: Dynamic child switcher updating dependent milestones without data mixing
-  - Automated Regression Suite: `verify_wave3_suite.py` PASS
-- **NEXT_GATE**: `HUMAN_MANAGER_WAVE3_RUNTIME_ACCEPTANCE`
-- **PROJECT_STATE**: `WAVE_3_TECHNICALLY_CLOSED_AWAITING_HUMAN_MANAGER`
+# Current Task: WAVE 5.5.2 — PARENT GROWTH OBSERVATORY RECONSTRUCTION (AUDIT PHASE)
 
----
+- **PREVIOUS_WAVE**: `WAVE5.5.1_STUDENT_DASHBOARD_PRODUCT_ACCEPTANCE_FINAL` -> `ACCEPTED` (CLOSED)
+- **CURRENT_DIRECTIVE**: `START_WAVE5.5.2_PARENT_DASHBOARD_EXPERIENCE_AUDIT`
+- **AUTHORITY**: `COMMANDER_DIRECTIVE`
+- **STATUS**: `AUDIT_IN_PROGRESS`
+- **CODE_WRITING_ALLOWED**: `NO` (Strictly audit & blueprint before code changes)
+- **TARGET_SURFACE**: `/parent` (Parent Growth Observatory)
+- **BASELINE**: `CODESHO_PUBLIC_HTTPS_BASELINE` (`https://codesho.ir/parent`)
+- **DEPLOYED_SHA**: `8ddade77979b83099d441f09a9b30b771f32a725`
 
-# Previous Task: SPRINT1-SECURITY-CLEANUP-SCHEDULING-ARCHITECTURE-77A
-- Current checkpoint: cleanup settings are now represented in `.env.example`
-  and validated as bounded configuration at settings load. Existing cleanup
-  orchestration and tenant task code were preserved because inspection found
-  no confirmed defect in those paths.
-- Verification: focused cleanup tests pass (`7 passed`); related completion/E2E
-  tests pass (`7 passed, 3 PostgreSQL-only skipped`); backend-cwd full suite is
-  `213 passed, 49 skipped, 1 failed`. The sole failure is the unrelated
-  OpenAPI canonical-byte test detecting generated LF versus committed CRLF in
-  `docs/openapi.yaml`, outside the task allow-list. The root-cwd compose-path
-  failure disappears when rerun from the official `backend` cwd.
-- Claude hard gate: `CLAUDE_TASK76A_PASSCODE_CHANGE_CLEANUP_IMPLEMENTATION_REVIEW_01_V1`
-  returned `PASS / OPEN_BLOCKERS 0 / P0 0 / P1 0`. One non-blocking note asks
-  for explicit audit wording that the PostgreSQL cleanup function comes from a
-  prior authorized migration; no code remediation was required.
-- Draft PR: `https://github.com/mytest19861986/codesho-test/pull/22`.
-- Remote CI for commit `8710d96`: backend SUCCESS, frontend SUCCESS, and
-  smoke_restore SUCCESS (workflow run `31263338566` / compose run
-  `31263338543`).
-- Documentation checkpoint commit `6eb7a30` also passed remote CI: backend and
-  frontend SUCCESS in run `31263485129`; smoke_restore SUCCESS in run
-  `31263485122`.
+## Mission Statement
+Transform `/parent` from a passive data reporting page («گزارش وضعیت فرزند») into:
+**Parent Growth Observatory — مرکز مشاهده و هدایت رشد فرزند**
 
-- Owner: Codex, directed by Commander AI.
-- Status: `COMPLETE / LOCAL_GATES_PASS / CI_COMPOSE_PASS / CLAUDE_PASS`.
-- Base branch: `codesho-test/main`.
-- Base SHA: `dca0800fd74fb3e852aacb9122e6c533538d2629`.
-- Branch: `codex/task73b-openapi-contract-drift`.
-
-## Goal
-
-Eliminate OpenAPI contract drift through an isolated `drf-spectacular`
-projection while preserving runtime URLs, auth, sessions, CSRF, cookies,
-tenant middleware and business logic.
-
-## Exact allow-list
-
-1. `backend/config/openapi_schema.py`
-2. `backend/config/openapi_urls.py`
-3. `backend/config/settings/base.py`
-4. `backend/tests/test_openapi_contract.py`
-5. `docs/openapi.yaml`
-6. `.github/workflows/ci.yml`
-7. `docs/coordination/CURRENT_TASK.md`
-8. `docs/coordination/PROJECT_STATE.md`
-9. `docs/coordination/CODEX_TO_COMMANDER.md`
-10. `.github/workflows/compose-smoke.yml` (Commander-approved CI remediation)
-
-No other file may change.
-
-## Acceptance
-
-- Generated schema is deterministic and exposes exactly six approved operations.
-- Generated schema is byte-equal to `docs/openapi.yaml`; schema and Swagger
-  are fail-closed for anonymous and non-staff users.
-- Runtime/projection path names, callback identities and HTTP methods are
-  parity-tested; unapproved endpoints are absent.
-- Runtime CSRF, session, cookie, status and Retry-After behavior is unchanged.
-- Ruff, MyPy, Django check, migration check, focused/full backend tests,
-  schema validation and `git diff --check` pass.
-- Claude implementation Review 02 passed with zero open blockers. Review 03's
-  only P1 (real Compose execution) is resolved by successful remote execution;
-  final evidence-closure Review 04 passed with zero open blockers.
-
-## Remote evidence
-
-- Commit: `264d85d06fc7c48c4eb2a721e69f53b58a57f7c5`.
-- CI: `31078717976` — SUCCESS (backend and frontend).
-- Compose smoke and restore: `31078717914` — SUCCESS.
-- Documentation checkpoint CI: `31078984692` — SUCCESS.
-- Documentation checkpoint Compose smoke and restore: `31078984491` — SUCCESS.
-- Final Claude evidence-closure review:
-  `CLAUDE_TASK73B_CI_COMPOSE_EVIDENCE_CLOSURE_REVIEW_04_V1` — PASS / 0 open
-  blockers.
-- Draft PR: `https://github.com/mytest19861986/codesho-test/pull/16` (Draft;
-  Ready, merge and protected-repository promotion remain forbidden).
-
-`FINAL_MARKER: CLAUDE_TASK73B_OPENAPI_CONTRACT_IMPLEMENTATION_REVIEW_02_V1`
-
-## Authority and exclusions
-
-Commit, normal branch push and Draft PR are authorized after final gates.
-Direct-main, Ready, merge, force-push and branch deletion are forbidden.
-
-No model, schema, migration, API/OpenAPI, UI, code/state-machine implementation,
-PII/real data, account, credential, session, active membership, role, public
-endpoint, email/SMS/OAuth/provider integration, Guardian/Recovery
-implementation, deployment, Alpha, Production or protected `codesho`
-promotion is authorized.
-
-## TASK77A_CLAUDE_GATE_RESULT_20260808
-
-Claude hard gate completed against `f0692d53cdeb1d65857d3efeb35a49dc709c4ab2`.
-Verdict: `PASS`; `OPEN_BLOCKERS: 0`; `P0: 0`; `P1: 0`. This closes the
-architecture-only review gate. It does not authorize implementation, merge,
-release, deployment, promotion, or protected-repository changes.
+## Strict Constraints
+- `DATABASE_CHANGE: 0`
+- `MIGRATION: 0`
+- `BACKEND_CHANGE: 0`
+- `INFRA_CHANGE: 0`
+- `OTHER_PROJECT_IMPACT: 0` (Shared server preservation)
+- `DO_NOT_IMPLEMENT_UI_BEFORE_AUDIT_APPROVAL: YES`
