@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { mentorAlphaContent as copy } from "@/content/fa/mentor.alpha";
 import {
   Badge,
@@ -229,7 +230,16 @@ export default function MentorOverviewPage() {
               <IconDocument aria-hidden="true" />
               <span>{o.pendingQueueTitle}</span>
             </h2>
-            <Badge variant="warning">{filteredQueue.length} مورد فعال</Badge>
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--cs-space-2)" }}>
+              <Badge variant="warning">{filteredQueue.length} مورد فعال</Badge>
+              <Link
+                href="/mentor/reviews"
+                className={styles.actionButton}
+                style={{ fontSize: "var(--cs-font-size-caption)", padding: "0.25rem 0.5rem", textDecoration: "none" }}
+              >
+                صف کامل بررسی
+              </Link>
+            </div>
           </div>
 
           {searchQuery && (
