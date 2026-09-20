@@ -69,3 +69,16 @@ class IsTenantLearner(permissions.BasePermission):
                 tenant=request.tenant, user=request.user, is_active=True
             ).first()
         return bool(membership and membership.role == TenantMembership.Role.LEARNER)
+
+
+class IsInternalQualifiedUser(permissions.BasePermission):
+    """
+    Wave 5.6 Phase 14: Stage 1 Internal Qualification Gate.
+    Restricts write mutations strictly to allowlisted internal test accounts (staff or internal test users).
+    Public real users are blocked with 403 Forbidden fail-closed.
+    """
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+        is_internal = getattr(request.user, "is_staff", False) or getattr(request.user, "is_superuser", False) or getattr(request.user, "is_internal_test", False)
+        return bool(is_internal)
