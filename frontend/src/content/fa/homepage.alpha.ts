@@ -107,7 +107,7 @@ export const homepageAlphaContent = {
       },
     ],
   },
-  learningPathsHeading: "مسیرهای یادگیری تخصصی",
+  learningPathsHeading: "مسیرهای یادگیری",
   learningPaths: [
     {
       id: "frontend",
