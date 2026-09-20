@@ -87,7 +87,7 @@ export const defaultSharedLearningState: SharedLearningState = {
   },
 };
 
-const STORAGE_KEY = "codesho_cross_role_learning_loop_state";
+const STORAGE_KEY = "codesho:learning-loop:v1";
 
 export function getSharedLearningState(): SharedLearningState {
   if (typeof window === "undefined") {
@@ -121,11 +121,20 @@ export function updateSharedLearningState(updater: (prev: SharedLearningState) =
   }
 }
 
-export function resetSharedLearningState(): SharedLearningState {
+/**
+ * Scoped Demo Reset: Strictly removes ONLY the codesho:learning-loop:* namespace,
+ * preserving any unrelated session/origin keys and restoring default baseline.
+ */
+export function resetLearningLoopDemoState(): SharedLearningState {
   if (typeof window === "undefined") {
     return defaultSharedLearningState;
   }
+  // Strictly remove scoped demo key only - NEVER use sessionStorage.clear()
+  sessionStorage.removeItem(STORAGE_KEY);
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(defaultSharedLearningState));
   window.dispatchEvent(new Event("storage"));
   return defaultSharedLearningState;
 }
+
+export const resetSharedLearningState = resetLearningLoopDemoState;
+
