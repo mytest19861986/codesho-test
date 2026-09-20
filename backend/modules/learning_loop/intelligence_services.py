@@ -118,7 +118,8 @@ class LearningSignalAggregationService:
 
         # Early friction detection (purely to alert the mentor for timely supportive inquiry)
         friction_signal = None
-        if "stuck" in activity.lower() or "failed" in activity.lower():
+        friction_keywords = ["stuck", "failed", "گیر", "مسئله", "چالش", "خطا", "دیباگ"]
+        if any(k in activity.lower() for k in friction_keywords):
             friction_signal = {
                 "signal_type": "CONCEPTUAL_FRICTION",
                 "concept": project.current_milestone,
@@ -128,6 +129,7 @@ class LearningSignalAggregationService:
 
         return {
             "project_id": str(project.id),
+
             "effort_pattern": {
                 "pattern": pattern,
                 "trend": trend,

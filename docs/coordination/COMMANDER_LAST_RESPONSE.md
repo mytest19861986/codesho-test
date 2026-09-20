@@ -1,32 +1,34 @@
-# COMMANDER LAST RESPONSE — WAVE 5.7 PHASE 4 APPROVAL & PHASE 5 DIRECTIVE
+# COMMANDER LAST RESPONSE — WAVE 5.7 PHASE 5 APPROVAL & PHASE 6 DIRECTIVE
 
 Captured: 2026-09-21
 
-COMMANDER REVIEW — WAVE 5.7 PHASE 4
-Intelligence Experience Design & Contract Freeze Gate
+COMMANDER REVIEW — WAVE 5.7 PHASE 5
+Intelligence Frontend Implementation Gate
 
-آنتی‌گرویتی، گزارش Wave 5.7 Phase 4: Intelligence Experience Design Report دریافت و ارزیابی شد.
+آنتی‌گرویتی، گزارش Wave 5.7 Phase 5: Intelligence Frontend Implementation Report دریافت و ارزیابی شد.
 
 نتیجه فرماندهی:
-TYPE: WAVE5.7_PHASE4_INTELLIGENCE_EXPERIENCE_DESIGN_REPORT
+TYPE: WAVE5.7_PHASE5_INTELLIGENCE_FRONTEND_IMPLEMENTATION_REPORT
 STATUS: APPROVED ✅
-UX_ARCHITECTURE: PASS ✅
-CONTRACT_FREEZE: PASS ✅
-PRIVACY_UX: PASS ✅
-IMPLEMENTATION: LOCKED ❌ (تا صدور Gate بعدی)
-NEXT_GATE: PHASE 5 — INTELLIGENCE FRONTEND IMPLEMENTATION (ISOLATED) (GO ✅)
+FRONTEND_ISOLATION: PASS ✅
+ROLE_VISIBILITY: PASS ✅
+CONTRACT_ALIGNMENT: PASS ✅
+REGRESSION: PASS ✅
+NEXT_GATE: PHASE 6 — INTELLIGENCE INTEGRATION VALIDATION & WAVE 5.7 CLOSURE (GO ✅)
 
-ارزیابی معماری تجربه:
-Intelligence serves humans. Humans do not serve the system.
-حرکت از Dashboard -> Metrics -> Judgment به سمت Evidence -> Understanding -> Reflection -> Supportive Action.
+ارزیابی کلان فاز ۵:
+Production UI: UNCHANGED ✅
+Existing Wave 5.6: PRESERVED ✅
+New Intelligence Layer: ISOLATED ✅
+معماری صحیح: Wave 5.6 Learning Loop + Wave 5.7 Learning Intelligence -> Human Understanding Layer.
 
-بررسی تجارب سه پرتال:
-1. /student: SkillConstellationView (هاردلاک NO Percentage/Rank/Score/Comparison)، ReflectionJournalTimeline (اختیاری، شخصی و تحت مالکیت دانش‌آموز، نه تکلیف اجباری یا امتیاز انضباط).
-2. /mentor: PedagogicalDossierCard (ستون Evidence -> Interpretation -> Question)، SocraticPromptLauncher (نه Answer Generator)، EarlyFrictionCard (استفاده از اصطلاح Learning Signal به جای Warning).
-3. /parent: EmpatheticGrowthBanner (Technical Achievement -> Human Growth Meaning)، HomeConversationCues (والد شریک رشد، نه ناظر عملکرد).
-4. Adapter Strategy: useLearningIntelligence -> Intelligence Adapter -> Projection Contract (ممنوعیت تماس مستقیم کامپوننت با API).
-5. Empty/Error State: هیچ خطایی نباید حس شکست منتقل کند.
-6. Snapshot Tests: 60/60 PASS (الزام اضافه شدن تست Role Visibility Snapshot Test در Phase 5).
+ارزیابی کامپوننت‌ها:
+1. StudentIntelligenceView: APPROVED ✅ (Skill Constellation تایید شد؛ بدون نمره، رتبه یا مقایسه؛ Student owns the story, System supports the story).
+2. MentorIntelligenceView: APPROVED ✅ (Evidence -> Understanding -> Question; Socratic Prompt Launcher = Mentor Thinking Amplifier).
+- TERMINOLOGY LOCK: استفاده منحصربه‌فرد از Learning Signal به جای هرگونه اخطار یا برچسب ضعف.
+3. ParentIntelligenceView: APPROVED ✅ (Parent = Growth Partner, نه Performance Monitor).
+4. Adapter Layer: Component -> useLearningIntelligence -> Adapter -> Projection Contract.
+5. Role Visibility Snapshot: 63/63 PASS ✅ (تفکیک ۱۰۰٪ دسترسی‌های نقش‌ها و عدم امکان نفوذ).
 
 Fleet Review:
 - GLM-5.3: PASS ✅
@@ -34,43 +36,41 @@ Fleet Review:
 - Gemini 3.8 Flash: PASS ✅
 
 تصمیم فرمانده:
-WAVE5.7_PHASE4: CLOSED ✅
+WAVE5.7_PHASE5: CLOSED ✅
 
-دستور Phase 5:
-WAVE 5.7 PHASE 5 — Intelligence Frontend Implementation (Isolated)
-هدف: ساخت نمونه اجرایی UI هوشمندی بدون اتصال به کاربران واقعی.
+دستور Phase 6:
+WAVE 5.7 PHASE 6 — Intelligence Integration Validation & Closure
+هدف: اعتبارسنجی نهایی سازگاری Wave 5.6 + Wave 5.7، پایداری قراردادها، تکمیل تجربه ۳ نقش و Freeze معماری.
 محدودیت‌های قطعی:
 مجاز:
-✅ ساخت Component
-✅ Adapter Implementation
-✅ Mock Projection Data
-✅ Story/Test
-✅ Accessibility Validation
+✅ End-to-End Validation
+✅ Contract Regression
+✅ Performance Review
+✅ Accessibility Review
+✅ Final Architecture Documentation
 ممنوع:
-❌ تغییر Production Route Behaviour
-❌ Real API Activation
-❌ Migration
-❌ External AI
-❌ User Traffic
-❌ حذف Learning Loop قبلی Wave 5.6
+❌ Feature Expansion
+❌ New Intelligence Capability
+❌ External AI Runtime
+❌ Migration بدون ADR
+❌ تغییر فلسفه NO_JUDGMENT_ENGINE
 
 Deliverable مورد انتظار:
-TYPE: WAVE5.7_PHASE5_INTELLIGENCE_FRONTEND_IMPLEMENTATION_REPORT
+TYPE: WAVE5.7_PHASE6_FINAL_INTEGRATION_CLOSURE_REPORT
 شامل:
-- Component Implementation Map
-- useLearningIntelligence Adapter
-- Mock Projection Layer
-- Student Intelligence UI
-- Mentor Intelligence UI
-- Parent Insight UI
-- Responsive RTL Validation
-- Accessibility Review
+- Wave 5.6 + Wave 5.7 Compatibility Report
+- Full Role Journey Validation (Student, Mentor, Parent)
+- Contract Regression Matrix
 - Performance Impact
-- Regression Tests
-- GLM Review, Qwen Review, Gemini Review
+- Security Boundary Review
+- Privacy Review
+- Accessibility Review
+- Final Technical Debt List
+- Future Roadmap Suggestions
+- GLM, Qwen, Gemini Final Reviews
 
 فرمان نهایی:
-WAVE5.7_PHASE4: APPROVED ✅
-PHASE5: GO ✅
-MISSION: BRING INTELLIGENCE TO THE INTERFACE.
-BUT REMEMBER: THE UI SHOULD HELP A LEARNER UNDERSTAND THEMSELVES, NOT MEASURE THEM.
+WAVE5.7_PHASE5: APPROVED ✅
+PHASE6: GO ✅
+MISSION: VALIDATE THE COMPLETE INTELLIGENCE EXPERIENCE.
+FINAL PRINCIPLE: THE SYSTEM CAN HELP PEOPLE NOTICE GROWTH. IT MUST NEVER DEFINE A CHILD'S VALUE.
