@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   IconGraduate,
@@ -15,6 +15,7 @@ import {
   IconStar,
   IconFire,
 } from "@/components/ui/Icons";
+import { getSharedLearningState, updateSharedLearningState, SharedLearningState } from "@/data/sharedLearningLoop";
 import styles from "./observatory.module.css";
 
 interface ChildProfile {
@@ -156,6 +157,15 @@ export default function ParentDashboardPage() {
   // Encouragement interaction state
   const [customMsg, setCustomMsg] = useState("");
   const [msgSent, setMsgSent] = useState(false);
+  const [loopState, setLoopState] = useState<SharedLearningState>(getSharedLearningState());
+
+  useEffect(() => {
+    const handleSync = () => {
+      setLoopState(getSharedLearningState());
+    };
+    window.addEventListener("storage", handleSync);
+    return () => window.removeEventListener("storage", handleSync);
+  }, []);
 
   const presets = [
     `«${child.name} عزیز، تلاش و پشتکار این هفته‌ات در حل چالش‌ها واقعاً برای من الهام‌بخش بود. بهت افتخار می‌کنم!»`,
@@ -164,6 +174,17 @@ export default function ParentDashboardPage() {
   ];
 
   const handleSendEncouragement = () => {
+    const messageToSend = customMsg.trim() || presets[0];
+    if (selectedChildKey === "ali") {
+      updateSharedLearningState((prev) => ({
+        ...prev,
+        parentBridge: {
+          ...prev.parentBridge,
+          parentEncouragementSent: true,
+          parentEncouragementMessage: messageToSend,
+        },
+      }));
+    }
     setMsgSent(true);
     setTimeout(() => {
       setMsgSent(false);
@@ -223,7 +244,11 @@ export default function ParentDashboardPage() {
             <IconSparkles className={styles.briefingTagIcon} />
             <span>گزارش هفتگی مربی (Weekly Mentor Briefing)</span>
           </div>
-          <span className={styles.briefingDate}>به‌روزرسانی: دیروز ساعت ۲۰:۰۰ • منتور ارشد</span>
+          <span className={styles.briefingDate}>
+            {selectedChildKey === "ali" && loopState.parentBridge.briefingTimestamp
+              ? `به‌روزرسانی: ${loopState.parentBridge.briefingTimestamp} • منتور ارشد`
+              : "به‌روزرسانی: دیروز ساعت ۲۰:۰۰ • منتور ارشد"}
+          </span>
         </div>
 
         <div className={styles.briefingBody}>
@@ -237,7 +262,11 @@ export default function ParentDashboardPage() {
                 <IconCheck className={`${styles.stepIcon} ${styles.stepIconBlue}`} />
                 <div>
                   <span className={styles.observationLabel}>مشاهده عینی مربی:</span>
-                  <span className={styles.observationVal}>{child.observation}</span>
+                  <span className={styles.observationVal}>
+                    {selectedChildKey === "ali" && loopState.parentBridge.lastBriefing
+                      ? loopState.parentBridge.lastBriefing
+                      : child.observation}
+                  </span>
                 </div>
               </div>
 

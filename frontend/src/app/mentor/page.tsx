@@ -8,6 +8,7 @@ import {
   Intervention,
   CohortPulseItem,
 } from "@/data/mentorSyntheticData";
+import { updateSharedLearningState } from "@/data/sharedLearningLoop";
 import {
   IconCheck,
   IconClose,
@@ -43,6 +44,15 @@ export default function MentorCommandCenterPage() {
         item.id === activeIntervention.id ? { ...item, status: newStatus } : item
       )
     );
+    if (activeIntervention.studentName.includes("علی")) {
+      updateSharedLearningState((prev) => ({
+        ...prev,
+        mentorIntervention: {
+          ...prev.mentorIntervention,
+          status: newStatus,
+        },
+      }));
+    }
     showToast(`وضعیت مداخله با موفقیت به «${newStatus}» به‌روزرسانی شد.`);
   };
 
@@ -71,6 +81,26 @@ export default function MentorCommandCenterPage() {
           : item
       )
     );
+
+    if (activeIntervention.studentName.includes("علی")) {
+      updateSharedLearningState((prev) => ({
+        ...prev,
+        mentorIntervention: {
+          ...prev.mentorIntervention,
+          status: prev.mentorIntervention.status === "OPEN" ? "REVIEWING" : prev.mentorIntervention.status,
+          feedbacks: [
+            {
+              id: newFeedback.id,
+              sender: "MENTOR",
+              timestamp: "هم‌اکنون",
+              text: newFeedback.text,
+              actionType,
+            },
+            ...prev.mentorIntervention.feedbacks,
+          ],
+        },
+      }));
+    }
 
     setFeedbackText("");
     showToast(`اقدام «${actionType}» برای دانش‌آموز ثبت و ارسال گردید.`);
@@ -464,6 +494,17 @@ export default function MentorCommandCenterPage() {
                   style={{ flex: 1 }}
                   onClick={() => {
                     setIsParentBriefingOpen(false);
+                    const briefingContent = `ولی محترم ${activeIntervention.studentName}، فرزند شما هم‌اکنون در حال توسعه پروژه «${activeIntervention.evidence.projectTitle}» است. ${activeIntervention.status === "RESOLVED" ? "روند پیشرفت ایشان بسیار درخشان بوده و چالش‌های اخیر را با موفقیت پشت سر گذاشته است." : "ایشان در حال تمرین بر روی مبحث پیشرفته است. ما در مرکز هدایت همراه ایشان هستیم و تشویق شما در خانه در تداوم تلاش بسیار موثر خواهد بود."}`;
+                    if (activeIntervention.studentName.includes("علی")) {
+                      updateSharedLearningState((prev) => ({
+                        ...prev,
+                        parentBridge: {
+                          ...prev.parentBridge,
+                          lastBriefing: briefingContent,
+                          briefingTimestamp: "هم‌اکنون",
+                        },
+                      }));
+                    }
                     showToast("گزارش والد با موفقیت به رصدخانه رشد ارسال شد.");
                   }}
                 >

@@ -1,6 +1,4 @@
-"use client";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   IconArrowUp,
@@ -21,6 +19,7 @@ import {
   IconTrending,
 } from "@/components/ui/Icons";
 import { studentAlphaContent as copy } from "@/content/fa/student.alpha";
+import { getSharedLearningState, SharedLearningState } from "@/data/sharedLearningLoop";
 import styles from "./commandCenter.module.css";
 
 export default function StudentDashboardPage() {
@@ -31,6 +30,15 @@ export default function StudentDashboardPage() {
   const [mentorDrawerOpen, setMentorDrawerOpen] = useState(false);
   const [projectDrawerOpen, setProjectDrawerOpen] = useState(false);
   const [missionCompleted, setMissionCompleted] = useState(false);
+  const [loopState, setLoopState] = useState<SharedLearningState>(getSharedLearningState());
+
+  useEffect(() => {
+    const handleSync = () => {
+      setLoopState(getSharedLearningState());
+    };
+    window.addEventListener("storage", handleSync);
+    return () => window.removeEventListener("storage", handleSync);
+  }, []);
 
   return (
     <div className={styles.commandCenter}>
@@ -74,6 +82,19 @@ export default function StudentDashboardPage() {
           </div>
         </div>
       </header>
+
+      {/* 1.5. Parent Encouragement Ribbon (Cross-Role Journey 3) */}
+      {loopState.parentBridge.parentEncouragementSent && (
+        <aside className={styles.parentEncouragementBanner} aria-label="پیام تشویقی خانواده">
+          <div className={styles.parentEncouragementIcon}>
+            <IconStar />
+          </div>
+          <div className={styles.parentEncouragementContent}>
+            <span className={styles.parentEncouragementLabel}>پیام خانواده از رصدخانه والدین:</span>
+            <p className={styles.parentEncouragementText}>«{loopState.parentBridge.parentEncouragementMessage}»</p>
+          </div>
+        </aside>
+      )}
 
       {/* 2. Today's Mission (Heart of the Command Center) */}
       <section className={styles.missionCard} aria-labelledby="mission-heading">
@@ -140,26 +161,26 @@ export default function StudentDashboardPage() {
 
           <div className={styles.projectCardBody}>
             <div className={styles.projectMainInfo}>
-              <h3 className={styles.projectTitle}>ربات تحلیل داده‌های ورزشی و سلامت (Python Data Engine)</h3>
+              <h3 className={styles.projectTitle}>{loopState.activeProject.title}</h3>
               <p className={styles.projectDesc}>
-                توسعه ماژول پردازش بلادرنگ جریان داده‌های حسگرهای حرکتی با کتابخانه‌های استاندارد و معماری ماژولار.
+                شاخه <code>{loopState.activeProject.branch}</code> • مایل‌استون: {loopState.activeProject.currentMilestone}
               </p>
             </div>
 
             <div className={styles.milestoneBlock}>
               <div className={styles.milestoneLabelRow}>
-                <span>مایل‌استون جاری: پیاده‌سازی فیلترهای آماری</span>
-                <span className={styles.milestonePct}>۷۰٪ تکمیل</span>
+                <span>پیشرفت پروژه</span>
+                <span className={styles.milestonePct}>{loopState.activeProject.progressPercentage}٪ تکمیل</span>
               </div>
               <div className={styles.progressTrack}>
-                <div className={styles.progressBar} style={{ width: "70%" }} />
+                <div className={styles.progressBar} style={{ width: `${loopState.activeProject.progressPercentage}%` }} />
               </div>
             </div>
 
             <div className={styles.reviewStatusRow}>
               <div className={styles.reviewBadge}>
                 <IconCheck className={styles.reviewCheckIcon} />
-                <span>بازبینی کد: تأیید شده توسط مربی ارشد (سنتتیک)</span>
+                <span>وضعیت هدایت مربی: {loopState.mentorIntervention.status === "RESOLVED" ? "تأییدشده و حل‌شده" : "در حال بازبینی و نظارت فعال"}</span>
               </div>
               <button
                 type="button"
@@ -188,10 +209,16 @@ export default function StudentDashboardPage() {
           <div className={styles.mentorPanelBody}>
             <div className={styles.mentorSpeechBubble}>
               <div className={styles.mentorSpeechTop}>
-                <span className={styles.mentorContextTag}>تحلیل آخرین تمرین (دیروز ساعت ۱۸:۳۰)</span>
+                <span className={styles.mentorContextTag}>
+                  {loopState.mentorIntervention.feedbacks.length > 0
+                    ? `آخرین بازخورد (${loopState.mentorIntervention.feedbacks[0].timestamp})`
+                    : "تحلیل آخرین تمرین"}
+                </span>
               </div>
               <p className={styles.mentorFeedbackText}>
-                «کد ساختار صف شما خوانا و استاندارد است. با این حال استفاده مکرر از <code>list.pop(0)</code> دارای پیچیدگی O(n) است. توصیه می‌کنم ساختار <code>collections.deque</code> را برای زمان اجرای ثابت O(1) جایگزین کنید.»
+                «{loopState.mentorIntervention.feedbacks.length > 0
+                  ? loopState.mentorIntervention.feedbacks[0].text
+                  : loopState.mentorIntervention.recommendedAction}»
               </p>
             </div>
 

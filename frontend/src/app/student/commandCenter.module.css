@@ -870,3 +870,61 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* 1.5. Parent Encouragement Ribbon (Cross-Role Journey 3) */
+.parentEncouragementBanner {
+  display: flex;
+  align-items: center;
+  gap: var(--cs-space-3, 0.75rem);
+  background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%);
+  border: 1px solid #fde047;
+  border-radius: var(--cs-radius-md, 0.75rem);
+  padding: 0.75rem 1.25rem;
+  box-shadow: 0 2px 8px rgba(234, 179, 8, 0.15);
+  animation: bannerFadeIn 0.4s ease-out;
+}
+
+@keyframes bannerFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.parentEncouragementIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  border-radius: var(--cs-radius-pill, 9999px);
+  background: #f59e0b;
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35);
+}
+
+.parentEncouragementContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.parentEncouragementLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #b45309;
+}
+
+.parentEncouragementText {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #78350f;
+  line-height: 1.5;
+}
+
