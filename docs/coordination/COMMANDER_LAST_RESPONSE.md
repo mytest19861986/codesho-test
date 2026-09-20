@@ -1,571 +1,126 @@
-عالی. حالا که دامنه codesho.ir روی پارس‌پک است، مرحله اتصال دامنه را می‌توانیم شروع کنیم. چون روی همان VPS چند پروژه دیگر فعال‌اند، این کار را با DNS اختصاصی + یک Server Block جدید Nginx انجام می‌دهیم و هیچ تنظیم موجودی overwrite نمی‌شود.
+# COMMANDER LAST RESPONSE — WAVE 5.6 PHASE 15 REVIEW & DIRECTIVE
 
-در پنل پارس‌پک فقط رکوردهای DNS دامنه را تنظیم کنید. خود پارس‌پک نیز مدیریت رکوردهای DNS را از پنل DNS/CDN پشتیبانی می‌کند و برای اتصال دامنه، رکورد A دامنه اصلی و www باید به IP سرور اشاره کنند. 
-پارس‌پک
-+1
+Captured: 2026-09-21
 
-کاری که شما در پنل پارس‌پک انجام دهید
+COMMANDER REVIEW — WAVE 5.6 PHASE 15
+Stage 2 — Limited Tenant Pilot Gate
 
-برای codesho.ir این دو رکورد را ایجاد/اصلاح کنید:
+آنتی‌گرویتی، گزارش Phase 15 دریافت شد.
 
-Type: A
-Name: @
-Value: 92.118.190.101
-TTL: 300
+این فاز نقطه مهمی در مسیر Write بود، زیرا برای اولین بار Write از محدوده Internal خارج شد و وارد Tenant-scoped Pilot شد.
+ملاک ارزیابی:
+- آیا فعال‌سازی در سطح Tenant واقعاً ایزوله است؟
+- آیا Tenantهای خارج از Pilot هیچ مسیر Mutation ندارند؟
+- آیا Rollback بدون آسیب انجام می‌شود؟
+- آیا Audit و Security Boundary حفظ شده است؟
 
-و:
+گزارش بررسی شد.
 
-Type: A
-Name: www
-Value: 92.118.190.101
-TTL: 300
-
-اگر پنل برای رکورد دامنه اصلی به‌جای @ نام خالی می‌خواهد، Name را خالی بگذارید.
-
-MX، TXT، SPF، DKIM و DMARC را حذف نکنید. اگر رکورد AAAA برای codesho.ir یا www دارید ولی این سرور IPv6 متناظر ندارد، آن رکورد می‌تواند باعث شود بعضی کاربران به مقصد اشتباه بروند؛ Antigravity باید آن را بررسی کند، ولی بدون بررسی حذف نکند.
-
-اگر قبلاً A record دیگری برای codesho.ir وجود دارد، چون قرار است دامنه را به این VPS منتقل کنیم، مقدار همان رکورد را به:
-
-92.118.190.101
-
-تغییر دهید، نه اینکه چند A record ناخواسته با IPهای متفاوت ایجاد کنید.
-
-بعد این فرمان را عیناً به Antigravity بدهید:
-
+Final Gate Decision
 TYPE:
-COMMANDER_CODESHO_DOMAIN_AND_HTTPS_ACTIVATION_DIRECTIVE
-
-AUTHORITY:
-HUMAN_MANAGER
-
-DOMAIN:
-codesho.ir
-
-WWW_DOMAIN:
-www.codesho.ir
-
-TARGET_SERVER:
-92.118.190.101
-
-CURRENT_CODESHO_UPSTREAM:
-127.0.0.1:18080
-
-CURRENT_DEPLOYED_SHA:
-00dc6400e206cf2d8d8fb24e5b4c1a223c2282ca
-
-==================================================
-ABSOLUTE RULES
-==================================================
-
-THIS IS A SHARED SERVER.
-
-DO NOT:
-- modify unrelated Nginx server blocks
-- stop unrelated containers
-- change ai-teacher services
-- change SSH configuration
-- change UFW unless explicitly required and approved
-- change existing ports
-- docker system prune
-- docker volume prune
-- docker network prune
-- replace /etc/nginx/nginx.conf wholesale
-- restart the server
-
-USE:
-nginx -t
-then reload only.
-
-==================================================
-PHASE 1 — DNS VERIFICATION
-==================================================
-
-Before touching host Nginx, verify public DNS:
-
-dig +short A codesho.ir
-dig +short A www.codesho.ir
-dig +short AAAA codesho.ir
-dig +short AAAA www.codesho.ir
-dig +short NS codesho.ir
-
-Required:
-
-codesho.ir A:
-92.118.190.101
-
-www.codesho.ir A:
-92.118.190.101
-
-If A records have not propagated:
-WAIT.
-DO NOT configure TLS yet.
-
-If a conflicting AAAA record exists:
-REPORT IT.
-Do not delete it automatically unless it is proven stale.
-
-Record current DNS evidence.
-
-==================================================
-PHASE 2 — NGINX BEFORE SNAPSHOT
-==================================================
-
-Capture:
-
-sudo nginx -T > /tmp/nginx-before-codesho.txt
-sudo nginx -t
-sudo ss -tulpn
-
-List enabled sites:
-
-ls -la /etc/nginx/sites-enabled/
-ls -la /etc/nginx/sites-available/
-
-Identify configuration files for existing projects.
-
-DO NOT MODIFY THEM.
-
-==================================================
-PHASE 3 — CREATE DEDICATED CODESHO SERVER BLOCK
-==================================================
-
-Create only:
-
-/etc/nginx/sites-available/codesho.ir
-
-Initial HTTP configuration:
-
-server {
-    listen 80;
-    listen [::]:80;
-
-    server_name codesho.ir www.codesho.ir;
-
-    location / {
-        proxy_pass http://127.0.0.1:18080;
-        proxy_http_version 1.1;
-
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        proxy_connect_timeout 10s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
-    }
-}
-
-Enable using only a symlink:
-
-sudo ln -s /etc/nginx/sites-available/codesho.ir \
-  /etc/nginx/sites-enabled/codesho.ir
-
-If the symlink already exists:
-do not recreate blindly;
-inspect first.
-
-==================================================
-PHASE 4 — VALIDATE BEFORE RELOAD
-==================================================
-
-Run:
-
-sudo nginx -t
-
-Required:
-
-NGINX_CONFIG_TEST:
-PASS
-
-If nginx -t fails:
-
-DO NOT RELOAD.
-ROLL BACK ONLY THE NEW CODESHO FILE/SYMLINK.
-REPORT BLOCKER.
-
-If PASS:
-
-sudo systemctl reload nginx
-
-DO NOT restart nginx.
-
-Verify:
-
-sudo systemctl is-active nginx
-
-Required:
-
-active
-
-==================================================
-PHASE 5 — HTTP DOMAIN VERIFICATION
-==================================================
-
-Test:
-
-curl -I http://codesho.ir
-curl -I http://www.codesho.ir
-
-Also test Host routing locally:
-
-curl -I -H 'Host: codesho.ir' http://127.0.0.1
-
-Required:
-
-CODESHO_DOMAIN_REACHES_CODESHO:
-YES
-
-OTHER_SERVER_BLOCK_COLLISION:
-0
-
-Do not proceed to SSL if domain routing is incorrect.
-
-==================================================
-PHASE 6 — TLS CERTIFICATE
-==================================================
-
-Check:
-
-certbot --version
-
-If Certbot is not installed, install only required packages.
-Do NOT perform a distribution upgrade.
-
-Ubuntu 24.04 packages:
-
-sudo apt-get update
-sudo apt-get install -y certbot python3-certbot-nginx
-
-Then obtain certificate:
-
-sudo certbot certonly --nginx \
-  -d codesho.ir \
-  -d www.codesho.ir
-
-Do NOT proceed if certificate issuance fails.
-
-If HTTP ACME validation is unreliable because of current network conditions,
-use DNS/TXT validation instead and report the exact required
-_acme-challenge records for the manager to add in ParsPack.
-
-Never bypass certificate verification.
-
-==================================================
-PHASE 7 — ENABLE HTTPS MANUALLY
-==================================================
-
-After certificate issuance, configure Codesho only.
-
-Use:
-
-/etc/letsencrypt/live/codesho.ir/fullchain.pem
-/etc/letsencrypt/live/codesho.ir/privkey.pem
-
-Final intended configuration:
-
-server {
-    listen 80;
-    listen [::]:80;
-
-    server_name codesho.ir www.codesho.ir;
-
-    return 301 https://codesho.ir$request_uri;
-}
-
-server {
-    listen 443 ssl;
-    listen [::]:443 ssl;
-
-    server_name codesho.ir www.codesho.ir;
-
-    ssl_certificate /etc/letsencrypt/live/codesho.ir/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/codesho.ir/privkey.pem;
-
-    location / {
-        proxy_pass http://127.0.0.1:18080;
-        proxy_http_version 1.1;
-
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto https;
-
-        proxy_connect_timeout 10s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
-    }
-}
-
-Then:
-
-sudo nginx -t
-
-Only if PASS:
-
-sudo systemctl reload nginx
-
-==================================================
-PHASE 8 — HTTPS VERIFICATION
-==================================================
-
-Verify:
-
-curl -I http://codesho.ir
-curl -I https://codesho.ir
-curl -I https://www.codesho.ir
-
-Required:
-
-HTTP_TO_HTTPS_REDIRECT:
-PASS
-
-HTTPS_CODESHO_IR:
-PASS
-
-HTTPS_WWW_CODESHO_IR:
-PASS
-
-CERTIFICATE_VALID:
-YES
-
-CERTIFICATE_HOSTNAME_MATCH:
-YES
-
-==================================================
-PHASE 9 — APPLICATION VALIDATION THROUGH REAL DOMAIN
-==================================================
-
-Run Browser validation against:
-
-https://codesho.ir/
-
-https://codesho.ir/login
-
-https://codesho.ir/student
-https://codesho.ir/student/learning
-https://codesho.ir/student/coaching
-https://codesho.ir/student/growth
-https://codesho.ir/student/portfolio
-
-https://codesho.ir/parent
-https://codesho.ir/parent/progress
-https://codesho.ir/parent/finance
-https://codesho.ir/parent/consent
-
-https://codesho.ir/mentor
-https://codesho.ir/mentor/reviews
-https://codesho.ir/mentor/students
-https://codesho.ir/mentor/sessions
-
-Required:
-
-DOMAIN_REACHABLE_404_FROM_UI:
-0
-
-BROKEN_NAVIGATION:
-0
-
-BROKEN_ACTIONS:
-0
-
-NO_OP_ACTIONS:
-0
-
-CONSOLE_ERRORS:
-0
-
-HYDRATION_ERRORS:
-0
-
-UNEXPECTED_NETWORK_ERRORS:
-0
-
-==================================================
-PHASE 10 — EXISTING PROJECT REGRESSION
-==================================================
-
-Recheck:
-
-ai-teacher-staging-api-1:
-UP_HEALTHY
-
-ai-teacher-staging-redis-1:
-UP_HEALTHY
-
-ai-teacher-staging-db-1:
-UP_HEALTHY
-
-Verify existing domains/server blocks still respond.
-
-Required:
-
-PRE_EXISTING_NGINX_SERVER_BLOCKS_CHANGED:
-0
-
-PRE_EXISTING_CONTAINERS_STOPPED:
-0
-
-PRE_EXISTING_CONTAINER_PORT_CHANGES:
-0
-
-OTHER_PROJECT_INTERRUPTION:
-0
-
-==================================================
-PHASE 11 — CERTIFICATE RENEWAL
-==================================================
-
-Verify:
-
-sudo certbot renew --dry-run
-
-Required:
-
-CERTBOT_RENEWAL_DRY_RUN:
-PASS
-
-Do not alter certificates belonging to other domains.
-
-==================================================
-FINAL EVIDENCE
-==================================================
-
-TYPE:
-CODESHO_DOMAIN_HTTPS_ACTIVATION_FINAL_EVIDENCE
-
-DOMAIN:
-codesho.ir
-
-WWW_DOMAIN:
-www.codesho.ir
-
-SERVER:
-92.118.190.101
-
-DEPLOYED_SHA:
-00dc6400e206cf2d8d8fb24e5b4c1a223c2282ca
-
-
-DNS_CODESHO_IR:
-92.118.190.101
-
-DNS_WWW_CODESHO_IR:
-92.118.190.101
-
-DNS_CONFLICTING_AAAA:
-0
-
-
-NGINX_DEDICATED_SERVER_BLOCK:
-PASS
-
-NGINX_CONFIG_TEST:
-PASS
-
-NGINX_RELOAD:
-PASS
-
-NGINX_RESTART_USED:
-NO
-
-
-TLS_CERTIFICATE:
-PASS
-
-TLS_CODESHO_IR:
-PASS
-
-TLS_WWW_CODESHO_IR:
-PASS
-
-HTTP_TO_HTTPS_REDIRECT:
-PASS
-
-CERTBOT_RENEWAL_DRY_RUN:
-PASS
-
-
-PUBLIC_AUTH_DOMAIN_RUNTIME:
-PASS
-
-STUDENT_DOMAIN_RUNTIME:
-PASS
-
-PARENT_DOMAIN_RUNTIME:
-PASS
-
-MENTOR_DOMAIN_RUNTIME:
-PASS
-
-MENTOR_REVIEWS_DOMAIN_RUNTIME:
-PASS
-
-
-DISCOVERED_INTERNAL_TARGETS:
-34
-
-TESTED_INTERNAL_TARGETS:
-34
-
-UNTESTED_INTERNAL_TARGETS:
-0
-
-REACHABLE_404_FROM_UI:
-0
-
-BROKEN_ACTIONS:
-0
-
-NO_OP_ACTIONS:
-0
-
-CONSOLE_ERRORS:
-0
-
-HYDRATION_ERRORS:
-0
-
-UNEXPECTED_NETWORK_ERRORS:
-0
-
-
-AI_TEACHER_EXISTING_STACK:
-UP_HEALTHY
-
-PRE_EXISTING_NGINX_SERVER_BLOCKS_CHANGED:
-0
-
-PRE_EXISTING_CONTAINERS_STOPPED:
-0
-
-PRE_EXISTING_CONTAINER_PORT_CHANGES:
-0
-
-OTHER_PROJECT_INTERRUPTION:
-0
-
-
-REAL_PII:
-0
-
-REAL_NOTIFICATIONS:
-0
-
-REAL_PAYMENTS:
-0
-
-PUBLIC_SIGNUP:
-DISABLED
-
-
-HUMAN_MANAGER_DOMAIN_ACCEPTANCE:
-PENDING
-
-COMMANDER_DECISION_REQUIRED:
-DOMAIN_HTTPS_CLOSURE
-
-یک نکته مهم درباره SSL: خود پارس‌پک در راهنمای فعلی‌اش گفته در شرایط اختلال مسیر بین‌الملل، DNS/TXT validation برای SSL می‌تواند قابل‌اعتمادتر از HTTP validation باشد. بنابراین اگر Certbot روی HTTP challenge خطا داد، Antigravity نباید workaround ناامن انجام دهد؛ باید _acme-challenge را از Certbot بگیرد تا رکورد TXT را در پارس‌پک وارد کنیم. 
-پارس‌پک
-
-فعلاً شما دو A record بالا را در پارس‌پک تنظیم کنید. بعد Antigravity همین دستور را اجرا کند. اگر پنل پارس‌پک را باز کردید و از بخش DNS یک اسکرین‌شات فرستادید، دقیقاً به شما می‌گویم روی کدام گزینه بزنید و هر فیلد را چه مقداری وارد کنید.
+WAVE5.6_PHASE15_LIMITED_TENANT_PILOT_REPORT
+
+STATUS:
+PASS ✅
+
+STAGE_2:
+COMPLETED ✅
+
+LIMITED_TENANT_WRITE:
+APPROVED ✅
+
+STAGE_3_GENERAL_AVAILABILITY:
+PREPARED ⚠️
+
+PUBLIC_GENERAL_WRITE:
+LOCKED ❌
+
+ارزیابی Phase 15
+1. Tenant Scoped Activation
+وضعیت:
+PILOT_TENANT_SCOPE: PASS ✅
+مدل:
+Request -> Internal / Pilot Gate -> Tenant Flag Check -> Role Permission -> Object Ownership -> Domain Service
+تأیید شد.
+
+نکته مهم فرماندهی:
+قرار دادن گیت در سطح Tenant تصمیم صحیحی است.
+اما برای Stage 3 باید یک مورد اضافه شود:
+فعال‌سازی نباید فقط Boolean باشد.
+در GA بهتر است مدل Flag به سمت:
+Tenant + Feature State + Activation Timestamp + Actor + Audit Event
+حرکت کند.
+
+2. Pilot Mutation Results: 49/49 TESTS PASS ✅
+- Learner Evidence Submission: PASS
+- Mentor Intervention + Feedback: PASS
+- Guardian Encouragement: PASS, Technical Mutation: DENIED
+- Non Pilot Tenants: Mutation Access BLOCKED 100% ✅
+
+3. Security & Integrity Gates:
+- Security Incident: 0
+- Data Leak: 0
+- Rollback Failure: 0
+- Audit Gap: 0
+- Critical UX Break: 0
+وضعیت: PASS ✅
+
+4. Performance:
+- Mutation Latency: 14.1ms -> PASS
+اما برای GA نیاز به Benchmark واقعی‌تر داریم:
+- Burst Requests
+- Concurrent Mentors
+- Concurrent Evidence Submit
+- Database Lock Contention
+
+5. Rollback Drill: PASS ✅ (Kill Switch پذیرفته است).
+
+Fleet Review:
+- GLM-5.3: PASS ✅
+- Qwen 3.8 Max: PASS ✅
+- Gemini 3.8 Flash: PASS ✅
+
+تصمیم درباره Stage 3:
+GA_ARCHITECTURE_READY: YES ✅
+GA_ACTIVATION_READY: PENDING ⚠️
+PUBLIC_WRITE: NO-GO ❌
+
+WAVE 5.6 PHASE 16: General Availability Readiness & Production Write Governance
+وضعیت: GO ✅
+اما: PUBLIC_WRITE: LOCKED ❌
+
+Scope Phase 16:
+1. Production Activation Checklist
+2. Load & Concurrency Validation (Multiple Mentors, Concurrent Evidence, Parent Actions, Lock Contention)
+3. Feature Governance (Tenant + Feature State + Activation Timestamp + Actor + Audit Event)
+4. Final GA Decision Package (GO / NO-GO PACKAGE)
+
+Hard Locks Phase 16:
+PUBLIC_WRITE: OFF
+GENERAL_USERS: OFF
+DATABASE_MIGRATION: LOCKED
+AI_TEACHER: UNCHANGED
+PRODUCTION_RISK: CONTROLLED
+
+Deliverable بعدی:
+TYPE: WAVE5.6_PHASE16_GENERAL_AVAILABILITY_READINESS_REPORT
+شامل:
+- PRODUCTION_CHECKLIST
+- LOAD_RESULTS
+- CONCURRENCY_RESULTS
+- FLAG_GOVERNANCE
+- AUDIT_POLICY
+- INCIDENT_RESPONSE
+- SECURITY_REVIEW
+- GLM_REVIEW
+- QWEN_REVIEW
+- GEMINI_REVIEW
+- GENERAL_AVAILABILITY_READY: YES | NO
+
+FINAL COMMAND:
+WAVE5.6_PHASE15: ACCEPTED ✅
+STAGE_2_LIMITED_PILOT: PASSED ✅
+STAGE_3: PREPARATION GO ✅
+PUBLIC_WRITE: LOCKED ❌
+NEXT: WAVE5.6_PHASE16
+EXECUTION: ANTIGRAVITY ONLY

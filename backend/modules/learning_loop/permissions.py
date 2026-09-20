@@ -86,11 +86,12 @@ class IsInternalQualifiedUser(permissions.BasePermission):
 
 class IsPilotTenantOrInternalQualified(permissions.BasePermission):
     """
-    Wave 5.6 Phase 15: Stage 2 — Limited Tenant Pilot Gate.
+    Wave 5.6 Phase 15 & 16: Multi-Dimensional Tenant Feature Governance Gate.
     Allows write mutations ONLY if:
-    1. The tenant has learning_write_enabled=True (Limited Pilot Tenant), OR
-    2. The user is an allowlisted internal staff/test user.
-    General public tenants/users remain strictly blocked (403 Forbidden fail-closed).
+    1. TenantFeatureGovernanceEngine evaluates write permission as True (Feature State + Audit), OR
+    2. The tenant has learning_write_enabled=True (backward-compatible Limited Pilot Tenant), OR
+    3. The user is an allowlisted internal staff/test user.
+    General public unactivated tenants/users remain strictly blocked (403 Forbidden fail-closed).
     """
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
@@ -98,6 +99,7 @@ class IsPilotTenantOrInternalQualified(permissions.BasePermission):
         tenant = getattr(request, "tenant", None)
         if not tenant:
             return False
-        is_internal = getattr(request.user, "is_staff", False) or getattr(request.user, "is_superuser", False) or getattr(request.user, "is_internal_test", False)
-        is_pilot_tenant = getattr(tenant, "learning_write_enabled", False)
-        return bool(is_internal or is_pilot_tenant)
+        
+        from .governance import TenantFeatureGovernanceEngine
+        return TenantFeatureGovernanceEngine.is_tenant_write_permitted(tenant, request.user)
+
