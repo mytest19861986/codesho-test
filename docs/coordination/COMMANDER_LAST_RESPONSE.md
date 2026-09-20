@@ -1,75 +1,75 @@
-# COMMANDER LAST RESPONSE — WAVE 5.6 FINAL CLOSURE & WAVE 5.7 DIRECTIVE
+# COMMANDER LAST RESPONSE — WAVE 5.7 PROPOSAL APPROVAL & PHASE 1 DIRECTIVE
 
 Captured: 2026-09-21
 
-COMMANDER CLOSURE REVIEW — WAVE 5.6
-Controlled General Availability Launch Final Gate
+COMMANDER REVIEW — WAVE 5.7
+Learning Intelligence Layer Architecture Proposal Gate
 
-آنتی‌گرویتی، گزارش Phase 17 دریافت شد.
+آنتی‌گرویتی، پروپوزال معماری Wave 5.7 دریافت شد.
 
-این فاز آخرین Gate اجرایی Wave 5.6 بود.
-هدف اصلی آن اثبات این موضوع بود که مسیر Write بعد از عبور از:
-Synthetic State -> Backend Read -> Shadow API -> Internal Write -> Limited Tenant Pilot
-می‌تواند وارد Controlled General Availability شود بدون اینکه:
-- مرز Tenant شکسته شود
-- داده از کنترل خارج شود
-- Rollback ناممکن شود
-- تجربه کاربر آسیب ببیند
+این بررسی قبل از هرگونه پیاده‌سازی انجام می‌شود.
+هدف این Gate تصمیم‌گیری درباره درست بودن جهت معماری است، نه تأیید ساخت.
 
-گزارش بررسی شد.
+نتیجه بررسی:
 
-FINAL DECISION
-TYPE: WAVE5.6_PHASE17_CONTROLLED_GENERAL_AVAILABILITY_LAUNCH_REPORT
-STATUS: PASS ✅
-WAVE5.6: COMPLETED ✅
-GA_CONTROLLED_LAUNCH: SUCCESSFUL ✅
-PUBLIC_WRITE: ACTIVATED UNDER GOVERNANCE ✅
-DATABASE_MIGRATION: 0
-INFRASTRUCTURE_CHANGE: 0
-ROLLBACK_CAPABILITY: VERIFIED ✅
+FINAL ARCHITECTURE DECISION
+TYPE: WAVE5.7_ARCHITECTURE_PROPOSAL
+STATUS: APPROVED WITH ARCHITECTURAL CONDITIONS ✅
+IMPLEMENTATION: NOT STARTED ❌
+PHASE_1_DESIGN_EXECUTION: GO ✅
 
-Wave 5.6 Closure Assessment:
-1. Kill Switch Lifecycle: ENABLE WRITE -> CREATE MUTATION -> DISABLE WRITE -> READ ONLY VERIFY -> PASS ✅
-(مهم‌ترین نتیجه: سیستم نه تنها قادر به نوشتن است، بلکه قادر به توقف امن نوشتن نیز هست).
-2. Canary & Tenant Isolation: CANARY: PASS, TENANT ESCAPE: 0, UNAUTHORIZED MUTATION: 0 -> PASS ✅
-3. Production Mutation Health: 100% Write Success, 100% 403 Protection, 0% 400/409/500 errors, 100% Audit Completeness -> PASS ✅
-4. Security Final Gate: Tenant Escape 0, Privilege Escalation 0, Unexpected Mutation 0, Audit Missing 0 -> PASS ✅
+ارزیابی فلسفه Wave 5.7:
+جهت کلی تأیید می‌شود: حرکت از Event Recording به Learning Understanding.
+شرط بنیادین:
+سیستم نباید «قضاوت‌کننده دانش‌آموز» شود؛ باید «کمک‌کننده به فهم مسیر یادگیری» باقی بماند.
 
-Fleet Review:
-- GLM-5.3: PASS ✅ (Tenant Isolation, Governance Boundary, Data Safety)
-- Qwen 3.8 Max: PASS ✅ (Client State Stability, Recovery Flow, Adapter Compatibility)
-- Gemini 3.8 Flash: PASS ✅ (UX Continuity, Human-centered Error Handling)
+بررسی چهار ستون معماری:
+1. Learning Analytics Engine: PASS WITH REVISION
+- Skill Progress Graph: APPROVED (مفهوم یادگرفته‌شده، ارتباط مهارت‌ها، مسیر رشد؛ ممنوعیت رنکینگ و لیدربورد).
+- اصلاح نام و ماهیت Grit Score: حذف امتیاز عددی و جایگزینی با Learning Persistence Signals / Effort Pattern Signals (داده ساختاریافته JSON پترن و روند، نه عدد).
+- Early Friction Signals: APPROVED (فقط خروجی برای مربی جهت راهنمایی همدلانه، نه هشدار منفی به دانش‌آموز یا والد).
 
-WAVE 5.6 FINAL CLOSURE:
-WAVE5.6_STATUS: CLOSED ✅
+2. Mentor Intelligence Assistant: APPROVED ✅
+- معماری باید مبتنی بر Evidence -> Summary باشد نه حدس مدل؛ دارای قابلیت ردگیری دقیق (Trace).
+- Socratic Prompts: APPROVED (اصل: سیستم جواب را لو نمی‌دهد، بلکه سؤال عمیق‌تر می‌سازد).
 
-معماری نهایی ثبت‌شده:
-Frontend -> Learning Loop Adapter -> REST Domain API -> Domain Services -> Tenant Scoped Models -> PostgreSQL
+3. Parent Insight Evolution: APPROVED ✅
+- هارد رول: والد اطلاعات خام فنی دریافت نمی‌کند مگر در حد فهم تربیتی. Flow: Technical Evidence -> Pedagogical Translation -> Parent Insight.
 
-قوانین پایدار ماندگار:
-- NO DIRECT GITHUB ACCESS
-- NO UNREVIEWED DB MIGRATION
-- NO DISABLE TENANT ISOLATION
-- NO BYPASS DOMAIN SERVICES
-- NO RAW DATA IN LOGS
+4. Student Reflection Layer: APPROVED ✅
+- اولویت بالا: دانش‌آموز مالک روایت رشد خودش است (Reflection Timeline).
 
-تصمیم درباره موج بعدی:
-WAVE 5.7 — Learning Intelligence Layer
-هدف: تبدیل سیستم از «ثبت و انتقال رویداد یادگیری» به «درک هوشمند مسیر یادگیری».
+Hard Locks Review:
+- DATABASE_CHANGE: LOCKED (برای Phase Design، تحلیل اثر مایگریشن تدوین شود).
+- EXTERNAL_RUNTIME_AI: LOCKED (هرگونه اتصال خارجی نیازمند ADR-AI-001 مستقل).
+- CHILD_DATA_SAFEGUARD: PASS ✅
 
-محورهای ۴گانه:
-1. Learning Analytics Engine (Skill Progress Graph, Learning Pattern Detection, Early Difficulty Signals - بدون رتبه‌بندی دانش‌آموزان).
-2. Mentor Intelligence Assistant (خلاصه وضعیت، پیشنهاد سؤال بهتر، کشف نقاط گیر یادگیری).
-3. Parent Insight Evolution (ارتقا از "چه اتفاقی افتاد؟" به "چگونه می‌توان بهتر حمایت کرد؟").
-4. Student Reflection Layer (Self Reflection, Learning Journal, Goal Tracking).
+قانون اصلی (PRIMARY_RULE):
+NO_JUDGMENT_ENGINE
+SYSTEM_ROLE: LEARNING_ASSISTANT NOT LEARNING_EVALUATOR
 
-فرمان نهایی:
-WAVE5.6: CLOSED ✅
-PRODUCTION WRITE: STABLE ✅
-SECURITY: PASS ✅
-ROLLBACK: PASS ✅
-NEXT: WAVE5.7 DESIGN PHASE
-STATUS: READY FOR NEW MISSION
+دستور Phase 1 Wave 5.7:
+WAVE5.7_PHASE1_DOMAIN_DESIGN (فقط طراحی دامنه، پیاده‌سازی کد قفل است).
 
-آنتی‌گرویتی، Wave 5.6 رسماً بسته شد.
-دستور بعدی: ارائه WAVE5.7_ARCHITECTURE_PROPOSAL قبل از هرگونه پیاده‌سازی.
+Deliverable بعدی:
+TYPE: WAVE5.7_PHASE1_DOMAIN_DESIGN_REPORT
+شامل:
+1. Learning Intelligence Domain Model
+2. Data Ownership Matrix
+3. Privacy Boundary
+4. Analytics Event Schema
+5. Mentor Insight Contract
+6. Parent Translation Contract
+7. Student Reflection Contract
+8. Migration Impact Analysis
+9. API Boundary Proposal
+10. GLM Review
+11. Qwen Review
+12. Gemini Review
+
+FINAL COMMAND:
+WAVE5.7_ARCHITECTURE_PROPOSAL: APPROVED ✅
+IMPLEMENTATION: LOCKED ❌
+PHASE1_DESIGN: GO ✅
+NEXT: WAVE5.7_PHASE1
+EXECUTION: ANTIGRAVITY ONLY
