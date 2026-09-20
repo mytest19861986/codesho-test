@@ -8,3 +8,4 @@ export { MentorCta } from "./MentorCta";
 export type { MentorCtaProps } from "./MentorCta";
 export { TrustStrip } from "./TrustStrip";
 export type { TrustStripProps } from "./TrustStrip";
+export { WhyCodeshoSection, RolePortalsSection } from "./ValueSections";

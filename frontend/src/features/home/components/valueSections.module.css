@@ -1,0 +1,205 @@
+.section {
+  padding-block: var(--cs-space-12);
+  direction: rtl;
+}
+
+.sectionAlt {
+  padding-block: var(--cs-space-12);
+  padding-inline: var(--cs-space-6);
+  border-radius: var(--cs-radius-sheet);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--cs-color-border-subtle);
+  direction: rtl;
+  margin-block: var(--cs-space-6);
+}
+
+.sectionHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-inline-size: 42rem;
+  margin-inline: auto;
+  margin-bottom: var(--cs-space-10);
+  gap: var(--cs-space-3);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 9999px;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.tagIcon {
+  inline-size: 0.95rem;
+  block-size: 0.95rem;
+}
+
+.heading {
+  margin: 0;
+  color: var(--cs-color-text-primary);
+  font-size: clamp(1.75rem, 2.5vw, 2.35rem);
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.subheading {
+  margin: 0;
+  color: var(--cs-color-text-secondary);
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: var(--cs-space-6);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--cs-space-6);
+  border-radius: var(--cs-radius-card);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--cs-color-border-subtle);
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--cs-color-border-strong);
+  box-shadow: var(--cs-shadow-card);
+}
+
+.cardIconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 3rem;
+  block-size: 3rem;
+  border-radius: 0.75rem;
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--cs-color-brand-primary);
+  margin-bottom: var(--cs-space-4);
+}
+
+.cardIcon {
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+}
+
+.cardTitle {
+  margin: 0 0 var(--cs-space-2) 0;
+  color: var(--cs-color-text-primary);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.cardDescription {
+  margin: 0;
+  color: var(--cs-color-text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
+/* Portals Grid */
+.portalGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: var(--cs-space-6);
+}
+
+.portalCard {
+  display: flex;
+  flex-direction: column;
+  padding: var(--cs-space-6);
+  border-radius: var(--cs-radius-card);
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.portalCard:hover {
+  border-color: var(--cs-color-brand-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(37, 99, 235, 0.15);
+}
+
+.portalHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: var(--cs-space-3);
+}
+
+.portalIconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  border-radius: 0.65rem;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(56, 189, 248, 0.2));
+  color: #38bdf8;
+}
+
+.portalIcon {
+  inline-size: 1.4rem;
+  block-size: 1.4rem;
+}
+
+.portalTitle {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.portalDescription {
+  margin: 0 0 var(--cs-space-5) 0;
+  color: var(--cs-color-text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.65;
+  flex-grow: 1;
+}
+
+.portalAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #38bdf8;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: gap 0.15s ease;
+}
+
+.portalAction:hover {
+  color: #60a5fa;
+  gap: 0.75rem;
+}
+
+.arrowIcon {
+  font-size: 1.1rem;
+}
+
+@media (max-width: 640px) {
+  .sectionAlt {
+    padding-inline: var(--cs-space-4);
+  }
+
+  .portalGrid {
+    grid-template-columns: 1fr;
+  }
+}

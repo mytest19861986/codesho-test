@@ -1,4 +1,4 @@
-export type HomepageRoute = "/login" | "/signup" | "/paths" | "/courses" | "/projects" | "/mentor";
+export type HomepageRoute = "/login" | "/signup" | "/paths" | "/courses" | "/projects" | "/mentor" | "/student" | "/parent" | "/admin";
 
 export type HomepageDestinationStatus = "available" | "hidden_until_route_available";
 
