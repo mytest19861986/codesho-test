@@ -1,14 +1,20 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useState } from "react";
 import { adminAlphaContent as copy } from "@/content/fa/admin.alpha";
 import styles from "../admin.module.css";
 
-export const metadata: Metadata = {
-  title: `${copy.brand} | ${copy.system.title}`,
-  description: copy.system.subtitle,
-};
-
 export default function AdminSystemPage() {
   const s = copy.system;
+  const [flags, setFlags] = useState(s.flags);
+  const [lastAction, setLastAction] = useState<string | null>(null);
+
+  const toggleFlag = (id: string, name: string) => {
+    setFlags((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, enabled: !f.enabled } : f))
+    );
+    setLastAction(`تغییر وضعیت پرچم '${name}' در حافظه رابط کاربری شبیه‌سازی شد (بدون اثر بر سرور).`);
+  };
 
   return (
     <div className={styles.adminContainer}>
@@ -19,6 +25,12 @@ export default function AdminSystemPage() {
         <h1 className={styles.pageTitle}>{s.title}</h1>
         <p className={styles.pageSubtitle}>{s.subtitle}</p>
       </div>
+
+      {lastAction && (
+        <div className={styles.statCard} style={{ borderColor: "#67c23a", background: "#f0f9eb", padding: "0.75rem 1rem" }}>
+          <span style={{ fontSize: "0.8125rem", color: "#67c23a", fontWeight: 700 }}>{lastAction}</span>
+        </div>
+      )}
 
       {/* System Engine Telemetry */}
       <h2 style={{ fontSize: "1.125rem", margin: "0.5rem 0 0", fontWeight: 800 }}>موتورهای زیرساخت و پردازش</h2>
@@ -47,7 +59,7 @@ export default function AdminSystemPage() {
             </tr>
           </thead>
           <tbody>
-            {s.flags.map((f) => (
+            {flags.map((f) => (
               <tr key={f.id}>
                 <td style={{ fontWeight: 800 }}>{f.name}</td>
                 <td dir="ltr" style={{ textAlign: "right", fontFamily: "monospace", fontSize: "0.8125rem", color: "var(--purple)" }}>
@@ -67,8 +79,12 @@ export default function AdminSystemPage() {
                   {f.description}
                 </td>
                 <td>
-                  <button type="button" className={styles.actionBtn}>
-                    {f.enabled ? "غیرفعال‌سازی" : "فعال‌سازی"}
+                  <button
+                    type="button"
+                    className={styles.actionBtn}
+                    onClick={() => toggleFlag(f.id, f.name)}
+                  >
+                    {f.enabled ? "غیرفعال‌سازی (شبیه‌سازی)" : "فعال‌سازی (شبیه‌سازی)"}
                   </button>
                 </td>
               </tr>

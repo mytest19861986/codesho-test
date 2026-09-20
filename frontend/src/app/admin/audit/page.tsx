@@ -1,14 +1,17 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useState } from "react";
 import { adminAlphaContent as copy } from "@/content/fa/admin.alpha";
 import styles from "../admin.module.css";
 
-export const metadata: Metadata = {
-  title: `${copy.brand} | ${copy.audit.title}`,
-  description: copy.audit.subtitle,
-};
-
 export default function AdminAuditPage() {
   const a = copy.audit;
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "SUCCESS" | "DENIED">("ALL");
+
+  const filteredEvents = a.events.filter((ev) => {
+    if (statusFilter === "ALL") return true;
+    return ev.status === statusFilter;
+  });
 
   return (
     <div className={styles.adminContainer}>
@@ -18,6 +21,39 @@ export default function AdminAuditPage() {
         </div>
         <h1 className={styles.pageTitle}>{a.title}</h1>
         <p className={styles.pageSubtitle}>{a.subtitle}</p>
+      </div>
+
+      {/* Filter and Notice */}
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button
+            type="button"
+            className={styles.actionBtn}
+            style={statusFilter === "ALL" ? { background: "#f3eafa", borderColor: "var(--purple)", color: "var(--purple)", fontWeight: 800 } : {}}
+            onClick={() => setStatusFilter("ALL")}
+          >
+            همه رویدادها ({a.events.length})
+          </button>
+          <button
+            type="button"
+            className={styles.actionBtn}
+            style={statusFilter === "SUCCESS" ? { background: "#f0f9eb", borderColor: "#67c23a", color: "#67c23a", fontWeight: 800 } : {}}
+            onClick={() => setStatusFilter("SUCCESS")}
+          >
+            موفق ({a.events.filter(e => e.status === "SUCCESS").length})
+          </button>
+          <button
+            type="button"
+            className={styles.actionBtn}
+            style={statusFilter === "DENIED" ? { background: "#fef0f0", borderColor: "#f56c6c", color: "#f56c6c", fontWeight: 800 } : {}}
+            onClick={() => setStatusFilter("DENIED")}
+          >
+            رد شده / هشدار ({a.events.filter(e => e.status === "DENIED").length})
+          </button>
+        </div>
+        <span style={{ fontSize: "0.75rem", color: "var(--muted)" }}>
+          کلیه رکوردهای این جدول داده‌های شبیه‌سازی‌شده آزمایشی (Synthetic Data) هستند.
+        </span>
       </div>
 
       <div className={styles.tableWrapper}>
@@ -33,7 +69,7 @@ export default function AdminAuditPage() {
             </tr>
           </thead>
           <tbody>
-            {a.events.map((ev) => (
+            {filteredEvents.map((ev) => (
               <tr key={ev.id}>
                 <td>
                   <div style={{ display: "flex", flexDirection: "column" }}>

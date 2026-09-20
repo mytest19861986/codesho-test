@@ -1,14 +1,12 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useState } from "react";
 import { adminAlphaContent as copy } from "@/content/fa/admin.alpha";
 import styles from "../admin.module.css";
 
-export const metadata: Metadata = {
-  title: `${copy.brand} | ${copy.roles.title}`,
-  description: copy.roles.subtitle,
-};
-
 export default function AdminRolesPage() {
   const r = copy.roles;
+  const [selectedRole, setSelectedRole] = useState<string | null>(null);
 
   return (
     <div className={styles.adminContainer}>
@@ -49,8 +47,12 @@ export default function AdminRolesPage() {
                 </td>
                 <td style={{ fontWeight: 700 }}>{role.userCount} کاربر</td>
                 <td>
-                  <button type="button" className={styles.actionBtn}>
-                    {r.tableHeaders.actions}
+                  <button
+                    type="button"
+                    className={styles.actionBtn}
+                    onClick={() => setSelectedRole(selectedRole === role.id ? null : role.id)}
+                  >
+                    {selectedRole === role.id ? "بستن جزئیات" : r.tableHeaders.actions}
                   </button>
                 </td>
               </tr>
@@ -58,6 +60,25 @@ export default function AdminRolesPage() {
           </tbody>
         </table>
       </div>
+
+      {selectedRole && (
+        <div className={styles.statCard} style={{ borderColor: "var(--purple)", background: "#fbf9fe", gap: "0.75rem" }}>
+          <h2 style={{ fontSize: "1rem", margin: 0, fontWeight: 800, color: "var(--purple)" }}>
+            ماتریس دسترسی و سیاست‌های امنیتی نقش ({selectedRole})
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem", fontSize: "0.8125rem" }}>
+            <div style={{ padding: "0.5rem", background: "#fff", borderRadius: "6px", border: "1px solid var(--line)" }}>
+              <strong>دسترسی چندمستأجری:</strong> {selectedRole === "r-superadmin" ? "سراسری (Cross-tenant)" : "محدود به سازمان (Isolated)"}
+            </div>
+            <div style={{ padding: "0.5rem", background: "#fff", borderRadius: "6px", border: "1px solid var(--line)" }}>
+              <strong>مجوزهای ثبت‌شده:</strong> {r.items.find(x => x.id === selectedRole)?.permissionsCount} مجوز فعال
+            </div>
+            <div style={{ padding: "0.5rem", background: "#fff", borderRadius: "6px", border: "1px solid var(--line)" }}>
+              <strong>سطح تغییرناپذیری:</strong> {selectedRole === "r-superadmin" || selectedRole === "r-auditor" ? "سیستمی رزروشده" : "قابل تنظیم سازمانی"}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
