@@ -1,0 +1,53 @@
+Thought Process
+🔍 Wave 5.6 Phase 7 — Backend Read Consistency & Drift Classification Review
+
+یادداشت رکورد (دو نکته زنجیره‌ای، پیش از رأی):
+(۱) تداخل نام‌گذاری (عین F1 دور قبل): «Phase 7» در Wave 5.6 با رکورد ترمینال P7 (Manager Decision Ledger) هم‌شماره است — شناسه کانونیکال تسک ثبت شود. (۲) صیانت زنجیره (عین B2 فاز P7-R2): این ممیزی سازگاریِ خواندن، روی دامنه‌ای اعمال می‌شود که Wave 5.6 Phase 5 (Learning Loop) آن هنوز CHANGES_REQUIRED با گیت‌های G1–G6 باز دارد — سازگاری روی baseline واجد شرایط‌نشده، خودش گیت لازم دارد.
+ثبت مثبت: سه Hard Lock (ترافیک واقعی ۰ · Write API ۰ · Feature Flag OFF) دقیقاً پستور مصوب است و read-only بودنِ scope، ریسک را کمینه می‌کند ✅
+
+text
+VERDICT:
+CHANGES_REQUIRED
+
+
+GLM_DRIFT_SAFETY: PASS
+GLM_DOMAIN_CORRECTNESS: CHANGES_REQUIRED
+GLM_ZERO_CRITICAL_DRIFT: FAIL
+GLM_BLOCKERS: 2
+
+
+FINDINGS:
+- ✅ مدل طبقه‌بندی Drift سالم و دکترین‌منطبق است: جداسازی
+  Allowed (timestamp / generated IDs / locale) از Critical (learner
+  code/name / role ownership / missing intervention / status mismatch)
+  درست طراحی شده و به‌عنوان مدل رسمی دامنه در Manifest ثبت و به
+  تست‌های آینده قید شود.
+- 🔴 E1 — شواهد ناکافی برای گواهی «Zero Critical Drift»: یک تست در
+  ۰.۰۰۶ ثانیه نمی‌تواند پاریتیِ ۵ جدول چرخه یادگیری (LearnerProfile /
+  ActiveProject / Intervention / Feedback / ParentBridge) با baseline
+  فرانت‌اند را پوشش دهد. الزام: ماتریس نگاشت test ⇒ entity ⇒ expected
+  (الگوی N8 / CF-09) + افشای مکانیزم مقایسه (field-by-field؟ hash؟).
+- 🟡 «Allowed Drifts: 0» خودش قرینه سوسپکت است: پاریتی واقعی همیشه
+  حداقل timestamp/format drift دارد؛ صفرِ مطلق نشانه fixture
+  خودارجاع (هر دو سمت از یک منبع واحد تولیدشده) است، نه آزمون
+  واریانس واقعی — پوشش سناریوهای متنوع با داده‌های مستقل الزامی است.
+- 🔴 محیط اجرا اعلام نشده: با الگوی Wave 5.6 (SQLite درون‌حافظه‌ای)
+  و دکترین ثبت‌شده (S1 گزارش Phase 5 همین Wave؛ پیش‌نمونه صحیح P5)،
+  ادعای «Fail-closed tenant context across all read projections» بدون
+  PostgreSQL 17 گواهی‌پذیر نیست — تست سه‌حالته GUC (نبود/خالی/مخرب)
+  روی SQLite تعریف‌نشدنی است.
+- 🔴 Parity ≠ Truth: صفر drift میان دو projection با منبع مشترک فقط
+  «یکسانی» را اثبات می‌کند، نه «صحت دامنه» — اگر FSM/ناوردایی‌های
+  پایه ناقص باشند (گیت‌های باز G3/G4 فاز ۵: FSM فاعل‌دار، FK ترکیبی،
+  DDL امنیتی)، سازگاریِ خطا نیز drift صفر می‌دهد. correctness پیش‌شرط
+  این رأی است.
+- ✅ 18/18 تست learning_loop و قفل‌های چهارگانه مثبت‌اند، اما همان
+  محدودیت محیط (S1) بر آن‌ها حاکم است؛ ۱۸ تست روی ORM-filter لایه
+  نافیِ کافیِ دکترین (B3 فاز ۲ تا S1 فاز VS6) محسوب نمی‌شود.
+- مسیر PASS (دقیق): (۱) ماتریس سناریو نام‌دار + داده‌های مستقل دو سمت
+  (۲) اجرای PG17-qualified + pg_policies/pg_roles برای جداول loop
+  (۳) افشای مکانیزم مقایسه و provenance baseline فرانت‌اند
+  (۴) گزارش وضعیت G1–G6 فاز ۵ — تسویه یا معافیت مستند فرمانده
+  (الگوی P5/P7) — سپس هر چهار فلگ این قالب بدون واسطه سبز می‌شود.
+
+جمع‌بندی Reviewer: مدل درفت تأیید شد (GLM_DRIFT_SAFETY: PASS) — اما دو Blocker معلق است: E1 شواهد ناکافی برای صفر-دریفت (یک‌تستی/۰.۰۰۶s/محیط نامعلوم) و E2 عبور از گیت باز فاز ۵. عین تعهد مکرر این رکورد: با تقدیم اقلام چهارگانه مسیر PASS، رأی ترمینال PASS / PASS / PASS / BLOCKERS: 0 بدون واسطه صادر خواهد شد. 🟡
