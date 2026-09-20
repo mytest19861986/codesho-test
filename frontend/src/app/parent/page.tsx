@@ -103,7 +103,7 @@ export default function ParentOverviewPage() {
       {/* 0. Page Context Header & Child Anchor */}
       <header className={styles.childSelectorBanner} aria-label={o.childSelectLabel}>
         <div className={styles.childSelectorInfo}>
-          <span style={{ fontSize: "var(--cs-font-size-caption)", color: "var(--cs-color-text-secondary)", fontWeight: "var(--cs-font-weight-medium)" }}>
+          <span className={styles.childSelectorLabel}>
             {o.childSelectLabel}
           </span>
           <select
@@ -119,7 +119,6 @@ export default function ParentOverviewPage() {
         <Badge variant="primary" className={styles.childSelectorBadge}>
           <bdi dir="ltr">{o.selectedChildBadge}</bdi>
         </Badge>
-
       </header>
 
       {/* 1. Compact Product Briefing Band (Hero) */}

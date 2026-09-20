@@ -10,7 +10,8 @@
   grid-column: 1;
   grid-row: 1;
   min-inline-size: 0;
-  min-block-size: 100dvh;
+  min-block-size: auto;
+  align-self: start;
 }
 
 .sidebar {
