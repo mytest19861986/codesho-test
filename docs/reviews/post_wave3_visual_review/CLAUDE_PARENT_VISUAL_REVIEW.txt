@@ -1,0 +1,71 @@
+VERDICT:
+CHANGES_REQUIRED
+
+TOP_7_PROBLEMS:
+
+Hero card has two competing headlines (the quoted parent testimonial box on the left, and the "گزارش عملکرد..." headline on the right) — no single focal point, eyes don't know where to land first.
+Four checkmark "features" inside the hero are just a bullet list disguised as buttons — same visual weight as real CTAs, diluting the two actual buttons below them.
+KPI row and the two lower cards use four different icon styles/colors (shield, calendar, doc, clock in soft pastel circles vs. flat badges) — reads as stitched-together components, not one system.
+Heavy inconsistent corner-radius and shadow language: hero has hard-ish corners, KPI cards are very rounded, bottom-left card has a colored pill tag — no consistent card grammar.
+Left panel "مشاوره اختصاصی تحصیلی" card fights visually with the nav above it — different background (dark navy vs. white sidebar), different rounding, sitting flush at the bottom with no breathing room from the last nav item.
+Bottom two cards are unequal in visual density — right card (دستاوردها) has two content rows with timestamps and avat<br>less badges, left card (حریم خصوصی) has a paragraph + one button — but both are boxed at identical height, leaving obvious wasted space in the right card.
+Small English fragments ("Synthetic", "Role Isolation", "State") sit awkwardly inside Persian sentences with no visual demarcation (no distinct styling/size/opacity) — reads as unpolished/template-like BiDi handling.
+
+KEEP:
+
+Overall page-level grid: sidebar + topbar + content is structurally sound and standard for a dashboard.
+KPI row (4 stat cards): the concept and content density is right, just needs restyling.
+Dark hero band as a device for the primary "report" framing — good idea, just overloaded.
+
+REWORK:
+
+Hero card: pick ONE focal message. Either the parent-reassurance quote or the report headline — not both as equal-weight blocks side by side.
+Hero's 4 checkmarks: convert to a single compact trust-strip (small icons in one row) or remove and fold key phrases into the paragraph — currently they're competing with the two real CTA buttons.
+Icon system across KPI cards and achievement/privacy cards: unify to one icon set, one container shape, one color logic (e.g., color = status, not decoration).
+Card corner-radius, shadow depth, and border treatment: standardize into a single card component used everywhere.
+Bottom-left "مشاوره اختصاصی" card in sidebar: give it matching padding/margin rhythm with the nav above, or visually separate it as a distinct footer zone with intentional spacing.
+The "(Synthetic)" and "State" English tokens: either fully localize, or style them consistently smaller/muted so they read as metadata, not broken text.
+
+REMOVE:
+
+The verified-badge-style pill "(Synthetic)" next to "احراز هویت شده" if this is meant to ship as a real product screen — it visually reads as debug/test residue, undermining premium perception.
+Redundant "نظارت شفاف و امن" + "حریم خصوصی تضمین‌شده" twin pills in the hero — both say the same trust message; one is enough.
+
+HIGHEST_IMPACT_CHANGE:
+Simplify the hero into one clear headline + one supporting line + one primary CTA, and demote everything else (quote, 4-item trust list, secondary CTA) to a lighter, smaller supporting role. Right now the hero is the first thing seen and it has the highest visual noise-to-signal ratio on the page — fixing it changes the entire first impression.
+
+HERO_FINDINGS:
+Two headline-weight blocks compete (quote card vs. main heading). Four "checkmark features" look like tappable elements but aren't primary actions, sitting between two real CTA buttons of similar visual weight — CTA hierarchy is flattened. Two trust-pills at top-right add a third trust message on top of the two already in the hero body.
+
+KPI_FINDINGS:
+Content and numbers are good (65 days, 12 days, 24 projects, 48 hours) but each icon uses a different pastel circle color with no evident meaning (not tied to status/urgency), which reads as decorative rather than functional. Card padding and number/label alignment look consistent — this part is closer to done than the hero.
+
+GRID_FINDINGS:
+Page-level column grid (sidebar/topbar/4-KPI/2-card row) is coherent and standard. Within-card grid is less disciplined: hero's two-column split isn't proportion-balanced (left quote column feels cramped vs. right message column), and the bottom two cards don't share consistent internal padding.
+
+TYPOGRAPHY_FINDINGS:
+At least 3-4 distinct weight/size combinations appear in the hero alone (quote heading, small labels, main heading, body paragraph, button labels) without a clear type scale. Numbers in KPI cards are appropriately the largest/boldest text — good — but labels above them and captions below them don't show a clean two-step hierarchy (feels like three).
+
+COLOR_FINDINGS:
+Primary purple appears in nav active state, CTA button, and profile avatar — consistent so far — but is diluted by unrelated pastel icon-circle colors (blue, orange, green, purple) in the KPI row and a green "تایید شده" pill that doesn't clearly relate to the purple system. No clear rule for when color = brand vs. color = status.
+
+SIDEBAR_TOPBAR_FINDINGS:
+Topbar search bar and the "جستجوی گزارش‌ها..." field beside it look like two separate search inputs — likely to confuse users about which does what. Sidebar nav itself is clean and well-spaced; the promotional consultation card at the bottom breaks that same rhythm with a different visual language (dark card, rounded, drop-shadow) right beneath plain nav items.
+
+CTA_FINDINGS:
+Two CTAs in the hero ("گفتگو با مشاور" and "مشاهده گزارش جامع هفته") are close in visual weight — only fill vs. outline distinguishes them, but the outline one is still quite prominent. Combined with the 4 checkmark "pseudo-buttons," a user has at least 6 clickable-looking elements in the hero alone.
+
+RTL_BIDI_FINDINGS:
+Overall RTL alignment is correct (text right-aligned, icons mirrored appropriately, nav chevron pointing correctly). But embedded Latin fragments ("(Synthetic)", "State" inside "پایان فصل مفاهیم State در React") are not visually set apart from surrounding Persian text — no distinct sizing, italics, or muted color — so they read as typos rather than intentional technical terms.
+
+WASTED_SPACE_FINDINGS:
+Bottom-right "دستاوردهای ثبت‌شده" card has significant empty space in its lower portion compared to the denser left "حریم خصوصی" card, despite both being boxed to equal height — height should be content-driven or the layout rebalanced.
+
+PREMIUM_QUALITY_GAPS:
+Inconsistent card/icon/shadow language across the page is the biggest signal of "not yet premium" — premium dashboards (Linear, Stripe, Notion-style) use one strict component system everywhere. Right now this page reads as multiple components built independently and placed together without a shared design token pass.
+
+DO_NOT_ADD:
+No new widgets, sections, or KPIs are needed — the existing content is sufficient for "information-rich but calm"; the fixes required here are entirely about hierarchy, consistency, and restraint, not adding more.
+
+CONFIDENCE:
+HIGH

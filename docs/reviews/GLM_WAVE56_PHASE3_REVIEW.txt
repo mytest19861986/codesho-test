@@ -1,0 +1,44 @@
+VERDICT: PASS
+GLM_MIGRATION_SAFETY: PASS
+GLM_DATA_LIFECYCLE: PASS
+GLM_TENANT_ISOLATION: PASS
+GLM_LOCK_RISK: PASS
+FINDINGS:
+
+
+STRENGTHS (verified against report)
+1. Purely additive DDL (learning_loop_*) — zero ACCESS EXCLUSIVE locks on existing
+   platform tables; index builds execute against empty tables (non-concurrent safe).
+2. Tenant model is textbook-correct: 5/5 models on TenantScopedModel with ON DELETE
+   CASCADE; 8/8 indexes tenant-leading; compound uniques (tenant, user) and
+   (tenant, student_code) eliminate cross-tenant uniqueness collisions.
+3. Data lifecycle posture is strong: InterventionFeedback append-only is the correct
+   audit-grade design; ActiveLearningProject retains portfolio history via is_active;
+   RESOLVED terminality on MentorIntervention is consistent with feedback immutability.
+4. Tiered rollback (client fallback -> API disable -> migrate zero) is coherent and
+   executable while tables hold no production data.
+5. 10/10 isolation/security tests passing supports the isolation claims.
+
+
+ADVISORIES (non-blocking — hardening pass, not a migration gate)
+A1. Lock nuance: CREATE TABLE ... REFERENCES installs RI cascade triggers on Tenant/
+    User, taking a brief SHARE ROW EXCLUSIVE on referenced tables (ms-scale; reads
+    unaffected; NOT ACCESS EXCLUSIVE). Execute in a low-write window to avoid
+    lock-queue amplification behind long-running transactions.
+A2. If "one active project per learner" is a domain invariant, enforce it with a
+    partial unique index (tenant_id, learner_id) WHERE is_active; otherwise document
+    app-level enforcement explicitly.
+A3. InterventionFeedback immutability should be enforced at the storage boundary
+    (REVOKE UPDATE/DELETE or guard trigger). App-layer-only append-only is
+    insufficient to sustain an audit-grade claim.
+A4. MentorIntervention.status: add DB-level CHECK/enum; define whether RESOLVED is
+    reopenable and whether a CANCELLED terminal path is required.
+A5. ParentBridge: confirm (a) transform is explicit curation — raw mentor notes must
+    not project to parents; (b) projection remains rebuildable and non-authoritative;
+    (c) sync mechanism documented (event-driven vs. on-read materialization).
+A6. Tier-3 rollback (migrate zero) is data-destructive — acceptable pre-GA only.
+    Mark module forward-only once production data accumulates.
+A7. Add an explicit cross-tenant student_code collision test to the isolation suite.
+
+
+CONDITIONS: None. All advisories are hardening items and do not gate Wave 5.6 Phase 3.

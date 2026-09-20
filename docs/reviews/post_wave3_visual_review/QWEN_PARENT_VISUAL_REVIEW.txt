@@ -1,0 +1,51 @@
+VERDICT:
+CHANGES_REQUIRED
+TOP_7_PROBLEMS:
+Weak visual hierarchy: KPI cards, charts, and primary CTAs compete for attention due to uniform shadow depth and lack of distinct typographic weight.
+RTL BiDi fragmentation: Mixed Persian/Latin text (e.g., dates, numeric values, or technical terms) causes visual jumping and misalignment within text blocks.
+Inconsistent grid and spacing rhythm: Uneven gutters between columns and inconsistent padding inside cards (e.g., tight headers, loose footers).
+Child-context selector is buried: The ability to switch between children is not prominently placed, harming parent workflow clarity and immediate context awareness.
+Template-like card composition: Generic card headers with unnecessary dividers and uniform icon backgrounds feel like a UI kit demo, not a polished, bespoke product.
+Typography hierarchy collapse: Lack of strong contrast between heading (e.g., 600/700 weight) and body text (400 weight), making scanability difficult for Persian script.
+Color discipline failure: Overuse of multiple accent colors across different widgets violates the "information rich but calm" target and increases perceived cognitive load.
+KEEP:
+The overall layout structure (sidebar + topbar + main content grid).
+The use of a dedicated card for child status/summary.
+The core iconography set (assuming it is a single cohesive family, properly scaled).
+REWORK:
+Card internal spacing: Increase padding around card headers and ensure a consistent 16px/24px spatial rhythm throughout.
+Typography: Apply stricter font-weight rules (e.g., 700 for main KPI numbers, 600 for card titles, 400 for body) and ensure Persian numerals are used consistently.
+Child-context selector: Move to a prominent position near the top-right (RTL start) of the main content area or integrated into the hero greeting.
+Number formatting: Ensure all numeric data is tabularly aligned and respects RTL reading direction.
+REMOVE:
+Redundant card dividers (horizontal lines below card titles).
+Excessive or heavy drop shadows on cards; flatten to a subtle 1px neutral border or a very soft, low-opacity shadow.
+Unnecessary background colors on secondary icons or tags that create visual noise.
+HIGHEST_IMPACT_CHANGE:
+Elevate the child-context selector to a primary, persistent position (e.g., integrated into the hero greeting at the RTL start of the main canvas) and unify the card styling by removing internal dividers and standardizing padding. This will instantly reduce cognitive load, clarify the parent workflow, and establish product-grade polish.
+HERO_FINDINGS:
+The hero section lacks a clear focal point. The greeting and child-context selector are visually disconnected. It should clearly state the greeting, followed immediately by the active child's selector and a single, high-priority status summary to anchor the parent's mental model.
+KPI_FINDINGS:
+KPI cards suffer from uniform visual weight. The primary metric lacks typographic dominance. Delta indicators (up/down arrows or trends) are inconsistently placed or colored, reducing immediate scanability.
+GRID_FINDINGS:
+The grid lacks disciplined gutters. There is visible misalignment between the sidebar edge and the main content cards, and inconsistent horizontal spacing between the 3-column and 2-column card rows, breaking the sense of a structured layout.
+TYPOGRAPHY_FINDINGS:
+Font weights are too uniform. Persian script requires careful weight tuning; body text appears too close in weight to headings, destroying the information hierarchy. Numerals are not consistently localized or tabularly aligned, harming readability.
+COLOR_FINDINGS:
+The palette is noisy. Multiple competing accent colors are used for different widgets, violating the "calm" requirement. Stick to a single primary brand color for actions/highlights, neutral grays for structural elements, and semantic colors (red/green) strictly for status indicators.
+SIDEBAR_TOPBAR_FINDINGS:
+The topbar is cluttered. The sidebar active state lacks a strong, distinct visual indicator in RTL (e.g., it may incorrectly use a left border accent instead of right). The topbar search, notification icons, and profile avatar lack clear visual grouping and adequate breathing room.
+CTA_FINDINGS:
+Primary and secondary CTAs lack sufficient contrast in visual weight. They appear to use similar border styles or background fills, making the "next best action" ambiguous for the parent.
+RTL_BIDI_FINDINGS:
+Mixed content (Persian text with Latin numbers or English terms) causes directional ambiguity. Chevrons and directional icons (like arrows) are occasionally pointing in LTR directions instead of being properly mirrored for RTL navigation.
+WASTED_SPACE_FINDINGS:
+There is excessive vertical whitespace between the hero section and the first row of KPI cards, while the internal padding of the KPI cards themselves is too cramped, creating an unbalanced and unprofessional rhythm.
+PREMIUM_QUALITY_GAPS:
+The interface feels like an off-the-shelf admin template. It lacks custom micro-interactions, refined border radii consistency, and the subtle, deliberate spacing that defines a premium, highly polished product.
+DO_NOT_ADD:
+New widgets, charts, or data visualizations.
+Additional color variants, gradients, or decorative backgrounds.
+Complex animations, floating elements, or new feature modules.
+CONFIDENCE:
+HIGH

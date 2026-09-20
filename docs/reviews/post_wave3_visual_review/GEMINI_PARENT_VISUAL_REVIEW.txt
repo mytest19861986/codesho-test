@@ -1,0 +1,94 @@
+VERDICT:
+CHANGES_REQUIRED
+
+TOP_7_PROBLEMS:
+
+Hero Section Visual Noise & Lack of Focal Anchor: The hero attempts to combine saturated indigo gradients, motivational copy, action triggers, and a floating glassmorphic card simultaneously, resulting in cognitive overload rather than a calm briefing area.
+
+Template-Like Glassmorphic Artifacts: The semi-transparent card nested within the hero banner introduces decorative visual complexity that lacks practical utility for a parent seeking concise oversight.
+
+Imbalanced KPI Hierarchy & Informal Artifacts: Metric cards use uniform square-like footprints with redundant radial rings and casual emoji indicators (🔥, ⭐), reading like a gamified teenage app rather than a dependable parental guardian portal.
+
+Disjointed Multi-Tier Grid & Unequal Card Baselines: The transition between the 4-column metric strip, the 3-column analytics row, and the bottom activity zone breaks the 8px spatial rhythm, resulting in erratic vertical baselines and trailing white space.
+
+Secondary Positioning of the Child-Context Selector: The active student switcher lacks a clear anchor in the header/hero hierarchy, making multi-child navigation unobvious and disconnected from the metrics below.
+
+Aggressive Color Saturation vs. Calm Target: Saturated violet and purple fills dominate the canvas, fighting against the target of an information-rich yet visually serene environment.
+
+BiDi Margin Pinching & Icon Inconsistencies: Shortcut tags (Ctrl + K), percentages, and Latin tokens lack consistent inline spacing with Persian strings, alongside inconsistent stroke weights across utilitarian icons.
+
+KEEP:
+
+Core 4 diagnostic parental metrics (Overall Progress, Completed Tasks, Study Streak, Mentor Satisfaction).
+
+Weekly progress analytics chart and competency progression breakdown.
+
+Sidebar primary navigation schema and utility placement.
+
+Recent activity timeline and milestone progression concepts.
+
+REWORK:
+
+Hero Area: Transform from a decorative, marketing-style banner into an understated, calm status briefing header integrated with the student selector.
+
+Child-Context Selector: Reposition to a prominent, anchored position in the top app bar or hero origin so the context of the data is clear at first glance.
+
+KPI Metrics Strip: Redesign cards using disciplined typography, horizontal progress meters instead of bulky radial rings, and refined status pills in place of emojis.
+
+Middle Analytics Grid: Standardize column gutters and unify card heights to align with an 8px/16px baseline system.
+
+Color Palette Application: Restrict saturated brand purples to micro-accents and primary buttons, transitioning background surfaces to calm, neutral off-whites and soft slates.
+
+REMOVE:
+
+Floating glassmorphic checklist card inside the hero banner.
+
+Informal emojis (🔥, ⭐) within metric cards and title headers.
+
+Redundant secondary action buttons inside the banner that compete with global navigation.
+
+Heavy container drop shadows and inconsistent border-radius definitions.
+
+HIGHEST_IMPACT_CHANGE:
+Deconstruct the loud, saturated hero section into a clean, neutral status header featuring an anchored Child Switcher, followed immediately by an evenly weighted, quiet 4-card metric strip.
+
+HERO_FINDINGS:
+The hero section dominates above-the-fold space with heavy brand saturation and decorative glassmorphism. It mimics a promotional landing page rather than a functional, reassuring workspace for a parent. The high visual weight forces critical diagnostic data below the primary viewport fold.
+
+KPI_FINDINGS:
+The 4 KPI cards lack internal hierarchy. Radial progress rings consume vertical height without increasing readability. The use of emojis damages the platform's credibility, and the cards do not indicate which metrics are healthy versus those requiring parental support.
+
+GRID_FINDINGS:
+The 1440px desktop grid lacks vertical unity. The 4-column KPI strip does not align cleanly with the 3-column middle zone or the 3-column bottom layout. Gutters vary between 16px and 24px, producing uneven margins and orphaned white patches at the bottom of cards.
+
+TYPOGRAPHY_FINDINGS:
+Vazirmatn weights are overused at the bold and black end of the spectrum. Subtitles and metadata compete with primary numerical figures. While Persian numerals are applied, the line-heights on multi-line text blocks feel tight, impairing quick scanning.
+
+COLOR_FINDINGS:
+The palette leans too heavily into dark purple and saturated violet surfaces. For an "Information-Rich but Calm" parent interface, backgrounds should be grounded in clean neutrals (e.g., neutral-50/100) with color reserved strictly for meaningful system states (success, warning, informational).
+
+SIDEBAR_TOPBAR_FINDINGS:
+سایدبار از لحاظ ساختار کلی پیاده‌سازی شده اما مرز جداکننده آن با فضای کاری اصلی به دلیل خط مرزی تند و یکنواخت، گسستگی بصری ایجاد کرده است. در تاپ‌بار، تجمیع متراکم اینپوت جستجو، نشانگر اعلان‌ها و پروفایل کاربری در سمت چپ، فضای کافی به المان‌های کلیدی‌تر نمی‌دهد. مهم‌تر از همه، سلکتور انتخاب فرزند (Child-Context Selector) به عنوان هسته اصلی هدایت داده‌ها برای والدین، در میان متادیتای عمومی حساب کاربری کم‌رنگ شده و از برجستگی و استقلال ساختاری لازم برای یک داشبورد چندفرزندی برخوردار نیست.
+
+CTA_FINDINGS:
+در نیمه بالایی صفحه با تراکم دکمه‌های کنشی با وزن بصری بالا مواجه هستیم. قرارگیری هم‌زمان «ثبت پرسش از منتور» و «دریافت برنامه اختصاصی» در داخل هیرو در کنار دکمه‌های فیلتر و ابزارهای سراسری، مرز میان اکشن‌های کلان پلتفرم و کنش‌های وابسته به کارت‌ها را مبهم کرده است. این امر سلسله‌مراتب اقدام را مختل کرده و بار تصمیمی والد را در ثانیه‌های نخست ورود افزایش می‌دهد.
+
+RTL_BIDI_FINDINGS:
+در نقاط تلاقی عبارات فارسی و توکن‌های لاتین (نظیر کلید میانبر Ctrl + K و کدهای سیستم)، برخوردهای جزئی در مارجین‌های افقی و چسبندگی حروف دیده می‌شود. علاوه بر این، در برخی آیکون‌های جهت‌دار، فلش‌ها و بج‌های وضعیت، به دلیل عدم به‌کارگیری یکپارچه CSS Logical Properties (margin-inline-start/end) نسبت به خصوصیات فیزیکی (margin-left/right)، تقارن فاصله در جریان راست‌چین دستخوش خطای چند پیکسلی شده است.
+
+WASTED_SPACE_FINDINGS:
+بخش هیرو با اشغال نزدیک به ۳۵ تا ۴۰ درصد از ارتفاع اولیه صفحه (Above-the-fold)، ارزش اطلاعاتی متناسبی نسبت به فضای مصرفی ارائه نمی‌دهد و داده‌های حیاتی روند تحصیلی را به زیر خط برش ویوپورت هدایت می‌کند. در نقطه مقابل، کارت‌های تحلیلی و روند مهارت‌ها در ردیف میانی دچار تنگی عرض ستون‌ها و فشردگی غیرضروری برچسب‌ها شده‌اند.
+
+PREMIUM_QUALITY_GAPS:
+رابط کاربری در وضعیت فعلی بیش از آنکه یک محصول آموزشی بومی و اختصاصی برای والدین باشد، حال‌وهوای قالب‌های آماده داشبورد SaaS را بازتاب می‌دهد. کمبود ظرافت در لایه‌بندی عمق (Subtle Elevation)، تکیه بیش از حد بر سطوح رنگی پررنگ به‌جای پس‌زمینه‌های خنثی و آرام، خطوط استروک نامتوازن در آیکون‌ها و عدم خویشتن‌داری تایپوگرافیک در استفاده از وزن‌های ضخیم فونت وزیرمتن، احساس یک محصول درجه‌یک و پخته را تضعیف می‌کند.
+
+DO_NOT_ADD:
+
+از افزودن المان‌های گیمیفیکیشن، مدال‌ها، استیکرها یا انیمیشن‌های تشویقی که فضای اطمینان‌بخش والد را برهم می‌زنند خودداری شود.
+
+از افزودن کارت‌های متریک اضافه، نمودارهای تحلیلی متفرقه، فیدهای خبری یا پنل‌های شبکه‌ای پرهیز گردد.
+
+از افزودن تصویرسازی‌های شلوغ تزئینی، بافت‌های پس‌زمینه و گرادیان‌های رنگی تند در بک‌گراندها اجتناب شود.
+
+CONFIDENCE:
+HIGH

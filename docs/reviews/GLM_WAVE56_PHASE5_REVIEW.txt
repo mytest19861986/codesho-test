@@ -1,0 +1,5 @@
+Tripwire CI (دائمی، هر two-way):
+- SET app.current_tenant  +  SET app.tenant_id  روی هر جدول tenant-scoped
+  ⇒ دقیقاً یکی مؤثر، دیگری صفر ردیف؛ انحراف ⇒ CI fail
+- pg_policies introspection: هیچ پالیسی‌ای جز app.current_tenant ارجاع نکند
+- هر GUC جدید ⇒ نیاز به ممیزی + اعلام نسخه‌دار استاندارد (الگوی G0 فاز VS9)
