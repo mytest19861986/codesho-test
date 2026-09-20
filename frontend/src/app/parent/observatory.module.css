@@ -1,0 +1,689 @@
+/* Parent Growth Observatory Styles — Wave 5.5.2 */
+
+.observatory {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-6, 1.5rem);
+  padding-block-end: var(--cs-space-8, 2rem);
+  direction: rtl;
+  color: var(--cs-color-text-primary, #0f172a);
+}
+
+/* 1. Child Growth Header */
+.childGrowthHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--cs-space-4, 1rem);
+  background: var(--cs-color-bg-surface, #ffffff);
+  border: 1px solid var(--cs-color-border-subtle, #e2e8f0);
+  border-radius: var(--cs-radius-lg, 1rem);
+  padding: var(--cs-space-5, 1.25rem) var(--cs-space-6, 1.5rem);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.childGrowthInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--cs-space-4, 1rem);
+  flex: 1;
+  min-inline-size: 18rem;
+}
+
+.childAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 3.5rem;
+  block-size: 3.5rem;
+  border-radius: var(--cs-radius-pill, 9999px);
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+}
+
+.childAvatarIcon {
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+}
+
+.childDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.childPillsRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.childTag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: #f0f9ff;
+  color: #0369a1;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--cs-radius-pill, 9999px);
+  border: 1px solid #bae6fd;
+}
+
+.safetyIndicatorTag {
+  font-size: 0.75rem;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--cs-radius-pill, 9999px);
+  font-weight: 600;
+}
+
+.childNameHeading {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--cs-color-text-primary, #0f172a);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.growthSummaryText {
+  font-size: 0.875rem;
+  color: var(--cs-color-text-secondary, #475569);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.childTabsControl {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--cs-color-bg-base, #f8fafc);
+  padding: 0.375rem;
+  border-radius: var(--cs-radius-pill, 9999px);
+  border: 1px solid var(--cs-color-border-subtle, #e2e8f0);
+}
+
+.childTabBtn {
+  background: transparent;
+  border: none;
+  padding: 0.4rem 0.875rem;
+  border-radius: var(--cs-radius-pill, 9999px);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--cs-color-text-secondary, #475569);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.childTabActive {
+  background: #ffffff;
+  color: #0284c7;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-weight: 700;
+}
+
+/* 2. Weekly Mentor Briefing (Hero of Parent Observatory) */
+.mentorBriefingCard {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  border: 1px solid #334155;
+  border-radius: var(--cs-radius-lg, 1rem);
+  padding: var(--cs-space-6, 1.5rem);
+  color: #f8fafc;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.3);
+}
+
+.briefingGlow {
+  position: absolute;
+  inset-block-start: -4rem;
+  inset-inline-end: -4rem;
+  inline-size: 16rem;
+  block-size: 16rem;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.25) 0%, rgba(14, 165, 233, 0) 70%);
+  pointer-events: none;
+}
+
+.briefingHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-end: 1rem;
+}
+
+.briefingTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(14, 165, 233, 0.2);
+  color: #38bdf8;
+  border: 1px solid rgba(14, 165, 233, 0.4);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--cs-radius-pill, 9999px);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.briefingTagIcon {
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+
+.briefingDate {
+  font-size: 0.8125rem;
+  color: #94a3b8;
+}
+
+.briefingBody {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--cs-space-6, 1.5rem);
+}
+
+.briefingMain {
+  flex: 1;
+  min-inline-size: 18rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.briefingHeadline {
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.observationStepBlock {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: var(--cs-radius-md, 0.75rem);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.observationRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.stepIcon {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  flex-shrink: 0;
+  margin-block-start: 0.15rem;
+}
+
+.stepIconBlue {
+  color: #38bdf8;
+}
+
+.stepIconYellow {
+  color: #facc15;
+}
+
+.stepIconGreen {
+  color: #4ade80;
+}
+
+.observationLabel {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.observationVal {
+  font-size: 0.8125rem;
+  color: #94a3b8;
+  margin-inline-start: 0.25rem;
+}
+
+.briefingActionCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-inline-size: 15rem;
+}
+
+.encourageBtnAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  inline-size: 100%;
+  padding: 0.875rem 1.25rem;
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--cs-radius-md, 0.75rem);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(3, 105, 161, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.encourageBtnAction:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(3, 105, 161, 0.5);
+}
+
+.viewBriefingDetailBtn {
+  background: transparent;
+  border: 1px solid #475569;
+  color: #cbd5e1;
+  padding: 0.625rem 1rem;
+  border-radius: var(--cs-radius-md, 0.5rem);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  inline-size: 100%;
+}
+
+.viewBriefingDetailBtn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+/* 3. Core Grid */
+.coreGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: var(--cs-space-6, 1.5rem);
+}
+
+.panelCard {
+  background: var(--cs-color-bg-surface, #ffffff);
+  border: 1px solid var(--cs-color-border-subtle, #e2e8f0);
+  border-radius: var(--cs-radius-lg, 1rem);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--cs-space-4, 1rem) var(--cs-space-5, 1.25rem);
+  border-block-end: 1px solid var(--cs-color-border-subtle, #e2e8f0);
+}
+
+.panelTitleWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.panelTitle {
+  font-size: 1rem;
+  font-weight: 800;
+  margin: 0;
+  color: var(--cs-color-text-primary, #0f172a);
+}
+
+.panelIcon {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  color: #0284c7;
+}
+
+.panelIconShield {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  color: #059669;
+}
+
+.statusBadge {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  background: #f0fdf4;
+  color: #15803d;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--cs-radius-pill, 9999px);
+  border: 1px solid #bbf7d0;
+}
+
+/* Project Observatory Body */
+.projectObservatoryBody {
+  padding: var(--cs-space-5, 1.25rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+}
+
+.projectHeadline {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+  color: var(--cs-color-text-primary, #0f172a);
+}
+
+.projectExplanation {
+  font-size: 0.8125rem;
+  color: var(--cs-color-text-secondary, #475569);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.progressTrack {
+  inline-size: 100%;
+  block-size: 0.5rem;
+  background: #f1f5f9;
+  border-radius: var(--cs-radius-pill, 9999px);
+  overflow: hidden;
+}
+
+.progressBar {
+  block-size: 100%;
+  border-radius: var(--cs-radius-pill, 9999px);
+  background: #0284c7;
+  transition: width 0.3s ease;
+}
+
+.evidenceActionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-block-start: auto;
+  padding-block-start: 0.5rem;
+  border-block-start: 1px dashed var(--cs-color-border-subtle, #e2e8f0);
+}
+
+.evidenceBtn {
+  background: var(--cs-color-bg-base, #f8fafc);
+  border: 1px solid var(--cs-color-border-subtle, #cbd5e1);
+  border-radius: var(--cs-radius-md, 0.5rem);
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--cs-color-text-primary, #1e293b);
+  cursor: pointer;
+}
+
+.evidenceBtn:hover {
+  background: #e2e8f0;
+}
+
+/* Health Guard Body */
+.healthGuardBody {
+  padding: var(--cs-space-5, 1.25rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+}
+
+.healthMetricItem {
+  background: var(--cs-color-bg-base, #f8fafc);
+  border: 1px solid var(--cs-color-border-subtle, #e2e8f0);
+  border-radius: var(--cs-radius-md, 0.75rem);
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.healthMetricLabel {
+  display: flex;
+  flex-direction: column;
+}
+
+.healthMetricTitle {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--cs-color-text-primary, #0f172a);
+}
+
+.healthMetricDesc {
+  font-size: 0.6875rem;
+  color: var(--cs-color-text-muted, #64748b);
+}
+
+.healthMetricStatus {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #059669;
+}
+
+/* 4. Skills Map Grid */
+.skillsMapGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+  padding: var(--cs-space-5, 1.25rem);
+}
+
+.skillPillarCard {
+  background: var(--cs-color-bg-base, #f8fafc);
+  border: 1px solid var(--cs-color-border-subtle, #e2e8f0);
+  border-radius: var(--cs-radius-md, 0.75rem);
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.skillPillarHeader {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--cs-color-text-primary, #0f172a);
+}
+
+.skillPillarScore {
+  color: #0284c7;
+}
+
+.skillPillarMeaning {
+  font-size: 0.6875rem;
+  color: var(--cs-color-text-secondary, #475569);
+  line-height: 1.5;
+}
+
+/* Modals & Drawers */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modalBox {
+  background: #ffffff;
+  border-radius: var(--cs-radius-lg, 1rem);
+  inline-size: 100%;
+  max-inline-size: 36rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.drawerBox {
+  background: #ffffff;
+  border-radius: var(--cs-radius-lg, 1rem);
+  inline-size: 100%;
+  max-inline-size: 34rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: #f8fafc;
+  border-block-end: 1px solid #e2e8f0;
+}
+
+.modalTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modalTitleRow h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.modalIcon {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  color: #0284c7;
+}
+
+.closeBtn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeBtn:hover {
+  color: #0f172a;
+}
+
+.modalBody {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.encouragementPresetList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.presetBtn {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.8125rem;
+  text-align: right;
+  color: #334155;
+  cursor: pointer;
+  line-height: 1.5;
+}
+
+.presetBtn:hover {
+  background: #f0f9ff;
+  border-color: #7dd3fc;
+  color: #0369a1;
+}
+
+.customTextarea {
+  inline-size: 100%;
+  min-block-size: 5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.sentSuccessBanner {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #059669;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.modalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  background: #f8fafc;
+  border-block-start: 1px solid #e2e8f0;
+}
+
+.sendActionBtn {
+  background: #0284c7;
+  color: #ffffff;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sendActionBtn:hover {
+  background: #0369a1;
+}
+
+.cancelBtn {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .childGrowthHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .childTabsControl {
+    inline-size: 100%;
+    justify-content: space-around;
+  }
+
+  .briefingBody {
+    flex-direction: column;
+  }
+
+  .briefingActionCol {
+    inline-size: 100%;
+  }
+
+  .coreGrid {
+    grid-template-columns: 1fr;
+  }
+}
