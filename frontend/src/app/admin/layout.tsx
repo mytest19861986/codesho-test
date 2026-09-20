@@ -61,6 +61,8 @@ const navigationItems = [
   { id: "system", label: copy.nav.system, href: "/admin/system", icon: <IconSettings aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} /> },
 ];
 
+const mobileBottomNavItems = navigationItems.slice(0, 5);
+
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -162,7 +164,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     <AppShell
       activeItemId={activeItemId}
       brand={brandSlot}
-      bottomNavigationItems={navigationItems}
+      bottomNavigationItems={mobileBottomNavItems}
       drawerCloseLabel="بستن منو"
       menuButtonLabel="منوی ناوبری مدیریت"
       navigationItems={navigationItems}
