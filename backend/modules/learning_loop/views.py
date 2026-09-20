@@ -8,7 +8,7 @@ from .permissions import (
     IsTenantMentor,
     IsTenantGuardian,
     IsTenantLearner,
-    IsInternalQualifiedUser,
+    IsPilotTenantOrInternalQualified,
 )
 from .services import LearningLoopDomainService
 from .serializers import (
@@ -48,7 +48,7 @@ def learning_loop_state_view(request):
     responses={200: MentorInterventionSerializer},
 )
 @api_view(["POST"])
-@permission_classes([IsTenantMentor, IsInternalQualifiedUser])
+@permission_classes([IsTenantMentor, IsPilotTenantOrInternalQualified])
 def update_intervention_status_view(request, intervention_id):
     serializer = UpdateInterventionStatusInputSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -67,7 +67,7 @@ def update_intervention_status_view(request, intervention_id):
     responses={201: FeedbackItemSerializer},
 )
 @api_view(["POST"])
-@permission_classes([IsTenantMember, IsInternalQualifiedUser])
+@permission_classes([IsTenantMember, IsPilotTenantOrInternalQualified])
 def add_intervention_feedback_view(request, intervention_id):
     serializer = AddFeedbackInputSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -90,7 +90,7 @@ def add_intervention_feedback_view(request, intervention_id):
     responses={200: ParentBridgeSerializer},
 )
 @api_view(["POST"])
-@permission_classes([IsTenantMentor, IsInternalQualifiedUser])
+@permission_classes([IsTenantMentor, IsPilotTenantOrInternalQualified])
 def update_parent_briefing_view(request, learner_id):
     serializer = SaveParentBriefingInputSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -109,7 +109,7 @@ def update_parent_briefing_view(request, learner_id):
     responses={200: ParentBridgeSerializer},
 )
 @api_view(["POST"])
-@permission_classes([IsTenantGuardian, IsInternalQualifiedUser])
+@permission_classes([IsTenantGuardian, IsPilotTenantOrInternalQualified])
 def send_parent_encouragement_view(request, learner_id):
     serializer = SendParentEncouragementInputSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -128,7 +128,7 @@ def send_parent_encouragement_view(request, learner_id):
     responses={200: ActiveProjectSerializer},
 )
 @api_view(["POST"])
-@permission_classes([IsTenantLearner, IsInternalQualifiedUser])
+@permission_classes([IsTenantLearner, IsPilotTenantOrInternalQualified])
 def submit_evidence_view(request, project_id):
     serializer = SubmitEvidenceInputSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
