@@ -1,0 +1,872 @@
+/* Learning Command Center — Wave 5.5.1 Student Dashboard Styles */
+
+.commandCenter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-space-6, 1.5rem);
+  padding-block-end: var(--cs-space-8, 2rem);
+  direction: rtl;
+  color: var(--cs-color-text-primary, #0f172a);
+}
+
+/* 1. Identity Header */
+.identityHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--cs-space-4, 1rem);
+  background: var(--cs-color-bg-surface, #ffffff);
+  border: 1px solid var(--cs-color-border-subtle, #e2e8f0);
+  border-radius: var(--cs-radius-lg, 1rem);
+  padding: var(--cs-space-5, 1.25rem) var(--cs-space-6, 1.5rem);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.identityInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--cs-space-4, 1rem);
+  flex: 1;
+  min-inline-size: 18rem;
+}
+
+.avatarBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 3.5rem;
+  block-size: 3.5rem;
+  border-radius: var(--cs-radius-pill, 9999px);
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+.avatarIcon {
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+}
+
+.identityText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.roleRankRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.levelTag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: #eff6ff;
+  color: #1d4ed8;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--cs-radius-pill, 9999px);
+  border: 1px solid #bfdbfe;
+}
+
+.studentIdTag {
+  font-size: 0.75rem;
+  color: var(--cs-color-text-muted, #64748b);
+  font-family: monospace;
+}
+
+.welcomeHeading {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--cs-color-text-primary, #0f172a);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.journeyNarrative {
+  font-size: 0.875rem;
+  color: var(--cs-color-text-secondary, #475569);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.identityBadges {
+  display: flex;
+  align-items: center;
+  gap: var(--cs-space-4, 1rem);
+}
+
+.badgeItem {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  background: var(--cs-color-bg-base, #f8fafc);
+  border: 1px solid var(--cs-color-border-subtle, #e2e8f0);
+  border-radius: var(--cs-radius-md, 0.75rem);
+  padding: 0.5rem 0.875rem;
+}
+
+.badgeIconWrapperFire {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  border-radius: var(--cs-radius-pill, 9999px);
+  background: #fef2f2;
+  color: #ef4444;
+}
+
+.fireIcon {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+}
+
+.badgeIconWrapperStar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  border-radius: var(--cs-radius-pill, 9999px);
+  background: #fefce8;
+  color: #eab308;
+}
+
+.starIcon {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+}
+
+.badgeDetails {
+  display: flex;
+  flex-direction: column;
+}
+
+.badgeVal {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--cs-color-text-primary, #0f172a);
+}
+
+.badgeLabel {
+  font-size: 0.6875rem;
+  color: var(--cs-color-text-muted, #64748b);
+}
+
+/* 2. Today's Mission (Hero Component) */
+.missionCard {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border: 1px solid #334155;
+  border-radius: var(--cs-radius-lg, 1rem);
+  padding: var(--cs-space-6, 1.5rem);
+  color: #f8fafc;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.3), 0 8px 10px -6px rgba(15, 23, 42, 0.3);
+}
+
+.missionGlow {
+  position: absolute;
+  inset-block-start: -4rem;
+  inset-inline-end: -4rem;
+  inline-size: 16rem;
+  block-size: 16rem;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, rgba(59, 130, 246, 0) 70%);
+  pointer-events: none;
+}
+
+.missionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-end: 1rem;
+}
+
+.missionTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--cs-radius-pill, 9999px);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.missionTagIcon {
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+
+.missionTimeEst {
+  font-size: 0.8125rem;
+  color: #94a3b8;
+}
+
+.missionBody {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--cs-space-6, 1.5rem);
+}
+
+.missionMain {
+  flex: 1;
+  min-inline-size: 18rem;
+}
+
+.missionTitle {
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.4;
+}
+
+.missionImportance {
+  font-size: 0.875rem;
+  color: #cbd5e1;
+  margin: 0 0 1rem 0;
+  line-height: 1.6;
+}
+
+.mentorHintBox {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: var(--cs-radius-md, 0.75rem);
+  padding: 0.75rem 1rem;
+  backdrop-filter: blur(4px);
+}
+
+.mentorHintHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: #93c5fd;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  margin-block-end: 0.25rem;
+}
+
+.mentorHintIcon {
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+
+.mentorHintText {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #e2e8f0;
+  line-height: 1.5;
+}
+
+.mentorHintText code {
+  background: rgba(15, 23, 42, 0.8);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-family: monospace;
+  direction: ltr;
+  display: inline-block;
+  color: #38bdf8;
+}
+
+.missionActionCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-inline-size: 14rem;
+}
+
+.missionBtnAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  inline-size: 100%;
+  padding: 0.875rem 1.25rem;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--cs-radius-md, 0.75rem);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.missionBtnAction:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+}
+
+.missionBtnDone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  inline-size: 100%;
+  padding: 0.875rem 1.25rem;
+  background: #059669;
+  color: #ffffff;
+  border: none;
+  border-radius: var(--cs-radius-md, 0.75rem);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btnIcon {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+}
+
+.missionStatusIndicator {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.dotActive {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-radius: var(--cs-radius-pill, 9999px);
+  background: #38bdf8;
+  box-shadow: 0 0 8px #38bdf8;
+}
+
+.dotDone {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-radius: var(--cs-radius-pill, 9999px);
+  background: #10b981;
+}
+
+/* 3. Core Grid */
+.coreGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: var(--cs-space-6, 1.5rem);
+}
+
+.panelCard {
+  background: var(--cs-color-bg-surface, #ffffff);
+  border: 1px solid var(--cs-color-border-subtle, #e2e8f0);
+  border-radius: var(--cs-radius-lg, 1rem);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--cs-space-4, 1rem) var(--cs-space-5, 1.25rem);
+  border-block-end: 1px solid var(--cs-color-border-subtle, #e2e8f0);
+}
+
+.panelTitleWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.panelTitle {
+  font-size: 1rem;
+  font-weight: 800;
+  margin: 0;
+  color: var(--cs-color-text-primary, #0f172a);
+}
+
+.panelIcon {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  color: var(--cs-color-brand-primary, #2563eb);
+}
+
+.panelIconAi {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  color: #8b5cf6;
+}
+
+.statusPill {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--cs-radius-pill, 9999px);
+}
+
+.onlineBadge {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  background: #ecfdf5;
+  color: #059669;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--cs-radius-pill, 9999px);
+  border: 1px solid #a7f3d0;
+}
+
+.viewDetailsLink {
+  font-size: 0.8125rem;
+  color: var(--cs-color-brand-primary, #2563eb);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.viewDetailsLink:hover {
+  text-decoration: underline;
+}
+
+/* Active Project Body */
+.projectCardBody {
+  padding: var(--cs-space-5, 1.25rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+}
+
+.projectTitle {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+  color: var(--cs-color-text-primary, #0f172a);
+}
+
+.projectDesc {
+  font-size: 0.8125rem;
+  color: var(--cs-color-text-secondary, #475569);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.milestoneBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.milestoneLabelRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--cs-color-text-secondary, #475569);
+}
+
+.milestonePct {
+  font-weight: 700;
+  color: var(--cs-color-brand-primary, #2563eb);
+}
+
+.progressTrack {
+  inline-size: 100%;
+  block-size: 0.5rem;
+  background: #f1f5f9;
+  border-radius: var(--cs-radius-pill, 9999px);
+  overflow: hidden;
+}
+
+.progressBar {
+  block-size: 100%;
+  border-radius: var(--cs-radius-pill, 9999px);
+  background: var(--cs-color-brand-primary, #2563eb);
+  transition: width 0.3s ease;
+}
+
+.reviewStatusRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-start: auto;
+  padding-block-start: 0.5rem;
+  border-block-start: 1px dashed var(--cs-color-border-subtle, #e2e8f0);
+}
+
+.reviewBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: #059669;
+  font-weight: 600;
+}
+
+.reviewCheckIcon {
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+
+.projectActionBtn {
+  background: var(--cs-color-bg-base, #f8fafc);
+  border: 1px solid var(--cs-color-border-subtle, #cbd5e1);
+  border-radius: var(--cs-radius-md, 0.5rem);
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--cs-color-text-primary, #1e293b);
+  cursor: pointer;
+}
+
+.projectActionBtn:hover {
+  background: #e2e8f0;
+}
+
+/* AI Mentor Body */
+.mentorPanelBody {
+  padding: var(--cs-space-5, 1.25rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+}
+
+.mentorSpeechBubble {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--cs-radius-md, 0.75rem);
+  padding: 0.875rem;
+  position: relative;
+}
+
+.mentorSpeechTop {
+  margin-block-end: 0.375rem;
+}
+
+.mentorContextTag {
+  font-size: 0.6875rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.mentorFeedbackText {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--cs-color-text-primary, #1e293b);
+  line-height: 1.6;
+}
+
+.mentorFeedbackText code {
+  background: #e2e8f0;
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  font-family: monospace;
+  direction: ltr;
+  display: inline-block;
+  color: #0f172a;
+}
+
+.mentorActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-start: auto;
+}
+
+.mentorTalkBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--cs-radius-md, 0.5rem);
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(109, 40, 217, 0.3);
+}
+
+.mentorTalkBtn:hover {
+  opacity: 0.95;
+}
+
+.btnMiniIcon {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+}
+
+.mentorHistoryLink {
+  font-size: 0.75rem;
+  color: #6d28d9;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* 4. Skills Grid */
+.skillsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+  padding: var(--cs-space-5, 1.25rem);
+}
+
+.skillItemCard {
+  background: var(--cs-color-bg-base, #f8fafc);
+  border: 1px solid var(--cs-color-border-subtle, #e2e8f0);
+  border-radius: var(--cs-radius-md, 0.75rem);
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.skillItemHeader {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--cs-color-text-primary, #0f172a);
+}
+
+.skillScore {
+  color: var(--cs-color-brand-primary, #2563eb);
+}
+
+.skillInsight {
+  font-size: 0.6875rem;
+  color: var(--cs-color-text-muted, #64748b);
+  margin-block-start: 0.125rem;
+}
+
+/* Interactive Modal / Drawer */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modalBox {
+  background: #ffffff;
+  border-radius: var(--cs-radius-lg, 1rem);
+  inline-size: 100%;
+  max-inline-size: 38rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.drawerBox {
+  background: #ffffff;
+  border-radius: var(--cs-radius-lg, 1rem);
+  inline-size: 100%;
+  max-inline-size: 32rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: #f8fafc;
+  border-block-end: 1px solid #e2e8f0;
+}
+
+.modalTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modalTitleRow h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.modalIcon {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  color: #2563eb;
+}
+
+.closeBtn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeBtn:hover {
+  color: #0f172a;
+}
+
+.modalBody {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.codeEditorSimulation {
+  background: #0f172a;
+  color: #f8fafc;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  font-family: monospace;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  direction: ltr;
+  text-align: left;
+}
+
+.editorComment {
+  color: #64748b;
+  direction: rtl;
+  text-align: right;
+  margin: 0 0 0.5rem 0;
+}
+
+.simulationFeedback {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+}
+
+.feedbackCheck {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.modalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  background: #f8fafc;
+  border-block-start: 1px solid #e2e8f0;
+}
+
+.submitCodeBtn {
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.submitCodeBtn:hover {
+  background: #1d4ed8;
+}
+
+.cancelBtn {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.drawerSectionTitle {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.drawerList {
+  margin: 0;
+  padding-inline-start: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: #334155;
+  line-height: 1.6;
+}
+
+.timelineItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border-inline-start: 2px solid #3b82f6;
+  padding-inline-start: 0.75rem;
+}
+
+.timelineDate {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.timelineItem p {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #334155;
+  line-height: 1.5;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .identityHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .identityBadges {
+    justify-content: space-between;
+  }
+
+  .missionBody {
+    flex-direction: column;
+  }
+
+  .missionActionCol {
+    inline-size: 100%;
+  }
+
+  .coreGrid {
+    grid-template-columns: 1fr;
+  }
+}
