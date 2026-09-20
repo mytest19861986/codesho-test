@@ -104,3 +104,12 @@ class SaveParentBriefingInputSerializer(serializers.Serializer):
 
 class SendParentEncouragementInputSerializer(serializers.Serializer):
     message = serializers.CharField(min_length=2, max_length=1000)
+
+
+class SubmitEvidenceInputSerializer(serializers.Serializer):
+    repo_branch = serializers.CharField(max_length=100)
+    commit_hash = serializers.CharField(min_length=7, max_length=40)
+    current_milestone = serializers.CharField(min_length=2, max_length=500)
+    recent_activity = serializers.CharField(min_length=2, max_length=1000)
+    last_code_snippet = serializers.CharField(max_length=10000, required=False, allow_blank=True)
+    progress_percentage = serializers.IntegerField(min_value=0, max_value=100, required=False)
