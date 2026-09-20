@@ -1,550 +1,482 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { mentorAlphaContent as copy } from "@/content/fa/mentor.alpha";
 import {
-  Badge,
-  IconSparkles,
-  IconChat,
+  syntheticCohortPulse,
+  initialInterventions,
+  Intervention,
+  CohortPulseItem,
+} from "@/data/mentorSyntheticData";
+import {
   IconCheck,
-  IconArrowUp,
+  IconClose,
   IconClock,
   IconDocument,
   IconLaptop,
   IconShield,
-  IconClose,
+  IconSparkles,
 } from "@/components/ui";
-import { useMentorSearch } from "./MentorSearchContext";
-import styles from "../student/student.module.css";
+import styles from "./mentor.module.css";
 
-interface QueueProject {
-  id: string;
-  title: string;
-  student: string;
-  branch: string;
-  time: string;
-  status: string;
-  iconType: "laptop" | "document";
-  snippet: string;
-}
+export default function MentorCommandCenterPage() {
+  const [selectedCohort, setSelectedCohort] = useState<string>("all");
+  const [interventions, setInterventions] = useState<Intervention[]>(initialInterventions);
+  const [activeInterventionId, setActiveInterventionId] = useState<string>(initialInterventions[0].id);
+  const [feedbackText, setFeedbackText] = useState<string>("");
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  
+  // Drawer states
+  const [isEvidenceDrawerOpen, setIsEvidenceDrawerOpen] = useState<boolean>(false);
+  const [isParentBriefingOpen, setIsParentBriefingOpen] = useState<boolean>(false);
 
-const initialQueue: QueueProject[] = [
-  {
-    id: "proj-1",
-    title: copy.overview.pendingItem1Title,
-    student: "علی محمدی",
-    branch: "learning/calc",
-    time: "۳۵ دقیقه پیش",
-    status: copy.overview.pendingItem1Status,
-    iconType: "laptop",
-    snippet: `// ماشین‌حساب ماژولار با جاوااسکریپت\nfunction calculate(op, a, b) {\n  switch(op) {\n    case '+': return a + b;\n    case '-': return a - b;\n    case '*': return a * b;\n    case '/': return b !== 0 ? a / b : 'خطای تقسیم بر صفر';\n    default: throw new Error('عملگر نامعتبر');\n  }\n}`
-  },
-  {
-    id: "proj-2",
-    title: copy.overview.pendingItem2Title,
-    student: "سارا احمدی",
-    branch: "auth/token-store",
-    time: "۲ ساعت پیش",
-    status: copy.overview.pendingItem2Status,
-    iconType: "document",
-    snippet: `// مدیریت نشست امن با توکن موقت\nexport function saveSession(token) {\n  if (!token) return false;\n  sessionStorage.setItem('cs_demo_token', token);\n  return true;\n}`
-  }
-];
+  const activeIntervention = interventions.find((i) => i.id === activeInterventionId) || interventions[0];
 
-export default function MentorOverviewPage() {
-  const o = copy.overview;
-  const {
-    searchQuery,
-    openSessionModal,
-    setOpenSessionModal,
-    openReviewModal,
-    setOpenReviewModal,
-    openGuideModal,
-    setOpenGuideModal
-  } = useMentorSearch();
-
-  const [activeProject, setActiveProject] = useState<QueueProject>(initialQueue[0]);
-  const [feedbackText, setFeedbackText] = useState("");
-  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
-
-  // Filter projects based on live searchQuery
-  const filteredQueue = initialQueue.filter(p => 
-    p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.student.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.branch.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.status.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleStartReview = (project?: QueueProject) => {
-    setActiveProject(project || initialQueue[0]);
-    setFeedbackSubmitted(false);
-    setFeedbackText("");
-    setOpenReviewModal(true);
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3500);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
-      setOpenReviewModal(false);
-      setOpenSessionModal(false);
-      setOpenGuideModal(false);
+  const handleStatusChange = (newStatus: Intervention["status"]) => {
+    setInterventions((prev) =>
+      prev.map((item) =>
+        item.id === activeIntervention.id ? { ...item, status: newStatus } : item
+      )
+    );
+    showToast(`وضعیت مداخله با موفقیت به «${newStatus}» به‌روزرسانی شد.`);
+  };
+
+  const handleSendFeedback = (actionType: string) => {
+    if (!feedbackText.trim()) {
+      showToast("لطفاً متن بازخورد یا راهنمایی را وارد کنید.");
+      return;
     }
+
+    const newFeedback = {
+      id: `fb-${Date.now()}`,
+      sender: "MENTOR" as const,
+      timestamp: "هم‌اکنون",
+      text: feedbackText.trim(),
+      actionType,
+    };
+
+    setInterventions((prev) =>
+      prev.map((item) =>
+        item.id === activeIntervention.id
+          ? {
+              ...item,
+              status: item.status === "OPEN" ? "REVIEWING" : item.status,
+              feedbackHistory: [newFeedback, ...item.feedbackHistory],
+            }
+          : item
+      )
+    );
+
+    setFeedbackText("");
+    showToast(`اقدام «${actionType}» برای دانش‌آموز ثبت و ارسال گردید.`);
   };
+
+  const handleResolveIntervention = () => {
+    handleStatusChange("RESOLVED");
+    showToast(`مداخله مربوط به ${activeIntervention.studentName} حل‌شده علامت‌گذاری شد.`);
+  };
+
+  const filteredInterventions = selectedCohort === "all"
+    ? interventions
+    : interventions.filter((i) => i.cohort.includes(selectedCohort));
 
   return (
-    <div className={styles.studentDashboard} onKeyDown={handleKeyDown} tabIndex={-1}>
-      {/* 1. Contextual Hero Banner */}
-      <section className={styles.heroBanner} aria-labelledby="mentor-hero-heading">
-        <div className={styles.heroContent}>
-          <div className={styles.heroGreeting}>
-            <div className={styles.heroBadgeRow}>
-              <Badge variant="primary" className={styles.heroBadgeTranslucent}>{o.heroBadge}</Badge>
-              <Badge variant="outline" className={styles.heroBadgeDark}>{o.heroBadgeSecondary}</Badge>
-            </div>
-            <h1 id="mentor-hero-heading" className={styles.heroHeading}>
-              {o.heroHeading}
-            </h1>
-            <p className={styles.heroSubtitle}>
-              {o.heroSubtitle}
+    <div className={styles.mentorCommandCenter} dir="rtl">
+      {/* Toast Notification */}
+      {toastMsg && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "1.5rem",
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "#0f172a",
+            color: "#ffffff",
+            padding: "0.75rem 1.5rem",
+            borderRadius: "9999px",
+            fontSize: "0.875rem",
+            fontWeight: 600,
+            zIndex: 1000,
+            boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+          }}
+        >
+          {toastMsg}
+        </div>
+      )}
+
+      {/* 1. Header & Cohort Switcher */}
+      <header className={styles.mentorHeader}>
+        <div className={styles.mentorBrandGroup}>
+          <div className={styles.mentorIconBadge}>
+            <IconLaptop style={{ inlineSize: "1.75rem", blockSize: "1.75rem" }} />
+          </div>
+          <div className={styles.mentorHeaderTitles}>
+            <h1 className={styles.mentorTitle}>مرکز فرماندهی مربیان (Mentor Command Center)</h1>
+            <p className={styles.mentorSubtitle}>
+              رصد هوشمند سیگنال‌های یادگیری، بررسی شواهد کد و هدایت متمرکز دانش‌آموزان
             </p>
           </div>
-          <div className={styles.heroButtons}>
-            <button
-              type="button"
-              className={styles.heroPrimaryBtn}
-              onClick={() => handleStartReview(initialQueue[0])}
-            >
-              <IconSparkles aria-hidden="true" style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
-              <span>{o.heroActionPrimary}</span>
-            </button>
-            <button
-              type="button"
-              className={styles.heroSecondaryBtn}
-              onClick={() => setOpenSessionModal(true)}
-            >
-              <IconChat aria-hidden="true" style={{ inlineSize: "1.125rem", blockSize: "1.125rem" }} />
-              <span>{o.heroActionSecondary}</span>
-            </button>
-          </div>
         </div>
 
-        <div className={styles.heroGraphicWrapper}>
-          <div className={styles.heroGlassPanel}>
-            <p className={styles.heroQuoteText}>{o.reviewConsoleTitle}</p>
-            <span className={styles.heroBrandMini}>{o.reviewConsoleSubtitle}</span>
-            <div className={styles.heroChecklist}>
-              <div className={styles.heroCheckItem}>
-                <IconCheck aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem", color: "var(--cs-color-success)" }} />
-                <span>{o.check1}</span>
+        <div className={styles.cohortSwitcher}>
+          <label htmlFor="cohortSelect" style={{ fontSize: "0.85rem", fontWeight: 700, color: "#475569" }}>
+            دوره آموزشی:
+          </label>
+          <select
+            id="cohortSelect"
+            className={styles.cohortSelect}
+            value={selectedCohort}
+            onChange={(e) => setSelectedCohort(e.target.value)}
+          >
+            <option value="all">همه دوره‌های فعال ({interventions.length} دانش‌آموز)</option>
+            <option value="پاییز">کدنویسی خلاق سطح ۲ (پاییز)</option>
+            <option value="پایگاه داده">پایگاه داده و معماری وب</option>
+          </select>
+        </div>
+      </header>
+
+      {/* 2. Cohort Pulse (Human Pulse Signals) */}
+      <section className={styles.pulseSection} aria-label="وضعیت انسانی دوره">
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>
+            <IconSparkles style={{ inlineSize: "1.25rem", blockSize: "1.25rem", color: "#4f46e5" }} />
+            <span>نبض پویای دوره (Cohort Pulse)</span>
+          </h2>
+        </div>
+
+        <div className={styles.pulseGrid}>
+          {syntheticCohortPulse.map((pulse: CohortPulseItem) => (
+            <div
+              key={pulse.id}
+              className={`${styles.pulseCard} ${styles[`pulseType${pulse.type}`]}`}
+              onClick={() => showToast(`فیلتر اعمال شد: ${pulse.label}`)}
+            >
+              <div className={styles.pulseTop}>
+                <span className={styles.pulseLabel}>{pulse.label}</span>
+                <span className={styles.pulseCount}>{pulse.count}</span>
               </div>
-              <div className={styles.heroCheckItem}>
-                <IconCheck aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem", color: "var(--cs-color-success)" }} />
-                <span>{o.check2}</span>
-              </div>
-              <div className={styles.heroCheckItem}>
-                <IconCheck aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem", color: "var(--cs-color-success)" }} />
-                <span>{o.check3}</span>
-              </div>
-              <div className={styles.heroCheckItem}>
-                <IconCheck aria-hidden="true" style={{ inlineSize: "0.875rem", blockSize: "0.875rem", color: "var(--cs-color-success)" }} />
-                <span>{o.check4}</span>
+              <p className={styles.pulseDesc}>{pulse.description}</p>
+              <div className={styles.pulseActionHint}>
+                <span>اقدام: {pulse.actionHint}</span>
               </div>
             </div>
-          </div>
+          ))}
         </div>
       </section>
 
-      {/* 2. 4 KPI Metrics Grid for Mentor Review Workload */}
-      <section className={styles.kpiGrid} aria-label={o.title}>
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiContent}>
-            <span className={styles.kpiLabel}>{o.kpi1Title}</span>
-            <span className={styles.kpiValue}>{filteredQueue.length} پروژه</span>
-            <span className={styles.kpiSub}>
-              <IconArrowUp aria-hidden="true" style={{ inlineSize: "0.75rem", blockSize: "0.75rem" }} />
-              <span>{o.kpi1Sub}</span>
-            </span>
-          </div>
-          <div className={styles.kpiVisual}>
-            <div className={`${styles.kpiIconCircle} ${styles.kpiCircle1}`}>
-              <IconDocument aria-hidden="true" style={{ inlineSize: "1.5rem", blockSize: "1.5rem" }} />
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiContent}>
-            <span className={styles.kpiLabel}>{o.kpi2Title}</span>
-            <span className={styles.kpiValue}>{o.kpi2Value}</span>
-            <span className={styles.kpiSub}>
-              <IconCheck aria-hidden="true" style={{ inlineSize: "0.75rem", blockSize: "0.75rem" }} />
-              <span>{o.kpi2Sub}</span>
-            </span>
-          </div>
-          <div className={styles.kpiVisual}>
-            <div className={`${styles.kpiIconCircle} ${styles.kpiCircle2}`}>
-              <IconClock aria-hidden="true" style={{ inlineSize: "1.5rem", blockSize: "1.5rem" }} />
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiContent}>
-            <span className={styles.kpiLabel}>{o.kpi3Title}</span>
-            <span className={styles.kpiValue}>{o.kpi3Value}</span>
-            <span className={styles.kpiSub}>
-              <IconCheck aria-hidden="true" style={{ inlineSize: "0.75rem", blockSize: "0.75rem" }} />
-              <span>{o.kpi3Sub}</span>
-            </span>
-          </div>
-          <div className={styles.kpiVisual}>
-            <div className={`${styles.kpiIconCircle} ${styles.kpiCircle3}`}>
-              <IconLaptop aria-hidden="true" style={{ inlineSize: "1.5rem", blockSize: "1.5rem" }} />
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiContent}>
-            <span className={styles.kpiLabel}>{o.kpi4Title}</span>
-            <span className={styles.kpiValue}>{o.kpi4Value}</span>
-            <span className={styles.kpiSub}>
-              <IconCheck aria-hidden="true" style={{ inlineSize: "0.75rem", blockSize: "0.75rem" }} />
-              <span>{o.kpi4Sub}</span>
-            </span>
-          </div>
-          <div className={styles.kpiVisual}>
-            <div className={`${styles.kpiIconCircle} ${styles.kpiCircle4}`}>
-              <IconShield aria-hidden="true" style={{ inlineSize: "1.5rem", blockSize: "1.5rem" }} />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. Operational Workflow & Review Queue Grid */}
-      <section className={styles.twoColumnGrid} aria-label="صف بررسی و تعهدات مربیگری">
-        {/* Pending Reviews Queue with Live Filter */}
-        <div className={styles.cardPanel}>
-          <div className={styles.panelHeader}>
-            <h2 className={styles.panelTitle} style={{ fontSize: "var(--cs-font-size-body)" }}>
-              <IconDocument aria-hidden="true" />
-              <span>{o.pendingQueueTitle}</span>
-            </h2>
-            <div style={{ display: "flex", alignItems: "center", gap: "var(--cs-space-2)" }}>
-              <Badge variant="warning">{filteredQueue.length} مورد فعال</Badge>
-              <Link
-                href="/mentor/reviews"
-                className={styles.actionButton}
-                style={{ fontSize: "var(--cs-font-size-caption)", padding: "0.25rem 0.5rem", textDecoration: "none" }}
-              >
-                صف کامل بررسی
-              </Link>
-            </div>
+      {/* 3. Main Workspace: Intervention Queue & Evidence Workspace */}
+      <div className={styles.workspaceLayout}>
+        {/* Left Column: Student Intervention Queue */}
+        <section className={styles.queuePanel} aria-label="صف مداخله دانش‌آموزان">
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>صف مداخلات فعال ({filteredInterventions.length})</h2>
           </div>
 
-          {searchQuery && (
-            <div style={{
-              padding: "var(--cs-space-2) var(--cs-space-3)",
-              background: "var(--cs-color-bg-base)",
-              borderRadius: "var(--cs-radius-control)",
-              fontSize: "var(--cs-font-size-caption)",
-              color: "var(--cs-color-text-secondary)",
-              display: "flex",
-              justifyContent: "space-between"
-            }}>
-              <span>فیلتر شده بر اساس: «{searchQuery}»</span>
-              <span>{filteredQueue.length} نتیجه</span>
-            </div>
-          )}
-
-          <div className={styles.activityList}>
-            {filteredQueue.length > 0 ? (
-              filteredQueue.map((item, idx) => (
-                <div
+          <div className={styles.queueList}>
+            {filteredInterventions.map((item) => {
+              const isActive = item.id === activeIntervention.id;
+              return (
+                <article
                   key={item.id}
-                  className={styles.activityItem}
-                  style={{ cursor: "pointer", transition: "background var(--cs-motion-fast)" }}
-                  onClick={() => handleStartReview(item)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleStartReview(item); }}
-                  aria-label={`بررسی کد ${item.title}`}
+                  className={`${styles.queueItem} ${isActive ? styles.queueItemActive : ""}`}
+                  onClick={() => setActiveInterventionId(item.id)}
                 >
-                  <div className={`${styles.activityIconCircle} ${idx === 0 ? styles.kpiCircle1 : styles.kpiCircle2}`}>
-                    {item.iconType === "laptop" ? <IconLaptop aria-hidden="true" /> : <IconDocument aria-hidden="true" />}
+                  <div className={styles.queueItemHeader}>
+                    <span className={styles.queueStudentName}>{item.studentName}</span>
+                    <span className={`${styles.urgencyBadge} ${styles[`urgency${item.urgency}`]}`}>
+                      {item.urgency === "HIGH" ? "فوریت بالا" : item.urgency === "MEDIUM" ? "متوسط" : "عادی"}
+                    </span>
                   </div>
-                  <div className={styles.activityContent} style={{ inlineSize: "100%" }}>
-                    <p className={styles.activityDesc} style={{ fontWeight: "var(--cs-font-weight-bold)" }}>{item.title}</p>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBlockStart: "0.25rem" }}>
-                      <span className={styles.activityTime}>{item.student} — {item.branch} • {item.time}</span>
-                      <Badge variant="outline">{item.status}</Badge>
-                    </div>
+
+                  <div className={styles.queueReason}>{item.reason}</div>
+                  <p className={styles.queueContext}>{item.context}</p>
+
+                  <div className={styles.queueItemFooter}>
+                    <span className={styles.queueStatusBadge}>وضعیت: {item.status}</span>
+                    <button
+                      type="button"
+                      className={styles.queueActionLink}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveInterventionId(item.id);
+                        setIsEvidenceDrawerOpen(true);
+                      }}
+                    >
+                      بررسی شواهد تفصیلی ←
+                    </button>
                   </div>
-                </div>
-              ))
-            ) : (
-              <div style={{
-                textAlign: "center",
-                padding: "var(--cs-space-8) var(--cs-space-4)",
-                color: "var(--cs-color-text-muted)"
-              }}>
-                <IconDocument aria-hidden="true" style={{ inlineSize: "2rem", blockSize: "2rem", margin: "0 auto var(--cs-space-2)" }} />
-                <p style={{ margin: 0, fontWeight: "var(--cs-font-weight-bold)" }}>نتیجه‌ای برای جستجوی شما یافت نشد</p>
-                <p style={{ margin: "var(--cs-space-1) 0 0", fontSize: "var(--cs-font-size-caption)" }}>عبارت دیگری را جستجو کنید یا فیلتر را پاک نمایید.</p>
-              </div>
-            )}
+                </article>
+              );
+            })}
           </div>
-        </div>
+        </section>
 
-        {/* Mentor Governance & Review Environment Focus */}
-        <div className={styles.cardPanel}>
-          <div className={styles.panelHeader}>
-            <h2 className={styles.panelTitle} style={{ fontSize: "var(--cs-font-size-body)" }}>
-              <IconShield aria-hidden="true" />
-              <span>{o.feedbackFocusTitle}</span>
-            </h2>
-            <Badge variant="primary">استاندارد راهبری</Badge>
-          </div>
-          <p className={styles.cardText}>{o.feedbackFocusDesc}</p>
-          <div style={{
-            background: "var(--cs-color-bg-base)",
-            padding: "var(--cs-space-3) var(--cs-space-4)",
-            borderRadius: "var(--cs-radius-control)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between"
-          }}>
-            <span style={{ fontSize: "var(--cs-font-size-caption)", color: "var(--cs-color-text-secondary)" }}>
-              {o.feedbackComplianceLabel}
-            </span>
-            <span style={{ fontSize: "var(--cs-font-size-caption)", fontWeight: "var(--cs-font-weight-bold)", color: "var(--cs-color-success-foreground)" }}>
-              {o.feedbackComplianceValue}
-            </span>
-          </div>
-          <div style={{ marginBlockStart: "auto", display: "flex", justifyContent: "flex-end" }}>
-            <button
-              className={`${styles.actionButton} ${styles.primaryActionButton}`}
-              type="button"
-              onClick={() => handleStartReview(initialQueue[0])}
-            >
-              {o.actionStartReview}
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* 4. Interactive Modal 1: Code Review Environment */}
-      {openReviewModal && (
-        <div className={styles.modalBackdrop} onClick={() => setOpenReviewModal(false)}>
-          <div className={styles.modalSheet} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="review-modal-title">
-            <div className={styles.modalHeader}>
-              <h3 id="review-modal-title" className={styles.modalTitle}>
-                <IconLaptop aria-hidden="true" style={{ color: "var(--cs-color-brand-primary)" }} />
-                <span>محیط ارزیابی کد: {activeProject.title}</span>
-              </h3>
-              <button
-                type="button"
-                className={styles.modalCloseBtn}
-                onClick={() => setOpenReviewModal(false)}
-                aria-label="بستن پنجره بازبینی"
-              >
-                <IconClose aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />
-              </button>
-            </div>
-
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "var(--cs-font-size-caption)" }}>
-              <span>کارآموز: <strong>{activeProject.student}</strong></span>
-              <span>شاخه گیت: <code>{activeProject.branch}</code></span>
-              <Badge variant="warning">{activeProject.status}</Badge>
-            </div>
-
-            <div style={{
-              background: "#0f172a",
-              color: "#e2e8f0",
-              padding: "var(--cs-space-4)",
-              borderRadius: "var(--cs-radius-control)",
-              fontFamily: "monospace",
-              direction: "ltr",
-              fontSize: "0.8125rem",
-              lineHeight: 1.5,
-              overflowX: "auto"
-            }}>
-              <pre style={{ margin: 0 }}>{activeProject.snippet}</pre>
-            </div>
-
+        {/* Right Column: Learning Evidence Workspace & Action Studio */}
+        <section className={styles.detailWorkspace} aria-label="فضای بررسی و استودیوی اقدام مربی">
+          <div className={styles.detailHeader}>
             <div>
-              <label htmlFor="mentor-feedback-input" style={{ display: "block", fontSize: "var(--cs-font-size-caption)", fontWeight: "var(--cs-font-weight-bold)", marginBlockEnd: "var(--cs-space-2)" }}>
-                بازخورد مهندسی و راهنمایی فنی منتور:
+              <h2 className={styles.detailStudentTitle}>{activeIntervention.studentName}</h2>
+              <p className={styles.detailCohortName}>{activeIntervention.cohort}</p>
+            </div>
+
+            <div className={styles.detailStatusControl}>
+              <label htmlFor="interventionStatus" style={{ fontSize: "0.75rem", fontWeight: 700, color: "#475569" }}>
+                وضعیت:
               </label>
+              <select
+                id="interventionStatus"
+                className={styles.statusSelect}
+                value={activeIntervention.status}
+                onChange={(e) => handleStatusChange(e.target.value as Intervention["status"])}
+              >
+                <option value="OPEN">باز (OPEN)</option>
+                <option value="REVIEWING">در حال بررسی (REVIEWING)</option>
+                <option value="FOLLOW_UP">نیازمند پیگیری (FOLLOW_UP)</option>
+                <option value="RESOLVED">حل‌شده (RESOLVED)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Evidence Meta Box */}
+          <div className={styles.evidenceBlock}>
+            <h3 className={styles.evidenceSectionTitle}>شواهد و پروژه فعال</h3>
+            <div className={styles.evidenceMetaBox}>
+              <div className={styles.evidenceMetaRow}>
+                <span className={styles.metaLabel}>عنوان پروژه:</span>
+                <span className={styles.metaValue}>{activeIntervention.evidence.projectTitle}</span>
+              </div>
+              <div className={styles.evidenceMetaRow}>
+                <span className={styles.metaLabel}>شاخه و کامیت:</span>
+                <span className={styles.metaValue} style={{ fontFamily: "monospace", direction: "ltr" }}>
+                  {activeIntervention.evidence.repoBranch} ({activeIntervention.evidence.commitHash})
+                </span>
+              </div>
+              <div className={styles.evidenceMetaRow}>
+                <span className={styles.metaLabel}>مهارت‌های دیده‌شده:</span>
+                <div className={styles.skillPills}>
+                  {activeIntervention.evidence.skillsDemonstrated.map((s, idx) => (
+                    <span key={idx} className={styles.skillPill}>
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Last Code Snippet */}
+            <h4 style={{ fontSize: "0.85rem", fontWeight: 700, margin: "0.5rem 0 0.25rem 0", color: "#334155" }}>
+              قطعه کد اخیر و محل چالش:
+            </h4>
+            <div className={styles.snippetBox}>
+              <pre style={{ margin: 0, whiteSpace: "pre-wrap" }}>
+                {activeIntervention.evidence.lastCodeSnippet}
+              </pre>
+            </div>
+          </div>
+
+          {/* Context Notes */}
+          <div style={{ background: "#f8fafc", padding: "0.75rem 1rem", borderRadius: "0.5rem", border: "1px solid #e2e8f0" }}>
+            <p style={{ margin: "0 0 0.4rem 0", fontSize: "0.8rem", color: "#475569" }}>
+              <strong>یادداشت مربی:</strong> {activeIntervention.evidence.mentorNotes}
+            </p>
+            <p style={{ margin: 0, fontSize: "0.8rem", color: "#64748b" }}>
+              <strong>زمینه والدین:</strong> {activeIntervention.evidence.parentContext}
+            </p>
+          </div>
+
+          {/* Mentor Action Studio */}
+          <div className={styles.actionStudio}>
+            <h3 className={styles.evidenceSectionTitle}>استودیوی اقدام مربی (Action Studio)</h3>
+            
+            <div className={styles.composerBox}>
               <textarea
-                id="mentor-feedback-input"
-                style={{
-                  inlineSize: "100%",
-                  minBlockSize: "5rem",
-                  padding: "var(--cs-space-3)",
-                  borderRadius: "var(--cs-radius-control)",
-                  border: "var(--cs-border-width) solid var(--cs-color-border-subtle)",
-                  background: "var(--cs-color-bg-base)",
-                  color: "var(--cs-color-text-primary)",
-                  fontFamily: "inherit",
-                  fontSize: "var(--cs-font-size-body)",
-                  resize: "vertical"
-                }}
-                placeholder="نقاط قوت کد، موارد نیازمند بازنویسی بر مبنای استانداردهای Clean Code و راهنمایی گام بعدی را ثبت نمایید..."
+                className={styles.composerTextarea}
+                placeholder="متن بازخورد مستقیم، راهنمای گام‌به‌گام یا پیام تشویق برای دانش‌آموز..."
                 value={feedbackText}
                 onChange={(e) => setFeedbackText(e.target.value)}
               />
+
+              <div className={styles.actionButtonsRow}>
+                <button
+                  type="button"
+                  className={styles.actionBtnSecondary}
+                  onClick={() => setIsParentBriefingOpen(true)}
+                >
+                  پیش‌نویس گزارش والدین
+                </button>
+                <button
+                  type="button"
+                  className={styles.actionBtnSecondary}
+                  onClick={() => handleSendFeedback("تشویق و انگیزه")}
+                >
+                  ارسال تشویق
+                </button>
+                <button
+                  type="button"
+                  className={styles.actionBtnPrimary}
+                  onClick={() => handleSendFeedback("راهنمای فنی")}
+                >
+                  ارسال بازخورد و راهکار
+                </button>
+                <button
+                  type="button"
+                  style={{
+                    padding: "0.5rem 1rem",
+                    background: "#16a34a",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "0.5rem",
+                    fontSize: "0.8rem",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                  onClick={handleResolveIntervention}
+                >
+                  حل مداخله ✓
+                </button>
+              </div>
             </div>
 
-            {feedbackSubmitted && (
-              <div style={{
-                background: "rgba(16, 185, 129, 0.12)",
-                color: "var(--cs-color-success)",
-                border: "1px solid rgba(16, 185, 129, 0.25)",
-                borderRadius: "var(--cs-radius-control)",
-                padding: "var(--cs-space-3)",
-                fontSize: "var(--cs-font-size-caption)",
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--cs-space-2)"
-              }}>
-                <IconCheck aria-hidden="true" style={{ inlineSize: "1rem", blockSize: "1rem" }} />
-                <span>بازخورد شما با موفقیت ثبت شد و وضعیت پروژه به «بررسی‌شده» تغییر یافت.</span>
+            {/* Previous Feedback History */}
+            {activeIntervention.feedbackHistory.length > 0 && (
+              <div style={{ marginBlockStart: "1rem" }}>
+                <h4 style={{ fontSize: "0.8rem", fontWeight: 700, color: "#64748b", margin: "0 0 0.5rem 0" }}>
+                  تاریخچه تعاملات ثبت‌شده:
+                </h4>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                  {activeIntervention.feedbackHistory.map((fb) => (
+                    <div
+                      key={fb.id}
+                      style={{
+                        padding: "0.5rem 0.75rem",
+                        background: "#f1f5f9",
+                        borderRadius: "0.375rem",
+                        fontSize: "0.78rem",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", color: "#64748b", marginBlockEnd: "0.2rem" }}>
+                        <span>{fb.actionType}</span>
+                        <span>{fb.timestamp}</span>
+                      </div>
+                      <div style={{ color: "#1e293b" }}>{fb.text}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
+          </div>
+        </section>
+      </div>
 
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--cs-space-3)", marginBlockStart: "var(--cs-space-2)" }}>
+      {/* 4. Evidence Review Drawer */}
+      {isEvidenceDrawerOpen && (
+        <div className={styles.drawerOverlay} onClick={() => setIsEvidenceDrawerOpen(false)}>
+          <div className={styles.drawerContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.drawerHeader}>
+              <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700 }}>
+                شواهد عمیق یادگیری: {activeIntervention.studentName}
+              </h3>
               <button
                 type="button"
-                className={styles.actionButton}
-                onClick={() => setOpenReviewModal(false)}
+                className={styles.drawerCloseBtn}
+                onClick={() => setIsEvidenceDrawerOpen(false)}
               >
-                انصراف
+                ✕
               </button>
-              <button
-                type="button"
-                className={`${styles.actionButton} ${styles.primaryActionButton}`}
-                onClick={() => setFeedbackSubmitted(true)}
-              >
-                ثبت بازخورد و تایید گام
-              </button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <h4 style={{ fontSize: "0.9rem", fontWeight: 700, margin: "0 0 0.25rem 0" }}>خلاصه وضعیت</h4>
+                <p style={{ fontSize: "0.85rem", color: "#475569", lineHeight: 1.5, margin: 0 }}>
+                  {activeIntervention.evidence.summary}
+                </p>
+              </div>
+
+              <div>
+                <h4 style={{ fontSize: "0.9rem", fontWeight: 700, margin: "0 0 0.25rem 0" }}>فعالیت اخیر در مخزن</h4>
+                <p style={{ fontSize: "0.85rem", color: "#475569", lineHeight: 1.5, margin: 0 }}>
+                  {activeIntervention.evidence.recentActivity}
+                </p>
+              </div>
+
+              <div>
+                <h4 style={{ fontSize: "0.9rem", fontWeight: 700, margin: "0 0 0.25rem 0" }}>پیشنهاد سیستمی اقدام</h4>
+                <div style={{ background: "#e0e7ff", padding: "0.75rem", borderRadius: "0.5rem", color: "#3730a3", fontSize: "0.85rem" }}>
+                  {activeIntervention.recommendedAction}
+                </div>
+              </div>
+
+              <div style={{ marginBlockStart: "1.5rem" }}>
+                <button
+                  type="button"
+                  className={styles.actionBtnPrimary}
+                  style={{ inlineSize: "100%" }}
+                  onClick={() => setIsEvidenceDrawerOpen(false)}
+                >
+                  بازگشت به استودیوی اقدام
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* 5. Interactive Modal 2: Today's Online Mentoring Sessions */}
-      {openSessionModal && (
-        <div className={styles.modalBackdrop} onClick={() => setOpenSessionModal(false)}>
-          <div className={styles.modalSheet} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="session-modal-title">
-            <div className={styles.modalHeader}>
-              <h3 id="session-modal-title" className={styles.modalTitle}>
-                <IconClock aria-hidden="true" style={{ color: "var(--cs-color-brand-primary)" }} />
-                <span>برنامه جلسات رفع اشکال آنلاین امروز</span>
+      {/* 5. Parent Briefing Modal / Drawer */}
+      {isParentBriefingOpen && (
+        <div className={styles.drawerOverlay} onClick={() => setIsParentBriefingOpen(false)}>
+          <div className={styles.drawerContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.drawerHeader}>
+              <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700 }}>
+                پیش‌نویس گزارش برای والدین ({activeIntervention.studentName})
               </h3>
               <button
                 type="button"
-                className={styles.modalCloseBtn}
-                onClick={() => setOpenSessionModal(false)}
-                aria-label="بستن پنجره جلسات"
+                className={styles.drawerCloseBtn}
+                onClick={() => setIsParentBriefingOpen(false)}
               >
-                <IconClose aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />
+                ✕
               </button>
             </div>
 
-            <p style={{ margin: 0, fontSize: "var(--cs-font-size-body)", color: "var(--cs-color-text-secondary)" }}>
-              جلسات هماهنگ‌شده با کارآموزان جهت رفع گره‌های فنی و مرور معماری پروژه‌ها:
-            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <p style={{ fontSize: "0.85rem", color: "#475569", lineHeight: 1.6 }}>
+                این گزارش با زبان غیرفنی تنظیم شده تا والد بتواند در منزل پشتیبانی لازم را ارائه دهد:
+              </p>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "var(--cs-space-3)" }}>
-              <div style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "var(--cs-space-3) var(--cs-space-4)",
-                background: "var(--cs-color-bg-base)",
-                borderRadius: "var(--cs-radius-control)",
-                border: "var(--cs-border-width) solid var(--cs-color-border-subtle)"
-              }}>
-                <div>
-                  <strong style={{ display: "block" }}>جلسه رفع اشکال معماری کامپوننت‌ها</strong>
-                  <span style={{ fontSize: "var(--cs-font-size-caption)", color: "var(--cs-color-text-muted)" }}>کارآموز: رضا حسینی • ساعت ۱۷:۰۰ الی ۱۷:۴۵</span>
-                </div>
-                <Badge variant="primary">آماده برگزاری</Badge>
+              <div style={{ background: "#f8fafc", padding: "1rem", borderRadius: "0.5rem", border: "1px solid #e2e8f0", fontSize: "0.85rem", lineHeight: 1.6, color: "#1e293b" }}>
+                <strong>ولی محترم {activeIntervention.studentName}،</strong><br />
+                فرزند شما هم‌اکنون در حال توسعه پروژه «{activeIntervention.evidence.projectTitle}» است. 
+                {activeIntervention.status === "RESOLVED"
+                  ? " روند پیشرفت ایشان بسیار درخشان بوده و چالش‌های اخیر را با موفقیت پشت سر گذاشته است."
+                  : ` ایشان در حال تمرین بر روی مبحث پیشرفته است. ما در مرکز هدایت همراه ایشان هستیم و تشویق شما در خانه در تداوم تلاش بسیار موثر خواهد بود.`}
               </div>
 
-              <div style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "var(--cs-space-3) var(--cs-space-4)",
-                background: "var(--cs-color-bg-base)",
-                borderRadius: "var(--cs-radius-control)",
-                border: "var(--cs-border-width) solid var(--cs-color-border-subtle)"
-              }}>
-                <div>
-                  <strong style={{ display: "block" }}>بررسی نهایی پروژه پورتفولیو و استقرار</strong>
-                  <span style={{ fontSize: "var(--cs-font-size-caption)", color: "var(--cs-color-text-muted)" }}>کارآموز: مریم کاظمی • ساعت ۱۹:۱۵ الی ۲۰:۰۰</span>
-                </div>
-                <Badge variant="outline">برنامه‌ریزی‌شده</Badge>
+              <div style={{ display: "flex", gap: "0.5rem", marginBlockStart: "1rem" }}>
+                <button
+                  type="button"
+                  className={styles.actionBtnPrimary}
+                  style={{ flex: 1 }}
+                  onClick={() => {
+                    setIsParentBriefingOpen(false);
+                    showToast("گزارش والد با موفقیت به رصدخانه رشد ارسال شد.");
+                  }}
+                >
+                  ارسال به رصدخانه والدین
+                </button>
+                <button
+                  type="button"
+                  className={styles.actionBtnSecondary}
+                  onClick={() => setIsParentBriefingOpen(false)}
+                >
+                  انصراف
+                </button>
               </div>
-            </div>
-
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBlockStart: "var(--cs-space-3)" }}>
-              <button
-                type="button"
-                className={`${styles.actionButton} ${styles.primaryActionButton}`}
-                onClick={() => setOpenSessionModal(false)}
-              >
-                متوجه شدم
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 6. Interactive Modal 3: Mentor Governance Guidelines */}
-      {openGuideModal && (
-        <div className={styles.modalBackdrop} onClick={() => setOpenGuideModal(false)}>
-          <div className={styles.modalSheet} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="guide-modal-title">
-            <div className={styles.modalHeader}>
-              <h3 id="guide-modal-title" className={styles.modalTitle}>
-                <IconShield aria-hidden="true" style={{ color: "var(--cs-color-brand-primary)" }} />
-                <span>شیوه‌نامه منتوری و اصول بازخورد سازنده</span>
-              </h3>
-              <button
-                type="button"
-                className={styles.modalCloseBtn}
-                onClick={() => setOpenGuideModal(false)}
-                aria-label="بستن شیوه‌نامه"
-              >
-                <IconClose aria-hidden="true" style={{ inlineSize: "1.25rem", blockSize: "1.25rem" }} />
-              </button>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "var(--cs-space-3)", fontSize: "var(--cs-font-size-body)", lineHeight: 1.6 }}>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "var(--cs-space-2)" }}>
-                <IconCheck aria-hidden="true" style={{ color: "var(--cs-color-success)", marginBlockStart: "0.25rem" }} />
-                <span><strong>هدایت به‌جای تحمیل پاسخ:</strong> منتور نباید کد نهایی را مستقیماً بنویسد؛ راهنمایی با طرح سوال و اشاره به مستندات رسمی انجام می‌شود.</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "var(--cs-space-2)" }}>
-                <IconCheck aria-hidden="true" style={{ color: "var(--cs-color-success)", marginBlockStart: "0.25rem" }} />
-                <span><strong>لحن سازنده و محترمانه:</strong> مقایسه کارآموزان با یکدیگر یا تحقیر اشتباهات کدنویسی مطلقاً ممنوع است.</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "var(--cs-space-2)" }}>
-                <IconCheck aria-hidden="true" style={{ color: "var(--cs-color-success)", marginBlockStart: "0.25rem" }} />
-                <span><strong>حفظ حریم خصوصی:</strong> کلیه مکاتبات و تبادل کد در بستر کنترل‌شده CodeSho نگهداری می‌شود.</span>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBlockStart: "var(--cs-space-3)" }}>
-              <button
-                type="button"
-                className={`${styles.actionButton} ${styles.primaryActionButton}`}
-                onClick={() => setOpenGuideModal(false)}
-              >
-                تایید و بستن
-              </button>
             </div>
           </div>
         </div>
