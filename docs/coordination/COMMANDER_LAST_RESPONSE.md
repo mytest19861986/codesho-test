@@ -1,67 +1,71 @@
-# COMMANDER LAST RESPONSE — WAVE 5.7 PHASE 1 APPROVAL & PHASE 2 DIRECTIVE
+# COMMANDER LAST RESPONSE — WAVE 5.7 PHASE 2 APPROVAL & PHASE 3 DIRECTIVE
 
 Captured: 2026-09-21
 
-COMMANDER REVIEW — WAVE 5.7 PHASE 1
-Learning Intelligence Domain Design Gate
+COMMANDER REVIEW — WAVE 5.7 PHASE 2
+Domain Service Implementation Gate
 
-آنتی‌گرویتی، گزارش Wave 5.7 Phase 1: Learning Intelligence Domain Design دریافت و بررسی شد.
+آنتی‌گرویتی، گزارش Wave 5.7 Phase 2: Domain Service Implementation دریافت و ارزیابی شد.
 
-نتیجه ارزیابی معماری:
-TYPE: WAVE5.7_PHASE1_DOMAIN_DESIGN_REPORT
+نتیجه فرماندهی:
+TYPE: WAVE5.7_PHASE2_DOMAIN_SERVICE_IMPLEMENTATION_REPORT
 STATUS: APPROVED ✅
-IMPLEMENTATION: LOCKED ❌
-NEXT_GATE: PHASE 2 DOMAIN SERVICE IMPLEMENTATION (ISOLATED)
-GO ✅
+QUALITY: PASS ✅
+SECURITY: PASS ✅
+DOMAIN_ISOLATION: PASS ✅
+NEXT_GATE: PHASE 3 — DOMAIN CONTRACT & READ MODEL DESIGN (GO ✅)
 
-ارزیابی کلی:
-فاز ۱ از نظر معماری تأیید می‌شود. مهم‌ترین اصل حفظ شده: NO_JUDGMENT_ENGINE.
-حرکت از Student Evaluation به Learning Understanding & Support.
+ارزیابی معماری فاز ۲:
+فاز ۲ مطابق دستور اجرا شده است: Domain Services Only, No Migration, No UI, No Production Activation.
+بررسی سرویس‌های اصلی:
+1. SkillGraphService: APPROVED ✅ (هاردلاک: NO_SKILL_SCORE, NO_RANKING, NO_COMPARISON).
+2. LearningSignalAggregationService: APPROVED WITH GOVERNANCE RULE ✅ (سیگنال‌ها همیشه Observation هستند نه Judgement).
+3. MentorInsightGenerator: CORE_APPROVED ✅ (Evidence -> Reason -> Socratic Prompt; Amplifier of Mentor Thinking).
+4. ParentTranslationService: APPROVED ✅ (Technical Event -> Growth Interpretation -> Family Conversation Cue).
+5. ReflectionTimelineService: APPROVED ✅ PRIORITY HIGH (دانش‌آموز مالک بازتاب ذهنی خود است).
 
-بررسی مدل دامنه:
-1. SkillConcept: APPROVED ✅ (ارتباط مفاهیم، مسیر یادگیری، پیش‌نیازها، شواهد تسلط؛ ممنوعیت رتبه‌بندی و نمره).
-2. LearnerSkillDemonstration: APPROVED ✅ (منبع حقیقت شواهد، الزام مسیر Trace از بینش تا شواهد).
-3. LearningFrictionSignal: APPROVED WITH PRIVACY HARDENING ✅ (عدم برچسب‌گذاری دانش‌آموز).
-4. MentorPedagogicalDossier: CORE_COMPONENT APPROVED ✅ (الزام Evidence Trace + Reason + Suggested Action).
-5. ParentEmpatheticInsight: APPROVED ✅ (Parent View != Technical View; Technical Evidence -> Pedagogical Translation -> Family Support Insight).
-6. StudentReflectionEntry: APPROVED ✅ PRIORITY: HIGH (دانش‌آموز مالک روایت رشد خود است).
-
-Data Ownership Matrix: PASS ✅
-Analytics Event Schema: APPROVED ✅ (تغییر Grit Score به Learning Persistence Signals تأیید نهایی شد؛ هاردلاک NO_NUMERIC_CHILD_EVALUATION فعال شد).
-API Boundary Proposal: APPROVED WITH DESIGN NOTE (عدم اکسپوز مستقیم مدل‌های داخلی).
-Migration Impact: DATABASE_MIGRATION: 0 (MIGRATION: LOCKED).
+تست‌ها: 52/52 PASS ✅
+الزام گیت بعدی: علاوه بر تست واحد، تست‌های Contract Test + Permission Boundary Test + Read Projection Test الزامی است.
 
 Fleet Review:
 - GLM-5.3: PASS ✅
 - Qwen 3.8 Max: PASS ✅
 - Gemini 3.8 Flash: PASS ✅
 
-دستور Phase 2:
-PHASE2: DOMAIN SERVICE IMPLEMENTATION ONLY (ایزوله در لایه سرویس‌های دامنه).
-ممنوعیت‌ها:
-❌ Migration
-❌ Production API Enable
-❌ UI Redesign
-❌ External AI Connection
+دستور Phase 3:
+WAVE 5.7 PHASE 3 — Intelligence Read Contract & Projection Layer
+هدف: ساخت لایه خواندن استاندارد برای مصرف Mentor, Parent, Student بدون تغییر UI.
+محدودیت‌های قطعی Phase 3:
+مجاز:
+✅ Read Models
+✅ Serializers
+✅ DTO Contracts
+✅ Projection Services
+✅ Contract Tests
+ممنوع:
+❌ Database Migration
+❌ UI Modification
+❌ External AI
+❌ Production Enablement
+❌ New User Traffic
 
-Deliverable اجباری Phase 2:
-TYPE: WAVE5.7_PHASE2_DOMAIN_SERVICE_IMPLEMENTATION_REPORT
+Deliverable مورد انتظار:
+TYPE: WAVE5.7_PHASE3_READ_CONTRACT_PROJECTION_REPORT
 شامل:
-- Service Layer Design
-- Skill Graph Service
-- Learning Signal Aggregation Service
-- Mentor Insight Generator (Deterministic)
-- Parent Translation Service
-- Reflection Timeline Service
-- Permission Matrix
-- Unit Tests
+- IntelligenceReadModel Design
+- Mentor Intelligence Projection
+- Parent Insight Projection
+- Student Reflection Projection
+- Skill Graph Read Contract
+- API DTO Schema
+- Frontend Compatibility Matrix
+- Privacy Boundary Verification
 - Tenant Isolation Tests
-- Migration Impact Confirmation
+- Regression Tests
 - GLM Review, Qwen Review, Gemini Review
 
 فرمان نهایی:
-WAVE5.7_PHASE1: CLOSED ✅
-ARCHITECTURE: APPROVED ✅
-PHASE2: GO ✅
-CODE: ALLOWED ONLY IN ISOLATED DOMAIN SERVICES
-PRIMARY LAW: THE SYSTEM MAY UNDERSTAND LEARNING, BUT MUST NEVER JUDGE THE LEARNER.
+WAVE5.7_PHASE2: APPROVED ✅
+PHASE3: GO ✅
+MISSION: BUILD THE INTELLIGENCE LAYER READ CONTRACT
+REMEMBER: THE PLATFORM MAY RECOGNIZE PATTERNS. IT MAY SUPPORT HUMANS. IT MAY NOT LABEL CHILDREN.
