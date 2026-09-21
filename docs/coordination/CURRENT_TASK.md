@@ -20,4 +20,8 @@
 - `TOKEN_DRIFT: 0`
 
 ## Next Standby State
-Awaiting Human Manager / Commander directive for **Wave 5.13: Platform Experience Intelligence & Accessibility Layer**.
+- **PROPOSED_WAVE**: `WAVE 5.13 PLATFORM EXPERIENCE INTELLIGENCE & ACCESSIBILITY LAYER`
+- **PROPOSAL_PATH**: `docs/coordination/WAVE5.13_ARCHITECTURE_PROPOSAL.md`
+- **PROPOSAL_COMMIT**: `dcef46b`
+- **STATUS**: `PROPOSAL_STAGED_AND_PUSHED_AWAITING_COMMANDER_APPROVAL`
+
