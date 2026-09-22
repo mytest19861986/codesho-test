@@ -1,122 +1,119 @@
-COMMANDER REVIEW & VERDICT — WAVE 5.15 PHASE 2
+COMMANDER REVIEW & VERDICT — WAVE 5.15 PHASE 3
 
-فرماندهی گزارش تحویل فاز ۲ موج ۵.۱۵ را دریافت و ارزیابی کرد.
+فرماندهی گزارش تحویل فاز ۳ موج ۵.۱۵ را دریافت و بررسی کرد.
 
-WAVE5.15_PHASE2_BACKEND_DOMAIN_RUNTIME_VERIFICATION
+WAVE5.15_PHASE3_FRONTEND_RUNTIME_ALIGNMENT
 
 VERDICT:
 APPROVED ✅
 
 STATUS:
-PHASE_2_ACCEPTED
-BACKEND_RUNTIME_VERIFICATION_COMPLETE
-PHASE_3_AUTHORIZED
-ارزیابی رسمی Phase 2
+PHASE_3_ACCEPTED
+FRONTEND_RUNTIME_ALIGNMENT_CERTIFIED
+PHASE_4_AUTHORIZED
+ارزیابی رسمی Phase 3
 
-هدف فاز ۲:
-اعتبارسنجی زنجیره اجرای Backend Runtime، مرزهای دامنه، ایزولاسیون Tenant و رفتار Fail-Closed بدون تغییر در Production.
+هدف فاز ۳:
 
-خروجی تحویلی با چارچوب تعریف‌شده Wave 5.15 منطبق است.
+اعتبارسنجی هماهنگی Runtime فرانت‌اند با قراردادهای Backend، Design System، Adapter Layer و تجربه نقش‌ها، بدون تغییر در Production.
 
-۱. Backend Runtime Execution Map
+نتیجه ارزیابی:
 
-وضعیت:
-
-PASS ✅
-
-موارد تأییدشده:
-
-Request Lifecycle
-
-Middleware Execution Chain
-
-Authentication Boundary
-
-Tenant Context Isolation
-
-DRF Permission Layer
-
-Domain Service Flow
-
-Database Transaction Boundary
-
-Transactional Outbox Path
-
-Exception Handling Strategy
-
-۲. Backend Domain Health Matrix
+FRONTEND_RUNTIME = PASS ✅
+CONTRACT_ALIGNMENT = PASS ✅
+ROLE_ISOLATION = PASS ✅
+RESPONSIVE_INTEGRITY = PASS ✅
+۱. Frontend Runtime Execution Map
 
 وضعیت:
 
 PASS ✅
 
-ماتریس سلامت:
+موارد پوشش داده‌شده:
 
-حوزه	وضعیت
-Authentication Runtime	PASS
-Authorization Boundary	PASS
-Tenant Context	PASS
-Domain Services	PASS
-Database Runtime Layer	PASS
-Outbox Reliability	PASS
-Fail-Closed Error Handling	PASS
-۳. Backend Runtime Verification Harness
+چرخه اجرای Next.js Runtime
 
-نتیجه گزارش‌شده:
+جریان App Router
+
+مرز Server / Client Component
+
+AppShell Runtime Boundary
+
+API Client Flow
+
+مدیریت Loading State
+
+مدیریت Empty State
+
+Error Boundary Handling
+
+۲. Frontend Contract Alignment Matrix
+
+وضعیت:
+
+PASS ✅
+
+اعتبارسنجی قرارداد:
+
+بخش	نتیجه
+TypeScript Contract Compatibility	PASS
+API Contract Consumption	PASS
+DTO Mapping Safety	PASS
+Role View Isolation	PASS
+Design System Alignment	PASS
+Responsive Behavior	PASS
+۳. Frontend Runtime Harness
+
+نتیجه اعلام‌شده:
 
 6/6 TESTS PASSED ✅
 
 جزئیات:
 
-سناریو	نتیجه
-Connection Pool Safety	PASS
-Atomic Transaction Boundary	PASS
-Tenant Isolation Context	PASS
-Role Permission Boundary	PASS
-Outbox Event Flow	PASS
-Error Sanitization	PASS
+Test	وضعیت
+AppShell Loading	PASS
+API Contract Consumption	PASS
+Role Boundary Validation	PASS
+Empty/Error State Rendering	PASS
+Responsive Viewport Integrity	PASS
+Anti-Evaluation UI Leak Scan	PASS
 ۴. Hardlock Verification
 
 وضعیت قفل‌ها:
 
 CODE_CHANGE = 0 ✅
 DATABASE_MIGRATION = 0 ✅
-PRODUCTION_DEPLOYMENT = NO ✅
-REAL_USER_TRAFFIC = 0 ✅
-DATA_POLICY = SYNTHETIC / METADATA ONLY ✅
-PII_DETECTED = 0 ✅
+PRODUCTION_TOUCH = 0 ✅
+REAL_TRAFFIC = 0 ✅
 CRITICAL_DRIFT = 0 ✅
-Phase 2 Closure Certificate
+Phase 3 Closure Record
 
-ثبت وضعیت:
+ثبت شد:
 
-WAVE5.15_PHASE2_CLOSED ✅
+WAVE5.15_PHASE3_CLOSED ✅
 
-Backend Runtime:
+Frontend Runtime:
 CERTIFIED
 
-Domain Runtime:
+Backend Contract Alignment:
 VALIDATED
 
-Tenant Isolation:
-PASS
-
-Outbox Runtime:
+Role Isolation:
 PASS
 
 Architecture Drift:
 0
-DIRECTIVE — WAVE 5.15 PHASE 3 AUTHORIZATION
+DIRECTIVE — WAVE 5.15 PHASE 4 AUTHORIZATION
 
-مجوز رسمی ورود صادر شد:
+مجوز رسمی صادر شد:
 
-WAVE5.15_PHASE3_FRONTEND_RUNTIME_ALIGNMENT
+WAVE5.15_PHASE4_FULL_STAGING_END_TO_END_QUALIFICATION
 
 STATUS:
 AUTHORIZED ✅
 
 MODE:
-VALIDATION ONLY
+CONTROLLED VALIDATION ONLY
 
 CODE_CHANGE:
 0
@@ -124,115 +121,115 @@ CODE_CHANGE:
 DATABASE_MIGRATION:
 0
 
-PRODUCTION_TOUCH:
+PRODUCTION_DEPLOYMENT:
+NO
+
+REAL_USER_TRAFFIC:
 0
-Phase 3 Scope
-Frontend Runtime Alignment
+Wave 5.15 Phase 4 Scope
+Full Staging End-to-End Qualification
 
 هدف:
 
-اعتبارسنجی هماهنگی Runtime فرانت‌اند با:
+اعتبارسنجی کامل زنجیره اجرایی سیستم در محیط استیجینگ ایزوله:
 
-قراردادهای Backend
-
-Adapter Layer
-
-Design System Freeze
-
-Role Experience Contracts
-
-Responsive Runtime Behavior
-
-بدون تغییر در Production UI.
-
+Synthetic Identity
+        ↓
+Frontend Runtime
+        ↓
+API Contract
+        ↓
+Backend Domain Runtime
+        ↓
+Tenant Isolation
+        ↓
+Database Boundary
+        ↓
+Outbox Processing
+        ↓
+Telemetry Validation
 Deliverables Required
-1. Frontend Runtime Execution Map
+1. Staging E2E Qualification Matrix
 
 مسیر:
 
-docs/runtime/FRONTEND_RUNTIME_EXECUTION_MAP.md
+docs/runtime/STAGING_E2E_QUALIFICATION_MATRIX.md
 
-محتوا:
+موارد مورد انتظار:
 
-Next.js Runtime Lifecycle
+Student Journey
 
-App Router Flow
+Mentor Journey
 
-Layout/AppShell Execution
+Parent Journey
 
-Server/Client Boundary
+Admin Operational Journey
 
-API Client Flow
+Authentication Flow
 
-Error Boundary
+Permission Boundaries
 
-Loading/Empty State Handling
+Failure Recovery Paths
 
-2. Frontend Contract Alignment Matrix
-
-مسیر:
-
-docs/runtime/FRONTEND_CONTRACT_ALIGNMENT_MATRIX.md
-
-بررسی:
-
-بخش	اعتبارسنجی
-TypeScript Contracts	Integrity
-DTO Mapping	Safety
-API Adapter Layer	Compatibility
-Role View Isolation	PASS
-Design Token Usage	Compliance
-Responsive States	PASS
-3. Frontend Runtime Harness
+2. Full Staging E2E Harness
 
 فایل:
 
-test_wave515_phase3_frontend_runtime.py
+test_wave515_phase4_staging_e2e.py
 
 سناریوهای الزامی:
 
 TEST 01:
-AppShell Runtime Loading
+Synthetic Authentication Journey
 
 TEST 02:
-API Contract Consumption
+Student Runtime Journey
 
 TEST 03:
-Role Boundary Validation
+Mentor Runtime Journey
 
 TEST 04:
-Empty/Error State Rendering
+Parent Runtime Journey
 
 TEST 05:
-Responsive Viewport Integrity
+Tenant Isolation Verification
 
 TEST 06:
-Anti-Evaluation UI Leak Scan
+Frontend ↔ Backend Contract Integrity
+
+TEST 07:
+Telemetry Safety Validation
+
+TEST 08:
+Failure Recovery Flow
 
 هدف:
 
-6/6 PASS
-4. Final Phase 3 Report
+8/8 PASS
+3. Phase 4 Final Report
 
 فایل:
 
-WAVE5.15_PHASE3_FRONTEND_RUNTIME_ALIGNMENT_REPORT.md
+WAVE5.15_PHASE4_STAGING_E2E_QUALIFICATION_REPORT.md
 
 فرمت تحویل:
 
 STATUS:
-WAVE5.15_PHASE3_DELIVERED
+WAVE5.15_PHASE4_DELIVERED
 
 Frontend Runtime:
 PASS
 
-Contract Alignment:
+Backend Runtime:
 PASS
 
-Role Isolation:
+E2E Journey:
 PASS
 
-Responsive Integrity:
+Tenant Isolation:
+PASS
+
+Telemetry:
 PASS
 
 Migration:
@@ -248,7 +245,7 @@ Critical Drift:
 0
 
 NEXT:
-WAITING_FOR_PHASE_4_AUTHORIZATION
+WAITING_FOR_PHASE_5_CLOSURE_AUTHORIZATION
 وضعیت فعلی پروژه
 WAVE5.12
 Design System Governance
@@ -275,17 +272,20 @@ Phase 2:
 COMPLETE ✅
 
 Phase 3:
+COMPLETE ✅
+
+Phase 4:
 AUTHORIZED 🟢
 FINAL COMMANDER DIRECTIVE
-WAVE5.15_PHASE3_FRONTEND_RUNTIME_ALIGNMENT_STARTED ✅
+WAVE5.15_PHASE4_FULL_STAGING_END_TO_END_QUALIFICATION_STARTED ✅
 
-Anti-Gravity مجاز است فاز ۳ را آغاز کند.
+Anti-Gravity مجاز است اجرای فاز ۴ را آغاز نماید.
 
 گزارش بعدی مورد انتظار:
 
-WAVE5.15_PHASE3_FRONTEND_RUNTIME_ALIGNMENT_REPORT.md
+WAVE5.15_PHASE4_STAGING_E2E_QUALIFICATION_REPORT.md
 
 با وضعیت:
 
-PHASE_3_DELIVERED
-WAITING_FOR_PHASE_4_DIRECTIVE
+PHASE_4_DELIVERED
+WAITING_FOR_PHASE_5_CLOSURE_DIRECTIVE
